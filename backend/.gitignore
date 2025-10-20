@@ -1,0 +1,40 @@
+# Ficheiro .gitignore para o Backend Node.js
+
+# Ignora o diretório que contém as dependências instaladas
+node_modules/
+
+# Ignora o ficheiro com variáveis de ambiente sensíveis (CRUCIAL)
+.env
+
+# Ignora logs gerados pela aplicação ou pelo NPM
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# Ignora ficheiros temporários ou de sistema operacional
+.DS_Store
+Thumbs.db
+
+# Ignora diretórios de build (se usar TypeScript ou outro transpilador)
+dist/
+build/
+*.tsbuildinfo
+
+# Ignora ficheiros de configuração de IDEs
+.vscode/
+.idea/
+
+# Ignora ficheiros de cache ou relatórios de testes
+.nyc_output/
+coverage/
+*.lcov
+
+# (OPCIONAL) Ignora a pasta de uploads de ficheiros
+# Descomente a linha abaixo se NÃO quiser guardar os ficheiros
+# enviados pelos utilizadores no repositório Git. Geralmente,
+# é melhor ignorar esta pasta e usar um volume separado ou
+# armazenamento na nuvem (S3) em produção.
+# uploads/
