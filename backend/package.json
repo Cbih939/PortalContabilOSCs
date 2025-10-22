@@ -1,26 +1,29 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "backend/\r ├── .gitignore             # Ignora node_modules, .env, etc.\r ├── package.json           # Dependências (Express, mysql2, jsonwebtoken, bcrypt, cors...)\r ├── README.md              # Instruções de setup, deploy, e variáveis de ambiente\r ├── .env                   # ARQUIVO SECRETO: Senhas do banco, segredo do JWT (NUNCA vai para o GitHub)\r ├── .env.example           # Arquivo de exemplo para o .env (vai para o GitHub)\r ├── server.js              # Ponto de entrada: Inicia o servidor Express e conecta ao DB\r │\r ├── src/                   # Diretório principal do código-fonte\r │   │\r │   ├── config/            # Configurações da aplicação\r │   │   ├── db.js          # Configuração da conexão com o MySQL (pool de conexões)\r │   │   └── index.js       # Carrega variáveis de ambiente (DB_HOST, JWT_SECRET, etc.)\r │   │\r │   ├── routes/            # Define todas as rotas da API (os \"endpoints\")\r │   │   ├── index.js       # Roteador principal (junta todas as outras rotas)\r │   │   ├── auth.routes.js   # Rotas de login (ex: /api/auth/login)\r │   │   ├── users.routes.js  # Rotas de admin (ex: /api/users)\r │   │   ├── oscs.routes.js   # Rotas para gerenciar OSCs (ex: /api/oscs)\r │   │   ├── docs.routes.js   # Rotas para upload/download de documentos\r │   │   ├── msg.routes.js    # Rotas para mensagens/chat\r │   │   └── alerts.routes.js # Rotas para os avisos e alertas\r │   │\r │   ├── controllers/       # A \"lógica\" de cada rota\r │   │   # (Recebe a requisição, valida, chama o serviço e envia a resposta)\r │   │   ├── auth.controller.js\r │   │   ├── user.controller.js\r │   │   ├── osc.controller.js\r │   │   ├── doc.controller.js\r │   │   ├── msg.controller.js\r │   │   └── alert.controller.js\r │   │\r │   ├── services/          # Lógica de negócio (regras, interações complexas)\r │   │   # (Opcional para apps menores, mas bom para modularidade)\r │   │   ├── auth.service.js  # (ex: Gerar o token JWT)\r │   │   └── file.service.js  # (ex: Processar um arquivo antes de salvar)\r │   │\r │   ├── models/            # Interação direta com o banco de dados (MySQL)\r │   │   # (Aqui ficam as queries SQL ou os modelos de um ORM como o Sequelize)\r │   │   ├── user.model.js    # (ex: findUserByEmail(), createUser())\r │   │   ├── osc.model.js     # (ex: getAllOSCs(), getOSCById())\r │   │   ├── document.model.js\r │   │   └── message.model.js\r │   │\r │   ├── middlewares/       # Funções que rodam \"no meio\" da requisição\r │   │   ├── auth.middleware.js # (ex: checkToken, checkRole - 'isAdmin', 'isContador')\r │   │   ├── upload.middleware.js # Configuração do 'multer' para upload de arquivos\r │   │   ├── validator.middleware.js # (ex: middlewares para validar o corpo da requisição)\r │   │   └── errorHandler.js  # Um handler global para capturar erros\r │   │\r │   └── utils/             # Funções utilitárias\r │       ├── bcrypt.utils.js  # Funções para hashear e comparar senhas\r │       └── jwt.utils.js     # Funções para criar e verificar tokens\r │\r ├── db/                    # Scripts do banco de dados\r │   ├── migrations/        # MUITO IMPORTANTE: Scripts SQL para criar/alterar tabelas\r │   │   ├── 001_create_users_table.sql\r │   │   ├── 002_create_oscs_table.sql\r │   │   ├── 003_create_documents_table.sql\r │   │   └── ...\r │   ├── seeds/             # (Opcional) Scripts para popular o banco com dados iniciais\r │   │   └── 001_create_admin_user.sql\r │\r └── scripts/               # Scripts de utilidade/deploy\r     └── deploy.sh          # (Exemplo) Script para rodar na VPS (git pull, npm install, run migrations...)",
+  "description": "Backend para o Portal Contábil OSCs", 
   "main": "server.js",
+  "type": "module", 
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+    
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bcryptjs": "^3.0.2",
+    "bcryptjs": "^2.4.3", 
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "express-validator": "^7.2.1",
+    "dotenv": "^16.4.5", 
+    "express": "^4.19.2", 
+    "express-validator": "^7.1.0", 
     "jsonwebtoken": "^9.0.2",
-    "multer": "^2.0.2",
-    "mysql2": "^3.15.2"
+    "multer": "^1.4.5-lts.1", 
+    "mysql2": "^3.10.0" 
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10" 
   }
 }
