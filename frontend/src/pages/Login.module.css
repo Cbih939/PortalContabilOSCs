@@ -71,3 +71,12 @@
   color: #9ca3af; /* Equivalente a text-gray-400 */
   margin-top: 2.5rem; /* Equivalente a mt-10 */
 }
+
+.errorMessage {
+  color: #dc2626; /* text-red-600 */
+  font-size: 0.875rem; /* text-sm */
+  /* Ajusta margens para ficar entre os inputs e o botão */
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
+  text-align: left; /* Alinha o erro à esquerda */
+}

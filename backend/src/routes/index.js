@@ -9,6 +9,7 @@ import oscRoutes from './oscs.routes.js';
 import docRoutes from './docs.routes.js';
 import msgRoutes from './msg.routes.js';
 import alertRoutes from './alerts.routes.js';
+import contadorRoutes from './contador.routes.js';
 
 // Cria o roteador principal do Express
 const router = express.Router();
@@ -20,6 +21,7 @@ router.use('/auth', authRoutes);
 
 // Rotas de Utilizadores (/api/users - geralmente para Admin)
 router.use('/users', userRoutes);
+router.use('/contador', contadorRoutes);
 
 // Rotas de OSCs (/api/oscs)
 router.use('/oscs', oscRoutes);

@@ -10,10 +10,6 @@ import { ROLES } from '../utils/constants.js';
  * @returns {Promise<Array>} Um array de objetos de mensagem.
  */
 export const findConversationHistory = async (oscId, contadorId) => {
-  // A query busca todas as mensagens onde a 'conversa'
-  // é definida pela combinação osc_id E contador_id.
-  // Também faz um JOIN na tabela 'users' (usando sender_id)
-  // para obter o nome de quem enviou.
   const query = `
     SELECT 
       m.id,
@@ -27,7 +23,7 @@ export const findConversationHistory = async (oscId, contadorId) => {
       m.osc_id = ? AND m.contador_id = ?
     ORDER BY 
       m.created_at ASC; 
-  `; // ASC (Ascendente) para ordem de chat (mais antigo primeiro)
+  `;
   
   const [rows] = await pool.execute(query, [oscId, contadorId]);
 
@@ -37,9 +33,8 @@ export const findConversationHistory = async (oscId, contadorId) => {
     text: row.text,
     date: row.date,
     // Define 'from' e 'to' baseado no 'sender_role'
-    // (Isto é baseado no protótipo, onde o nome era o identificador)
-    from: row.sender_role === ROLES.OSC ? row.from_name : ROLES.CONTADOR,
-    to: row.sender_role === ROLES.OSC ? ROLES.CONTADOR : row.from_name,
+    from: row.sender_role === ROLES.OSC ? row.from_name : 'Contador', // Ajuste 'Contador' se necessário
+    to: row.sender_role === ROLES.OSC ? 'Contador' : row.from_name,    // Ajuste 'Contador' se necessário
   }));
 };
 
@@ -60,8 +55,8 @@ export const createMessage = async (messageData) => {
 
   const query = `
     INSERT INTO messages 
-      (osc_id, contador_id, text, sender_role, sender_id, from_name) 
-    VALUES (?, ?, ?, ?, ?, ?)
+      (osc_id, contador_id, text, sender_role, sender_id, from_name, read_status) 
+    VALUES (?, ?, ?, ?, ?, ?, FALSE) -- Assume read_status inicia como FALSE (0)
   `;
   
   const [result] = await pool.execute(query, [
@@ -73,9 +68,14 @@ export const createMessage = async (messageData) => {
     from_name
   ]);
 
-  // Retorna a mensagem recém-criada
+  // Retorna a mensagem recém-criada (busca para obter a data gerada pelo DB)
   const [newMessages] = await pool.execute(
-    'SELECT * FROM messages WHERE id = ?',
+    `SELECT 
+       m.id, m.text, m.created_at as date, m.sender_role, m.from_name,
+       u_osc.name as osc_name -- Busca nome da OSC para a propriedade 'to'
+     FROM messages m 
+     JOIN users u_osc ON m.osc_id = u_osc.id
+     WHERE m.id = ?`,
     [result.insertId]
   );
   
@@ -85,8 +85,39 @@ export const createMessage = async (messageData) => {
   return {
     id: newMessage.id,
     text: newMessage.text,
-    date: newMessage.created_at,
-    from: newMessage.from_name, // O 'from_name' que salvámos
-    to: sender_role === ROLES.OSC ? ROLES.CONTADOR : 'Nome da OSC', // (O frontend pode preencher isto)
+    date: newMessage.date,
+    from: newMessage.from_name,
+    to: newMessage.sender_role === ROLES.OSC ? ROLES.CONTADOR : newMessage.osc_name, // Define 'to'
   };
 };
+
+// --- NOVA FUNÇÃO PARA O DASHBOARD DO CONTADOR ---
+
+/**
+ * Conta o número de mensagens NÃO LIDAS destinadas a um Contador.
+ * (Assume coluna 'read_status' BOOLEAN/TINYINT onde false/0 = não lida)
+ * @param {number} contadorId - O ID do utilizador (Contador).
+ * @returns {Promise<number>} O número de mensagens não lidas.
+ */
+export const countUnreadByContadorId = async (contadorId) => { // <-- Função incluída e exportada
+  const query = `
+    SELECT COUNT(*) as count
+    FROM messages
+    WHERE contador_id = ?
+      AND sender_role = ? 
+      AND read_status = false 
+  `; // read_status = false pode precisar ser 0
+  try {
+    const [rows] = await pool.execute(query, [contadorId, ROLES.OSC]);
+    return rows[0].count;
+  } catch (error) {
+    console.error('Erro em countUnreadByContadorId:', error);
+    if (error.code === 'ER_BAD_FIELD_ERROR' && error.sqlMessage.includes('read_status')) {
+        console.warn("[Aviso] A coluna 'read_status' parece não existir na tabela 'messages'. Execute a migração correspondente.");
+        return 0; 
+    }
+    throw new Error('Erro ao contar mensagens não lidas.');
+  }
+};
+
+// (Futuramente, adicione aqui funções como markAsRead, etc.)

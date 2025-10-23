@@ -19,7 +19,7 @@ INSERT IGNORE INTO `users` (
 ) VALUES (
     'Administrador',
     'admin@email.com',
-    '$2a$10$mE.q.C.F.A.p.e.K.e.m.i.w.U.T.o.o.j.Y.y.H.O.o.q.Z.J.S.C.w.u', -- Hash para "123456"
+    '$2b$10$6LHWreZKAgQuA.XpZlR8A.o7WT.PiQYtrpVPDN2EkHbuuPPazg9wK', -- Hash para "123456"
     'Adm',
     'Ativo'
 );
