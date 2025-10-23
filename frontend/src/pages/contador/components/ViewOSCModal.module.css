@@ -1,0 +1,59 @@
+/* src/pages/contador/components/ViewOSCModal.module.css */
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr)); /* 1 coluna por padrão */
+  gap: 1.5rem 2rem; /* gap-y-6 gap-x-8 */
+  color: #374151; /* text-gray-700 */
+}
+
+/* 2 colunas em telas médias */
+@media (min-width: 768px) {
+  .detailsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .span2 {
+    grid-column: span 2 / span 2;
+  }
+}
+
+.fieldLabel {
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+  color: #6b7280; /* text-gray-500 */
+  display: block;
+  margin-bottom: 0.125rem;
+}
+
+.fieldValue {
+  color: #111827; /* text-gray-900 */
+  word-break: break-word; /* Quebra texto longo */
+}
+
+/* Estilos copiados do OSCListView.module.css para o Badge */
+.statusBadge {
+  position: relative;
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+}
+
+.statusBg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  border-radius: 9999px;
+}
+
+.statusBadgeActive { color: #059669; }
+.statusBadgeActive .statusBg { background-color: #a7f3d0; }
+
+.statusBadgeInactive { color: #b91c1c; }
+.statusBadgeInactive .statusBg { background-color: #fecaca; }
+
+.statusText {
+    position: relative;
+}

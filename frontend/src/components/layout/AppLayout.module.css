@@ -1,0 +1,33 @@
+/* src/components/layout/AppLayout.module.css */
+
+.layoutContainer {
+  display: flex; /* <-- ESSENCIAL: Coloca Sidebar e Main lado a lado */
+  height: 100vh; /* Ocupa a altura total */
+  background-color: #f3f4f6; /* bg-gray-100 - Fundo da área de conteúdo */
+}
+
+.mainContent {
+  flex: 1 1 0%; /* flex-1: Faz ocupar o espaço restante */
+  display: flex;
+  flex-direction: column; /* Empilha Header e Page Content */
+  overflow-y: auto; /* Permite scroll vertical APENAS no conteúdo principal */
+  position: relative; /* Contexto para outros elementos, se necessário */
+}
+
+.headerContainer {
+  flex-shrink: 0; /* Impede que o header encolha */
+  position: sticky; /* Opcional: Faz o header ficar fixo no topo ao rolar */
+  top: 0;
+  z-index: 10; /* Garante que fica acima do conteúdo */
+  /* O estilo (bg-white, shadow) vem do componente Header específico */
+}
+
+.navigationContainer { /* Para as abas da OSC */
+    flex-shrink: 0;
+    /* O estilo (bg-white, border) vem do componente OSCNavigationTabs */
+}
+
+.pageContent {
+  flex: 1 1 0%; /* flex-1: Faz ocupar o espaço restante abaixo do header/nav */
+  /* O padding (p-8) deve ser aplicado DENTRO das páginas individuais */
+}

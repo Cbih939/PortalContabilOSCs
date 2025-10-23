@@ -1,0 +1,48 @@
+/* src/components/layout/Sidebar.module.css */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* <-- ADICIONE ESTA LINHA */
+  transition-property: width;
+  transition-duration: 300ms;
+  transition-timing-function: ease-in-out;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.sidebarOpen {
+  width: 16rem; /* w-64 */
+}
+
+.sidebarClosed {
+  width: 0;
+}
+
+.innerContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  /* overflow: hidden; */ /* Removido daqui, colocado no container principal */
+}
+
+.logoContainer {
+  padding: 1.5rem; /* p-6 */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* border-gray-700 (aproximado) */
+  white-space: nowrap; /* Impede quebra */
+}
+
+.navContainer {
+  flex: 1 1 0%; /* flex-1 */
+  padding: 1rem; /* p-4 */
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* space-y-2 */
+  overflow-y: auto; /* Permite scroll se os links não couberem */
+}
+
+.footerContainer {
+  padding: 1rem; /* p-4 */
+  border-top: 1px solid rgba(255, 255, 255, 0.1); /* border-gray-700 */
+  white-space: nowrap; /* Impede quebra */
+}

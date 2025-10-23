@@ -1,0 +1,105 @@
+/* src/pages/contador/components/DocumentListView.module.css */
+
+.pageContainer {
+  padding: 2rem; /* p-8 */
+}
+
+.title {
+  font-size: 1.875rem; /* text-3xl */
+  font-weight: 700; /* font-bold */
+  color: #1f2937; /* text-gray-800 */
+  margin-bottom: 1.5rem; /* mb-6 */
+}
+
+.filtersContainer {
+  margin-bottom: 1.5rem; /* mb-6 */
+  background-color: white;
+  padding: 1rem; /* p-4 */
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+}
+
+.filtersGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr)); /* 1 coluna por padrão */
+  gap: 1rem; /* gap-4 */
+}
+
+/* 2 colunas em telas médias */
+@media (min-width: 768px) {
+  .filtersGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Ajuste para input de data (se necessário) */
+.dateInput {
+    /* Garante que o padding interno do Input.jsx funcione bem */
+    /* padding-top: 0.75rem;
+    padding-bottom: 0.75rem; */
+}
+
+
+.tableContainer {
+  background-color: white;
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow-x: auto; /* Permite scroll horizontal */
+}
+
+.table {
+  min-width: 100%; /* min-w-full */
+  line-height: 1.25; /* leading-normal (aproximado) */
+}
+
+.table th {
+  padding: 0.75rem 1.25rem; /* px-5 py-3 */
+  border-bottom: 2px solid #e5e7eb; /* border-b-2 */
+  background-color: #f9fafb; /* bg-gray-100 */
+  text-align: left;
+  font-size: 0.75rem; /* text-xs */
+  font-weight: 600; /* font-semibold */
+  color: #4b5563; /* text-gray-600 */
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 1.25rem 1.25rem; /* px-5 py-5 */
+  border-bottom: 1px solid #e5e7eb; /* border-b border-gray-200 */
+  font-size: 0.875rem; /* text-sm */
+  color: #111827; /* text-gray-900 */
+  white-space: nowrap;
+}
+ .table tr:hover td { /* hover:bg-gray-50 */
+    background-color: #f9fafb;
+}
+
+.fileNameCell {
+  /* Opcional: permitir quebra ou adicionar ellipsis se nome for longo */
+  /* white-space: normal; */
+  /* max-width: 300px; */
+  /* overflow: hidden; */
+  /* text-overflow: ellipsis; */
+}
+
+.actionsContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* space-x-2 */
+}
+
+/* Botões de ação reutilizados de OSCListView.module.css */
+.actionButton {
+  background: none; border: none; padding: 0.25rem; border-radius: 9999px; cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.actionButton svg { height: 1rem; width: 1rem; display: block; }
+.viewButton { color: #2563eb; }
+.viewButton:hover { color: #1d4ed8; background-color: #dbeafe; }
+.printButton { color: #4b5563; } /* Cinza */
+.printButton:hover { color: #1f2937; background-color: #f3f4f6; } /* hover:text-gray-900 hover:bg-gray-100 */
+
+.emptyRow td {
+    padding: 2.5rem 1.25rem; text-align: center; color: #6b7280; white-space: normal;
+}

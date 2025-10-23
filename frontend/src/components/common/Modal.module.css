@@ -1,0 +1,92 @@
+/* src/components/common/Modal.module.css */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6); /* bg-black bg-opacity-60 */
+  z-index: 50; /* z-50 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem; /* p-4 */
+  opacity: 0; /* Começa invisível para animação */
+  transition: opacity 0.3s ease; /* transition-opacity duration-300 */
+}
+
+/* Estilo para quando o modal está aberto */
+.overlayOpen {
+  opacity: 1;
+}
+
+.modalPanel {
+  background-color: white;
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); /* shadow-xl */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh; /* Altura máxima */
+  transform: scale(0.95); /* Começa ligeiramente pequeno */
+  transition: transform 0.3s ease;
+}
+
+/* Estilo para quando o modal está aberto */
+.modalPanelOpen {
+  transform: scale(1);
+}
+
+/* Tamanhos (max-width) */
+.sm { max-width: 24rem; /* max-w-sm */ }
+.md { max-width: 28rem; /* max-w-md */ }
+.lg { max-width: 42rem; /* max-w-2xl */ }
+.xl { max-width: 56rem; /* max-w-4xl */ }
+._2xl { max-width: 72rem; /* max-w-6xl */ } /* Usa _2xl porque '2xl' não é nome de classe válido */
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem; /* p-5 */
+  border-bottom: 1px solid #e5e7eb; /* border-b border-gray-200 */
+}
+
+.modalTitle {
+  font-size: 1.25rem; /* text-xl */
+  font-weight: 600; /* font-semibold */
+  color: #1f2937; /* text-gray-800 */
+}
+
+.closeButton {
+  color: #9ca3af; /* text-gray-400 */
+  background: none;
+  border: none;
+  padding: 0.25rem; /* p-1 */
+  border-radius: 9999px; /* rounded-full */
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+.closeButton:hover {
+  color: #374151; /* hover:text-gray-700 */
+  background-color: #f3f4f6; /* hover:bg-gray-100 */
+}
+.closeButton svg { /* Estilo para o ícone XIcon */
+    height: 1.5rem; /* h-6 */
+    width: 1.5rem; /* w-6 */
+}
+
+.modalBody {
+  overflow-y: auto;
+  padding: 1.5rem; /* p-6 */
+  flex: 1 1 0%; /* flex-1 */
+}
+
+.modalFooter {
+  padding: 1rem; /* p-4 */
+  border-top: 1px solid #e5e7eb; /* border-t border-gray-200 */
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem; /* space-x-3 */
+  background-color: #f9fafb; /* bg-gray-50 */
+  border-bottom-left-radius: 0.5rem; /* rounded-b-lg */
+  border-bottom-right-radius: 0.5rem;
+}

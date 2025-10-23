@@ -1,0 +1,41 @@
+/* src/pages/osc/components/OSCNavigationTabs.module.css */
+
+.tabsContainer {
+  background-color: white; /* Fundo branco */
+  border-bottom: 1px solid #e5e7eb; /* border-b border-gray-200 */
+  /* Sombra leve para destacar (opcional) */
+  /* box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); */
+  padding: 0 2rem; /* Adiciona padding lateral igual ao das páginas (p-8) */
+}
+
+.nav {
+  display: flex;
+  gap: 2rem; /* space-x-8 */
+  /* '-mb-px' Puxa os links ligeiramente para baixo para sobrepor a borda do container */
+  margin-bottom: -1px;
+}
+
+.tabLink {
+  /* Estilos base do link */
+  padding-top: 1rem; /* py-4 */
+  padding-bottom: 1rem;
+  padding-left: 0.25rem; /* px-1 */
+  padding-right: 0.25rem;
+  border-bottom: 2px solid transparent; /* border-b-2 border-transparent */
+  font-weight: 500; /* font-medium */
+  font-size: 0.875rem; /* text-sm */
+  color: #6b7280; /* text-gray-500 */
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.tabLink:hover {
+  color: #4b5563; /* hover:text-gray-700 */
+  border-bottom-color: #d1d5db; /* hover:border-gray-300 */
+}
+
+.tabLink.active {
+  color: #3b82f6; /* text-blue-600 */
+  border-bottom-color: #3b82f6; /* border-blue-500 */
+}

@@ -1,0 +1,108 @@
+/* src/components/common/Button.module.css */
+
+.buttonBase {
+  display: inline-flex; /* Use inline-flex para alinhar ícones e texto */
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border-radius: 0.5rem; /* rounded-lg */
+  border: 1px solid transparent; /* Adiciona borda para consistência */
+  cursor: pointer;
+  outline: none; /* Remove outline padrão */
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  white-space: nowrap; /* Impede que o texto quebre */
+}
+
+/* Efeito Hover (pode ser refinado) */
+.buttonBase:hover:not(:disabled) {
+  transform: scale(1.03);
+}
+
+/* Efeito Focus (anel de foco) */
+.buttonBase:focus-visible {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4); /* Anel azul similar ao ring */
+}
+
+/* Estado Desabilitado */
+.buttonBase:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none; /* Remove hover scale */
+}
+
+/* --- Variantes de Cor --- */
+.primary {
+  background-color: #3b82f6; /* Azul */
+  color: white;
+  border-color: #3b82f6;
+}
+.primary:hover:not(:disabled) {
+  background-color: #2563eb; /* Azul mais escuro */
+  border-color: #2563eb;
+}
+
+.secondary {
+  background-color: #e5e7eb; /* Cinza claro */
+  color: #1f2937; /* Cinza escuro */
+  border-color: #d1d5db; /* Borda cinza */
+}
+.secondary:hover:not(:disabled) {
+  background-color: #d1d5db; /* Cinza médio */
+}
+
+.danger {
+  background-color: #ef4444; /* Vermelho */
+  color: white;
+  border-color: #ef4444;
+}
+.danger:hover:not(:disabled) {
+  background-color: #dc2626; /* Vermelho mais escuro */
+  border-color: #dc2626;
+}
+
+.ghost {
+  background-color: transparent;
+  color: #374151; /* Cinza */
+  border-color: transparent;
+}
+.ghost:hover:not(:disabled) {
+  background-color: #f3f4f6; /* Cinza muito claro */
+}
+
+/* --- Variantes de Cor ADICIONAIS --- */
+.success { /* Para o botão OSC */
+  background-color: #22c55e; /* Verde */
+  color: white;
+  border-color: #22c55e;
+}
+.success:hover:not(:disabled) {
+  background-color: #16a34a; /* Verde mais escuro */
+  border-color: #16a34a;
+}
+
+.dark { /* Para o botão Admin */
+  background-color: #374151; /* Cinza escuro */
+  color: white;
+  border-color: #374151;
+}
+.dark:hover:not(:disabled) {
+  background-color: #1f2937; /* Cinza mais escuro */
+  border-color: #1f2937;
+}
+
+/* --- Tamanhos --- */
+.sm {
+  padding: 0.25rem 0.75rem; /* py-1 px-3 */
+  font-size: 0.875rem; /* text-sm */
+}
+
+.md {
+  padding: 0.5rem 1rem; /* py-2 px-4 */
+  font-size: 1rem; /* text-base (padrão) */
+}
+
+.lg {
+  padding: 0.75rem 1.5rem; /* py-3 px-6 */
+  font-size: 1.125rem; /* text-lg */
+}
+

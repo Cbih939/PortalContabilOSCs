@@ -1,0 +1,87 @@
+/* src/components/common/Input.module.css */
+
+.container {
+  width: 100%;
+  position: relative; /* Necessário para posicionar o ícone */
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+  color: #374151; /* text-gray-700 */
+  margin-bottom: 0.25rem; /* mb-1 */
+}
+
+.inputWrapper {
+  position: relative; /* Container para input e ícone */
+}
+
+.inputBase {
+  display: block;
+  width: 100%;
+  padding: 0.75rem; /* p-3 */
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+  color: #111827; /* text-gray-900 */
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  appearance: none; /* Remove estilos padrão do browser */
+  background-color: white; /* Garante fundo branco */
+}
+
+/* Estilo padrão (sem erro) */
+.inputDefault {
+  border-color: #d1d5db; /* border-gray-300 */
+}
+.inputDefault:focus {
+  outline: none;
+  border-color: #3b82f6; /* focus:ring-blue-500 (cor da borda) */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); /* focus:ring-2 (sombra azul clara) */
+}
+
+/* Estilo de erro */
+.inputError {
+  border-color: #ef4444; /* border-red-500 */
+}
+.inputError:focus {
+  outline: none;
+  border-color: #ef4444; /* focus:ring-red-500 (cor da borda) */
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3); /* focus:ring-2 (sombra vermelha clara) */
+}
+
+/* Padding esquerdo quando há ícone */
+.inputWithIcon {
+  padding-left: 2.5rem; /* pl-10 */
+}
+
+/* Estilo para input desabilitado */
+.inputBase:disabled {
+  background-color: #f3f4f6; /* disabled:bg-gray-100 */
+  color: #6b7280; /* disabled:text-gray-500 */
+  cursor: not-allowed;
+  border-color: #e5e7eb;
+}
+
+.iconContainer {
+  position: absolute;
+  inset: 0; /* Ocupa toda a altura */
+  left: 0;
+  display: flex;
+  align-items: center;
+  padding-left: 0.75rem; /* pl-3 */
+  pointer-events: none; /* Permite clicar no input "atrás" do ícone */
+}
+
+.icon {
+  height: 1.25rem; /* h-5 */
+  width: 1.25rem; /* w-5 */
+  color: #9ca3af; /* text-gray-400 */
+}
+
+.errorMessage {
+  margin-top: 0.25rem; /* mt-1 */
+  font-size: 0.875rem; /* text-sm */
+  color: #dc2626; /* text-red-600 */
+}

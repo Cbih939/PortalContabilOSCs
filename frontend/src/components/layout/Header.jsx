@@ -1,22 +1,12 @@
 // src/components/layout/Header.jsx
-
 import React from 'react';
+import styles from './Header.module.css'; // Importa CSS Module
 
-/**
- * Um 'molde' de cabeçalho genérico e reutilizável.
- */
 export default function Header({ leftContent, rightContent }) {
   return (
-    <header className="bg-white shadow-sm p-4 flex justify-between items-center z-10">
-      {/* --- Lado Esquerdo --- */}
-      <div className="flex items-center">
-        {leftContent}
-      </div>
-
-      {/* --- Lado Direito --- */}
-      <div className="flex items-center space-x-4">
-        {rightContent}
-      </div>
+    <header className={styles.header}>
+      <div className={styles.leftContainer}>{leftContent}</div>
+      <div className={styles.rightContainer}>{rightContent}</div>
     </header>
   );
 }

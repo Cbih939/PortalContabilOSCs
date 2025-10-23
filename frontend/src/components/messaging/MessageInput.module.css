@@ -1,0 +1,54 @@
+/* src/components/messaging/MessageInput.module.css */
+
+.formContainer {
+  padding: 1rem; /* p-4 */
+  border-top: 1px solid #e5e7eb; /* border-t bg-white (fundo é padrão) */
+  background-color: white;
+}
+
+.inputGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* space-x-3 */
+}
+
+.textInput {
+  flex: 1 1 0%; /* flex-1 */
+  padding: 0.75rem 1rem; /* p-3 (ajustado ligeiramente para altura) */
+  border: 1px solid #d1d5db; /* border border-gray-300 */
+  border-radius: 9999px; /* rounded-full */
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.textInput:focus {
+  border-color: #3b82f6; /* focus:ring-blue-500 (cor da borda) */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); /* focus:ring-2 */
+}
+
+.sendButton {
+  background-color: #3b82f6; /* bg-blue-600 */
+  color: white;
+  padding: 0.75rem; /* p-3 */
+  border-radius: 9999px; /* rounded-full */
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.sendButton:hover:not(:disabled) {
+  background-color: #2563eb; /* hover:bg-blue-700 */
+}
+
+.sendButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sendButton svg {
+  height: 1.25rem; /* h-5 */
+  width: 1.25rem; /* w-5 */
+}

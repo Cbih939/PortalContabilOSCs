@@ -1,0 +1,40 @@
+/* src/pages/contador/components/DocumentViewModal.module.css */
+
+.modalTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* Espaço entre ícone e nome */
+}
+.titleIcon {
+    height: 1.25rem; width: 1.25rem; flex-shrink: 0;
+}
+
+.modalBody {
+    /* O conteúdo padrão (p-6) do Modal.jsx já dá espaçamento */
+    min-height: 40vh; /* Altura mínima para simular visualização */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centraliza conteúdo de simulação */
+    justify-content: center; /* Centraliza conteúdo de simulação */
+    color: #6b7280; /* text-gray-500 */
+    background-color: #f9fafb; /* bg-gray-50 (opcional) */
+    border-radius: 0.25rem;
+}
+
+.detailsBox {
+    margin-top: 2rem; /* mt-8 */
+    padding: 1rem; /* p-4 */
+    border: 1px solid #e5e7eb; /* border */
+    border-radius: 0.5rem; /* rounded-lg */
+    background-color: #f9fafb; /* bg-gray-50 */
+    text-align: left; /* Alinha texto à esquerda */
+    width: 100%;
+    max-width: 400px;
+    color: #374151; /* Cor de texto mais escura */
+}
+.detailsBox p + p {
+    margin-top: 0.25rem;
+}
+.detailsBox strong {
+    font-weight: 600;
+}

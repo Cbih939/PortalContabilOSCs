@@ -1,0 +1,70 @@
+/* src/pages/osc/components/OSCHeader.module.css */
+
+.rightContentContainer {
+  display: flex;
+  align-items: center; /* Mantém alinhamento vertical */
+  gap: 0.75rem; /* Reduz ligeiramente o espaço entre itens (era 1rem) */
+}
+
+.alertButton {
+  position: relative;
+  color: #6b7280; /* Cor padrão cinza */
+  background: none;
+  border: none;
+  padding: 0.25rem; /* Reduzido ligeiramente o padding para aproximar o badge */
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+  display: flex; /* Adicionado para garantir alinhamento interno */
+  align-items: center; /* Adicionado para garantir alinhamento interno */
+}
+
+.alertButton:hover {
+  /* Pode ajustar a cor hover se necessário, talvez um vermelho mais claro? */
+  color: #dc2626; /* Cor vermelha no hover */
+  background-color: #fee2e2; /* Fundo vermelho claro no hover */
+}
+
+.alertIcon {
+  height: 1.25rem; /* h-5 (reduzido ligeiramente) */
+  width: 1.25rem; /* w-5 (reduzido ligeiramente) */
+  display: block;
+  /* Aplica cor vermelha diretamente ao ícone para simular preenchimento */
+  color: #ef4444; /* text-red-500 */
+  /* Se fosse SVG inline, poderíamos usar fill: #ef4444; */
+}
+
+.alertBadge {
+  position: absolute;
+  top: -0.4rem;   /* Ajustado para subir um pouco mais */
+  right: -0.4rem; /* Ajustado para aproximar um pouco mais */
+  display: flex;
+  height: 1.1rem; /* Reduzido ligeiramente */
+  width: 1.1rem;  /* Reduzido ligeiramente */
+  min-width: 1.1rem; /* Garante tamanho mínimo se o número for grande */
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background-color: #ef4444; /* bg-red-500 */
+  font-size: 0.7rem; /* Reduzido ligeiramente */
+  line-height: 1; /* Garante que o número fica centrado */
+  color: white;
+  font-weight: bold;
+  /* border: 1px solid white; */ /* Removida ou reduzida a borda branca */
+  padding: 1px; /* Pequeno padding interno */
+}
+
+.welcomeText {
+  color: #4b5563;
+  display: none;
+  /* Adiciona alinhamento vertical explícito */
+  vertical-align: middle;
+  line-height: 1.5rem; /* Altura de linha igual ao ícone/botão */
+}
+
+/* Mostra o texto de boas-vindas em telas maiores (sm:block) */
+@media (min-width: 640px) {
+  .welcomeText {
+    display: inline;
+  }
+}

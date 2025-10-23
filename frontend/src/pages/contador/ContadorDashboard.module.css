@@ -1,0 +1,187 @@
+/* src/pages/contador/ContadorDashboard.module.css */
+
+.pageContainer {
+  padding: 2rem; /* p-8 */
+}
+
+.title {
+  font-size: 1.875rem; /* text-3xl */
+  font-weight: 700; /* font-bold */
+  color: #1f2937; /* text-gray-800 */
+  margin-bottom: 1.5rem; /* mb-6 */
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr)); /* 1 coluna por padrão */
+  gap: 1.5rem; /* gap-6 */
+  margin-bottom: 2rem; /* mb-8 */
+}
+
+/* 2 colunas em telas médias */
+@media (min-width: 768px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* 3 colunas em telas grandes */
+@media (min-width: 1024px) {
+  .statsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.statCard {
+  background-color: white;
+  padding: 1.5rem; /* p-6 */
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* space-x-4 */
+}
+
+.statIconContainer {
+  padding: 0.75rem; /* p-3 */
+  border-radius: 9999px; /* rounded-full */
+}
+/* Cores específicas para os ícones */
+.iconBlue { background-color: #dbeafe; /* bg-blue-100 */ color: #3b82f6; /* text-blue-600 */ }
+.iconYellow { background-color: #fef3c7; /* bg-yellow-100 */ color: #ca8a04; /* text-yellow-600 */ }
+.iconGreen { background-color: #dcfce7; /* bg-green-100 */ color: #16a34a; /* text-green-600 */ }
+
+.statIcon {
+  height: 1.5rem; /* h-6 */
+  width: 1.5rem; /* w-6 */
+  display: block;
+}
+
+.statLabel {
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+  color: #6b7280; /* text-gray-500 */
+}
+
+.statValue {
+  font-size: 1.875rem; /* text-3xl */
+  font-weight: 700; /* font-bold */
+  color: #111827; /* text-gray-900 */
+}
+
+/* Grid Principal (Ações + Atividades) */
+.mainGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 2rem; /* gap-8 */
+}
+/* 3 colunas em telas grandes, 1 para Ações, 2 para Atividades */
+@media (min-width: 1024px) {
+  .mainGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .actionsColumn {
+    grid-column: span 1 / span 1; /* lg:col-span-1 */
+  }
+  .activityColumn {
+    grid-column: span 2 / span 2; /* lg:col-span-2 */
+  }
+}
+
+.sectionCard {
+  background-color: white;
+  padding: 1.5rem; /* p-6 */
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.sectionTitle {
+  font-size: 1.25rem; /* text-xl */
+  font-weight: 600; /* font-semibold */
+  color: #374151; /* text-gray-700 */
+  margin-bottom: 1rem; /* mb-4 */
+}
+
+.quickLinksContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* space-y-3 */
+}
+
+.quickLink {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem; /* p-3 */
+  border-radius: 0.5rem; /* rounded-lg */
+  color: #374151; /* text-gray-700 */
+  font-weight: 500; /* font-medium */
+  background-color: #f9fafb; /* bg-gray-50 */
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+.quickLink:hover {
+  background-color: #f3f4f6; /* hover:bg-gray-100 */
+}
+
+.quickLinkIcon {
+  height: 1.25rem; /* h-5 */
+  width: 1.25rem; /* w-5 */
+  margin-right: 0.75rem; /* mr-3 */
+  flex-shrink: 0;
+}
+/* Cores específicas para ícones dos links */
+.iconLinkBlue { color: #3b82f6; }
+.iconLinkYellow { color: #ca8a04; }
+.iconLinkGreen { color: #16a34a; }
+.iconLinkRed { color: #ef4444; }
+
+.activityFeedContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* space-y-4 */
+}
+
+.activityItem {
+  display: flex;
+  align-items: flex-start; /* Alinha ícone com topo do texto */
+  padding-bottom: 1rem; /* pb-4 (ou use gap no container) */
+  border-bottom: 1px solid #f3f4f6; /* border-b border-gray-100 */
+}
+.activityItem:last-child {
+  border-bottom: none; /* last:border-b-0 */
+}
+
+.activityIconContainer {
+  flex-shrink: 0;
+  padding-top: 0.25rem; /* pt-1 */
+  color: #6b7280; /* text-gray-500 */
+  margin-right: 0.75rem; /* ml-3 (aplicado no div pai no original) */
+}
+
+.activityIcon {
+    height: 1.25rem; /* h-5 */
+    width: 1.25rem; /* w-5 */
+}
+
+.activityText {
+  flex: 1 1 0%; /* flex-1 */
+  font-size: 0.875rem; /* text-sm */
+  color: #1f2937; /* text-gray-800 */
+}
+.activityText strong { /* Nome da OSC */
+    font-weight: 700; /* font-bold */
+}
+.activityText i { /* Conteúdo da mensagem/ficheiro */
+    font-style: italic;
+}
+
+.activityTimestamp {
+  font-size: 0.75rem; /* text-xs */
+  color: #6b7280; /* text-gray-500 */
+  margin-top: 0.25rem; /* mt-1 */
+}
+
+.emptyText {
+    text-align: center;
+    color: #6b7280;
+    padding-top: 1rem;
+}

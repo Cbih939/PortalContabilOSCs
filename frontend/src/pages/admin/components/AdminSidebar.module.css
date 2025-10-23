@@ -1,0 +1,41 @@
+/* src/pages/admin/components/AdminSidebar.module.css */
+
+/* Cor de fundo específica (cinza mais escuro) */
+.sidebar {
+    background-color: #111827; /* bg-gray-900 */
+    color: white;
+}
+
+.logoTitle {
+  font-size: 1.5rem; /* text-2xl */
+  font-weight: 700; /* font-bold */
+}
+
+/* Reutiliza estilos de link e ícone do ContadorSidebar.module.css */
+/* Poderíamos criar um CSS Module comum para links de sidebar no futuro */
+.sidebarLink {
+  width: 100%; text-align: left; display: flex; align-items: center;
+  padding: 0.75rem; border-radius: 0.5rem; white-space: nowrap;
+  color: #d1d5db; text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.sidebarLink:hover { background-color: #374151; color: white; } /* bg-gray-700 */
+
+/* Estilo ativo pode ser diferente (ex: indigo) */
+.sidebarLinkActive {
+  background-color: #4f46e5; /* bg-indigo-600 */
+  color: white; font-weight: 600;
+}
+.sidebarLinkActive:hover { background-color: #4338ca; } /* Indigo mais escuro */
+
+.linkIcon { height: 1.25rem; width: 1.25rem; flex-shrink: 0; margin-right: 0.75rem; }
+
+/* Botão Logout (reutilizado) */
+.logoutButton {
+  width: 100%; text-align: left; display: flex; align-items: center;
+  padding: 0.75rem; border-radius: 0.5rem; white-space: nowrap;
+  color: #d1d5db; background: none; border: none; cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.logoutButton:hover { background-color: #dc2626; color: white; }
+.logoutIcon { height: 1.25rem; width: 1.25rem; flex-shrink: 0; margin-right: 0.75rem; }

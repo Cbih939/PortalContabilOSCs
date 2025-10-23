@@ -1,0 +1,150 @@
+/* src/pages/contador/components/OSCListView.module.css */
+
+.pageContainer {
+  padding: 2rem; /* p-8 */
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem; /* mb-6 */
+}
+
+.title {
+  font-size: 1.875rem; /* text-3xl */
+  font-weight: 700; /* font-bold */
+  color: #1f2937; /* text-gray-800 */
+}
+
+/* Estilos para o botão "Cadastrar Nova OSC" (usa o componente Button) */
+.createButton {
+  /* Pode adicionar margens específicas se necessário */
+}
+
+.filtersContainer {
+  margin-bottom: 1.5rem; /* mb-6 */
+  background-color: white;
+  padding: 1rem; /* p-4 */
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+}
+
+.filtersGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr)); /* 1 coluna por padrão */
+  gap: 1rem; /* gap-4 */
+}
+
+/* 3 colunas em telas médias */
+@media (min-width: 768px) {
+  .filtersGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.tableContainer {
+  background-color: white;
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow-x: auto; /* Permite scroll horizontal em telas pequenas */
+}
+
+.table {
+  min-width: 100%; /* min-w-full */
+  line-height: 1.25; /* leading-normal (aproximado) */
+}
+
+.table th {
+  padding: 0.75rem 1.25rem; /* px-5 py-3 */
+  border-bottom: 2px solid #e5e7eb; /* border-b-2 */
+  background-color: #f9fafb; /* bg-gray-100 */
+  text-align: left;
+  font-size: 0.75rem; /* text-xs */
+  font-weight: 600; /* font-semibold */
+  color: #4b5563; /* text-gray-600 */
+  text-transform: uppercase;
+}
+
+.table td {
+  padding: 1.25rem 1.25rem; /* px-5 py-5 */
+  border-bottom: 1px solid #e5e7eb; /* border-b border-gray-200 */
+  font-size: 0.875rem; /* text-sm */
+  color: #111827; /* text-gray-900 */
+  white-space: nowrap; /* whitespace-no-wrap */
+}
+
+.table tr:hover td { /* hover:bg-gray-50 */
+    background-color: #f9fafb;
+}
+
+.statusBadge {
+  position: relative;
+  display: inline-block;
+  padding: 0.25rem 0.75rem; /* px-3 py-1 */
+  font-weight: 600; /* font-semibold */
+  line-height: 1.25; /* leading-tight */
+  border-radius: 9999px; /* rounded-full */
+  font-size: 0.75rem; /* text-xs */
+}
+
+.statusBadge span { /* O pseudo-elemento :before/:after seria melhor, mas span é mais simples */
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  border-radius: 9999px;
+}
+
+.statusBadgeActive {
+  color: #059669; /* text-green-900 */
+}
+.statusBadgeActive span {
+  background-color: #a7f3d0; /* bg-green-200 */
+}
+
+.statusBadgeInactive {
+  color: #b91c1c; /* text-red-900 */
+}
+.statusBadgeInactive span {
+  background-color: #fecaca; /* bg-red-200 */
+}
+
+.statusText { /* O texto visível dentro do badge */
+    position: relative; /* Para ficar acima do span de fundo */
+}
+
+.actionsContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* space-x-2 */
+}
+
+.actionButton {
+  background: none;
+  border: none;
+  padding: 0.25rem; /* p-1 */
+  border-radius: 9999px; /* rounded-full */
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.actionButton svg {
+  height: 1rem; /* h-4 */
+  width: 1rem; /* w-4 */
+  display: block;
+}
+
+.viewButton { color: #2563eb; /* text-blue-600 */ }
+.viewButton:hover { color: #1d4ed8; /* hover:text-blue-900 */ background-color: #dbeafe; /* hover:bg-blue-100 */ }
+
+.editButton { color: #ca8a04; /* text-yellow-600 */ }
+.editButton:hover { color: #854d0e; /* hover:text-yellow-900 */ background-color: #fef9c3; /* hover:bg-yellow-100 */ }
+
+.alertButton { color: #dc2626; /* text-red-600 */ }
+.alertButton:hover { color: #991b1b; /* hover:text-red-900 */ background-color: #fee2e2; /* hover:bg-red-100 */ }
+
+.emptyRow td {
+    padding: 2.5rem 1.25rem; /* py-10 px-5 */
+    text-align: center;
+    color: #6b7280; /* text-gray-500 */
+    white-space: normal;
+}

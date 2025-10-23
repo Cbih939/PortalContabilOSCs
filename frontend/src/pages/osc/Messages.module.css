@@ -1,0 +1,24 @@
+/* src/pages/osc/Messages.module.css */
+
+.pageContainer {
+  padding: 2rem; /* p-8 */
+}
+
+.chatWrapper {
+  /* Calcula altura: 100vh - altura do header - altura das abas - padding da página * 2 */
+  /* Ajuste o valor '160px' conforme necessário para a altura combinada do header+abas */
+  height: calc(100vh - 160px);
+  background-color: white;
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+  display: flex; /* Para o Spinner centralizar, se necessário */
+  flex-direction: column;
+  overflow: hidden; /* Garante que o ChatWindow não vaze */
+}
+
+.loadingContainer {
+  flex: 1; /* Ocupa espaço disponível */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

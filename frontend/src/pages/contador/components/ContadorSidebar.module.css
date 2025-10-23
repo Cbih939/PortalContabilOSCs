@@ -1,0 +1,72 @@
+/* src/pages/contador/components/ContadorSidebar.module.css */
+
+/* Cor de fundo específica desta sidebar */
+.sidebar {
+    background-color: #1f2937; /* bg-gray-800 */
+    color: white;
+}
+
+.logoTitle {
+  font-size: 1.5rem; /* text-2xl */
+  font-weight: 700; /* font-bold */
+}
+
+.sidebarLink {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem; /* p-3 */
+  border-radius: 0.5rem; /* rounded-lg */
+  white-space: nowrap;
+  color: #d1d5db; /* Cor padrão do texto do link (cinza claro) */
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sidebarLink:hover {
+  background-color: #374151; /* hover:bg-gray-700 */
+  color: white;
+}
+
+.sidebarLinkActive {
+  background-color: #3b82f6; /* bg-blue-600 */
+  color: white;
+  font-weight: 600; /* font-semibold */
+}
+.sidebarLinkActive:hover {
+    background-color: #2563eb; /* Azul mais escuro no hover ativo */
+}
+
+.linkIcon {
+  height: 1.25rem; /* h-5 */
+  width: 1.25rem; /* w-5 */
+  flex-shrink: 0;
+  margin-right: 0.75rem; /* ml-3 */
+}
+
+.logoutButton {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem; /* p-3 */
+  border-radius: 0.5rem;
+  white-space: nowrap;
+  color: #d1d5db;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.logoutButton:hover {
+  background-color: #dc2626; /* hover:bg-red-700 (vermelho mais escuro) */
+  color: white;
+}
+.logoutIcon {
+    height: 1.25rem; /* h-5 */
+    width: 1.25rem; /* w-5 */
+    flex-shrink: 0;
+    margin-right: 0.75rem; /* ml-3 */
+}

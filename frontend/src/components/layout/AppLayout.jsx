@@ -2,33 +2,35 @@
 
 import React from 'react';
 import { Outlet } from 'react-router-dom';
+import styles from './AppLayout.module.css'; // <-- Importa o CSS Module
 
-/**
- * O layout principal para seções autenticadas da aplicação.
- * Cria a estrutura de "Sidebar + Área de Conteúdo (Header + Página)".
- */
-export default function AppLayout({ sidebarComponent, headerComponent }) {
+export default function AppLayout({
+  sidebarComponent,
+  headerComponent,
+  navigationComponent,
+}) {
   return (
-    // Container Flex principal que ocupa toda a altura da tela
-    <div className="flex h-screen bg-gray-100">
-      
-      {/* Renderiza a Sidebar (se fornecida) */}
-      {sidebarComponent}
+    // Aplica a classe flex container principal
+    <div className={styles.layoutContainer}>
+      {sidebarComponent} {/* A Sidebar já tem seus próprios estilos */}
 
-      {/* Área de Conteúdo Principal */}
-      {/* 'flex-1' faz ocupar o espaço restante */}
-      {/* 'flex flex-col' para empilhar Header e Conteúdo */}
-      {/* 'overflow-y-auto' permite scroll vertical apenas nesta área */}
-      <main className="flex-1 flex flex-col overflow-y-auto">
-        
-        {/* Renderiza o Header (obrigatório) */}
-        {/* 'flex-shrink-0' impede que o Header encolha */}
-        <div className="flex-shrink-0">{headerComponent}</div>
+      {/* Aplica a classe flex-1 e flex-col à <main> */}
+      <main className={styles.mainContent}>
 
-        {/* Conteúdo da Página Atual */}
-        {/* 'flex-1' faz esta div crescer para preencher o espaço */}
-        <div className="flex-1">
-          {/* O React Router renderiza a página atual aqui */}
+        {/* Container para o Header */}
+        <div className={styles.headerContainer}>
+          {headerComponent}
+        </div>
+
+        {/* Container para Navegação (se existir) */}
+        {navigationComponent && (
+          <div className={styles.navigationContainer}>
+            {navigationComponent}
+          </div>
+        )}
+
+        {/* Container para o conteúdo da página */}
+        <div className={styles.pageContent}>
           <Outlet />
         </div>
 

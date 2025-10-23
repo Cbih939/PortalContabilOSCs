@@ -1,0 +1,95 @@
+/* src/pages/admin/ManageOSCs.module.css */
+
+.pageContainer {
+  padding: 2rem; /* p-8 */
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem; /* mb-6 */
+}
+
+.title {
+  font-size: 1.875rem; /* text-3xl */
+  font-weight: 700; /* font-bold */
+  color: #1f2937; /* text-gray-800 */
+}
+
+/* Estilo para botão "Associar OSC" (usa Button.jsx) */
+.assignButton {
+  /* Ajustes finos se necessário */
+}
+.assignButton svg {
+  height: 1.25rem; /* h-5 */
+  width: 1.25rem; /* w-5 */
+  margin-right: 0.5rem; /* mr-2 */
+}
+
+.filtersContainer {
+  margin-bottom: 1.5rem; /* mb-6 */
+  background-color: white;
+  padding: 1rem; /* p-4 */
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+}
+
+.filtersGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr)); /* 1 coluna */
+  gap: 1rem; /* gap-4 */
+}
+/* 3 colunas em telas médias */
+@media (min-width: 768px) {
+  .filtersGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Estilos da tabela (reutilizados de OSCListView.module.css) */
+.tableContainer {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow-x: auto;
+}
+
+.table { min-width: 100%; line-height: 1.25; }
+
+.table th {
+  padding: 0.75rem 1.25rem; border-bottom: 2px solid #e5e7eb; background-color: #f9fafb;
+  text-align: left; font-size: 0.75rem; font-weight: 600; color: #4b5563;
+  text-transform: uppercase; white-space: nowrap;
+}
+
+.table td {
+  padding: 1.25rem 1.25rem; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;
+  color: #111827; white-space: nowrap;
+}
+.table tr:hover td { background-color: #f9fafb; }
+
+.contadorNameNone { /* Estilo para "Nenhum" */
+    color: #6b7280; /* text-gray-500 */
+    font-style: italic;
+}
+
+/* Badge de Status (reutilizado) */
+.statusBadge { position: relative; display: inline-block; padding: 0.25rem 0.75rem; font-weight: 600; line-height: 1.25; border-radius: 9999px; font-size: 0.75rem; }
+.statusBadge span { position: absolute; inset: 0; opacity: 0.5; border-radius: 9999px; }
+.statusBadgeActive { color: #059669; }
+.statusBadgeActive span { background-color: #a7f3d0; }
+.statusBadgeInactive { color: #b91c1c; }
+.statusBadgeInactive span { background-color: #fecaca; }
+.statusText { position: relative; }
+
+/* Ações (reutilizado) */
+.actionsContainer { display: flex; align-items: center; gap: 0.5rem; }
+.actionButton { background: none; border: none; padding: 0.25rem; border-radius: 9999px; cursor: pointer; transition: background-color 0.2s ease, color 0.2s ease; }
+.actionButton svg { height: 1rem; width: 1rem; display: block; }
+.viewButton { color: #2563eb; }
+.viewButton:hover { color: #1d4ed8; background-color: #dbeafe; }
+.assignButtonAction { color: #ca8a04; } /* Botão de Associar/Editar */
+.assignButtonAction:hover { color: #854d0e; background-color: #fef9c3; }
+
+.emptyRow td { padding: 2.5rem 1.25rem; text-align: center; color: #6b7280; white-space: normal; }

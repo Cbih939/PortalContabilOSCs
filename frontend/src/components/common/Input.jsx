@@ -1,12 +1,11 @@
 // src/components/common/Input.jsx
 
 import React from 'react';
-import { clsx } from 'clsx';
-// Assume que Icons.jsx existirá em './Icons.jsx'
-// import { SearchIcon } from './Icons.jsx'; // Exemplo de importação
+// import { clsx } from 'clsx'; // Não mais necessário
+import styles from './Input.module.css'; // Importa o CSS Module
 
 /**
- * Componente de Input reutilizável com suporte a label, ícone e erro.
+ * Componente de Input reutilizável (usando CSS Modules).
  */
 export default function Input({
   label,
@@ -14,49 +13,48 @@ export default function Input({
   name,
   icon: IconComponent,
   error,
-  className,
-  inputClassName,
+  className = '', // Para o container principal (div externa)
+  inputClassName = '', // Para classes extras no próprio <input>
   ...props
 }) {
-  const baseInputStyles =
-    'block w-full p-3 border rounded-lg shadow-sm text-gray-900 transition-colors duration-200 focus:outline-none focus:ring-2 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed';
 
-  const errorStyles = error
-    ? 'border-red-500 focus:ring-red-500'
-    : 'border-gray-300 focus:ring-blue-500';
-
-  const iconPaddingStyles = IconComponent ? 'pl-10' : 'pl-3';
+  // Determina as classes CSS para o elemento <input>
+  const inputClasses = `
+    ${styles.inputBase}
+    ${error ? styles.inputError : styles.inputDefault}
+    ${IconComponent ? styles.inputWithIcon : ''}
+    ${inputClassName}
+  `.trim();
 
   return (
-    <div className={clsx('w-full', className)}>
+    // Aplica a classe do container e a classe extra opcional
+    <div className={`${styles.container} ${className}`}>
       {label && (
-        <label
-          htmlFor={id || name}
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+        <label htmlFor={id || name} className={styles.label}>
           {label}
         </label>
       )}
-      <div className="relative">
+
+      {/* Wrapper para input e ícone */}
+      <div className={styles.inputWrapper}>
         {IconComponent && (
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <IconComponent className="h-5 w-5 text-gray-400" />
+          <div className={styles.iconContainer}>
+            {/* Aplica a classe de estilo ao ícone */}
+            <IconComponent className={styles.icon} />
           </div>
         )}
+
+        {/* O Input */}
         <input
           id={id}
           name={name}
-          className={clsx(
-            baseInputStyles,
-            errorStyles,
-            iconPaddingStyles,
-            inputClassName
-          )}
+          className={inputClasses} // Aplica as classes combinadas
           {...props}
         />
       </div>
+
       {error && (
-        <p className="mt-1 text-sm text-red-600" id={`${id || name}-error`}>
+        <p className={styles.errorMessage} id={`${id || name}-error`}>
           {error}
         </p>
       )}

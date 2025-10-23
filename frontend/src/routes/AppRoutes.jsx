@@ -1,6 +1,6 @@
 // src/routes/AppRoutes.jsx
 
-import React, { useState } from 'react'; // <--- IMPORT useState AQUI ---
+import React, { useState } from 'react'; // Import useState
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 // Hooks e Constantes
@@ -18,12 +18,13 @@ import ProtectedRoute from './ProtectedRoute.jsx';
 import LoginPage from '../pages/Login.jsx';
 import NotFoundPage from '../pages/NotFound.jsx';
 
-// Páginas do Admin (Placeholders)
+// Páginas e Componentes do Admin (Reais)
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import ManageUsers from '../pages/admin/ManageUsers.jsx';
 import ManageOSCs from '../pages/admin/ManageOSCs.jsx';
-const AdminSidebar = () => <div className="w-64 bg-gray-900 text-white p-5">Admin Sidebar</div>; // Placeholder Mantido
-const AdminHeader = () => <div className="bg-white p-4 shadow">Admin Header</div>; // Placeholder Mantido
+import AdminSidebar from '../pages/admin/components/AdminSidebar.jsx'; // Import Real
+import AdminHeader from '../pages/admin/components/AdminHeader.jsx';   // Import Real
+// --- PLACEHOLDERS DO ADMIN REMOVIDOS ---
 
 // Páginas e Componentes do Contador (Reais)
 import ContadorDashboard from '../pages/contador/ContadorDashboard.jsx';
@@ -32,23 +33,22 @@ import DocumentsPage from '../pages/contador/Documents.jsx';
 import NoticesPage from '../pages/contador/Notices.jsx';
 import ContadorMessagesPage from '../pages/contador/Messages.jsx';
 import ContadorProfilePage from '../pages/contador/Profile.jsx';
-import ContadorSidebar from '../pages/contador/components/ContadorSidebar.jsx'; // Import Real
-import ContadorHeader from '../pages/contador/components/ContadorHeader.jsx';   // Import Real
-// --- PLACEHOLDERS DO CONTADOR REMOVIDOS ---
+import ContadorSidebar from '../pages/contador/components/ContadorSidebar.jsx';
+import ContadorHeader from '../pages/contador/components/ContadorHeader.jsx';
 
 // Páginas e Componentes da OSC (Reais)
 import OSCDashboard from '../pages/osc/OSCDashboard.jsx';
 import OSCDocumentsPage from '../pages/osc/Documents.jsx';
 import OSCMessagesPage from '../pages/osc/Messages.jsx';
 import OSCProfilePage from '../pages/osc/Profile.jsx';
-import OSCHeader from '../pages/osc/components/OSCHeader.jsx'; // Import Real
-// --- PLACEHOLDER DA OSC REMOVIDO ---
-
+import OSCHeader from '../pages/osc/components/OSCHeader.jsx';
+import OSCNavigationTabs from '../pages/osc/components/OSCNavigationTabs.jsx';
 
 /**
  * Componente "Redirecionador" (sem alterações)
  */
 function RootRedirect() {
+  // ... (código do RootRedirect) ...
   console.log('RootRedirect a renderizar');
   const { isAuthenticated, user } = useAuth();
 
@@ -72,11 +72,11 @@ function RootRedirect() {
 }
 
 /**
- * Componente Wrapper para o Layout do Contador
- * Isola o estado 'isSidebarOpen' aqui.
+ * Componente Wrapper para o Layout do Contador (sem alterações)
  */
 function ContadorLayoutWrapper() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Sidebar começa aberta
+  // ... (código do ContadorLayoutWrapper) ...
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   return (
@@ -84,7 +84,21 @@ function ContadorLayoutWrapper() {
       sidebarComponent={<ContadorSidebar isOpen={isSidebarOpen} />}
       headerComponent={<ContadorHeader onToggleSidebar={toggleSidebar} />}
     />
-    // O Outlet do AppLayout renderizará as rotas filhas aqui
+  );
+}
+
+/**
+ * Componente Wrapper para o Layout do Admin (NOVO)
+ */
+function AdminLayoutWrapper() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  return (
+    <AppLayout
+      sidebarComponent={<AdminSidebar isOpen={isSidebarOpen} />} // Usa componente Admin real
+      headerComponent={<AdminHeader onToggleSidebar={toggleSidebar} />} // Usa componente Admin real
+    />
   );
 }
 
@@ -107,27 +121,21 @@ export default function AppRoutes() {
 
         {/* --- Rotas Protegidas --- */}
 
-        {/* 1. Rotas do ADMIN */}
+        {/* 1. Rotas do ADMIN (Estrutura Corrigida com Wrapper) */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
-          <Route
-            element={
-              <AppLayout
-                sidebarComponent={<AdminSidebar />} // Usa placeholder Admin
-                headerComponent={<AdminHeader />}   // Usa placeholder Admin
-              />
-            }
-          >
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/usuarios" element={<ManageUsers />} />
-            <Route path="/admin/oscs" element={<ManageOSCs />} />
+          {/* Usa o Wrapper do Admin */}
+          <Route element={<AdminLayoutWrapper />}>
+              {/* Rotas filhas do Admin */}
+              <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/usuarios" element={<ManageUsers />} />
+              <Route path="/admin/oscs" element={<ManageOSCs />} />
           </Route>
         </Route>
 
-        {/* 2. Rotas do CONTADOR (Estrutura Corrigida com Wrapper) */}
+        {/* 2. Rotas do CONTADOR (Estrutura com Wrapper - sem alterações) */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.CONTADOR]} />}>
-          {/* O Wrapper agora é o elemento pai */}
           <Route element={<ContadorLayoutWrapper />}>
-              {/* As rotas filhas vêm aqui dentro */}
               <Route path="/contador" element={<Navigate to="/contador/dashboard" replace />} />
               <Route path="/contador/dashboard" element={<ContadorDashboard />} />
               <Route path="/contador/oscs" element={<OSCsPage />} />
@@ -143,7 +151,8 @@ export default function AppRoutes() {
           <Route
             element={
               <AppLayout
-                headerComponent={<OSCHeader />} // Usa componente OSC real
+                headerComponent={<OSCHeader />}
+                navigationComponent={<OSCNavigationTabs />}
               />
             }
           >

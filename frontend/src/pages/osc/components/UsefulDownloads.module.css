@@ -1,0 +1,62 @@
+/* src/pages/osc/components/UsefulDownloads.module.css */
+
+.card {
+  background-color: #f9fafb; /* bg-gray-50 */
+  padding: 1rem; /* p-4 */
+  border-radius: 0.5rem; /* rounded-lg */
+  border: 1px solid #e5e7eb; /* border */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.infoContainer {
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  height: 2.5rem; /* h-10 */
+  width: 2.5rem; /* w-10 */
+  color: #15803d; /* Cor verde para ícone Excel (text-green-700) */
+  flex-shrink: 0;
+  margin-right: 1rem; /* ml-4 (aplicado no div pai no original) */
+}
+
+.textContainer {
+  text-align: left;
+}
+
+.title {
+  font-weight: 600; /* font-semibold */
+  color: #1f2937; /* text-gray-800 */
+}
+
+.fileName {
+  font-size: 0.875rem; /* text-sm */
+  color: #6b7280; /* text-gray-500 */
+}
+
+/* Estilo para o botão de download (baseado no Button.module.css ghost + overrides) */
+.downloadButton {
+  background-color: #16a34a; /* bg-green-600 */
+  color: white;
+  padding: 0.5rem; /* p-2 */
+  border-radius: 9999px; /* rounded-full */
+  border: none;
+  display: inline-flex; /* Para alinhar o ícone */
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.downloadButton:hover {
+  background-color: #15803d; /* hover:bg-green-700 */
+  transform: scale(1.05);
+}
+
+.downloadButton svg {
+    height: 1.25rem; /* h-5 */
+    width: 1.25rem; /* w-5 */
+}

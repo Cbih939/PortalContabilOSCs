@@ -1,0 +1,34 @@
+/* src/pages/contador/Messages.module.css */
+
+.pageContainer {
+  display: flex;
+  height: 100%; /* Ocupa toda a altura disponível do AppLayout */
+}
+
+.contactListColumn {
+  width: 100%; /* Ocupa tudo em mobile */
+  height: 100%;
+}
+
+.chatWindowColumn {
+  flex: 1 1 0%;
+  height: 100%; /* GARANTA height: 100% */
+  display: flex; /* Pode ajudar a conter o filho */
+  flex-direction: column; /* Garante que o ChatWindow se estica verticalmente */
+  background-color: #f3f4f6;
+}
+
+/* Layout de 2 colunas em telas médias e maiores */
+@media (min-width: 768px) {
+  .contactListColumn {
+    width: 33.333333%; /* md:w-1/3 */
+    flex-shrink: 0; /* Impede que encolha */
+  }
+   /* Não precisa definir largura para chatWindowColumn, flex: 1 já faz isso */
+}
+
+
+.placeholderText {
+    color: #6b7280; /* text-gray-500 */
+    font-size: 1.125rem; /* text-lg */
+}

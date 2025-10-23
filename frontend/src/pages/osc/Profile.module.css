@@ -1,0 +1,98 @@
+/* src/pages/osc/Profile.module.css */
+
+.pageContainer {
+  padding: 2rem; /* p-8 */
+}
+
+.card {
+  background-color: white;
+  padding: 2rem; /* p-8 */
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+  max-width: 56rem; /* max-w-4xl */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem; /* mb-6 */
+  padding-bottom: 1rem; /* pb-4 */
+  border-bottom: 1px solid #e5e7eb; /* border-b */
+}
+
+.title {
+  font-size: 1.5rem; /* text-2xl */
+  font-weight: 600; /* font-semibold */
+  color: #374151; /* text-gray-700 */
+}
+
+/* --- Modo de Visualização --- */
+.viewGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr)); /* Padrão (1 coluna) */
+  gap: 1.5rem 2rem; /* gap-y-6 gap-x-8 */
+  color: #374151; /* text-gray-700 */
+}
+
+/* Em telas médias (md) e maiores */
+@media (min-width: 768px) {
+  .viewGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* md:grid-cols-2 */
+  }
+  .span2 {
+    grid-column: span 2 / span 2; /* md:col-span-2 */
+  }
+}
+
+.fieldLabel {
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+  color: #6b7280; /* text-gray-500 */
+  display: block; /* Para ficar acima do valor */
+  margin-bottom: 0.125rem;
+}
+
+.fieldValue {
+  /* Estilos para o valor, se necessário */
+}
+
+/* --- Modo de Edição (Formulário) --- */
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1.5rem; /* gap-6 */
+}
+
+@media (min-width: 768px) {
+  .formGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .span2Form {
+     grid-column: span 2 / span 2;
+  }
+}
+
+.formActions {
+  margin-top: 2rem; /* mt-8 */
+  padding-top: 1.5rem; /* pt-6 */
+  border-top: 1px solid #e5e7eb; /* border-t */
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem; /* space-x-3 */
+}
+
+/* Estilo para o Input dentro do formulário (se precisar de ajustes) */
+/* .formInput { ... } */
+
+.loadingContainer,
+.errorContainer {
+    padding: 2rem;
+    text-align: center;
+    color: #6b7280;
+}
+.errorContainer {
+    color: #dc2626; /* text-red-600 */
+}

@@ -1,0 +1,109 @@
+/* src/pages/admin/AdminDashboard.module.css */
+
+.pageContainer {
+  padding: 2rem; /* p-8 */
+}
+
+.title {
+  font-size: 1.875rem; /* text-3xl */
+  font-weight: 700; /* font-bold */
+  color: #1f2937; /* text-gray-800 */
+  margin-bottom: 1.5rem; /* mb-6 */
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr)); /* 1 coluna por padrão */
+  gap: 1.5rem; /* gap-6 */
+  margin-bottom: 2rem; /* mb-8 */
+}
+
+/* 2 colunas em telas médias */
+@media (min-width: 768px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* 3 colunas em telas grandes */
+@media (min-width: 1024px) {
+  .statsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Estilo do Card (Reutilizado do Contador, mas pode ser separado) */
+.statCard {
+  background-color: white;
+  padding: 1.5rem; /* p-6 */
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* space-x-4 */
+  text-decoration: none; /* Remove sublinhado de link */
+  color: inherit; /* Herda cor do texto */
+  transition: box-shadow 0.2s ease; /* transition-shadow */
+}
+.statCard:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); /* hover:shadow-lg */
+}
+
+
+.statIconContainer {
+  padding: 0.75rem; /* p-3 */
+  border-radius: 9999px; /* rounded-full */
+}
+/* Cores (Podem ser diferentes para o Admin) */
+.iconBlue { background-color: #dbeafe; color: #3b82f6; }
+.iconGreen { background-color: #dcfce7; color: #16a34a; }
+.iconYellow { background-color: #fef3c7; color: #ca8a04; }
+
+.statIcon {
+  height: 1.5rem; /* h-6 */
+  width: 1.5rem; /* w-6 */
+  display: block;
+}
+
+.statLabel {
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+  color: #6b7280; /* text-gray-500 */
+}
+
+.statValue {
+  font-size: 1.875rem; /* text-3xl */
+  font-weight: 700; /* font-bold */
+  color: #111827; /* text-gray-900 */
+}
+
+/* Card de Ações Rápidas */
+.actionsCard {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.actionsTitle {
+  font-size: 1.25rem; /* text-xl */
+  font-weight: 600; /* font-semibold */
+  color: #374151; /* text-gray-700 */
+  margin-bottom: 1rem; /* mb-4 */
+}
+
+.actionsContainer {
+  display: flex;
+  flex-wrap: wrap; /* Permite que os botões quebrem linha se necessário */
+  gap: 1rem; /* gap-4 */
+}
+
+/* Estilo para os botões de ação rápida (usará o Button.jsx) */
+.actionButton {
+    /* O componente Button cuidará da cor base e hover */
+    /* Podemos adicionar ícone aqui se necessário */
+}
+.actionButton svg {
+    height: 1.25rem; /* h-5 */
+    width: 1.25rem; /* w-5 */
+    margin-right: 0.5rem; /* mr-2 */
+}

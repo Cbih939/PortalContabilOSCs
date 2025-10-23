@@ -1,88 +1,50 @@
 // src/pages/contador/components/ContadorSidebar.jsx
-
-import React from 'react'; // Removido useState daqui, pois é gerido pelo Wrapper
+import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { clsx } from 'clsx';
-// Importa o molde genérico
+// import { clsx } from 'clsx'; // Não mais necessário para NavLink
 import Sidebar from '../../../components/layout/Sidebar.jsx';
-// Importa ícones e o hook de autenticação
-import {
-  BuildingIcon,
-  FolderIcon,
-  ChartIcon,
-  MegaphoneIcon,
-  MessageIcon,
-  ProfileIcon,
-  LogoutIcon,
-} from '../../../components/common/Icons.jsx';
+import { /* ... Ícones ... */ LogoutIcon, ChartIcon, BuildingIcon, FolderIcon, MegaphoneIcon, MessageIcon, ProfileIcon } from '../../../components/common/Icons.jsx';
 import { useAuth } from '../../../hooks/useAuth.jsx';
+import styles from './ContadorSidebar.module.css'; // Importa CSS Module específico
 
-// Componente auxiliar reutilizável para os links da Sidebar
+// Componente SidebarLink modificado para usar CSS Modules
 const SidebarLink = ({ to, icon: Icon, children }) => {
   return (
     <NavLink
       to={to}
-      // NavLink passa 'isActive' para a função className
+      // Usa a função para aplicar classe ativa
       className={({ isActive }) =>
-        clsx(
-          'w-full text-left flex items-center p-3 rounded-lg hover:bg-gray-700 whitespace-nowrap transition-colors duration-200',
-          isActive ? 'bg-blue-600 font-semibold' : '' // Estilo ativo
-        )
+        `${styles.sidebarLink} ${isActive ? styles.sidebarLinkActive : ''}`
       }
     >
-      <Icon className="h-5 w-5 flex-shrink-0" />
-      <span className="ml-3">{children}</span>
+      <Icon className={styles.linkIcon} />
+      <span>{children}</span>
     </NavLink>
   );
 };
 
+export default function ContadorSidebar({ isOpen }) {
+  const { logout } = useAuth();
+  const handleLogout = () => logout();
+  const logo = <h2 className={styles.logoTitle}>Contábil OSC</h2>;
 
-/**
- * Componente Sidebar específico para o painel do Contador.
- */
-export default function ContadorSidebar({ isOpen }) { // Recebe isOpen do ContadorLayoutWrapper
-  const { logout } = useAuth(); // Pega a função de logout
-
-  const handleLogout = () => {
-    logout();
-  };
-
-  // Define o logo/título
-  const logo = <h2 className="text-2xl font-bold">Contábil OSC</h2>;
-
-  // Define o rodapé com o botão de logout
   const footer = (
-    <button
-      onClick={handleLogout}
-      className="w-full text-left flex items-center p-3 rounded-lg hover:bg-red-700 hover:text-white transition-colors duration-200 text-gray-300"
-    >
-      <LogoutIcon className="h-5 w-5 flex-shrink-0" />
-      <span className="ml-3 whitespace-nowrap">Sair</span>
+    <button onClick={handleLogout} className={styles.logoutButton}>
+      <LogoutIcon className={styles.logoutIcon} />
+      <span>Sair</span>
     </button>
   );
 
   return (
-    // Renderiza o "molde" Sidebar
-    <Sidebar isOpen={isOpen} logo={logo} footer={footer} className="bg-gray-800">
-      {/* Links de Navegação (passados como children) */}
-      <SidebarLink to="/contador/dashboard" icon={ChartIcon}>
-        Dashboard
-      </SidebarLink>
-      <SidebarLink to="/contador/oscs" icon={BuildingIcon}>
-        Lista de OSCs
-      </SidebarLink>
-      <SidebarLink to="/contador/documentos" icon={FolderIcon}>
-        Documentos
-      </SidebarLink>
-      <SidebarLink to="/contador/avisos" icon={MegaphoneIcon}>
-        Canal de Avisos
-      </SidebarLink>
-      <SidebarLink to="/contador/mensagens" icon={MessageIcon}>
-        Mensagens
-      </SidebarLink>
-      <SidebarLink to="/contador/perfil" icon={ProfileIcon}>
-        Editar Perfil
-      </SidebarLink>
+    // Passa a classe de cor específica para o molde Sidebar
+    <Sidebar isOpen={isOpen} logo={logo} footer={footer} className={styles.sidebar}>
+      {/* Links de Navegação */}
+      <SidebarLink to="/contador/dashboard" icon={ChartIcon}>Dashboard</SidebarLink>
+      <SidebarLink to="/contador/oscs" icon={BuildingIcon}>Lista de OSCs</SidebarLink>
+      <SidebarLink to="/contador/documentos" icon={FolderIcon}>Documentos</SidebarLink>
+      <SidebarLink to="/contador/avisos" icon={MegaphoneIcon}>Canal de Avisos</SidebarLink>
+      <SidebarLink to="/contador/mensagens" icon={MessageIcon}>Mensagens</SidebarLink>
+      <SidebarLink to="/contador/perfil" icon={ProfileIcon}>Editar Perfil</SidebarLink>
     </Sidebar>
   );
 }

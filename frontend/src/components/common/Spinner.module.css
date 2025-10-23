@@ -1,0 +1,62 @@
+/* src/components/common/Spinner.module.css */
+
+.spinnerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  border-radius: 50%; /* rounded-full */
+  border-style: solid;
+  border-color: #3b82f6; /* border-blue-600 */
+  border-top-color: transparent; /* border-t-transparent */
+  animation: spin 1s linear infinite; /* animate-spin */
+}
+
+/* Animação de rotação */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Tamanhos */
+.sm {
+  width: 1rem; /* w-4 */
+  height: 1rem; /* h-4 */
+  border-width: 2px;
+}
+
+.md {
+  width: 2rem; /* w-8 */
+  height: 2rem; /* h-8 */
+  border-width: 4px;
+}
+
+.lg {
+  width: 4rem; /* w-16 */
+  height: 4rem; /* h-16 */
+  border-width: 4px;
+}
+
+.spinnerText {
+  margin-top: 0.5rem; /* mt-2 */
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+  color: #374151; /* text-gray-700 */
+}
+
+.fullscreenOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.75); /* bg-white bg-opacity-75 */
+  z-index: 50; /* z-50 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

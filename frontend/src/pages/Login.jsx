@@ -3,64 +3,58 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
-import { mockUsers } from '../utils/mockData.js'; // Importa os utilizadores mock
-import Button from '../components/common/Button.jsx'; // Importa o nosso componente Button
+import { mockUsers } from '../utils/mockData.js';
+import Button from '../components/common/Button.jsx'; // USA O NOVO BOTÃO
+import styles from './Login.module.css';
 
-/**
- * Página de Login (versão atualizada com botões mock estilizados).
- */
 export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();
 
-  // Handler para o login simulado
   const handleMockLogin = (mockUser) => {
     login(mockUser);
-    // O AppRoutes tratará do redirecionamento
   };
 
-  // Redireciona se já estiver autenticado
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
-  // Renderiza a UI (similar ao protótipo)
   return (
-    // Container do GuestLayout (centraliza)
-    // Card branco (do protótipo)
-    <div className="bg-white shadow-xl rounded-2xl p-10 max-w-md w-full text-center">
-      <h1 className="text-3xl font-bold text-gray-800 mb-2">
+    <div className={styles.loginCard}>
+      <h1 className={styles.title}>
         Portal Contábil OSCs
       </h1>
-      <p className="text-gray-500 mb-8">
+      <p className={styles.subtitle}>
         Selecione um perfil para simular o login.
       </p>
 
-      {/* Botões de Login Simulado */}
-      <div className="space-y-4">
+      <div className={styles.buttonContainer}>
+        {/* Usamos a prop 'variant' e 'className="w-full"' */}
         <Button
           onClick={() => handleMockLogin(mockUsers.osc)}
-          className="w-full bg-green-500 hover:bg-green-600 border-green-500 hover:border-green-600" // Classes Tailwind para verde
-          variant="primary" // Usa a base do primário, mas sobrepõe a cor
+          variant="success" // Usa a variante (azul por defeito)
+          className="w-full bg-green-500 hover:bg-green-600 border-green-500 hover:border-green-600" // Ainda precisa do override para verde
+          // TODO: Adicionar variante 'success' (verde) ao Button.module.css
         >
           Entrar como OSC
         </Button>
         <Button
           onClick={() => handleMockLogin(mockUsers.contador)}
-          className="w-full" // Azul padrão
-          variant="primary"
+          variant="primary" // Usa a variante azul
+          className="w-full" // Garante largura total (pode mover para CSS Module)
         >
           Entrar como Contador
         </Button>
         <Button
           onClick={() => handleMockLogin(mockUsers.adm)}
-          className="w-full bg-gray-700 hover:bg-gray-800 border-gray-700 hover:border-gray-800" // Classes Tailwind para cinza escuro
-          variant="primary" // Usa a base do primário, mas sobrepõe a cor
+          variant="dark" // Usa a variante cinza
+          className="w-full bg-gray-700 hover:bg-gray-800 border-gray-700 hover:border-gray-800 text-white" // Ainda precisa do override para cinza escuro + texto branco
+          // TODO: Adicionar variante 'dark' (cinza) ao Button.module.css
         >
           Entrar como Administrador
         </Button>
       </div>
 
-      <p className="text-xs text-gray-400 mt-10">
+      <p className={styles.disclaimer}>
         Este é um protótipo. A tela de login real terá campos de utilizador e
         senha.
       </p>

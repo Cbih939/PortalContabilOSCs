@@ -1,0 +1,19 @@
+/* src/components/layout/Header.module.css */
+.header {
+  background-color: white;
+  padding: 1rem; /* p-4 */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative; /* Para z-index */
+  z-index: 10;
+}
+
+/* Contêineres internos (opcional, mas bom para organização) */
+.leftContainer,
+.rightContainer {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* Controla espaçamento interno, pode ser ajustado por Header específico */
+}
