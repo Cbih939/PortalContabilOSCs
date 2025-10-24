@@ -12,9 +12,9 @@ import { hashPassword } from '../utils/bcrypt.utils.js';
  */
 export const getAllUsers = async (req, res) => {
   try {
-    // (A rota que chama este controlador deve ser protegida para ROLES.ADMIN)
-    
-    // Opcional: Receber filtros da query string (ex: /api/users?role=Contador)
+    // A verificação de Admin já é feita pelo middleware na rota
+
+    // Opcional: Receber filtros da query string
     const filters = req.query; // ex: { role: 'Contador', name: 'Carlos' }
 
     const users = await UserModel.findAll(filters);
@@ -40,6 +40,7 @@ export const getAllUsers = async (req, res) => {
  */
 export const getUserById = async (req, res) => {
   try {
+    // A verificação de Admin já é feita pelo middleware na rota
     const { id } = req.params;
     const user = await UserModel.findUserById(id);
 
@@ -65,6 +66,7 @@ export const getUserById = async (req, res) => {
  */
 export const createUser = async (req, res) => {
   try {
+    // A verificação de Admin já é feita pelo middleware na rota
     const { name, email, password, role } = req.body;
 
     // 1. Validação
@@ -73,7 +75,6 @@ export const createUser = async (req, res) => {
     }
 
     // 2. Validação do Perfil (Role)
-    //    (Este endpoint não deve criar OSCs, use o /api/oscs para isso)
     if (role === ROLES.OSC) {
       return res.status(400).json({ 
         message: 'Para criar uma OSC, utilize a rota POST /api/oscs.' 
@@ -98,6 +99,7 @@ export const createUser = async (req, res) => {
       email,
       password_hash: passwordHash,
       role: role,
+      status: 'Ativo' // Utilizadores criados pelo Admin começam Ativos
     };
 
     // 6. Cria o utilizador no banco
@@ -118,73 +120,93 @@ export const createUser = async (req, res) => {
 };
 
 /**
- * @desc    Atualiza um utilizador (Admin).
+ * @desc    Atualiza um utilizador.
  * @route   PUT /api/users/:id
- * @access  Privado (Admin)
- * @body    { name: string, email: string, role: string, status: 'Ativo' | 'Inativo' }
+ * @access  Privado (Admin OU o próprio utilizador)
+ * @body    { name?: string, email?: string, role?: string, status?: 'Ativo' | 'Inativo' }
  */
 export const updateUser = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, email, role, status } = req.body;
+    const { id: userIdToUpdate } = req.params; // ID do utilizador a ser atualizado (da URL)
+    const { id: loggedInUserId, role: loggedInUserRole } = req.user; // Quem está a pedir (do token)
     
-    // (O Admin não deve poder editar a sua própria 'role' ou 'status'
-    //  para evitar auto-lockout. O modelo deve tratar disso.)
-    if (Number(id) === req.user.id) {
-        if (req.body.role !== req.user.role || req.body.status === 'Inativo') {
-             return res.status(403).json({ message: 'Não pode alterar o seu próprio perfil (role) ou status.' });
+    // --- Verificação de Permissão ---
+    const isSelf = Number(userIdToUpdate) === Number(loggedInUserId);
+    const isAdmin = loggedInUserRole === ROLES.ADMIN;
+
+    // Se não for o próprio utilizador E não for um Admin
+    if (!isSelf && !isAdmin) { 
+      console.log(`[UpdateUser] Falha: Utilizador ${loggedInUserId} tentou editar ${userIdToUpdate}.`);
+      return res.status(403).json({ message: 'Acesso negado. Não pode editar este utilizador.' });
+    }
+    
+    const updateData = req.body;
+    
+    // --- Regras de Negócio ---
+    // O utilizador não pode mudar o seu próprio 'role' ou 'status'
+    if (isSelf) {
+        delete updateData.role;
+        delete updateData.status;
+        // Medida de segurança extra: não permitir que Admin se desative/mude perfil por esta rota
+        if (isAdmin && (updateData.role !== ROLES.ADMIN || updateData.status === 'Inativo')) {
+            delete updateData.role;
+            delete updateData.status;
+            console.warn(`[UpdateUser] Admin (ID: ${loggedInUserId}) tentou modificar o próprio role/status via API geral.`);
         }
     }
+    
+    // Não permitir atualização de senha por esta rota (deve ter rota própria)
+    delete updateData.password;
+    delete updateData.password_hash;
 
-    // (Não permitimos alterar a senha por aqui,
-    //  isso deve ser feito numa rota separada 'PATCH /api/users/:id/password')
-
-    const updateData = { name, email, role, status };
-
-    const updatedUser = await UserModel.updateUser(id, updateData);
+    // O modelo 'updateUser' lida com a atualização no DB
+    const updatedUser = await UserModel.updateUser(userIdToUpdate, updateData);
 
     if (!updatedUser) {
       return res.status(404).json({ message: 'Utilizador não encontrado.' });
     }
 
+    // Retorna o utilizador atualizado (sem o hash da senha)
     // eslint-disable-next-line no-unused-vars
     const { password_hash, ...safeUser } = updatedUser;
     res.status(200).json(safeUser);
     
   } catch (error) {
     console.error('Erro no controlador updateUser:', error);
-    if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({ message: 'Email já existe.' });
+    if (error.code === 'ER_DUP_ENTRY') { // Erro de email duplicado
+      return res.status(409).json({ 
+        message: 'Email já existe.', 
+        // Formato de erro para o frontend ler
+        errors: { email: 'Este email já está em uso por outra conta.' } 
+      });
     }
     res.status(500).json({ message: 'Erro interno do servidor.' });
   }
 };
 
 /**
- * @desc    Apaga um utilizador (Admin).
+ * @desc    Apaga um utilizador (Admin ou Contador).
  * @route   DELETE /api/users/:id
  * @access  Privado (Admin)
  */
 export const deleteUser = async (req, res) => {
   try {
-    const { id } = req.params;
+    // A verificação de Admin já é feita pelo middleware na rota
+    const { id: userIdToDelete } = req.params;
+    const { id: loggedInUserId } = req.user;
 
     // Medida de segurança: Não permitir que o Admin se apague a si mesmo
-    if (Number(id) === req.user.id) {
+    if (Number(userIdToDelete) === Number(loggedInUserId)) {
       return res.status(403).json({ message: 'Não pode apagar a sua própria conta.' });
     }
 
     // O modelo deve verificar se o utilizador existe
-    const success = await UserModel.deleteUser(id);
+    const success = await UserModel.deleteUser(userIdToDelete);
 
     if (!success) {
-      return res.status(404).json({ message: 'Utilizador não encontrado.' });
+      return res.status(404).json({ message: 'Utilizador não encontrado ou é uma OSC (use DELETE /api/oscs/:id).' });
     }
     
-    // NOTA: O modelo 'deleteUser' deve usar uma TRANSAÇÃO
-    // se precisar de apagar entidades associadas (ex: se apagar
-    // um utilizador OSC, deve apagar a OSC na tabela 'oscs' também).
-
     res.status(204).send(); // 204 No Content (sucesso, sem corpo)
   } catch (error) {
     console.error('Erro no controlador deleteUser:', error);

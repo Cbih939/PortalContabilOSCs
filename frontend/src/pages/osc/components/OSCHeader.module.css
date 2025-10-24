@@ -62,9 +62,17 @@
   line-height: 1.5rem; /* Altura de linha igual ao ícone/botão */
 }
 
+/* Estilo para o título à esquerda */
+.leftTitle {
+    font-size: 1.5rem; /* text-2xl */
+    font-weight: 700; /* font-bold */
+    color: #1f2937; /* text-gray-800 */
+}
+
 /* Mostra o texto de boas-vindas em telas maiores (sm:block) */
 @media (min-width: 640px) {
   .welcomeText {
     display: inline;
   }
 }
+

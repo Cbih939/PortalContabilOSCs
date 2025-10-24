@@ -1,0 +1,124 @@
+/* src/pages/contador/components/NotificationModal.module.css */
+
+/* Estilo para o título (opcional, pode vir do Modal.jsx) */
+.modalTitle {
+    font-size: 1.125rem; /* text-lg */
+    font-weight: 600; /* font-semibold */
+    color: #1f2937; /* text-gray-800 */
+}
+
+/* Estilo para o corpo do modal, permitindo scroll */
+.modalBody {
+    /* Remove padding padrão do Modal.jsx se ele existir */
+    margin: -1.5rem; /* Anula p-6 */
+    overflow-y: auto;
+    /* Define uma altura máxima para o conteúdo com scroll */
+    max-height: 70vh; /* Ajuste conforme necessário */
+}
+
+/* Estilo para a lista de notificações */
+.notificationsList {
+    list-style: none; /* Remove marcadores de lista */
+    padding: 0;
+    margin: 0;
+}
+
+/* Estilo para cada item da lista */
+.notificationItem {
+    padding: 1rem; /* p-4 */
+    transition: background-color 0.2s ease;
+    /* Adiciona borda inferior entre os itens */
+    border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
+}
+
+/* Remove a borda do último item */
+.notificationItem:last-child {
+    border-bottom: none;
+}
+
+.notificationItem:hover {
+    background-color: #f9fafb; /* hover:bg-gray-50 */
+}
+
+/* Container flex para alinhar ícone, texto e botão */
+.itemContent {
+    display: flex;
+    align-items: flex-start; /* Alinha itens no topo */
+    gap: 1rem; /* space-x-4 */
+}
+
+/* Container e estilo do ícone */
+.itemIconContainer {
+    padding-top: 0.25rem; /* pt-1 (alinha com a primeira linha de texto) */
+    color: #6b7280; /* text-gray-500 */
+    flex-shrink: 0; /* Impede que o ícone encolha */
+}
+.itemIcon {
+    height: 1.25rem; /* h-5 */
+    width: 1.25rem; /* w-5 */
+    display: block; /* Garante tamanho correto */
+}
+
+/* Container para o texto (ocupa espaço restante) */
+.itemTextContainer {
+    flex: 1 1 0%; /* flex-1 */
+    /* Garante que texto longo não empurre o botão para fora */
+    min-width: 0; /* Necessário para flex-1 funcionar com text-overflow */
+}
+
+/* Estilo do texto principal da notificação */
+.itemText {
+    font-size: 0.875rem; /* text-sm */
+    color: #374151; /* text-gray-700 */
+    word-break: break-word; /* Quebra palavras longas */
+}
+.itemText strong { /* Nome da OSC */
+    font-weight: 700; /* font-bold */
+}
+.itemText i { /* Conteúdo da mensagem/ficheiro */
+    font-style: italic;
+    /* Opcional: Truncar conteúdo longo */
+    /* display: inline-block; */
+    /* max-width: 90%; */ /* Ajuste conforme necessário */
+    /* white-space: nowrap; */
+    /* overflow: hidden; */
+    /* text-overflow: ellipsis; */
+}
+
+/* Estilo do timestamp */
+.itemTimestamp {
+    font-size: 0.75rem; /* text-xs */
+    color: #6b7280; /* text-gray-500 */
+    margin-top: 0.25rem; /* mt-1 */
+}
+
+/* Container do botão de ação */
+.itemActionContainer {
+    flex-shrink: 0; /* Impede que o botão encolha */
+    /* Alinha o botão verticalmente com o timestamp (aproximado) */
+    margin-top: 1.2rem;
+}
+
+/* Estilo para o botão "Verificar" */
+.checkButton {
+    background-color: #e0f2fe; /* bg-blue-100 */
+    color: #1e40af; /* text-blue-800 */
+    font-size: 0.75rem; /* text-xs */
+    font-weight: 700; /* font-bold */
+    padding: 0.25rem 0.75rem; /* py-1 px-3 */
+    border-radius: 9999px; /* rounded-full */
+    border: none;
+    cursor: pointer;
+    white-space: nowrap; /* Impede quebra de texto */
+    transition: background-color 0.2s ease;
+}
+.checkButton:hover {
+    background-color: #bfdbfe; /* hover:bg-blue-200 */
+}
+
+/* Estilo para mensagem quando não há notificações */
+.emptyText {
+    padding: 2rem; /* p-8 */
+    text-align: center;
+    color: #6b7280; /* text-gray-500 */
+}

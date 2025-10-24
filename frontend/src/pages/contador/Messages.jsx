@@ -1,105 +1,182 @@
 // src/pages/contador/Messages.jsx
 
-import React, { useState, useEffect } from 'react';
-// Componentes de Mensagens (já refatorados)
+import React, { useState, useEffect, useCallback } from 'react';
+// Componentes
 import ContactList from '../../components/messaging/ContactList.jsx';
 import ChatWindow from '../../components/messaging/ChatWindow.jsx';
-// Mocks e Constantes
-import { mockOSCs, mockMessages, mockUsers } from '../../utils/mockData.js';
+// Serviços API
+import * as oscService from '../../services/oscService.js';
+import * as messageService from '../../services/messageService.js';
+// Mocks e Constantes (Fallback)
+import { mockUsers } from '../../utils/mockData.js'; // Apenas para fallback
 import { ROLES } from '../../utils/constants.js';
 // Hooks e UI
 import { useAuth } from '../../hooks/useAuth.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
 import useApi from '../../hooks/useApi.jsx';
-// import * as messageService from '../../services/messageService.js'; // API real
+import { useNotification } from '../../contexts/NotificationContext.jsx';
 import styles from './Messages.module.css'; // Importa CSS Module da página
 
-// --- Mock API ---
-const mockSendMessageApi = (data) => new Promise(resolve => { /* ... */ });
-// ---
-
 /**
- * Página de Mensagens do Contador (CSS Modules).
+ * Página de Mensagens do Contador (Conectada à API).
  */
 export default function ContadorMessagesPage() {
-  // Usa fallback do mock se useAuth ainda não carregou (mas não deveria acontecer)
-  const { user = mockUsers.contador } = useAuth();
+  const { user } = useAuth(); // Pega utilizador logado
+  const currentUser = user || mockUsers.contador; // Usa fallback se user for null inicialmente
+  const addNotification = useNotification();
 
   // --- Estados ---
-  const [oscs, setOscs] = useState([]);
-  const [messages, setMessages] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [oscs, setOscs] = useState([]); // Lista de contatos (OSCs)
+  const [messages, setMessages] = useState([]); // Mensagens da conversa ATIVA
   const [selectedOsc, setSelectedOsc] = useState(null); // OSC selecionada
-  const { request: sendMessage, isLoading: isSending } = useApi(mockSendMessageApi);
+  const [isLoadingContacts, setIsLoadingContacts] = useState(true); // Loading inicial (lista de OSCs)
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false); // Loading para CADA conversa
+  const [errorLoading, setErrorLoading] = useState(null); // Erros de busca
 
-  // --- Efeito para buscar dados ---
+  // Hook para enviar mensagem
+  const { request: sendMessageRequest, isLoading: isSending } = useApi(messageService.sendMessage);
+
+  // --- Efeito para buscar a lista de OSCs (Contatos) ---
   useEffect(() => {
-    setIsLoading(true);
-    setTimeout(() => {
-      // API real: buscar OSCs associadas e todas as mensagens
-      setOscs(mockOSCs); // Mock: Assume que o contador vê todas as OSCs
-      setMessages(mockMessages);
-      setIsLoading(false);
-    }, 300);
-  }, []);
+    const fetchContacts = async () => {
+      setIsLoadingContacts(true);
+      setErrorLoading(null);
+      try {
+        const response = await oscService.getMyOSCs();
+        setOscs(response.data || []);
+      } catch (err) {
+        console.error("Erro ao buscar contatos (OSCs):", err);
+        const errorMsg = err.response?.data?.message || "Não foi possível carregar a lista de contatos.";
+        setErrorLoading(errorMsg);
+        addNotification("Erro ao carregar contatos.", "error");
+      } finally {
+        setIsLoadingContacts(false);
+      }
+    };
+    fetchContacts();
+  }, [addNotification]); // addNotification é estável, roda 1 vez
+
+  // --- Efeito para buscar o histórico da conversa SELECIONADA ---
+  const fetchHistory = useCallback(async (oscId, oscName) => { // Recebe nome para notificação
+      if (!oscId) return;
+      setIsLoadingMessages(true);
+      setErrorLoading(null);
+      setMessages([]);
+      try {
+        const response = await messageService.getMessagesHistory(oscId);
+        setMessages(response.data || []);
+      } catch (err) {
+        console.error(`Erro ao buscar histórico para OSC ${oscId}:`, err);
+        const errorMsg = err.response?.data?.message || `Não foi possível carregar as mensagens para ${oscName}.`;
+        setErrorLoading(errorMsg); // Mostra erro na área de chat
+        addNotification(`Erro ao carregar mensagens de ${oscName}.`, "error");
+      } finally {
+        setIsLoadingMessages(false);
+      }
+  }, [addNotification]); // Dependências estáveis
+
+  // Dispara a busca de histórico quando selectedOsc muda
+  useEffect(() => {
+    if (selectedOsc?.id) {
+        fetchHistory(selectedOsc.id, selectedOsc.name);
+    } else {
+        setMessages([]); // Limpa mensagens se nenhuma OSC estiver selecionada
+        setErrorLoading(null); // Limpa erro específico da conversa
+    }
+  }, [selectedOsc, fetchHistory]);
 
   // --- Handler Enviar Mensagem ---
   const handleSendMessage = async (text) => {
-    if (!selectedOsc) return;
-    const newMessage = { /* ... (lógica otimista como antes) ... */ };
-    setMessages((prev) => [...prev, newMessage]);
+    if (!selectedOsc || !currentUser) return; // Garante que user existe
+    const tempId = Date.now(); // ID Otimista
+    const newMessage = {
+        id: tempId,
+        from: currentUser.name, // Nome do contador logado
+        to: selectedOsc.name,
+        text,
+        date: new Date().toISOString(),
+        sender_role: ROLES.CONTADOR,
+    };
+    setMessages((prev) => [...prev, newMessage]); // Atualização otimista
     try {
-      await sendMessage({ toOscId: selectedOsc.id, text }); // Passa ID da OSC
+      await sendMessageRequest({ toOscId: selectedOsc.id, text });
+      // Sucesso! A API salvou. Poderia atualizar msg com ID real se necessário.
     } catch (err) {
-      setMessages((prev) => prev.filter(m => m.id !== newMessage.id));
+      // Reverte a atualização otimista em caso de erro
+      setMessages((prev) => prev.filter(m => m.id !== tempId));
       console.error('Falha ao enviar mensagem:', err);
+      // useApi já mostra notificação de erro vinda da API
+      addNotification("Falha ao enviar mensagem. Tente novamente.", "error"); // Feedback extra opcional
     }
   };
 
-  // Filtra mensagens da conversa selecionada
-  const filteredMessages = selectedOsc
-    ? messages.filter(
-        m => (m.from === selectedOsc.name && m.to === user.name) ||
-             (m.from === user.name && m.to === selectedOsc.name)
-      )
-    : [];
-
   // --- Renderização ---
-  if (isLoading) { // Spinner ocupa toda a área da página
+
+  // Loading inicial da lista de contatos
+  if (isLoadingContacts) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-        <Spinner text="Carregando mensagens..." />
+        <Spinner text="Carregando contatos..." />
       </div>
     );
   }
 
+  // Erro irrecuperável ao carregar contatos
+   if (errorLoading && !selectedOsc && oscs.length === 0) {
+       return <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>{errorLoading}</div>;
+   }
+
   return (
-    // Container Flex principal da página
+    // Container Flex principal da página (ocupa toda a altura disponível no AppLayout)
     <div className={styles.pageContainer}>
+
       {/* Coluna da Lista de Contatos */}
       <ContactList
         contacts={oscs}
         selectedContact={selectedOsc}
         onSelectContact={setSelectedOsc}
-        className={styles.contactListColumn} // Aplica classe de largura
+        className={styles.contactListColumn}
       />
 
-      {/* Coluna da Janela de Chat */}
+      {/* Coluna da Janela de Chat / Placeholder */}
       <div className={styles.chatWindowColumn}>
         {selectedOsc ? (
-          <ChatWindow
-            key={selectedOsc.id} // Força recriação ao mudar de OSC
-            otherParty={selectedOsc}
-            messages={filteredMessages}
-            user={user}
-            onSendMessage={handleSendMessage}
-            // className="h-full" // O container pai já define a altura
-          />
+          // --- Renderiza ChatWindow quando OSC está selecionada ---
+          isLoadingMessages ? ( // Mostra spinner enquanto carrega histórico
+            <Spinner text={`Carregando mensagens de ${selectedOsc.name}...`} />
+          ) : errorLoading ? ( // Mostra erro se falhar ao carregar histórico
+             <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>{errorLoading}</div>
+          ) : (
+            // Renderiza a janela de chat com os dados carregados
+            <ChatWindow
+              key={selectedOsc.id} // Força recriação ao mudar de OSC
+              otherParty={selectedOsc}
+              messages={messages}
+              user={currentUser} // Passa o utilizador logado (Contador)
+              onSendMessage={handleSendMessage}
+              // Passa estado de envio para desabilitar input (opcional)
+              // isSending={isSending}
+              className="w-full h-full" // Garante que ChatWindow ocupe o espaço
+            />
+          )
         ) : (
-          // Placeholder
-          <p className={styles.placeholderText}>
-            Selecione uma OSC para iniciar a conversa
-          </p>
+          // --- Renderiza Placeholder se NENHUMA OSC está selecionada ---
+          !errorLoading && ( // Só mostra placeholder se não houver erro geral
+            <div className={styles.placeholderContainer}>
+              {/* Logo Placeholder */}
+              <div className={styles.placeholderLogo}>
+                <span>Logo Contador</span>
+              </div>
+              {/* Mensagem */}
+              <p className={styles.placeholderText}>
+                Selecione uma OSC para iniciar a conversa
+              </p>
+            </div>
+          )
+        )}
+        {/* Mostra erro geral se houver e nenhuma OSC selecionada */}
+        {!selectedOsc && errorLoading && (
+             <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>{errorLoading}</div>
         )}
       </div>
     </div>

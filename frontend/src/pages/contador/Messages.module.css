@@ -12,10 +12,44 @@
 
 .chatWindowColumn {
   flex: 1 1 0%;
-  height: 100%; /* GARANTA height: 100% */
-  display: flex; /* Pode ajudar a conter o filho */
-  flex-direction: column; /* Garante que o ChatWindow se estica verticalmente */
-  background-color: #f3f4f6;
+  height: 100%;
+  display: flex; /* Mantém flex */
+  flex-direction: column; /* Mantém column */
+  /* Centraliza o CONTEÚDO (placeholder OU ChatWindow) */
+  align-items: center; /* Centraliza horizontalmente */
+  justify-content: center; /* Centraliza verticalmente */
+  background-color: #f3f4f6; /* bg-gray-100 */
+}
+
+/* NOVO: Container para o placeholder (logo + texto) */
+.placeholderContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    color: #6b7280; /* text-gray-500 */
+}
+
+/* NOVO: Estilo para a logo placeholder */
+.placeholderLogo {
+    width: 8rem; /* Ajuste o tamanho conforme necessário (w-32) */
+    height: 8rem; /* Ajuste o tamanho conforme necessário (h-32) */
+    background-color: #e5e7eb; /* Cor de fundo cinza */
+    border-radius: 50%; /* Faz ser um círculo */
+    margin-bottom: 1.5rem; /* mb-6 */
+    display: flex; /* Para centralizar texto interno se houver */
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    color: #4b5563;
+    /* Pode substituir por uma tag <img> real */
+}
+
+.placeholderText {
+    font-size: 1.125rem; /* text-lg */
+    /* Não precisa mais de centralização aqui, o container já faz */
 }
 
 /* Layout de 2 colunas em telas médias e maiores */

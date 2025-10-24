@@ -1,0 +1,116 @@
+/* src/pages/osc/components/AlertsModal.module.css */
+
+.modalTitle { /* Reutiliza estilo do DocumentViewModal */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.titleIcon {
+    height: 1.25rem; width: 1.25rem; flex-shrink: 0;
+    color: #f59e0b; /* text-yellow-500 */
+}
+
+.modalBody {
+    /* Remove padding padrão do Modal.jsx e adiciona fundo */
+    margin: -1.5rem; /* Anula p-6 */
+    padding: 1rem; /* p-4 */
+    background-color: #f9fafb; /* bg-gray-50 */
+    overflow-y: auto;
+    max-height: 70vh; /* Limita altura */
+}
+
+.sectionTitle {
+    font-size: 0.75rem; /* text-sm */
+    font-weight: 700; /* font-bold */
+    color: #6b7280; /* text-gray-500 */
+    text-transform: uppercase;
+    margin-bottom: 0.5rem; /* mb-2 */
+}
+
+.alertsList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem; /* space-y-3 */
+}
+
+/* Alerta Não Lido */
+.unreadAlert {
+  background-color: #fef3c7; /* bg-yellow-50 */
+  border-left: 4px solid #fcd34d; /* border-l-4 border-yellow-400 */
+  padding: 1rem; /* p-4 */
+  border-top-right-radius: 0.375rem; /* rounded-r-lg */
+  border-bottom-right-radius: 0.375rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+}
+
+.alertHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.alertContent {
+    flex: 1 1 0%;
+}
+
+.alertTitle {
+    font-weight: 700; /* font-bold */
+    color: #b45309; /* text-yellow-800 */
+}
+
+.alertMessage {
+    font-size: 0.875rem; /* text-sm */
+    color: #374151; /* text-gray-700 */
+    margin-top: 0.25rem; /* mt-1 */
+}
+
+.markReadButton {
+    font-size: 0.75rem; /* text-xs */
+    background-color: #fde68a; /* bg-yellow-200 */
+    color: #b45309; /* text-yellow-800 */
+    font-weight: 700; /* font-bold */
+    padding: 0.25rem 0.75rem; /* py-1 px-3 */
+    border-radius: 9999px; /* rounded-full */
+    white-space: nowrap;
+    margin-left: 1rem; /* ml-4 */
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.markReadButton:hover:not(:disabled) {
+    background-color: #fcd34d; /* hover:bg-yellow-300 */
+}
+.markReadButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+.alertTimestamp {
+    font-size: 0.75rem; /* text-xs */
+    color: #6b7280; /* text-gray-500 */
+    margin-top: 0.5rem; /* mt-2 */
+    text-align: right;
+}
+
+/* Alerta Lido */
+.readAlert {
+    background-color: white;
+    padding: 1rem; /* p-4 */
+    border-radius: 0.5rem; /* rounded-lg */
+    opacity: 0.7; /* opacity-70 */
+    border: 1px solid #e5e7eb; /* border */
+}
+.readAlert .alertTitle { color: #4b5563; /* text-gray-600 */ }
+.readAlert .alertMessage { color: #4b5563; }
+
+/* Secção 'Lidos' (espaçamento) */
+.readSection {
+    margin-top: 1.5rem; /* mt-6 */
+}
+
+.emptyText {
+    padding: 2rem; /* p-8 */
+    text-align: center;
+    color: #6b7280; /* text-gray-500 */
+}

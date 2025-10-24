@@ -1,105 +1,148 @@
 // backend/src/controllers/alert.controller.js
 
-// Importa o modelo que faz a interação direta com o banco de dados.
-// (Assumimos que 'alert.model.js' existirá em '../models/')
+// Importa os modelos
 import * as AlertModel from '../models/alert.model.js';
+import * as OscModel from '../models/osc.model.js'; // Para buscar nomes de OSC
+import * as UserModel from '../models/user.model.js'; // Para buscar nomes de OSC (via ID)
+import { ROLES } from '../utils/constants.js'; // Para comparar roles
 
 /**
  * @desc    Busca todos os alertas para a OSC logada.
  * @route   GET /api/alerts
- * @access  Privado (requer login de OSC)
+ * @access  Privado (OSC)
  */
 export const getMyAlerts = async (req, res) => {
   try {
-    // O 'req.user.id' é injetado pelo middleware de autenticação (JWT).
-    // Para um utilizador OSC, req.user.id será o ID da OSC.
     const oscId = req.user.id;
-
-    if (!oscId) {
-      // Este erro não deve acontecer se o middleware de 'role' estiver correto
-      return res.status(401).json({ message: 'Não autorizado.' });
+    if (req.user.role !== ROLES.OSC) {
+      return res.status(403).json({ message: 'Acesso negado.' });
     }
-
     const alerts = await AlertModel.findAlertsByOSCId(oscId);
-    
-    // Retorna os alertas (pode ser um array vazio)
     res.status(200).json(alerts);
   } catch (error) {
-    console.error('Erro no controlador ao buscar alertas:', error);
+    console.error('[GetMyAlerts] Erro no controlador:', error);
     res.status(500).json({ message: 'Erro interno do servidor ao buscar alertas.' });
   }
 };
 
 /**
- * @desc    Cria um novo alerta para uma OSC específica.
- * @route   POST /api/alerts
- * @access  Privado (requer login de Contador)
- * @body    { oscId: string, title: string, message: string }
+ * @desc    Cria um novo alerta/aviso para uma ou mais OSCs.
+ * @route   POST /api/alerts OU POST /api/notices
+ * @access  Privado (Contador)
+ * @body    { oscId: (number|null), title: string, message: string, type: string? } // Aceita oscId
  */
 export const createAlert = async (req, res) => {
   try {
-    const { oscId, title, message } = req.body;
+    // --- LOG DE DEBUG ---
+    console.log('[Create Alert] Corpo da Requisição Recebido:', req.body);
 
-    // O ID do *remetente* (o Contador) vem do token
-    const fromContadorId = req.user.id; 
+    // !! CORREÇÃO: Aceita oscId do frontend !!
+    const { oscId, title, message, type } = req.body;
+    const fromContadorId = req.user.id;
 
-    // Validação básica de entrada
-    if (!oscId || !title || !message) {
-      return res.status(400).json({ 
-        message: 'Dados inválidos. oscId, title, e message são obrigatórios.' 
+    // Validação básica
+    if (!title || !message) {
+      console.log('[Create Alert] Erro 400: Título ou Mensagem em falta.');
+      return res.status(400).json({
+        message: 'Título e mensagem são obrigatórios.'
       });
     }
+    // Verifica se oscId foi enviado (mesmo que seja null)
+    if (oscId === undefined) {
+         console.log('[Create Alert] Erro 400: Campo oscId (mesmo que null) é esperado.');
+         return res.status(400).json({ message: 'Campo oscId inválido ou em falta.' });
+    }
 
+    // Prepara dados para o modelo (usa osc_id com underscore)
     const newAlertData = {
-      oscId, // O ID da OSC que *receberá* o alerta
+      osc_id: oscId, // Converte para o nome da coluna no DB
       title,
       message,
-      // (Opcional) Podemos salvar quem enviou
-      created_by_contador_id: fromContadorId, 
+      // Define tipo (Urgente para /alerts, padrão para /notices)
+      type: type || (req.path.includes('/alerts') ? 'Urgente' : 'Informativo'),
+      created_by_contador_id: fromContadorId,
     };
+
+    // --- LOG DE DEBUG ---
+    console.log('[Create Alert] Dados a serem salvos:', newAlertData);
 
     const createdAlert = await AlertModel.createAlert(newAlertData);
 
-    // Retorna o novo alerta criado com o status 201 (Created)
-    res.status(201).json(createdAlert);
+     // --- LOG DE DEBUG ---
+     console.log('[Create Alert] Alerta criado com sucesso:', createdAlert);
+
+    res.status(201).json(createdAlert); // Retorna 201 Created
+
   } catch (error) {
-    console.error('Erro no controlador ao criar alerta:', error);
-    res.status(500).json({ message: 'Erro interno do servidor ao criar alerta.' });
+    // --- LOG DE DEBUG ---
+    console.error('[Create Alert] Erro INESPERADO:', error);
+    res.status(500).json({ message: 'Erro interno do servidor ao criar alerta/aviso.' });
   }
 };
 
 /**
  * @desc    Marca um alerta específico como lido.
  * @route   PATCH /api/alerts/:alertId/read
- * @access  Privado (requer login de OSC)
+ * @access  Privado (OSC)
  */
 export const markAsRead = async (req, res) => {
   try {
-    // O ID do alerta vem do parâmetro da URL (ex: /api/alerts/123/read)
     const { alertId } = req.params;
-    
-    // O ID da OSC logada (para garantir que ela só marque os *seus* alertas)
     const oscId = req.user.id;
 
     if (!alertId) {
       return res.status(400).json({ message: 'ID do alerta não fornecido.' });
     }
+    if (req.user.role !== ROLES.OSC) {
+        return res.status(403).json({ message: 'Acesso negado.' });
+    }
 
-    // O modelo deve verificar o alertId E o oscId por segurança
     const updatedAlert = await AlertModel.markAsRead(alertId, oscId);
 
     if (!updatedAlert) {
-      // Se o modelo retornar null/undefined, significa que o alerta
-      // não foi encontrado OU não pertencia a esta OSC.
-      return res.status(404).json({ 
-        message: 'Alerta não encontrado ou não pertence a este utilizador.' 
+      return res.status(404).json({
+        message: 'Alerta não encontrado, não pertence a este utilizador ou já estava lido.'
       });
     }
 
-    // Retorna o alerta atualizado (ou apenas status 204 No Content)
     res.status(200).json(updatedAlert);
   } catch (error) {
-    console.error('Erro no controlador ao marcar alerta como lido:', error);
+    console.error('[MarkAsRead] Erro no controlador:', error);
     res.status(500).json({ message: 'Erro interno do servidor ao atualizar alerta.' });
+  }
+};
+
+
+/**
+ * @desc    Busca o histórico de avisos enviados pelo Contador logado.
+ * @route   GET /api/notices/history
+ * @access  Privado (Contador)
+ */
+export const getSentNoticesHistory = async (req, res) => {
+  try {
+    const contadorId = req.user.id;
+    console.log(`[GetSentHistory] Buscando histórico para Contador ID: ${contadorId}`); // Log
+
+    const notices = await AlertModel.findNoticesBySenderId(contadorId);
+    console.log(`[GetSentHistory] Modelo retornou ${notices.length} avisos.`); // Log
+
+    // Enriquecer com nome da OSC
+    const enrichedNotices = await Promise.all(notices.map(async (notice) => {
+        let oscName = 'Todas as OSCs';
+        if (notice.osc_id) {
+            // Busca o nome na tabela 'users' usando o ID da OSC
+            // NOTA: OscModel.findById busca JOIN com users, mais eficiente
+            const osc = await OscModel.findById(notice.osc_id);
+            oscName = osc?.name || 'OSC Desconhecida';
+        }
+        return { ...notice, oscName }; // Adiciona oscName ao objeto
+    }));
+
+     console.log('[GetSentHistory] Retornando histórico enriquecido.'); // Log
+    res.status(200).json(enrichedNotices);
+
+  } catch (error) {
+    console.error('[GetSentHistory] Erro no controlador:', error);
+    res.status(500).json({ message: 'Erro interno do servidor ao buscar histórico de avisos.' });
   }
 };

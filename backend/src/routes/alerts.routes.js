@@ -1,53 +1,76 @@
-// backend/src/routes/alerts.routes.js
+// backend/src/routes/alert.routes.js
 
 import express from 'express';
-// Importa os middlewares de autenticação/autorização
+// Middlewares
 import { protect, checkRole } from '../middlewares/auth.middleware.js';
-// Importa as constantes de ROLES
+// Constantes
 import { ROLES } from '../utils/constants.js';
-// Importa os controladores de alerta
+// Controladores
 import {
   getMyAlerts,
-  createAlert,
+  createAlert, // Usado para POST /alerts e POST /notices
   markAsRead,
+  getSentNoticesHistory // Controlador para o histórico
 } from '../controllers/alert.controller.js';
+// (Validação pode ser adicionada aqui no futuro)
+// import { validate, createAlertRules } from '../middlewares/validator.middleware.js';
 
-// Cria o router do Express
+// Cria o router
 const router = express.Router();
 
-/* --- Definição das Rotas para /api/alerts --- */
+/* --- Rotas para /api/alerts (Principalmente para OSC) --- */
 
 // GET /api/alerts
 // Busca os alertas da OSC logada.
-// Acesso: Apenas OSCs autenticadas.
 router.get(
   '/',
-  protect, // 1º: Verifica se está autenticado
-  checkRole([ROLES.OSC]), // 2º: Verifica se é uma OSC
-  getMyAlerts // 3º: Executa o controlador
-);
-
-// POST /api/alerts
-// Cria um novo alerta (enviado por um Contador para uma OSC).
-// Acesso: Apenas Contadores autenticados.
-router.post(
-  '/',
-  protect, // 1º: Autenticação
-  checkRole([ROLES.CONTADOR]), // 2º: Autorização (Contador)
-  // (Validação do corpo da requisição seria adicionada aqui no futuro)
-  // validator.createAlertRules,
-  // validator.validate,
-  createAlert // 3º: Controlador
+  protect,
+  checkRole([ROLES.OSC]),
+  getMyAlerts
 );
 
 // PATCH /api/alerts/:alertId/read
 // Marca um alerta específico como lido (feito pela OSC).
-// Acesso: Apenas OSCs autenticadas.
 router.patch(
   '/:alertId/read',
-  protect, // 1º: Autenticação
-  checkRole([ROLES.OSC]), // 2º: Autorização (OSC)
-  markAsRead // 3º: Controlador
+  protect,
+  checkRole([ROLES.OSC]),
+  markAsRead
+);
+
+// POST /api/alerts
+// Cria um novo alerta de alta prioridade (enviado por um Contador para uma OSC).
+router.post(
+  '/',
+  protect,
+  checkRole([ROLES.CONTADOR]),
+  // createAlertRules, // Adicionar validação se necessário
+  // validate,
+  createAlert // Controlador para criar alerta/aviso
+);
+
+
+/* --- Rotas para /api/notices (Principalmente para Contador) --- */
+// (Usando o mesmo router e controlador de /alerts por simplicidade)
+
+// POST /api/notices
+// Cria um novo aviso geral (enviado por um Contador para uma ou todas as OSCs).
+router.post(
+  '/', // Note: a rota é POST /api/notices
+  protect,
+  checkRole([ROLES.CONTADOR]),
+  // createAlertRules, // Usar as mesmas regras ou regras específicas
+  // validate,
+  createAlert // Reutiliza o controlador createAlert
+);
+
+// GET /api/notices/history
+// Busca o histórico de avisos enviados pelo Contador logado.
+router.get(
+    '/history', // Rota completa será /api/notices/history
+    protect,
+    checkRole([ROLES.CONTADOR]),
+    getSentNoticesHistory // Chama o controlador do histórico
 );
 
 // Exporta o router para ser usado no 'routes/index.js'
