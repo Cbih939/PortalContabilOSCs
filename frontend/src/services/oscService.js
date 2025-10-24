@@ -8,7 +8,7 @@ export const getMyOSCs = () => {
 
 /** Busca detalhes de uma OSC pelo ID */
 export const getOSCById = (oscId) => {
-  return api.get(`/oscs/${oscId}`);
+  return api.get(`/oscs/${oscId}`); // Rota: GET /api/oscs/:id
 };
 
 /** Cria uma nova OSC */

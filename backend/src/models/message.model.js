@@ -32,9 +32,9 @@ export const findConversationHistory = async (oscId, contadorId) => {
     id: row.id,
     text: row.text,
     date: row.date,
-    // Define 'from' e 'to' baseado no 'sender_role'
-    from: row.sender_role === ROLES.OSC ? row.from_name : 'Contador', // Ajuste 'Contador' se necessário
-    to: row.sender_role === ROLES.OSC ? 'Contador' : row.from_name,    // Ajuste 'Contador' se necessário
+    from: row.from_name,
+    // Define 'to' baseado no sender_role
+    to: row.sender_role === ROLES.OSC ? 'Contador' : row.from_name, // O 'to' é o oposto do 'from'
   }));
 };
 
@@ -50,7 +50,7 @@ export const createMessage = async (messageData) => {
     text,
     sender_role,
     sender_id,
-    from_name // (Campo do protótipo)
+    from_name 
   } = messageData;
 
   const query = `
@@ -68,11 +68,11 @@ export const createMessage = async (messageData) => {
     from_name
   ]);
 
-  // Retorna a mensagem recém-criada (busca para obter a data gerada pelo DB)
+  // Retorna a mensagem recém-criada
   const [newMessages] = await pool.execute(
     `SELECT 
        m.id, m.text, m.created_at as date, m.sender_role, m.from_name,
-       u_osc.name as osc_name -- Busca nome da OSC para a propriedade 'to'
+       u_osc.name as osc_name
      FROM messages m 
      JOIN users u_osc ON m.osc_id = u_osc.id
      WHERE m.id = ?`,
@@ -81,43 +81,66 @@ export const createMessage = async (messageData) => {
   
   const newMessage = newMessages[0];
   
-  // Formata a resposta para corresponder ao que o frontend espera
   return {
     id: newMessage.id,
     text: newMessage.text,
     date: newMessage.date,
     from: newMessage.from_name,
-    to: newMessage.sender_role === ROLES.OSC ? ROLES.CONTADOR : newMessage.osc_name, // Define 'to'
+    to: newMessage.sender_role === ROLES.OSC ? 'Contador' : newMessage.osc_name,
   };
 };
 
-// --- NOVA FUNÇÃO PARA O DASHBOARD DO CONTADOR ---
-
 /**
  * Conta o número de mensagens NÃO LIDAS destinadas a um Contador.
- * (Assume coluna 'read_status' BOOLEAN/TINYINT onde false/0 = não lida)
  * @param {number} contadorId - O ID do utilizador (Contador).
  * @returns {Promise<number>} O número de mensagens não lidas.
  */
-export const countUnreadByContadorId = async (contadorId) => { // <-- Função incluída e exportada
+export const countUnreadByContadorId = async (contadorId) => {
   const query = `
     SELECT COUNT(*) as count
     FROM messages
     WHERE contador_id = ?
       AND sender_role = ? 
       AND read_status = false 
-  `; // read_status = false pode precisar ser 0
+  `;
   try {
     const [rows] = await pool.execute(query, [contadorId, ROLES.OSC]);
     return rows[0].count;
   } catch (error) {
     console.error('Erro em countUnreadByContadorId:', error);
     if (error.code === 'ER_BAD_FIELD_ERROR' && error.sqlMessage.includes('read_status')) {
-        console.warn("[Aviso] A coluna 'read_status' parece não existir na tabela 'messages'. Execute a migração correspondente.");
+        console.warn("[Aviso] A coluna 'read_status' parece não existir na tabela 'messages'. Execute a migração.");
         return 0; 
     }
     throw new Error('Erro ao contar mensagens não lidas.');
   }
 };
 
-// (Futuramente, adicione aqui funções como markAsRead, etc.)
+/**
+ * Busca as N mensagens mais recentes não lidas para um Contador.
+ * (Usado pelo Controlador de Notificações)
+ * @param {number} contadorId - O ID do utilizador (Contador).
+ * @param {number} limit - Quantidade a buscar.
+ * @returns {Promise<Array>} Um array de objetos de mensagem.
+ */
+export const findRecentUnreadByContadorId = async (contadorId, limit = 5) => {
+  const query = `
+    SELECT 
+      m.id, m.text, m.created_at as date, m.osc_id,
+      u.name as from_name
+    FROM messages m
+    JOIN users u ON m.sender_id = u.id
+    WHERE m.contador_id = ?
+      AND m.sender_role = ?
+      AND m.read_status = false
+    ORDER BY m.created_at DESC
+    LIMIT ?
+  `;
+  try {
+    const [rows] = await pool.execute(query, [contadorId, ROLES.OSC, limit]);
+    return rows;
+  } catch (error) {
+    console.error('Erro em findRecentUnreadByContadorId (Message):', error);
+    throw error; // Propaga o erro para o controlador
+  }
+};

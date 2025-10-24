@@ -1,0 +1,111 @@
+/* src/pages/contador/CreateOSCPage.module.css */
+
+.pageContainer {
+  padding: 2rem; /* p-8 */
+  max-width: 80rem; /* max-w-7xl (limita a largura máxima da página) */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.formHeader {
+  text-align: left;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 1.875rem; /* text-3xl */
+  font-weight: 700; /* font-bold */
+  color: #1f2937; /* text-gray-800 */
+}
+
+.subtitle {
+  font-size: 1rem; /* text-base */
+  color: #6b7280; /* text-gray-600 */
+  margin-top: 0.5rem;
+}
+
+.formSection {
+  background-color: white;
+  padding: 1.5rem 2rem; /* p-6 md:p-8 */
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+  margin-bottom: 2rem; /* Espaço entre secções */
+}
+
+.sectionTitle {
+  font-size: 1.25rem; /* text-xl */
+  font-weight: 600; /* font-semibold */
+  color: #111827; /* text-gray-900 */
+  padding-bottom: 0.75rem; /* pb-3 */
+  border-bottom: 1px solid #e5e7eb; /* border-b */
+  margin-bottom: 1.5rem; /* mb-6 */
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr)); /* 1 coluna por padrão */
+  gap: 1.5rem; /* gap-6 */
+}
+
+/* 2 colunas em telas médias e maiores */
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* md:grid-cols-2 */
+  }
+}
+
+.field {
+  /* O container para label + input */
+  display: flex;
+  flex-direction: column;
+}
+
+.formLabel {
+  display: block;
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+  color: #374151; /* text-gray-700 */
+  margin-bottom: 0.25rem; /* mb-1 */
+}
+
+/* Estilo para inputs (reutiliza estilo base do Input.module.css) */
+.formInput {
+  display: block;
+  width: 100%;
+  padding: 0.65rem 0.75rem; /* p-3 (ajustado para altura) */
+  border: 1px solid #d1d5db; /* border border-gray-300 */
+  border-radius: 0.375rem; /* rounded-md */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+  color: #111827;
+  background-color: white;
+}
+.formInput::placeholder {
+    color: #9ca3af; /* placeholder-gray-400 */
+}
+.formInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Estilos de Erro para RHF */
+.formInputError {
+  border-color: #ef4444; /* border-red-500 */
+}
+.formInputError:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+}
+.errorMessage {
+  margin-top: 0.25rem; /* mt-1 */
+  font-size: 0.875rem; /* text-sm */
+  color: #dc2626; /* text-red-600 */
+}
+
+
+/* Botão de Submissão */
+.submitContainer {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-end; /* Alinha o botão à direita */
+}

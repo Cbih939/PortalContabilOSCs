@@ -1,6 +1,6 @@
 // src/routes/AppRoutes.jsx
 
-import React, { useState } from 'react'; // Import useState
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 // Hooks e Constantes
@@ -22,13 +22,13 @@ import NotFoundPage from '../pages/NotFound.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import ManageUsers from '../pages/admin/ManageUsers.jsx';
 import ManageOSCs from '../pages/admin/ManageOSCs.jsx';
-import AdminSidebar from '../pages/admin/components/AdminSidebar.jsx'; // Import Real
-import AdminHeader from '../pages/admin/components/AdminHeader.jsx';   // Import Real
-// --- PLACEHOLDERS DO ADMIN REMOVIDOS ---
+import AdminSidebar from '../pages/admin/components/AdminSidebar.jsx';
+import AdminHeader from '../pages/admin/components/AdminHeader.jsx';
 
 // Páginas e Componentes do Contador (Reais)
 import ContadorDashboard from '../pages/contador/ContadorDashboard.jsx';
 import OSCsPage from '../pages/contador/OSCs.jsx';
+import CreateOSCPage from '../pages/contador/CreateOSCPage.jsx'; // <-- Página de Criação
 import DocumentsPage from '../pages/contador/Documents.jsx';
 import NoticesPage from '../pages/contador/Notices.jsx';
 import ContadorMessagesPage from '../pages/contador/Messages.jsx';
@@ -45,19 +45,14 @@ import OSCHeader from '../pages/osc/components/OSCHeader.jsx';
 import OSCNavigationTabs from '../pages/osc/components/OSCNavigationTabs.jsx';
 
 /**
- * Componente "Redirecionador" (sem alterações)
+ * Componente "Redirecionador"
+ * Trata o acesso à rota raiz "/".
  */
 function RootRedirect() {
-  // ... (código do RootRedirect) ...
-  console.log('RootRedirect a renderizar');
   const { isAuthenticated, user } = useAuth();
-
   if (!isAuthenticated) {
-    console.log('RootRedirect: Não autenticado, a redirecionar para /login');
     return <Navigate to="/login" replace />;
   }
-
-  console.log('RootRedirect: Autenticado, a redirecionar para dashboard do perfil:', user?.role);
   switch (user?.role) {
     case ROLES.ADMIN:
       return <Navigate to="/admin/dashboard" replace />;
@@ -66,16 +61,15 @@ function RootRedirect() {
     case ROLES.OSC:
       return <Navigate to="/osc/inicio" replace />;
     default:
-      console.warn('RootRedirect: Perfil inválido ou não encontrado, a redirecionar para /login');
       return <Navigate to="/login" replace />;
   }
 }
 
 /**
- * Componente Wrapper para o Layout do Contador (sem alterações)
+ * Componente Wrapper para o Layout do Contador
+ * Isola o estado 'isSidebarOpen' aqui.
  */
 function ContadorLayoutWrapper() {
-  // ... (código do ContadorLayoutWrapper) ...
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -88,7 +82,7 @@ function ContadorLayoutWrapper() {
 }
 
 /**
- * Componente Wrapper para o Layout do Admin (NOVO)
+ * Componente Wrapper para o Layout do Admin
  */
 function AdminLayoutWrapper() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -96,8 +90,8 @@ function AdminLayoutWrapper() {
 
   return (
     <AppLayout
-      sidebarComponent={<AdminSidebar isOpen={isSidebarOpen} />} // Usa componente Admin real
-      headerComponent={<AdminHeader onToggleSidebar={toggleSidebar} />} // Usa componente Admin real
+      sidebarComponent={<AdminSidebar isOpen={isSidebarOpen} />}
+      headerComponent={<AdminHeader onToggleSidebar={toggleSidebar} />}
     />
   );
 }
@@ -107,7 +101,6 @@ function AdminLayoutWrapper() {
  * Define todas as rotas da aplicação.
  */
 export default function AppRoutes() {
-  console.log('AppRoutes a renderizar');
   return (
     <BrowserRouter>
       <Routes>
@@ -121,11 +114,9 @@ export default function AppRoutes() {
 
         {/* --- Rotas Protegidas --- */}
 
-        {/* 1. Rotas do ADMIN (Estrutura Corrigida com Wrapper) */}
+        {/* 1. Rotas do ADMIN */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
-          {/* Usa o Wrapper do Admin */}
           <Route element={<AdminLayoutWrapper />}>
-              {/* Rotas filhas do Admin */}
               <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/usuarios" element={<ManageUsers />} />
@@ -133,12 +124,13 @@ export default function AppRoutes() {
           </Route>
         </Route>
 
-        {/* 2. Rotas do CONTADOR (Estrutura com Wrapper - sem alterações) */}
+        {/* 2. Rotas do CONTADOR */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.CONTADOR]} />}>
           <Route element={<ContadorLayoutWrapper />}>
               <Route path="/contador" element={<Navigate to="/contador/dashboard" replace />} />
               <Route path="/contador/dashboard" element={<ContadorDashboard />} />
               <Route path="/contador/oscs" element={<OSCsPage />} />
+              <Route path="/contador/oscs/novo" element={<CreateOSCPage />} /> {/* <-- ROTA DA NOVA PÁGINA */}
               <Route path="/contador/documentos" element={<DocumentsPage />} />
               <Route path="/contador/avisos" element={<NoticesPage />} />
               <Route path="/contador/mensagens" element={<ContadorMessagesPage />} />

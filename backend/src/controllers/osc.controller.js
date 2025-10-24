@@ -1,17 +1,12 @@
 // backend/src/controllers/osc.controller.js
 
-// Importa os modelos de dados
 import * as OscModel from '../models/osc.model.js';
-import * as UserModel from '../models/user.model.js'; // Necessário para criar/atualizar utilizadores OSC
-
-// Importa utilitários
+import * as UserModel from '../models/user.model.js';
 import { ROLES } from '../utils/constants.js';
 import { hashPassword } from '../utils/bcrypt.utils.js';
 
 /**
  * @desc    Busca TODAS as OSCs (para o Admin).
- * @route   GET /api/oscs
- * @access  Privado (Admin)
  */
 export const getAllOSCs = async (req, res) => {
   try {
@@ -28,31 +23,20 @@ export const getAllOSCs = async (req, res) => {
 
 /**
  * @desc    Busca as OSCs associadas ao Contador logado.
- * @route   GET /api/oscs/my
- * @access  Privado (Contador)
  */
 export const getMyOSCs = async (req, res) => {
   try {
-    const contadorId = req.user?.id; // Pega ID do middleware
-
-    // --- LOG DE DEBUG ---
+    const contadorId = req.user?.id;
     console.log(`[getMyOSCs] Buscando OSCs para o Contador ID: ${contadorId}`);
-
-    if (req.user?.role !== ROLES.CONTADOR) { // Usa optional chaining por segurança
-      console.log(`[getMyOSCs] Acesso negado. Role do utilizador: ${req.user?.role}`);
+    if (req.user?.role !== ROLES.CONTADOR) {
       return res.status(403).json({ message: 'Acesso negado.' });
     }
-    if (!contadorId) { // Segurança extra
-        console.log('[getMyOSCs] Erro: ID do Contador não encontrado no token.');
+    if (!contadorId) {
         return res.status(401).json({ message: 'Não autorizado.' });
     }
-
-    const oscs = await OscModel.findByContadorId(contadorId); // Chama o modelo
-
-    // --- LOG DE DEBUG ---
+    const oscs = await OscModel.findByContadorId(contadorId);
     console.log(`[getMyOSCs] OSCs encontradas pelo modelo: ${oscs?.length || 0}`);
-
-    res.status(200).json(oscs); // Retorna o resultado do modelo
+    res.status(200).json(oscs);
   } catch (error) {
     console.error('Erro no controlador getMyOSCs:', error);
     res.status(500).json({ message: 'Erro interno do servidor.' });
@@ -61,8 +45,6 @@ export const getMyOSCs = async (req, res) => {
 
 /**
  * @desc    Busca os detalhes de uma OSC específica pelo ID.
- * @route   GET /api/oscs/:id
- * @access  Privado (Admin, ou Contador/OSC associada)
  */
 export const getOSCById = async (req, res) => {
   try {
@@ -73,16 +55,11 @@ export const getOSCById = async (req, res) => {
     if (!osc) {
       return res.status(404).json({ message: 'OSC não encontrada.' });
     }
-
-    // --- Verificação de Permissão ---
+    
     let hasPermission = false;
-    if (userRole === ROLES.ADMIN) {
-      hasPermission = true;
-    } else if (userRole === ROLES.CONTADOR) {
-      hasPermission = osc.assigned_contador_id === userId;
-    } else if (userRole === ROLES.OSC) {
-      hasPermission = Number(osc.id) === Number(userId); // Garante comparação numérica
-    }
+    if (userRole === ROLES.ADMIN) hasPermission = true;
+    else if (userRole === ROLES.CONTADOR) hasPermission = (Number(osc.assigned_contador_id) === Number(userId));
+    else if (userRole === ROLES.OSC) hasPermission = (Number(osc.id) === Number(userId));
 
     if (!hasPermission) {
       return res.status(403).json({ message: 'Acesso negado. Você não tem permissão para ver esta OSC.' });
@@ -96,10 +73,9 @@ export const getOSCById = async (req, res) => {
 };
 
 /**
- * @desc    Cria uma nova OSC e um Utilizador associado a ela.
+ * @desc    Cria uma nova OSC e um Utilizador associado (Formulário Detalhado).
  * @route   POST /api/oscs
  * @access  Privado (Contador, Admin)
- * @body    { name, cnpj, responsible, email (login), phone, address, password, email_contato? }
  */
 export const createOSC = async (req, res) => {
   try {
@@ -107,50 +83,69 @@ export const createOSC = async (req, res) => {
       return res.status(403).json({ message: 'Acesso negado.' });
     }
     const creatingContadorId = req.user.role === ROLES.CONTADOR ? req.user.id : null;
+    
+    // Todos os campos do formulário RHF
+    const data = req.body;
+    console.log('[CreateOSC] Dados recebidos:', data); // Log
 
-    const { name, cnpj, responsible, email, phone, address, password, email_contato } = req.body; // email é o de LOGIN
-
-    // 1. Validação
-    if (!name || !cnpj || !email || !password) {
-      return res.status(400).json({ message: 'Nome, CNPJ, Email de login e Senha são obrigatórios.' });
+    // 1. Validação (feita pelo Yup no frontend, mas verificações cruciais aqui)
+    if (!data.nomeFantasia || !data.cnpj || !data.coordEmail || !data.coordSenha) {
+      return res.status(400).json({ message: 'Nome Fantasia, CNPJ, Email do Coordenador e Senha são obrigatórios.' });
+    }
+    if (data.coordSenha.length < 8) {
+        return res.status(400).json({ message: 'A senha do Coordenador deve ter no mínimo 8 caracteres.' });
     }
 
     // 2. Verifica duplicados
-    const existingUser = await UserModel.findUserByEmail(email);
+    const existingUser = await UserModel.findUserByEmail(data.coordEmail);
     if (existingUser) {
-      return res.status(409).json({ message: 'Este email de login já está em uso.' });
+      return res.status(409).json({ message: 'O Email do Coordenador (login) já está em uso.' });
     }
-    const existingOSC = await OscModel.findByCnpj(cnpj);
+    const existingOSC = await OscModel.findByCnpj(data.cnpj);
     if (existingOSC) {
       return res.status(409).json({ message: 'Este CNPJ já está registado.' });
     }
 
-    // 3. Hash da senha
-    const passwordHash = await hashPassword(password);
+    // 3. Hash da senha do Coordenador
+    const passwordHash = await hashPassword(data.coordSenha);
 
-    // 4. Prepara os dados
+    // 4. Prepara os dados para os Modelos
     const userData = {
-      name, // Nome da OSC vai para users.name
-      email, // Email de LOGIN
+      name: data.coordNome || data.nomeFantasia, // Nome do Coordenador ou Nome Fantasia
+      email: data.coordEmail,       // Email de LOGIN
       password_hash: passwordHash,
-      role: ROLES.OSC,
-      status: 'Ativo' // OSC começa ativa
+      cpf: data.coordCpf,
+      phone: data.coordTelefone,
     };
+    
     const oscData = {
-      cnpj,
-      responsible,
-      email: email_contato || email, // Email de CONTACTO (usa login se não fornecido)
-      phone,
-      address,
+      cnpj: data.cnpj,
+      razao_social: data.razaoSocial,
+      data_fundacao: data.dataFundacao || null, // Garante NULL se vazio
+      responsible: data.respNome,
+      responsible_cpf: data.respCpf,
+      email: data.emailContato,     // Email de CONTACTO
+      phone: data.telefone,         // Telefone PRINCIPAL
+      address: data.endereco,
+      cep: data.cep,
+      numero: data.numero,
+      bairro: data.bairro,
+      cidade: data.cidade,
+      estado: data.estado,
+      pais: data.pais || 'Brasil',
+      website: data.website,
+      instagram: data.instagram,
       assigned_contador_id: creatingContadorId,
+      // (Faltam os uploads de ficheiro)
     };
 
     // 5. O Modelo 'createOscAndUser' usa TRANSAÇÃO
     const newOSC = await OscModel.createOscAndUser(oscData, userData);
+    console.log('[CreateOSC] OSC criada com sucesso:', newOSC.id);
 
     res.status(201).json(newOSC);
   } catch (error) {
-    console.error('Erro no controlador createOSC:', error);
+    console.error('Erro no controlador createOSC (detalhado):', error);
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({ message: 'Email de login ou CNPJ já existe.' });
     }
@@ -160,43 +155,40 @@ export const createOSC = async (req, res) => {
 
 /**
  * @desc    Atualiza os dados de uma OSC (Perfil).
- * @route   PUT /api/oscs/:id
- * @access  Privado (OSC dona, ou Contador associado)
- * @body    { name, responsible, email (contacto), phone, address, status, login_email? }
  */
 export const updateOSC = async (req, res) => {
   try {
     const { id: oscId } = req.params;
     const { id: userId, role: userRole } = req.user;
-    const updateData = req.body; // Contém os campos a atualizar
+    const updateData = req.body;
 
-    // 1. Verifica se a OSC existe (busca combinada)
     const osc = await OscModel.findById(oscId);
     if (!osc) {
       return res.status(404).json({ message: 'OSC não encontrada.' });
     }
-
-    // 2. Verificação de Permissão
+    
     let hasPermission = false;
-    if (userRole === ROLES.OSC && Number(osc.id) === Number(userId)) {
-      hasPermission = true;
-      // OSC não pode alterar o próprio status ou contador associado
-      delete updateData.status;
-      delete updateData.assigned_contador_id;
-    } else if (userRole === ROLES.CONTADOR && osc.assigned_contador_id === userId) {
-      hasPermission = true;
-      // Contador não pode alterar o contador associado (ele mesmo)
-      delete updateData.assigned_contador_id;
-    } else if (userRole === ROLES.ADMIN) { // Admin pode editar tudo
-        hasPermission = true;
-    }
+    if (userRole === ROLES.ADMIN) hasPermission = true;
+    else if (userRole === ROLES.CONTADOR) hasPermission = (Number(osc.assigned_contador_id) === Number(userId));
+    else if (userRole === ROLES.OSC) hasPermission = (Number(osc.id) === Number(userId));
 
     if (!hasPermission) {
       return res.status(403).json({ message: 'Acesso negado. Você não tem permissão para editar esta OSC.' });
     }
 
-    // 3. O Modelo 'updateOscAndUser' usa TRANSAÇÃO
+    // Regras de negócio
+    if (userRole !== ROLES.ADMIN) {
+        delete updateData.assigned_contador_id; // Só Admin pode reatribuir
+    }
+    if (userRole === ROLES.OSC) {
+        delete updateData.status; // OSC não pode mudar o próprio status
+        delete updateData.cnpj; // OSC não pode mudar o próprio CNPJ
+    }
+    
     const updatedOSC = await OscModel.updateOscAndUser(oscId, updateData);
+    if (!updatedOSC) { // Caso update falhe no modelo
+         return res.status(404).json({ message: 'OSC não encontrada durante a atualização.' });
+    }
 
     res.status(200).json(updatedOSC);
   } catch (error) {
@@ -210,9 +202,6 @@ export const updateOSC = async (req, res) => {
 
 /**
  * @desc    Associa (ou re-associa) uma OSC a um Contador.
- * @route   PATCH /api/oscs/:id/assign
- * @access  Privado (Admin)
- * @body    { contadorId: string }
  */
 export const assignContador = async (req, res) => {
   try {
@@ -225,8 +214,7 @@ export const assignContador = async (req, res) => {
     if (!contadorId) {
       return res.status(400).json({ message: 'O ID do Contador (contadorId) é obrigatório.' });
     }
-
-    // (Validação extra: verificar se contadorId existe e tem role Contador)
+    
     const contadorUser = await UserModel.findUserById(contadorId);
     if (!contadorUser || contadorUser.role !== ROLES.CONTADOR) {
         return res.status(404).json({ message: 'Contador não encontrado ou inválido.'});
@@ -246,8 +234,6 @@ export const assignContador = async (req, res) => {
 
 /**
  * @desc    Apaga uma OSC e o seu utilizador associado.
- * @route   DELETE /api/oscs/:id
- * @access  Privado (Admin)
  */
 export const deleteOSC = async (req, res) => {
   try {
@@ -256,13 +242,11 @@ export const deleteOSC = async (req, res) => {
     }
     const { id: oscId } = req.params;
 
-    // O Modelo 'deleteOscAndUser' usa ON DELETE CASCADE
     const success = await OscModel.deleteOscAndUser(oscId);
     if (!success) {
         return res.status(404).json({ message: 'OSC não encontrada.' });
     }
-
-    res.status(204).send(); // Sucesso, sem conteúdo
+    res.status(204).send();
   } catch (error) {
     console.error('Erro no controlador deleteOSC:', error);
     res.status(500).json({ message: 'Erro interno do servidor.' });

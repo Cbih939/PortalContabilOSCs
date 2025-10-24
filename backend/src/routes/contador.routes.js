@@ -5,10 +5,11 @@ import express from 'express';
 import { protect, checkRole } from '../middlewares/auth.middleware.js';
 // Constantes
 import { ROLES } from '../utils/constants.js';
-// Controladores (Criaremos a seguir)
+// Controladores
 import {
   getDashboardStats,
   getRecentActivity,
+  getNotifications // <-- Controlador para o sino de notificação
 } from '../controllers/contador.controller.js';
 
 // Cria o router
@@ -27,6 +28,10 @@ router.get('/dashboard/stats', getDashboardStats);
 // GET /api/contador/dashboard/activity
 // Busca as atividades recentes para o dashboard do contador logado.
 router.get('/dashboard/activity', getRecentActivity);
+
+// GET /api/contador/notifications
+// Busca as notificações (sino) para o contador logado.
+router.get('/notifications', getNotifications);
 
 // (Outras rotas específicas do contador podem ser adicionadas aqui no futuro)
 

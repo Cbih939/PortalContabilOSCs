@@ -1,27 +1,22 @@
 // backend/src/models/osc.model.js
 
-import pool from '../config/db.js'; // Importa o pool de conexões MySQL
+import pool from '../config/db.js';
 import { ROLES } from '../utils/constants.js';
 
 /**
  * Busca todas as OSCs com o nome do contador associado.
  * (Usado pelo Admin)
- * @returns {Promise<Array>} Lista de OSCs.
  */
 export const findAllWithContador = async () => {
   const query = `
     SELECT
-      o.id,
-      u_osc.name, -- Busca o nome da tabela users associada à OSC
-      o.cnpj,
-      o.responsible,
-      u_osc.status, -- Busca o status da tabela users associada à OSC
-      u_contador.name as contadorName -- Busca o nome do contador (se houver)
+      o.id, u_osc.name, o.cnpj, o.responsible, u_osc.status,
+      u_contador.name as contadorName
     FROM oscs o
-    JOIN users u_osc ON o.id = u_osc.id -- JOIN para obter nome e status da OSC
+    JOIN users u_osc ON o.id = u_osc.id
     LEFT JOIN users u_contador ON o.assigned_contador_id = u_contador.id
       AND u_contador.role = ?
-    WHERE u_osc.role = ? -- Garante que estamos pegando apenas utilizadores OSC
+    WHERE u_osc.role = ?
     ORDER BY u_osc.name ASC
   `;
   const [rows] = await pool.execute(query, [ROLES.CONTADOR, ROLES.OSC]);
@@ -30,35 +25,20 @@ export const findAllWithContador = async () => {
 
 /**
  * Busca OSCs associadas a um Contador específico.
- * @param {number} contadorId - O ID do utilizador (Contador).
- * @returns {Promise<Array>} Lista de OSCs (incluindo nome e status da tabela users).
  */
 export const findByContadorId = async (contadorId) => {
-  // --- LOG DE DEBUG ---
   console.log(`[Model findByContadorId] Recebido contadorId: ${contadorId}`);
-
   const query = `
     SELECT
-        o.id,
-        u.name, -- Nome da OSC (da tabela users)
-        o.cnpj,
-        o.responsible,
-        o.email, -- Email de CONTACTO
-        o.phone,
-        o.address,
-        u.status -- Status da OSC (da tabela users)
+        o.id, u.name, o.cnpj, o.responsible, o.email, o.phone, o.address, u.status
     FROM oscs o
-    JOIN users u ON o.id = u.id -- JOIN para obter nome e status
+    JOIN users u ON o.id = u.id
     WHERE o.assigned_contador_id = ? AND u.role = ?
     ORDER BY u.name ASC
   `;
   try {
-      const [rows] = await pool.execute(query, [contadorId, ROLES.OSC]); // Passa ROLE como parâmetro
-
-      // --- LOG DE DEBUG ---
+      const [rows] = await pool.execute(query, [contadorId, ROLES.OSC]);
       console.log(`[Model findByContadorId] Query executada. Linhas encontradas: ${rows.length}`);
-      // console.log('[Model findByContadorId] Linhas:', rows); // Descomente para ver os dados crus
-
       return rows;
   } catch (error) {
       console.error('Erro em findByContadorId:', error);
@@ -68,23 +48,20 @@ export const findByContadorId = async (contadorId) => {
 
 /**
  * Busca uma OSC pelo seu ID (incluindo dados da tabela users).
- * @param {number} id - O ID da OSC.
- * @returns {Promise<object | null>} A OSC com dados combinados ou null.
  */
 export const findById = async (id) => {
   const query = `
     SELECT
-      o.id,
-      u.name,
-      o.cnpj,
-      o.responsible,
-      o.email, -- Email de contacto da OSC
-      u.email as login_email, -- Email de login (pode ser diferente)
-      o.phone,
-      o.address,
+      o.id, u.name, o.cnpj, o.razao_social, o.data_fundacao,
+      o.responsible, o.responsible_cpf,
+      o.email, o.phone, o.address, o.cep, o.numero, o.bairro, o.cidade, o.estado, o.pais,
+      o.website, o.instagram,
+      u.email as login_email, -- Email de login (da tabela users)
+      u.cpf as login_cpf, -- CPF do coordenador (da tabela users)
+      u.phone as login_phone, -- Telefone do coordenador (da tabela users)
       u.status,
       o.assigned_contador_id,
-      u.role -- Inclui role para verificações
+      u.role
     FROM oscs o
     JOIN users u ON o.id = u.id
     WHERE o.id = ? AND u.role = ?
@@ -95,21 +72,20 @@ export const findById = async (id) => {
 
 /**
  * Busca uma OSC pelo seu CNPJ (para validação).
- * @param {string} cnpj - O CNPJ da OSC.
- * @returns {Promise<object | null>} A OSC ou null se não encontrada.
  */
 export const findByCnpj = async (cnpj) => {
   const [rows] = await pool.execute(
-    'SELECT id, cnpj FROM oscs WHERE cnpj = ?', // Seleciona apenas o necessário
+    'SELECT id, cnpj FROM oscs WHERE cnpj = ?',
     [cnpj]
   );
   return rows[0] || null;
 };
 
 /**
- * Cria uma nova OSC e o seu Utilizador associado (usando Transação).
- * @param {object} oscData - Dados da tabela 'oscs' (cnpj, responsible, email (contacto), etc.).
- * @param {object} userData - Dados da tabela 'users' (name, email (login), password_hash, role, status).
+ * Cria uma nova OSC e o seu Utilizador (Coordenador) associado (Transação).
+ * (ATUALIZADO para todos os campos do formulário)
+ * @param {object} oscData - Dados da tabela 'oscs'
+ * @param {object} userData - Dados da tabela 'users' (Coordenador)
  * @returns {Promise<object>} A nova OSC criada (com dados combinados).
  */
 export const createOscAndUser = async (oscData, userData) => {
@@ -117,32 +93,49 @@ export const createOscAndUser = async (oscData, userData) => {
   try {
     await connection.beginTransaction();
 
-    // Cria o utilizador
+    // 1. Cria o Utilizador (Coordenador)
     const userQuery = `
-      INSERT INTO users (name, email, password_hash, role, status)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO users (
+        name, email, password_hash, role, status, cpf, phone
+      ) VALUES (?, ?, ?, ?, 'Ativo', ?, ?)
     `;
     const [userResult] = await connection.execute(userQuery, [
-      userData.name,
-      userData.email,
+      userData.name,          // coordNome
+      userData.email,         // coordEmail
       userData.password_hash,
       ROLES.OSC,
-      userData.status || 'Ativo'
+      userData.cpf,           // coordCpf
+      userData.phone          // coordTelefone
     ]);
-    const newUserId = userResult.insertId;
+    const newUserId = userResult.insertId; // Este é o ID da OSC
 
-    // Cria o registo OSC
+    // 2. Cria o Registo da OSC
     const oscQuery = `
-      INSERT INTO oscs (id, cnpj, responsible, email, phone, address, assigned_contador_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO oscs (
+        id, cnpj, razao_social, data_fundacao, responsible, responsible_cpf,
+        email, phone, address, cep, numero, bairro, cidade, estado, pais,
+        website, instagram,
+        assigned_contador_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     await connection.execute(oscQuery, [
       newUserId,
       oscData.cnpj,
-      oscData.responsible,
-      oscData.email,
-      oscData.phone,
-      oscData.address,
+      oscData.razao_social,
+      oscData.data_fundacao || null, // Garante NULL se vazio
+      oscData.responsible,      // respNome
+      oscData.responsible_cpf,  // respCpf
+      oscData.email,            // emailContato
+      oscData.phone,            // telefone (Principal da OSC)
+      oscData.address,          // endereco
+      oscData.cep,
+      oscData.numero,
+      oscData.bairro,
+      oscData.cidade,
+      oscData.estado,
+      oscData.pais || 'Brasil', // Padrão
+      oscData.website,
+      oscData.instagram,
       oscData.assigned_contador_id
     ]);
 
@@ -151,7 +144,7 @@ export const createOscAndUser = async (oscData, userData) => {
 
   } catch (error) {
     await connection.rollback();
-    console.error('Erro na transação createOscAndUser:', error);
+    console.error('Erro na transação createOscAndUser (detalhada):', error);
     throw error;
   } finally {
     connection.release();
@@ -160,15 +153,11 @@ export const createOscAndUser = async (oscData, userData) => {
 
 /**
  * Atualiza uma OSC e o seu Utilizador associado (usando Transação).
- * @param {number} oscId - O ID da OSC/Utilizador a ser atualizado.
- * @param {object} updateData - Dados a serem atualizados (name, responsible, email(contacto), phone, address, status, login_email?).
- * @returns {Promise<object | null>} A OSC atualizada (com dados combinados) ou null se não encontrada.
  */
 export const updateOscAndUser = async (oscId, updateData) => {
   const connection = await pool.getConnection();
   try {
-    // Verifica se a OSC existe antes de iniciar a transação
-    const exists = await findById(oscId);
+    const exists = await findById(oscId); // Busca dados combinados
     if (!exists) return null;
 
     await connection.beginTransaction();
@@ -176,7 +165,13 @@ export const updateOscAndUser = async (oscId, updateData) => {
     // 1. Atualiza a tabela 'oscs'
     const oscFieldsToUpdate = [];
     const oscParams = [];
-    const allowedOscFields = ['responsible', 'email', 'phone', 'address', 'assigned_contador_id']; // CNPJ não é atualizado aqui
+    // Todos os campos da migração 006 + email/phone
+    const allowedOscFields = [
+        'razao_social', 'data_fundacao', 'responsible', 'responsible_cpf',
+        'email', 'phone', 'address', 'cep', 'numero', 'bairro', 'cidade', 'estado', 'pais',
+        'website', 'instagram', 'assigned_contador_id',
+        'logotipo_path', 'ata_path', 'estatuto_path'
+    ];
     allowedOscFields.forEach(field => {
         if (updateData[field] !== undefined) {
             oscFieldsToUpdate.push(`${field} = ?`);
@@ -193,9 +188,13 @@ export const updateOscAndUser = async (oscId, updateData) => {
     // 2. Atualiza a tabela 'users'
     const userFieldsToUpdate = [];
     const userParams = [];
-    const allowedUserFields = ['name', 'status', 'email']; // 'email' aqui é o de LOGIN
+    // Campos da migração 007 + name, status, email
+    const allowedUserFields = ['name', 'status', 'email', 'cpf', 'phone'];
     allowedUserFields.forEach(field => {
-        const dataKey = field === 'email' ? 'login_email' : field; // Usa login_email se fornecido
+        // Mapeia 'coordNome' para 'name', 'coordEmail' para 'email', etc.
+        // Ou usa os nomes do 'findById' (name, login_email, login_cpf, login_phone)
+        const dataKey = field === 'email' ? 'login_email' : (field === 'cpf' ? 'login_cpf' : (field === 'phone' ? 'login_phone' : field));
+        
         if (updateData[dataKey] !== undefined) {
             userFieldsToUpdate.push(`${field} = ?`);
             userParams.push(updateData[dataKey]);
@@ -204,7 +203,7 @@ export const updateOscAndUser = async (oscId, updateData) => {
 
      if (userFieldsToUpdate.length > 0) {
         userParams.push(oscId);
-        const userQuery = `UPDATE users SET ${userFieldsToUpdate.join(', ')} WHERE id = ? AND role = ?`; // Adiciona role para segurança
+        const userQuery = `UPDATE users SET ${userFieldsToUpdate.join(', ')} WHERE id = ? AND role = ?`;
         await connection.execute(userQuery, [...userParams, ROLES.OSC]);
     }
 
@@ -223,9 +222,6 @@ export const updateOscAndUser = async (oscId, updateData) => {
 
 /**
  * Associa uma OSC a um Contador (Admin).
- * @param {number} oscId - O ID da OSC.
- * @param {number} contadorId - O ID do utilizador (Contador).
- * @returns {Promise<object | null>} A OSC atualizada ou null se não encontrada.
  */
 export const assignContador = async (oscId, contadorId) => {
   const [result] = await pool.execute(
@@ -238,11 +234,8 @@ export const assignContador = async (oscId, contadorId) => {
 
 /**
  * Apaga uma OSC e o seu Utilizador associado.
- * @param {number} oscId - O ID da OSC/Utilizador a ser apagado.
- * @returns {Promise<boolean>} True se foi apagado, false se não encontrado.
  */
 export const deleteOscAndUser = async (oscId) => {
-  // ON DELETE CASCADE na FK 'fk_osc_user' apaga o registo 'oscs'.
   const [result] = await pool.execute(
     'DELETE FROM users WHERE id = ? AND role = ?',
     [oscId, ROLES.OSC]
@@ -252,8 +245,6 @@ export const deleteOscAndUser = async (oscId) => {
 
 /**
  * Encontra o Contador associado a uma OSC.
- * @param {number} oscId - O ID da OSC.
- * @returns {Promise<object | null>} O objeto do utilizador (Contador).
  */
 export const findContadorForOsc = async (oscId) => {
   const query = `
@@ -268,9 +259,6 @@ export const findContadorForOsc = async (oscId) => {
 
 /**
  * Verifica se uma OSC está associada a um Contador.
- * @param {number} oscId - O ID da OSC.
- * @param {number} contadorId - O ID do Contador.
- * @returns {Promise<boolean>} True se estiverem associados.
  */
 export const isOscAssignedToContador = async (oscId, contadorId) => {
   const [rows] = await pool.execute(
@@ -283,14 +271,12 @@ export const isOscAssignedToContador = async (oscId, contadorId) => {
 /**
  * Conta o número de OSCs ATIVAS associadas a um Contador específico.
  * (CORRIGIDO com JOIN em 'users')
- * @param {number} contadorId - O ID do utilizador (Contador).
- * @returns {Promise<number>} O número de OSCs ativas.
  */
 export const countActiveByContadorId = async (contadorId) => {
   const query = `
     SELECT COUNT(o.id) as count
     FROM oscs o
-    JOIN users u ON o.id = u.id -- Liga oscs.id com users.id
+    JOIN users u ON o.id = u.id
     WHERE o.assigned_contador_id = ? AND u.status = 'Ativo' AND u.role = ?
   `;
   try {

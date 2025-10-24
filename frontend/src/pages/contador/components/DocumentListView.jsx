@@ -3,11 +3,12 @@
 import React, { useState } from 'react';
 import { ViewIcon, PrintIcon, SearchIcon } from '../../../components/common/Icons.jsx';
 import Input from '../../../components/common/Input.jsx';
-import styles from './DocumentListView.module.css'; // Importa CSS Module
+import styles from './DocumentListView.module.css';
 import { formatDate } from '../../../utils/formatDate.js'; // Importa helper
 
 /**
  * Componente "burro" DocumentListView (CSS Modules).
+ * CORRIGIDO para aviso de whitespace e bugs de filtro/nome.
  */
 export default function DocumentListView({ files = [], onView, onPrint }) {
   const [filterOsc, setFilterOsc] = useState('');
@@ -15,9 +16,11 @@ export default function DocumentListView({ files = [], onView, onPrint }) {
 
   const filteredFiles = files.filter(
     (file) =>
-      (!filterDate || file.date === filterDate) &&
+      // Filtro de data
+      (!filterDate || (file.date || file.created_at).startsWith(filterDate)) && // Compara o início da data
+      // Filtro de nome da OSC
       (!filterOsc ||
-        file.from.toLowerCase().includes(filterOsc.toLowerCase()))
+        (file.from_name || file.from || '').toLowerCase().includes(filterOsc.toLowerCase()))
   );
 
   return (
@@ -37,10 +40,10 @@ export default function DocumentListView({ files = [], onView, onPrint }) {
           />
           <Input
             type="date"
-            placeholder="Filtrar por data..." // Placeholder pode não aparecer em input date
+            placeholder="Filtrar por data..."
             value={filterDate}
             onChange={(e) => setFilterDate(e.target.value)}
-            inputClassName={styles.dateInput} // Classe específica para input date
+            inputClassName={styles.dateInput} // Usa classe do CSS Module
           />
         </div>
       </div>
@@ -56,29 +59,29 @@ export default function DocumentListView({ files = [], onView, onPrint }) {
               <th>Ações</th>
             </tr>
           </thead>
-          <tbody>
-            {filteredFiles.length > 0 ? (
+          {/* CORREÇÃO WHITESPACE: Remove espaço entre <tbody> e {map} */}
+          <tbody>{
+            filteredFiles.length > 0 ? (
               filteredFiles.map((file) => (
                 <tr key={file.id}>
-                  <td>{file.from}</td>
-                  <td className={styles.fileNameCell}>{file.name}</td>
-                  <td>{formatDate(file.date)}</td> {/* Usa helper */}
+                  {/* Usa 'from_name' (da API) ou 'from' (fallback) */}
+                  <td>{file.from_name || file.from}</td>
+                  {/* Usa 'original_name' (da API) ou 'name' (fallback) */}
+                  <td className={styles.fileNameCell}>{file.original_name || file.name}</td>
+                  {/* Usa 'created_at' (da API) ou 'date' (fallback) */}
+                  <td>{formatDate(file.created_at || file.date)}</td>
                   <td>
                     <div className={styles.actionsContainer}>
                       <button
                         onClick={() => onView(file)}
                         className={`${styles.actionButton} ${styles.viewButton}`}
                         title="Visualizar"
-                      >
-                        <ViewIcon />
-                      </button>
+                      ><ViewIcon /></button>
                       <button
                         onClick={() => onPrint(file)}
                         className={`${styles.actionButton} ${styles.printButton}`}
-                        title="Imprimir"
-                      >
-                        <PrintIcon />
-                      </button>
+                        title="Baixar Documento" // Título atualizado
+                      ><PrintIcon /></button> {/* Ícone de 'Print' usado para 'Download' */}
                     </div>
                   </td>
                 </tr>
@@ -89,8 +92,8 @@ export default function DocumentListView({ files = [], onView, onPrint }) {
                   Nenhum documento encontrado com os filtros aplicados.
                 </td>
               </tr>
-            )}
-          </tbody>
+            )
+          }</tbody>
         </table>
       </div>
     </div>
