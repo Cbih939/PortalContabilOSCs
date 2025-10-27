@@ -99,3 +99,31 @@ export const downloadTemplate = async (templateName) => {
     throw new Error('Não foi possível fazer o download do template.');
   }
 };
+
+/**
+ * Busca os dados brutos (blob) de um ficheiro.
+ * (Usado pelo DocumentViewModal para pré-visualização)
+ * @param {string|number} fileId - O ID do ficheiro.
+ * @returns {Promise<Blob>} Os dados do ficheiro como um Blob.
+ */
+export const getDocumentBlob = async (fileId) => {
+  try {
+    const response = await api.get(`/documents/download/${fileId}`, {
+      responseType: 'blob', // Pede dados binários
+    });
+    return response.data; // Retorna o blob
+  } catch (error) {
+    console.error('Erro ao buscar blob do documento:', error);
+    // Tenta ler o erro se a API tiver retornado JSON em vez de blob
+    if (error.response?.data?.constructor === Blob) {
+        try {
+            const errText = await error.response.data.text();
+            const errJson = JSON.parse(errText);
+            throw new Error(errJson.message || 'Não foi possível carregar o ficheiro.');
+        } catch(e) {
+             throw new Error('Não foi possível carregar o ficheiro.');
+        }
+    }
+    throw new Error(error.response?.data?.message || 'Não foi possível carregar o ficheiro.');
+  }
+};

@@ -10,6 +10,9 @@ import { ROLES } from '../utils/constants.js';
  * @returns {Promise<Array>} Um array de objetos de mensagem.
  */
 export const findConversationHistory = async (oscId, contadorId) => {
+  // --- LOG DE DEBUG ---
+  console.log(`[Model findConversationHistory] Buscando para osc_id: ${oscId} E contador_id: ${contadorId}`);
+
   const query = `
     SELECT 
       m.id,
@@ -25,17 +28,25 @@ export const findConversationHistory = async (oscId, contadorId) => {
       m.created_at ASC; 
   `;
   
-  const [rows] = await pool.execute(query, [oscId, contadorId]);
+  try {
+    const [rows] = await pool.execute(query, [oscId, contadorId]);
+    // --- LOG DE DEBUG ---
+    console.log(`[Model findConversationHistory] Query encontrou ${rows.length} linhas.`);
 
-  // Mapeia os dados para o formato esperado pelo frontend (do protótipo)
-  return rows.map(row => ({
-    id: row.id,
-    text: row.text,
-    date: row.date,
-    from: row.from_name,
-    // Define 'to' baseado no sender_role
-    to: row.sender_role === ROLES.OSC ? 'Contador' : row.from_name, // O 'to' é o oposto do 'from'
-  }));
+    // Mapeia os dados para o formato esperado pelo frontend
+    return rows.map(row => ({
+      id: row.id,
+      text: row.text,
+      date: row.date,
+      from: row.from_name,
+      // Define 'to' baseado no sender_role
+      // (Esta lógica pode precisar de nomes reais se houver múltiplos contadores)
+      to: row.sender_role === ROLES.OSC ? 'Contador' : row.from_name,
+    }));
+  } catch (error) {
+      console.error('Erro em findConversationHistory:', error);
+      throw new Error('Erro ao buscar histórico de conversa.');
+  }
 };
 
 /**
@@ -72,21 +83,25 @@ export const createMessage = async (messageData) => {
   const [newMessages] = await pool.execute(
     `SELECT 
        m.id, m.text, m.created_at as date, m.sender_role, m.from_name,
-       u_osc.name as osc_name
+       u_osc.name as osc_name,
+       u_contador.name as contador_name
      FROM messages m 
      JOIN users u_osc ON m.osc_id = u_osc.id
+     JOIN users u_contador ON m.contador_id = u_contador.id
      WHERE m.id = ?`,
     [result.insertId]
   );
   
   const newMessage = newMessages[0];
+  if (!newMessage) throw new Error("Falha ao buscar mensagem recém-criada.");
   
+  // Formata a resposta para corresponder ao que o frontend espera
   return {
     id: newMessage.id,
     text: newMessage.text,
     date: newMessage.date,
     from: newMessage.from_name,
-    to: newMessage.sender_role === ROLES.OSC ? 'Contador' : newMessage.osc_name,
+    to: newMessage.sender_role === ROLES.OSC ? newMessage.contador_name : newMessage.osc_name,
   };
 };
 
