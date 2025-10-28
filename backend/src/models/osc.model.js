@@ -4,8 +4,7 @@ import pool from '../config/db.js';
 import { ROLES } from '../utils/constants.js';
 
 /**
- * Busca todas as OSCs com o nome do contador associado.
- * (Usado pelo Admin)
+ * Busca todas as OSCs com o nome do contador associado. (Admin)
  */
 export const findAllWithContador = async () => {
   const query = `
@@ -24,7 +23,7 @@ export const findAllWithContador = async () => {
 };
 
 /**
- * Busca OSCs associadas a um Contador específico.
+ * Busca OSCs associadas a um Contador específico. (Contador)
  */
 export const findByContadorId = async (contadorId) => {
   console.log(`[Model findByContadorId] Recebido contadorId: ${contadorId}`);
@@ -48,17 +47,26 @@ export const findByContadorId = async (contadorId) => {
 
 /**
  * Busca uma OSC pelo seu ID (incluindo dados da tabela users).
+ * (ATUALIZADO com todos os campos das migrações 006 e 007)
  */
 export const findById = async (id) => {
   const query = `
     SELECT
-      o.id, u.name, o.cnpj, o.razao_social, o.data_fundacao,
-      o.responsible, o.responsible_cpf,
-      o.email, o.phone, o.address, o.cep, o.numero, o.bairro, o.cidade, o.estado, o.pais,
+      o.id,
+      u.name, -- Nome Fantasia (da tabela users)
+      o.cnpj,
+      o.razao_social,
+      o.data_fundacao,
+      o.responsible, -- Resp. Legal Nome
+      o.responsible_cpf, -- Resp. Legal CPF
+      o.email, -- Email de CONTACTO (da tabela oscs)
+      o.phone, -- Telefone PRINCIPAL (da tabela oscs)
+      o.address, o.cep, o.numero, o.bairro, o.cidade, o.estado, o.pais,
       o.website, o.instagram,
-      u.email as login_email, -- Email de login (da tabela users)
-      u.cpf as login_cpf, -- CPF do coordenador (da tabela users)
-      u.phone as login_phone, -- Telefone do coordenador (da tabela users)
+      o.logotipo_path, o.ata_path, o.estatuto_path,
+      u.email as login_email, -- Email de LOGIN (Coordenador, da tabela users)
+      u.cpf as login_cpf, -- CPF do Coordenador (da tabela users)
+      u.phone as login_phone, -- Telefone do Coordenador (da tabela users)
       u.status,
       o.assigned_contador_id,
       u.role
@@ -83,7 +91,7 @@ export const findByCnpj = async (cnpj) => {
 
 /**
  * Cria uma nova OSC e o seu Utilizador (Coordenador) associado (Transação).
- * (ATUALIZADO para todos os campos do formulário)
+ * (ATUALIZADO para todos os campos do formulário e ficheiros)
  * @param {object} oscData - Dados da tabela 'oscs'
  * @param {object} userData - Dados da tabela 'users' (Coordenador)
  * @returns {Promise<object>} A nova OSC criada (com dados combinados).
@@ -107,7 +115,7 @@ export const createOscAndUser = async (oscData, userData) => {
       userData.cpf,           // coordCpf
       userData.phone          // coordTelefone
     ]);
-    const newUserId = userResult.insertId; // Este é o ID da OSC
+    const newUserId = userResult.insertId;
 
     // 2. Cria o Registo da OSC
     const oscQuery = `
@@ -115,28 +123,32 @@ export const createOscAndUser = async (oscData, userData) => {
         id, cnpj, razao_social, data_fundacao, responsible, responsible_cpf,
         email, phone, address, cep, numero, bairro, cidade, estado, pais,
         website, instagram,
-        assigned_contador_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        assigned_contador_id,
+        logotipo_path, ata_path, estatuto_path
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     await connection.execute(oscQuery, [
       newUserId,
       oscData.cnpj,
       oscData.razao_social,
-      oscData.data_fundacao || null, // Garante NULL se vazio
-      oscData.responsible,      // respNome
-      oscData.responsible_cpf,  // respCpf
-      oscData.email,            // emailContato
-      oscData.phone,            // telefone (Principal da OSC)
-      oscData.address,          // endereco
+      oscData.data_fundacao || null,
+      oscData.responsible,
+      oscData.responsible_cpf,
+      oscData.email,
+      oscData.phone,
+      oscData.address,
       oscData.cep,
       oscData.numero,
       oscData.bairro,
       oscData.cidade,
       oscData.estado,
-      oscData.pais || 'Brasil', // Padrão
+      oscData.pais || 'Brasil',
       oscData.website,
       oscData.instagram,
-      oscData.assigned_contador_id
+      oscData.assigned_contador_id,
+      oscData.logotipo_path,
+      oscData.ata_path,
+      oscData.estatuto_path
     ]);
 
     await connection.commit();
@@ -153,11 +165,12 @@ export const createOscAndUser = async (oscData, userData) => {
 
 /**
  * Atualiza uma OSC e o seu Utilizador associado (usando Transação).
+ * (ATUALIZADO para todos os campos das migrações 006 e 007)
  */
 export const updateOscAndUser = async (oscId, updateData) => {
   const connection = await pool.getConnection();
   try {
-    const exists = await findById(oscId); // Busca dados combinados
+    const exists = await findById(oscId);
     if (!exists) return null;
 
     await connection.beginTransaction();
@@ -165,8 +178,8 @@ export const updateOscAndUser = async (oscId, updateData) => {
     // 1. Atualiza a tabela 'oscs'
     const oscFieldsToUpdate = [];
     const oscParams = [];
-    // Todos os campos da migração 006 + email/phone
     const allowedOscFields = [
+        'cnpj', // (Embora talvez não deva ser editável pela OSC)
         'razao_social', 'data_fundacao', 'responsible', 'responsible_cpf',
         'email', 'phone', 'address', 'cep', 'numero', 'bairro', 'cidade', 'estado', 'pais',
         'website', 'instagram', 'assigned_contador_id',
@@ -188,18 +201,23 @@ export const updateOscAndUser = async (oscId, updateData) => {
     // 2. Atualiza a tabela 'users'
     const userFieldsToUpdate = [];
     const userParams = [];
-    // Campos da migração 007 + name, status, email
-    const allowedUserFields = ['name', 'status', 'email', 'cpf', 'phone'];
-    allowedUserFields.forEach(field => {
-        // Mapeia 'coordNome' para 'name', 'coordEmail' para 'email', etc.
-        // Ou usa os nomes do 'findById' (name, login_email, login_cpf, login_phone)
-        const dataKey = field === 'email' ? 'login_email' : (field === 'cpf' ? 'login_cpf' : (field === 'phone' ? 'login_phone' : field));
-        
-        if (updateData[dataKey] !== undefined) {
-            userFieldsToUpdate.push(`${field} = ?`);
-            userParams.push(updateData[dataKey]);
+    // Mapeia nomes do formulário (ex: login_email) para nomes da coluna (email)
+    const userFieldMap = {
+        name: updateData.name, // Nome Fantasia
+        login_name: updateData.name, // (Se o nome do Coordenador for separado)
+        email: updateData.login_email,
+        cpf: updateData.login_cpf,
+        phone: updateData.login_phone,
+        status: updateData.status
+    };
+    
+    for (const key in userFieldMap) {
+        const dbKey = (key === 'login_email' ? 'email' : (key === 'login_cpf' ? 'cpf' : (key === 'login_phone' ? 'phone' : key)));
+        if (updateData[key] !== undefined) {
+             userFieldsToUpdate.push(`${dbKey} = ?`);
+             userParams.push(updateData[key]);
         }
-    });
+    }
 
      if (userFieldsToUpdate.length > 0) {
         userParams.push(oscId);

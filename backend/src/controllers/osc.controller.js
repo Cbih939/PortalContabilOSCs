@@ -4,6 +4,7 @@ import * as OscModel from '../models/osc.model.js';
 import * as UserModel from '../models/user.model.js';
 import { ROLES } from '../utils/constants.js';
 import { hashPassword } from '../utils/bcrypt.utils.js';
+import fs from 'fs'; // Importa File System para apagar ficheiros órfãos
 
 /**
  * @desc    Busca TODAS as OSCs (para o Admin).
@@ -74,7 +75,7 @@ export const getOSCById = async (req, res) => {
 
 /**
  * @desc    Cria uma nova OSC e um Utilizador associado (Formulário Detalhado).
- * @route   POST /api/oscs
+ * @route   POST /api/oscs (multipart/form-data)
  * @access  Privado (Contador, Admin)
  */
 export const createOSC = async (req, res) => {
@@ -84,11 +85,14 @@ export const createOSC = async (req, res) => {
     }
     const creatingContadorId = req.user.role === ROLES.CONTADOR ? req.user.id : null;
     
-    // Todos os campos do formulário RHF
-    const data = req.body;
-    console.log('[CreateOSC] Dados recebidos:', data); // Log
+    // Dados vêm de req.body (texto) e req.files (ficheiros)
+    const data = req.body; 
+    const files = req.files;
 
-    // 1. Validação (feita pelo Yup no frontend, mas verificações cruciais aqui)
+    console.log('[CreateOSC] Dados de Texto (body):', data);
+    console.log('[CreateOSC] Ficheiros Recebidos (files):', files);
+    
+    // 1. Validação
     if (!data.nomeFantasia || !data.cnpj || !data.coordEmail || !data.coordSenha) {
       return res.status(400).json({ message: 'Nome Fantasia, CNPJ, Email do Coordenador e Senha são obrigatórios.' });
     }
@@ -111,8 +115,8 @@ export const createOSC = async (req, res) => {
 
     // 4. Prepara os dados para os Modelos
     const userData = {
-      name: data.coordNome || data.nomeFantasia, // Nome do Coordenador ou Nome Fantasia
-      email: data.coordEmail,       // Email de LOGIN
+      name: data.coordNome || data.nomeFantasia,
+      email: data.coordEmail,
       password_hash: passwordHash,
       cpf: data.coordCpf,
       phone: data.coordTelefone,
@@ -121,11 +125,11 @@ export const createOSC = async (req, res) => {
     const oscData = {
       cnpj: data.cnpj,
       razao_social: data.razaoSocial,
-      data_fundacao: data.dataFundacao || null, // Garante NULL se vazio
+      data_fundacao: data.dataFundacao || null,
       responsible: data.respNome,
       responsible_cpf: data.respCpf,
-      email: data.emailContato,     // Email de CONTACTO
-      phone: data.telefone,         // Telefone PRINCIPAL
+      email: data.emailContato,
+      phone: data.telefone,
       address: data.endereco,
       cep: data.cep,
       numero: data.numero,
@@ -136,7 +140,10 @@ export const createOSC = async (req, res) => {
       website: data.website,
       instagram: data.instagram,
       assigned_contador_id: creatingContadorId,
-      // (Faltam os uploads de ficheiro)
+      // Adiciona caminhos dos ficheiros (se existirem)
+      logotipo_path: files?.logotipo ? files.logotipo[0].path : null,
+      ata_path: files?.ata ? files.ata[0].path : null,
+      estatuto_path: files?.estatuto ? files.estatuto[0].path : null,
     };
 
     // 5. O Modelo 'createOscAndUser' usa TRANSAÇÃO
@@ -146,6 +153,18 @@ export const createOSC = async (req, res) => {
     res.status(201).json(newOSC);
   } catch (error) {
     console.error('Erro no controlador createOSC (detalhado):', error);
+    
+    // Se a transação falhar, apaga ficheiros órfãos que o multer já salvou
+    if (req.files) {
+        Object.values(req.files).forEach(fileArray => {
+            if (fileArray && fileArray[0] && fs.existsSync(fileArray[0].path)) {
+                fs.unlink(fileArray[0].path, (err) => {
+                    if (err) console.error(`[CreateOSC] Falha ao apagar ficheiro órfão ${fileArray[0].path}:`, err);
+                });
+            }
+        });
+    }
+
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({ message: 'Email de login ou CNPJ já existe.' });
     }
@@ -160,7 +179,9 @@ export const updateOSC = async (req, res) => {
   try {
     const { id: oscId } = req.params;
     const { id: userId, role: userRole } = req.user;
-    const updateData = req.body;
+    // (Esta rota precisa ser atualizada para multipart/form-data também
+    //  se a edição de perfil permitir upload de ficheiros)
+    const updateData = req.body; 
 
     const osc = await OscModel.findById(oscId);
     if (!osc) {
@@ -178,15 +199,15 @@ export const updateOSC = async (req, res) => {
 
     // Regras de negócio
     if (userRole !== ROLES.ADMIN) {
-        delete updateData.assigned_contador_id; // Só Admin pode reatribuir
+        delete updateData.assigned_contador_id;
     }
     if (userRole === ROLES.OSC) {
-        delete updateData.status; // OSC não pode mudar o próprio status
-        delete updateData.cnpj; // OSC não pode mudar o próprio CNPJ
+        delete updateData.status;
+        delete updateData.cnpj; // CNPJ não deve ser editável
     }
     
     const updatedOSC = await OscModel.updateOscAndUser(oscId, updateData);
-    if (!updatedOSC) { // Caso update falhe no modelo
+    if (!updatedOSC) {
          return res.status(404).json({ message: 'OSC não encontrada durante a atualização.' });
     }
 

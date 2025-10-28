@@ -1,57 +1,58 @@
 // src/pages/contador/Notices.jsx
 
 import React, { useState, useEffect } from 'react';
-import NoticesView from './components/NoticesView.jsx'; // Componente de apresentação
-import * as oscService from '../../services/oscService.js'; // Para buscar OSCs
-import * as alertService from '../../services/alertService.js'; // Para enviar e buscar histórico
+import NoticesView from './components/NoticesView.jsx';
+import * as oscService from '../../services/oscService.js';
+import * as alertService from '../../services/alertService.js';
 import useApi from '../../hooks/useApi.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
-import { formatDate } from '../../utils/formatDate.js'; // Para formatar data no histórico
+import { formatDate } from '../../utils/formatDate.js';
 
 /**
  * Página Canal de Avisos do Contador (Conectada à API).
  */
 export default function NoticesPage() {
-  // --- Estados ---
-  const [oscs, setOscs] = useState([]); // Lista de OSCs para dropdown
-  const [sentNotices, setSentNotices] = useState([]); // Histórico de avisos
+  const [oscs, setOscs] = useState([]);
+  const [sentNotices, setSentNotices] = useState([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [errorLoading, setErrorLoading] = useState(null);
   const addNotification = useNotification();
 
   // Hook para a API de *envio* de aviso
-  const { request: sendNoticeRequest, isLoading: isSending } = useApi(alertService.sendNotice);
+  // Dizemos ao useApi para NÃO mostrar o seu próprio erro,
+  // pois trataremos o erro manualmente no handleSendNotice
+  const { request: sendNoticeRequest, isLoading: isSending } = useApi(
+      alertService.sendNotice,
+      { showErrorNotification: false } 
+  );
 
-  // --- Efeito para Buscar Dados Iniciais (OSCs e Histórico) ---
+  // Efeito para Buscar Dados Iniciais
   useEffect(() => {
     const fetchData = async () => {
       setIsLoadingData(true);
       setErrorLoading(null);
-      let fetchedOscs = []; // Guarda as OSCs buscadas para usar na formatação do histórico
+      let fetchedOscs = [];
       try {
-        // Busca OSCs e Histórico em paralelo
         const [oscsResponse, historyResponse] = await Promise.all([
           oscService.getMyOSCs(),
           alertService.getSentNoticesHistory(),
         ]);
 
-        fetchedOscs = oscsResponse.data || []; // Guarda as OSCs
+        fetchedOscs = oscsResponse.data || [];
         setOscs(fetchedOscs);
 
-        // Formata o histórico recebido da API
         const formattedHistory = (historyResponse.data || []).map(notice => {
-            const oscName = notice.osc_id === null // Assumindo que a API retorna osc_id
+            const oscName = notice.osc_id === null
                            ? 'Todas as OSCs'
                            : fetchedOscs.find(o => o.id === notice.osc_id)?.name || 'OSC Desconhecida';
             return {
                 ...notice,
                 oscName: oscName,
-                date: notice.created_at || notice.date, // Ajusta nome do campo data
-                // Garante que 'type' existe, mesmo que a API não retorne (usa title como fallback)
+                date: notice.created_at || notice.date,
                 type: notice.type || (notice.title?.includes('Urgente') ? 'Urgente' : (notice.title?.includes('Lembrete') ? 'Lembrete' : 'Informativo')),
             };
-        }).sort((a, b) => new Date(b.date) - new Date(a.date)); // Ordena por data
+        }).sort((a, b) => new Date(b.date) - new Date(a.date));
 
         setSentNotices(formattedHistory);
 
@@ -65,36 +66,40 @@ export default function NoticesPage() {
       }
     };
     fetchData();
-  }, [addNotification]); // addNotification é estável, useEffect roda 1 vez
+  }, [addNotification]);
 
-  // --- Handler para Enviar Aviso (Conectado à API) ---
+  // --- Handler para Enviar Aviso (CORRIGIDO) ---
   const handleSendNotice = async (formData) => {
-    // formData = { oscId, type, title, message }
+    // formData já vem de NoticesView como:
+    // { oscId: (number|null), type: string, title: string, message: string }
+    
     try {
-      // Renomeia oscId para osc_id se o backend esperar assim
-      const apiPayload = { ...formData, osc_id: formData.oscId };
-      delete apiPayload.oscId; // Remove a chave antiga se necessário
-
-      const newNoticeResponse = await sendNoticeRequest(apiPayload); // Chama API real
-      const newNotice = newNoticeResponse; // API deve retornar o aviso criado
+      // --- CORREÇÃO AQUI ---
+      // O backend espera 'oscId' (camelCase), não 'osc_id'.
+      // O 'formData' já está no formato correto.
+      const newNoticeResponse = await sendNoticeRequest(formData); // Envia formData diretamente
+      // --- FIM DA CORREÇÃO ---
+      
+      const newNotice = newNoticeResponse;
 
       const oscName = formData.oscId === null
                       ? 'Todas as OSCs'
                       : oscs.find(o => o.id === formData.oscId)?.name || 'Desconhecida';
 
-      // Adiciona ao topo do histórico local (formatado)
+      // Adiciona ao topo do histórico local
       setSentNotices((prev) => [{
           ...newNotice,
-          id: newNotice.id || Date.now(), // Usa ID da API ou um temporário
+          id: newNotice.id || Date.now(),
           oscName: oscName,
-          date: newNotice.created_at || new Date().toISOString(), // Usa data da resposta ou atual
-          type: formData.type // Usa o tipo enviado no form
-      }, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date))); // Re-ordena
+          date: newNotice.created_at || new Date().toISOString(),
+          type: formData.type
+      }, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date)));
 
       addNotification(`Aviso "${formData.title}" enviado com sucesso para ${oscName}!`, 'success');
+    
     } catch (err) {
       console.error('Falha ao enviar aviso:', err);
-      // useApi já mostra notificação de erro, mas pode adicionar log específico
+      // Mostra a notificação de erro manualmente
       addNotification(`Falha ao enviar aviso: ${err.response?.data?.message || err.message}`, 'error');
     }
   };
@@ -112,12 +117,11 @@ export default function NoticesPage() {
   }
 
   return (
-    // Renderiza o componente de apresentação com dados da API
     <NoticesView
       oscs={oscs}
       sentNotices={sentNotices}
       onSendNotice={handleSendNotice}
-      isLoading={isSending} // Passa estado de loading do *envio*
+      isLoading={isSending}
     />
   );
 }

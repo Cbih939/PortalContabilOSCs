@@ -8,18 +8,22 @@ import pool from '../config/db.js'; // Importa o pool de conexões MySQL
  * @returns {Promise<Array>} Um array de objetos de alerta.
  */
 export const findAlertsByOSCId = async (oscId) => {
+  // --- LÓGICA CORRIGIDA ---
+  // Seleciona alertas onde o osc_id é o da OSC logada
+  // OU onde o osc_id é NULL (alerta geral para todas as OSCs)
   const query = `
     SELECT
       id,
       title,
       message,
       created_at as date,
-      read_status as 'read', -- Renomeia para corresponder ao frontend
-      type -- Inclui o tipo
+      read_status as 'read',
+      type
     FROM alerts
-    WHERE osc_id = ? OR osc_id IS NULL -- Inclui alertas para 'Todas' (osc_id = NULL)
+    WHERE osc_id = ? OR osc_id IS NULL
     ORDER BY read_status ASC, created_at DESC
   `;
+  // --- FIM DA CORREÇÃO ---
   const [rows] = await pool.execute(query, [oscId]);
 
   // Converte o 'read_status' (TINYINT 0/1) para booleano (true/false)

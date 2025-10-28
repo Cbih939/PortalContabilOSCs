@@ -2,32 +2,32 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form'; // <-- Importa o Controller
+import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { IMaskInput } from 'react-imask'; // <-- Importa o IMaskInput
+import { IMaskInput } from 'react-imask';
 import styles from './CreateOSCPage.module.css';
 import Button from '../../components/common/Button.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
+import FileUpload from '../../components/common/FileUpload.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
-import useApi from '../../hooks/useApi.jsx';
 import * as oscService from '../../services/oscService.js';
 // (Opcional: ícones de senha)
 // import { EyeIcon, EyeOffIcon } from '../../components/common/Icons.jsx';
 
 // --- Schema de Validação (Yup) ---
-// (Atualiza as máscaras para o formato do Yup)
 const schema = yup.object().shape({
   nomeFantasia: yup.string().required('O nome fantasia é obrigatório.'),
   razaoSocial: yup.string().required('A razão social é obrigatória.'),
   cnpj: yup.string().required('O CNPJ é obrigatório.').matches(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, 'CNPJ inválido.'),
   dataFundacao: yup.date().nullable().transform((curr, orig) => orig === '' ? null : curr),
-  
+  logotipo: yup.mixed().nullable(),
+  ata: yup.mixed().nullable(),
+  estatuto: yup.mixed().nullable(),
   emailContato: yup.string().email('Email de contato inválido.').required('O email de contato é obrigatório.'),
   telefone: yup.string().required('O telefone é obrigatório.'),
   website: yup.string().url('URL do website inválida.').nullable().transform((curr, orig) => orig === '' ? null : curr),
   instagram: yup.string().nullable().transform((curr, orig) => orig === '' ? null : curr),
-  
   cep: yup.string().required('O CEP é obrigatório.').matches(/^\d{5}-\d{3}$/, 'CEP inválido.'),
   endereco: yup.string().required('O endereço é obrigatório.'),
   numero: yup.string().required('O número é obrigatório.'),
@@ -35,10 +35,8 @@ const schema = yup.object().shape({
   cidade: yup.string().required('A cidade é obrigatória.'),
   estado: yup.string().required('O estado é obrigatório.'),
   pais: yup.string().default('Brasil'),
-
   respNome: yup.string().required('O nome do responsável é obrigatório.'),
   respCpf: yup.string().required('O CPF do responsável é obrigatório.').matches(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'CPF inválido.'),
-  
   coordNome: yup.string().required('O nome do coordenador é obrigatório.'),
   coordCpf: yup.string().required('O CPF do coordenador é obrigatório.').matches(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'CPF inválido.'),
   coordEmail: yup.string().email('Email de login inválido.').required('O email de login é obrigatório.'),
@@ -46,7 +44,7 @@ const schema = yup.object().shape({
   coordSenha: yup.string().required('A senha é obrigatória.').min(8, 'A senha deve ter no mínimo 8 caracteres.'),
 });
 
-// --- Componentes Helper RHF (Input simples, sem máscara) ---
+// --- Componentes Helper RHF (Input simples e Máscara) ---
 const RHFInput = React.memo(({ label, id, error, type = "text", registerProps }) => (
     <div className={styles.field}>
         <label htmlFor={id} className={styles.formLabel}>{label}</label>
@@ -55,26 +53,24 @@ const RHFInput = React.memo(({ label, id, error, type = "text", registerProps })
     </div>
 ));
 
-// --- Componente Helper RHFMaskedInput (ATUALIZADO) ---
-// Usa <Controller> do RHF e <IMaskInput>
-const RHFMaskedInput = React.memo(({ control, name, label, id, mask, placeholder, error, onBlurCEP = () => {} }) => (
+const RHFMaskedInput = React.memo(({ control, name, label, id, mask, placeholder, error, onBlurCEP = () => {}, ...props }) => (
      <div className={styles.field}>
         <label htmlFor={id} className={styles.formLabel}>{label}</label>
         <Controller
             name={name}
             control={control}
-            render={({ field }) => ( // 'field' contém { onChange, onBlur, value, ref }
+            render={({ field }) => (
                 <IMaskInput
-                    {...field} // Passa props do RHF (value, onChange, etc.)
+                    {...field}
                     mask={mask}
                     id={id}
                     placeholder={placeholder}
-                    onBlur={onBlurCEP} // Usa o handler de CEP se fornecido
+                    onBlur={(e) => { field.onBlur(e); onBlurCEP(e); }}
                     className={`${styles.formInput} ${error ? styles.formInputError : ''}`}
-                    // IMaskInput usa 'unmask' para retornar valor limpo, mas RHF lida com isso
+                    disabled={props.disabled}
                 />
             )}
-        />
+        Controller/> {/* <-- CORRIGIDO AQUI (de /> para </Controller>) */}
         {error && <span className={styles.errorMessage}>{error.message}</span>}
     </div>
 ));
@@ -84,16 +80,16 @@ const RHFMaskedInput = React.memo(({ control, name, label, id, mask, placeholder
 export default function CreateOSCPage() {
     const navigate = useNavigate();
     const addNotification = useNotification();
-    const { request: createOSCRequest, isLoading } = useApi(oscService.createOSC);
+    const [isLoading, setIsLoading] = useState(false);
 
     const { register, handleSubmit, control, setValue, clearErrors, formState: { errors } } = useForm({
         resolver: yupResolver(schema),
         defaultValues: { pais: 'Brasil' }
     });
 
-    // Handler Busca CEP (ViaCEP)
+    // Handler Busca CEP
     const handleCepBlur = async (e) => {
-        const cep = e.target.value.replace(/\D/g, ''); // Remove máscara
+        const cep = e.target.value.replace(/\D/g, '');
         if (cep.length === 8) {
             try {
                 const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
@@ -101,7 +97,6 @@ export default function CreateOSCPage() {
                 const data = await response.json();
                 if (data.erro) throw new Error('CEP não localizado');
                 
-                // Preenche os campos do formulário
                 setValue('endereco', data.logradouro, { shouldValidate: true });
                 setValue('bairro', data.bairro, { shouldValidate: true });
                 setValue('cidade', data.localidade, { shouldValidate: true });
@@ -116,17 +111,41 @@ export default function CreateOSCPage() {
 
     // Handler Submissão
     const onSubmit = async (data) => {
-        console.log("Enviando formulário:", data);
+        setIsLoading(true);
+        const formData = new FormData();
+        
+        for (const key in data) {
+            if (data[key] !== null && data[key] !== undefined) {
+                if (typeof data[key] !== 'object' || data[key] === null || !(data[key] instanceof File)) {
+                    formData.append(key, data[key]);
+                }
+            }
+        }
+        if (data.logotipo && data.logotipo instanceof File) {
+            formData.append('logotipo', data.logotipo);
+        }
+        if (data.ata && data.ata instanceof File) {
+            formData.append('ata', data.ata);
+        }
+        if (data.estatuto && data.estatuto instanceof File) {
+            formData.append('estatuto', data.estatuto);
+        }
+
         try {
-            const newOSC = await createOSCRequest(data); // Chama API
+            const response = await oscService.createOSC(formData); 
+            const newOSC = response.data;
             addNotification(`OSC "${newOSC.name}" criada com sucesso!`, 'success');
-            navigate('/contador/oscs'); // Volta para a lista
+            navigate('/contador/oscs');
         } catch (err) {
              console.error('Falha ao criar OSC:', err);
              addNotification(`Falha ao criar OSC: ${err.response?.data?.message || err.message}`, 'error');
+        } finally {
+            setIsLoading(false);
         }
     };
-
+    
+    const pdfOnly = { 'application/pdf': ['.pdf'] };
+    const imageOnly = { 'image/jpeg': [], 'image/png': [], 'image/gif': [] };
 
     return (
         <div className={styles.pageContainer}>
@@ -142,14 +161,51 @@ export default function CreateOSCPage() {
                     <div className={styles.grid}>
                         <RHFInput label="Nome Fantasia da OSC *" id="nomeFantasia" registerProps={register('nomeFantasia')} error={errors.nomeFantasia} />
                         <RHFInput label="Razão Social *" id="razaoSocial" registerProps={register('razaoSocial')} error={errors.razaoSocial} />
-                        <RHFMaskedInput
-                            control={control} name="cnpj"
-                            label="CNPJ *" id="cnpj"
-                            mask="00.000.000/0000-00" // <-- Máscara atualizada para '0'
-                            error={errors.cnpj}
-                            placeholder="00.000.000/0000-00"
-                        />
+                        <RHFMaskedInput control={control} name="cnpj" label="CNPJ *" id="cnpj" mask="00.000.000/0000-00" error={errors.cnpj} placeholder="00.000.000/0000-00" />
                         <RHFInput label="Data de Fundação" id="dataFundacao" type="date" registerProps={register('dataFundacao')} error={errors.dataFundacao} />
+                    </div>
+                </section>
+
+                {/* --- Secção 2: Documentos --- */}
+                <section className={styles.formSection}>
+                    <h2 className={styles.sectionTitle}>2. Documentos</h2>
+                    <div className={styles.grid}>
+                        <Controller
+                            name="logotipo"
+                            control={control}
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <FileUpload
+                                    label="Logotipo"
+                                    onFileSelect={onChange}
+                                    acceptedTypes={imageOnly}
+                                    hint="JPG, PNG, GIF (máx. 5MB)"
+                                />
+                            )}
+                        />
+                        <Controller
+                            name="ata"
+                            control={control}
+                            render={({ field: { onChange } }) => (
+                                <FileUpload
+                                    label="Última ATA (.pdf)"
+                                    onFileSelect={onChange}
+                                    acceptedTypes={pdfOnly}
+                                    hint="Apenas .pdf (máx. 5MB)"
+                                />
+                            )}
+                        />
+                         <Controller
+                            name="estatuto"
+                            control={control}
+                            render={({ field: { onChange } }) => (
+                                <FileUpload
+                                    label="Estatuto Social (.pdf)"
+                                    onFileSelect={onChange}
+                                    acceptedTypes={pdfOnly}
+                                    hint="Apenas .pdf (máx. 5MB)"
+                                />
+                            )}
+                        />
                     </div>
                 </section>
 
@@ -158,24 +214,10 @@ export default function CreateOSCPage() {
                     <h2 className={styles.sectionTitle}>3. Contato e Endereço</h2>
                     <div className={styles.grid}>
                         <RHFInput label="E-mail de Contato *" id="emailContato" type="email" registerProps={register('emailContato')} error={errors.emailContato} />
-                        <RHFMaskedInput
-                            control={control} name="telefone"
-                            label="Telefone / WhatsApp *" id="telefone"
-                            mask="(00) 00000-0000" // <-- Máscara atualizada
-                            error={errors.telefone}
-                            placeholder="(00) 00000-0000"
-                        />
+                        <RHFMaskedInput control={control} name="telefone" label="Telefone / WhatsApp *" id="telefone" mask="(00) 00000-0000" error={errors.telefone} placeholder="(00) 00000-0000" />
                         <RHFInput label="Website" id="website" type="url" registerProps={register('website')} error={errors.website} placeholder="https://..." />
                         <RHFInput label="Instagram" id="instagram" registerProps={register('instagram')} error={errors.instagram} placeholder="@seu_perfil" />
-                        
-                        <RHFMaskedInput
-                            control={control} name="cep"
-                            label="CEP *" id="cep"
-                            mask="00000-000" // <-- Máscara atualizada
-                            error={errors.cep}
-                            onBlurCEP={handleCepBlur} // Passa o handler do CEP
-                            placeholder="XXXXX-XXX"
-                        />
+                        <RHFMaskedInput control={control} name="cep" label="CEP *" id="cep" mask="00000-000" error={errors.cep} onBlurCEP={handleCepBlur} placeholder="XXXXX-XXX" />
                         <RHFInput label="Endereço *" id="endereco" registerProps={register('endereco')} error={errors.endereco} />
                         <RHFInput label="Número *" id="numero" registerProps={register('numero')} error={errors.numero} />
                         <RHFInput label="Bairro *" id="bairro" registerProps={register('bairro')} error={errors.bairro} />
@@ -190,13 +232,7 @@ export default function CreateOSCPage() {
                      <h2 className={styles.sectionTitle}>4. Responsável Legal (Presidente)</h2>
                      <div className={styles.grid}>
                         <RHFInput label="Nome *" id="respNome" registerProps={register('respNome')} error={errors.respNome} />
-                        <RHFMaskedInput
-                            control={control} name="respCpf"
-                            label="CPF *" id="respCpf"
-                            mask="000.000.000-00" // <-- Máscara atualizada
-                            error={errors.respCpf}
-                            placeholder="000.000.000-00"
-                        />
+                        <RHFMaskedInput control={control} name="respCpf" label="CPF *" id="respCpf" mask="000.000.000-00" error={errors.respCpf} placeholder="000.000.000-00" />
                      </div>
                 </section>
 
@@ -205,27 +241,14 @@ export default function CreateOSCPage() {
                      <h2 className={styles.sectionTitle}>5. Coordenador do Programa (Utilizador)</h2>
                      <div className={styles.grid}>
                         <RHFInput label="Nome Completo do Coordenador *" id="coordNome" registerProps={register('coordNome')} error={errors.coordNome} />
-                        <RHFMaskedInput
-                            control={control} name="coordCpf"
-                            label="CPF do Coordenador *" id="coordCpf"
-                            mask="000.000.000-00" // <-- Máscara atualizada
-                            error={errors.coordCpf}
-                            placeholder="000.000.000-00"
-                        />
+                        <RHFMaskedInput control={control} name="coordCpf" label="CPF do Coordenador *" id="coordCpf" mask="000.000.000-00" error={errors.coordCpf} placeholder="000.000.000-00" />
                         <RHFInput label="E-mail do Coordenador (será o login) *" id="coordEmail" type="email" registerProps={register('coordEmail')} error={errors.coordEmail} />
-                        <RHFMaskedInput
-                            control={control} name="coordTelefone"
-                            label="Telefone do Coordenador *" id="coordTelefone"
-                            mask="(00) 00000-0000" // <-- Máscara atualizada
-                            error={errors.coordTelefone}
-                            placeholder="(00) 00000-0000"
-                        />
+                        <RHFMaskedInput control={control} name="coordTelefone" label="Telefone do Coordenador *" id="coordTelefone" mask="(00) 00000-0000" error={errors.coordTelefone} placeholder="(00) 00000-0000" />
                         <RHFInput label="Senha Provisória (Mín. 8 caracteres) *" id="coordSenha" type="password" registerProps={register('coordSenha')} error={errors.coordSenha} />
                      </div>
                 </section>
 
-                {/* (Falta Secção 2: Upload de Documentos) */}
-
+                {/* --- Submissão --- */}
                 <div className={styles.submitContainer}>
                     <Button type="submit" variant="primary" size="lg" disabled={isLoading} style={{backgroundImage: 'linear-gradient(to right, #f97316, #ef4444)'}}>
                          {isLoading ? <Spinner size="sm" className="mr-2" /> : "Finalizar Cadastro da OSC"}

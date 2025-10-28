@@ -3,7 +3,8 @@
 import express from 'express';
 // Middlewares
 import { protect, checkRole } from '../middlewares/auth.middleware.js';
-import { validate, createOscRules } from '../middlewares/validator.middleware.js'; // Importa regras específicas
+import { validate } from '../middlewares/validator.middleware.js'; // (Validação de texto é complexa com multer)
+import upload from '../middlewares/upload.middleware.js'; // Importa Multer
 // Constantes
 import { ROLES } from '../utils/constants.js';
 // Controladores
@@ -22,79 +23,69 @@ const router = express.Router();
 
 /* --- Definição das Rotas para /api/oscs --- */
 
-// GET /api/oscs
-// Busca todas as OSCs (com nome do contador).
-// Acesso: Apenas Admin.
+// GET /api/oscs (Admin)
 router.get(
   '/',
-  protect, // 1º: Autenticação
-  checkRole([ROLES.ADMIN]), // 2º: Autorização (Admin)
-  getAllOSCs // 3º: Controlador
+  protect,
+  checkRole([ROLES.ADMIN]),
+  getAllOSCs
 );
 
-// GET /api/oscs/my
-// Busca as OSCs associadas ao Contador logado.
-// Acesso: Apenas Contador.
+// GET /api/oscs/my (Contador)
 router.get(
   '/my',
-  protect, // 1º: Autenticação
-  checkRole([ROLES.CONTADOR]), // 2º: Autorização (Contador)
-  getMyOSCs // 3º: Controlador
+  protect,
+  checkRole([ROLES.CONTADOR]),
+  getMyOSCs
 );
 
-// GET /api/oscs/:id
-// Busca detalhes de uma OSC específica.
-// Acesso: Admin, Contador associado ou a própria OSC.
+// GET /api/oscs/:id (Admin, Contador associado, OSC própria)
 router.get(
   '/:id',
-  protect, // 1º: Autenticação (precisa saber quem está a pedir)
-  // A verificação de permissão específica (se é associado/próprio)
-  // é feita DENTRO do controlador getOSCById.
-  getOSCById // 2º: Controlador
+  protect,
+  getOSCById
 );
 
-// POST /api/oscs
-// Cria uma nova OSC (e um utilizador associado).
-// Acesso: Admin ou Contador.
+// POST /api/oscs (Criação de OSC - Atualizado para multipart/form-data)
+// Define os campos de ficheiro que o Multer deve esperar
+const oscUploadFields = [
+    { name: 'logotipo', maxCount: 1 },
+    { name: 'ata', maxCount: 1 },
+    { name: 'estatuto', maxCount: 1 }
+];
+
 router.post(
   '/',
-  protect, // 1º: Autenticação
-  checkRole([ROLES.ADMIN, ROLES.CONTADOR]), // 2º: Autorização
-  createOscRules, // 3º: Regras de validação
-  validate,       // 4º: Middleware que verifica a validação
-  createOSC       // 5º: Controlador
+  protect,
+  checkRole([ROLES.ADMIN, ROLES.CONTADOR]),
+  upload.fields(oscUploadFields), // <-- USA MULTER para processar ficheiros
+  // Nota: A validação (express-validator) em campos de texto de multipart/form-data é complexa
+  // e geralmente é feita manualmente no controlador.
+  createOSC // Controlador
 );
 
-// PUT /api/oscs/:id
-// Atualiza os dados de uma OSC.
-// Acesso: Contador associado ou a própria OSC.
+// PUT /api/oscs/:id (Atualiza OSC)
 router.put(
   '/:id',
-  protect, // 1º: Autenticação
-  checkRole([ROLES.CONTADOR, ROLES.OSC]), // 2º: Autorização (Contador ou OSC)
-  // (Poderia adicionar regras de validação para update aqui)
-  updateOSC // 3º: Controlador (verifica permissão interna)
+  protect,
+  // (Pode precisar de upload.fields aqui também se a edição permitir mudar ficheiros)
+  updateOSC
 );
 
-// PATCH /api/oscs/:id/assign
-// Associa/Reassocia uma OSC a um Contador.
-// Acesso: Apenas Admin.
+// PATCH /api/oscs/:id/assign (Admin)
 router.patch(
   '/:id/assign',
-  protect, // 1º: Autenticação
-  checkRole([ROLES.ADMIN]), // 2º: Autorização (Admin)
-  // (Poderia adicionar validação para 'contadorId' no body)
-  assignContador // 3º: Controlador
+  protect,
+  checkRole([ROLES.ADMIN]),
+  assignContador
 );
 
-// DELETE /api/oscs/:id
-// Apaga uma OSC (e o utilizador associado).
-// Acesso: Apenas Admin.
+// DELETE /api/oscs/:id (Admin)
 router.delete(
   '/:id',
-  protect, // 1º: Autenticação
-  checkRole([ROLES.ADMIN]), // 2º: Autorização (Admin)
-  deleteOSC // 3º: Controlador
+  protect,
+  checkRole([ROLES.ADMIN]),
+  deleteOSC
 );
 
 // Exporta o router
