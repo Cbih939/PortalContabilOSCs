@@ -1,6 +1,25 @@
 // src/services/oscService.js
 import api from './api.js';
 
+/**
+ * [ADMIN] Busca TODAS as OSCs no sistema.
+ * @returns {Promise<Array>} Lista de todas as OSCs com nome do contador.
+ */
+export const getAllOSCs = () => {
+  // Rota: GET /api/oscs
+  return api.get('/oscs');
+};
+/**
+ * [ADMIN] Associa uma OSC a um Contador.
+ * @param {string|number} oscId
+ * @param {string|number} contadorId
+ * @returns {Promise<object>}
+ */
+
+export const assignContador = (oscId, contadorId) => {
+  return api.patch(`/oscs/${oscId}/assign`, { contadorId });
+};
+
 /** Busca as OSCs associadas ao Contador logado */
 export const getMyOSCs = () => {
   return api.get('/oscs/my');
