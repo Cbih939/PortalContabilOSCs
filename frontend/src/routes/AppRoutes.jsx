@@ -33,6 +33,7 @@ import DocumentsPage from '../pages/contador/Documents.jsx';
 import NoticesPage from '../pages/contador/Notices.jsx';
 import ContadorMessagesPage from '../pages/contador/Messages.jsx';
 import ContadorProfilePage from '../pages/contador/Profile.jsx';
+import TemplatesPage from '../pages/contador/TemplatesPage.jsx';
 import ContadorSidebar from '../pages/contador/components/ContadorSidebar.jsx';
 import ContadorHeader from '../pages/contador/components/ContadorHeader.jsx';
 
@@ -133,6 +134,8 @@ export default function AppRoutes() {
               <Route path="/contador/oscs/novo" element={<CreateOSCPage />} /> {/* <-- ROTA DA NOVA PÁGINA */}
               <Route path="/contador/documentos" element={<DocumentsPage />} />
               <Route path="/contador/avisos" element={<NoticesPage />} />
+              <Route path="/contador/perfil" element={<ContadorProfilePage />} />
+              <Route path="/contador/modelos" element={<TemplatesPage />} />
               <Route path="/contador/mensagens" element={<ContadorMessagesPage />} />
               <Route path="/contador/perfil" element={<ContadorProfilePage />} />
           </Route>

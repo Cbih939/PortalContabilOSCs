@@ -1,0 +1,36 @@
+/* src/pages/admin/components/AssignContadorModal.module.css */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* space-y-6 */
+}
+
+/* Estilos para o Select (copiados de CreateUserModal.module.css) */
+.selectLabel {
+  display: block; font-size: 0.875rem; font-weight: 500;
+  color: #374151; margin-bottom: 0.25rem;
+}
+.selectInput {
+  /* ... (copie a definição completa de .selectInput de CreateUserModal.module.css) ... */
+  margin-top: 0.25rem; display: block; width: 100%; padding: 0.75rem;
+  border: 1px solid #d1d5db; border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: white;
+  appearance: none;
+  background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>');
+  background-repeat: no-repeat; background-position: right 0.75rem center;
+  background-size: 1.25em 1.25em; cursor: pointer;
+}
+.selectInput:focus {
+    outline: none; border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+.selectInput:disabled {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+.errorMessage {
+    color: #dc2626; font-size: 0.875rem; margin-top: 0.25rem;
+}

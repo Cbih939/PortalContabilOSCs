@@ -3,7 +3,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 // import { clsx } from 'clsx'; // Não mais necessário para NavLink
 import Sidebar from '../../../components/layout/Sidebar.jsx';
-import { /* ... Ícones ... */ LogoutIcon, ChartIcon, BuildingIcon, FolderIcon, MegaphoneIcon, MessageIcon, ProfileIcon } from '../../../components/common/Icons.jsx';
+import { /* ... Ícones ... */ LogoutIcon, ChartIcon, BuildingIcon, FolderIcon, MegaphoneIcon, MessageIcon, ProfileIcon, UploadIcon } from '../../../components/common/Icons.jsx';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 import styles from './ContadorSidebar.module.css'; // Importa CSS Module específico
 
@@ -43,6 +43,7 @@ export default function ContadorSidebar({ isOpen }) {
       <SidebarLink to="/contador/oscs" icon={BuildingIcon}>Lista de OSCs</SidebarLink>
       <SidebarLink to="/contador/documentos" icon={FolderIcon}>Documentos</SidebarLink>
       <SidebarLink to="/contador/avisos" icon={MegaphoneIcon}>Canal de Avisos</SidebarLink>
+      <SidebarLink to="/contador/modelos" icon={UploadIcon}> Gerenciar Modelos</SidebarLink>
       <SidebarLink to="/contador/mensagens" icon={MessageIcon}>Mensagens</SidebarLink>
       <SidebarLink to="/contador/perfil" icon={ProfileIcon}>Editar Perfil</SidebarLink>
     </Sidebar>

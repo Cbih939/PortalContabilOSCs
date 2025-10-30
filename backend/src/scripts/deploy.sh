@@ -12,7 +12,7 @@
 
 # --- Configuração ---
 # (!!!) Altere estas variáveis para corresponder ao seu ambiente (!!!)
-APP_DIR="/var/www/portal-contabil/backend" # O caminho absoluto para a pasta do backend na VPS
+APP_DIR="/var/www/PortalContabilOSCs/backend" # O caminho absoluto para a pasta do backend na VPS
 GIT_BRANCH="main"                          # O branch do Git a ser puxado (ex: main, master, develop)
 PM2_APP_NAME="portal-contabil-backend"     # Nome da aplicação no PM2
 
