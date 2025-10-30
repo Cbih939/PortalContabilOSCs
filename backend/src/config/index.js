@@ -19,12 +19,12 @@ const config = {
   // Configuração do Banco de Dados MySQL
   DB_HOST: process.env.DB_HOST || 'localhost',
   DB_PORT: process.env.DB_PORT || 3306, // Porta padrão do MySQL
-  DB_USER: process.env.DB_USER || 'root',
-  DB_PASSWORD: process.env.DB_PASSWORD || '', // Coloque a sua senha no .env
-  DB_NAME: process.env.DB_NAME || 'contabil_osc_db',
+  DB_USER: process.env.DB_USER || 'Lucas',
+  DB_PASSWORD: process.env.DB_PASSWORD || 'PortalLucas54321!', // Coloque a sua senha no .env
+  DB_NAME: process.env.DB_NAME || 'portal_contabil',
 
   // Configuração de Segurança (JWT - JSON Web Token)
-  JWT_SECRET: process.env.JWT_SECRET || 'SEGREDO_SUPER_SECRETO_TROCAR_EM_PROD',
+  JWT_SECRET: process.env.JWT_SECRET || 'ea000d1a6824d253f61525ba1d69bd29',
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
 };
 
