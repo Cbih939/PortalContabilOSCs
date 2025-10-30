@@ -45,7 +45,10 @@ export default function AdminDashboard() {
         const oscs = oscsResponse.data || [];
 
         // Calcula as estatísticas
-        const contadorCount = users.filter(u => u.role === ROLES.CONTADOR).length;
+        // Filtra por Contadores que estão 'Ativos'
+        const contadorCount = users.filter(
+          u => u.role === ROLES.CONTADOR && u.status === 'Ativo'
+        ).length;
         
         setStats({
           totalUsers: users.length,
@@ -106,16 +109,17 @@ export default function AdminDashboard() {
               </div>
             </Link>
 
-            {/* Card Total de Contadores (não é link) */}
-<div className={styles.statCard} style={{cursor: 'default', transform: 'none'}}>
-  <div className={`${styles.statIconContainer} ${styles.iconYellow}`}>
-    <UsersIcon className={styles.statIcon} />
-  </div>
-  <div>
-    <p className={styles.statLabel}>Contadores Ativos</p> {/* <-- CORRIGIDO */}
-    <p className={styles.statValue}>{stats.totalContadores}</p>
-  </div>
-</div>
+            {/* Card Total de Contadores */}
+            {/* Remove o Link, pois não temos uma página só de contadores */}
+            <div className={styles.statCard} style={{cursor: 'default', transform: 'none'}}>
+              <div className={`${styles.statIconContainer} ${styles.iconYellow}`}>
+                <UsersIcon className={styles.statIcon} />
+              </div>
+              <div>
+                <p className={styles.statLabel}>Contadores Ativos</p>
+                <p className={styles.statValue}>{stats.totalContadores}</p>
+              </div>
+            </div>
           </div>
 
           {/* Ações Rápidas (sem alterações) */}
@@ -125,11 +129,11 @@ export default function AdminDashboard() {
             </h3>
             <div className={styles.actionsContainer}>
               <Button as={Link} to="/admin/usuarios" variant="primary" className={styles.actionButton}>
-                <UsersIcon />
+                <UsersIcon className="w-5 h-5 mr-2" /> {/* Ajuste CSS se 'mr-2' não funcionar */}
                 Gerenciar Usuários
               </Button>
               <Button as={Link} to="/admin/oscs" variant="success" className={styles.actionButton}>
-                <BuildingIcon />
+                <BuildingIcon className="w-5 h-5 mr-2" /> {/* Ajuste CSS se 'mr-2' não funcionar */}
                 Gerenciar OSCs
               </Button>
             </div>
@@ -139,3 +143,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
