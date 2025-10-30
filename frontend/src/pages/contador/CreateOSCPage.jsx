@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form'; // <-- Importa o Controller
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { IMaskInput } from 'react-imask';
+import { IMaskInput } from 'react-imask'; // <-- Importa o IMaskInput
 import styles from './CreateOSCPage.module.css';
 import Button from '../../components/common/Button.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
@@ -16,6 +16,7 @@ import * as oscService from '../../services/oscService.js';
 // import { EyeIcon, EyeOffIcon } from '../../components/common/Icons.jsx';
 
 // --- Schema de Validação (Yup) ---
+// (Atualiza as máscaras para o formato do Yup)
 const schema = yup.object().shape({
   nomeFantasia: yup.string().required('O nome fantasia é obrigatório.'),
   razaoSocial: yup.string().required('A razão social é obrigatória.'),
@@ -45,6 +46,7 @@ const schema = yup.object().shape({
 });
 
 // --- Componentes Helper RHF (Input simples e Máscara) ---
+// RHFInput (Input simples)
 const RHFInput = React.memo(({ label, id, error, type = "text", registerProps }) => (
     <div className={styles.field}>
         <label htmlFor={id} className={styles.formLabel}>{label}</label>
@@ -53,24 +55,25 @@ const RHFInput = React.memo(({ label, id, error, type = "text", registerProps })
     </div>
 ));
 
+// RHFMaskedInput (ATUALIZADO para react-imask e Controller)
 const RHFMaskedInput = React.memo(({ control, name, label, id, mask, placeholder, error, onBlurCEP = () => {}, ...props }) => (
      <div className={styles.field}>
         <label htmlFor={id} className={styles.formLabel}>{label}</label>
         <Controller
             name={name}
             control={control}
-            render={({ field }) => (
+            render={({ field }) => ( // 'field' contém { onChange, onBlur, value, ref }
                 <IMaskInput
-                    {...field}
+                    {...field} // Passa props do RHF (value, onChange, etc.)
                     mask={mask}
                     id={id}
                     placeholder={placeholder}
-                    onBlur={(e) => { field.onBlur(e); onBlurCEP(e); }}
+                    onBlur={(e) => { field.onBlur(e); onBlurCEP(e); }} // Combina onBlur
                     className={`${styles.formInput} ${error ? styles.formInputError : ''}`}
                     disabled={props.disabled}
                 />
             )}
-        Controller/> {/* <-- CORRIGIDO AQUI (de /> para </Controller>) */}
+        />
         {error && <span className={styles.errorMessage}>{error.message}</span>}
     </div>
 ));
@@ -87,9 +90,9 @@ export default function CreateOSCPage() {
         defaultValues: { pais: 'Brasil' }
     });
 
-    // Handler Busca CEP
+    // Handler Busca CEP (ViaCEP)
     const handleCepBlur = async (e) => {
-        const cep = e.target.value.replace(/\D/g, '');
+        const cep = e.target.value.replace(/\D/g, ''); // Remove máscara
         if (cep.length === 8) {
             try {
                 const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
@@ -109,7 +112,7 @@ export default function CreateOSCPage() {
         }
     };
 
-    // Handler Submissão
+    // Handler Submissão (Envia FormData)
     const onSubmit = async (data) => {
         setIsLoading(true);
         const formData = new FormData();
@@ -161,7 +164,13 @@ export default function CreateOSCPage() {
                     <div className={styles.grid}>
                         <RHFInput label="Nome Fantasia da OSC *" id="nomeFantasia" registerProps={register('nomeFantasia')} error={errors.nomeFantasia} />
                         <RHFInput label="Razão Social *" id="razaoSocial" registerProps={register('razaoSocial')} error={errors.razaoSocial} />
-                        <RHFMaskedInput control={control} name="cnpj" label="CNPJ *" id="cnpj" mask="00.000.000/0000-00" error={errors.cnpj} placeholder="00.000.000/0000-00" />
+                        <RHFMaskedInput
+                            control={control} name="cnpj"
+                            label="CNPJ *" id="cnpj"
+                            mask="00.000.000/0000-00" // Formato react-imask
+                            error={errors.cnpj}
+                            placeholder="00.000.000/0000-00"
+                        />
                         <RHFInput label="Data de Fundação" id="dataFundacao" type="date" registerProps={register('dataFundacao')} error={errors.dataFundacao} />
                     </div>
                 </section>
@@ -173,7 +182,7 @@ export default function CreateOSCPage() {
                         <Controller
                             name="logotipo"
                             control={control}
-                            render={({ field: { onChange, onBlur, value } }) => (
+                            render={({ field: { onChange } }) => (
                                 <FileUpload
                                     label="Logotipo"
                                     onFileSelect={onChange}
@@ -214,10 +223,24 @@ export default function CreateOSCPage() {
                     <h2 className={styles.sectionTitle}>3. Contato e Endereço</h2>
                     <div className={styles.grid}>
                         <RHFInput label="E-mail de Contato *" id="emailContato" type="email" registerProps={register('emailContato')} error={errors.emailContato} />
-                        <RHFMaskedInput control={control} name="telefone" label="Telefone / WhatsApp *" id="telefone" mask="(00) 00000-0000" error={errors.telefone} placeholder="(00) 00000-0000" />
+                        <RHFMaskedInput
+                            control={control} name="telefone"
+                            label="Telefone / WhatsApp *" id="telefone"
+                            mask="(00) 00000-0000" // Formato react-imask
+                            error={errors.telefone}
+                            placeholder="(00) 00000-0000"
+                        />
                         <RHFInput label="Website" id="website" type="url" registerProps={register('website')} error={errors.website} placeholder="https://..." />
                         <RHFInput label="Instagram" id="instagram" registerProps={register('instagram')} error={errors.instagram} placeholder="@seu_perfil" />
-                        <RHFMaskedInput control={control} name="cep" label="CEP *" id="cep" mask="00000-000" error={errors.cep} onBlurCEP={handleCepBlur} placeholder="XXXXX-XXX" />
+                        
+                        <RHFMaskedInput
+                            control={control} name="cep"
+                            label="CEP *" id="cep"
+                            mask="00000-000" // Formato react-imask
+                            error={errors.cep}
+                            onBlurCEP={handleCepBlur}
+                            placeholder="XXXXX-XXX"
+                        />
                         <RHFInput label="Endereço *" id="endereco" registerProps={register('endereco')} error={errors.endereco} />
                         <RHFInput label="Número *" id="numero" registerProps={register('numero')} error={errors.numero} />
                         <RHFInput label="Bairro *" id="bairro" registerProps={register('bairro')} error={errors.bairro} />
@@ -232,7 +255,13 @@ export default function CreateOSCPage() {
                      <h2 className={styles.sectionTitle}>4. Responsável Legal (Presidente)</h2>
                      <div className={styles.grid}>
                         <RHFInput label="Nome *" id="respNome" registerProps={register('respNome')} error={errors.respNome} />
-                        <RHFMaskedInput control={control} name="respCpf" label="CPF *" id="respCpf" mask="000.000.000-00" error={errors.respCpf} placeholder="000.000.000-00" />
+                        <RHFMaskedInput
+                            control={control} name="respCpf"
+                            label="CPF *" id="respCpf"
+                            mask="000.000.000-00" // Formato react-imask
+                            error={errors.respCpf}
+                            placeholder="000.000.000-00"
+                        />
                      </div>
                 </section>
 
@@ -241,9 +270,21 @@ export default function CreateOSCPage() {
                      <h2 className={styles.sectionTitle}>5. Coordenador do Programa (Utilizador)</h2>
                      <div className={styles.grid}>
                         <RHFInput label="Nome Completo do Coordenador *" id="coordNome" registerProps={register('coordNome')} error={errors.coordNome} />
-                        <RHFMaskedInput control={control} name="coordCpf" label="CPF do Coordenador *" id="coordCpf" mask="000.000.000-00" error={errors.coordCpf} placeholder="000.000.000-00" />
+                        <RHFMaskedInput
+                            control={control} name="coordCpf"
+                            label="CPF do Coordenador *" id="coordCpf"
+                            mask="000.000.000-00" // Formato react-imask
+                            error={errors.coordCpf}
+                            placeholder="000.000.000-00"
+                        />
                         <RHFInput label="E-mail do Coordenador (será o login) *" id="coordEmail" type="email" registerProps={register('coordEmail')} error={errors.coordEmail} />
-                        <RHFMaskedInput control={control} name="coordTelefone" label="Telefone do Coordenador *" id="coordTelefone" mask="(00) 00000-0000" error={errors.coordTelefone} placeholder="(00) 00000-0000" />
+                        <RHFMaskedInput
+                            control={control} name="coordTelefone"
+                            label="Telefone do Coordenador *" id="coordTelefone"
+                            mask="(00) 00000-0000" // Formato react-imask
+                            error={errors.coordTelefone}
+                            placeholder="(00) 00000-0000"
+                        />
                         <RHFInput label="Senha Provisória (Mín. 8 caracteres) *" id="coordSenha" type="password" registerProps={register('coordSenha')} error={errors.coordSenha} />
                      </div>
                 </section>
