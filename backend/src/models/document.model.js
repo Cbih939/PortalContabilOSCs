@@ -14,21 +14,21 @@ export const findDocsByContadorId = async (contadorId) => {
       d.id,
       d.original_name,
       d.created_at as date,
-      u_osc.name as from_name, -- Nome da OSC que enviou (tabela users)
-      u_sender.role as uploader_role -- Quem fez o upload
+      u_osc.name as from_name,
+      u_sender.role as uploader_role
     FROM documents d
     JOIN oscs o ON d.osc_id = o.id
-    JOIN users u_osc ON d.osc_id = u_osc.id -- JOIN para nome da OSC
-    JOIN users u_sender ON d.uploaded_by_user_id = u_sender.id -- JOIN para saber quem enviou
+    JOIN users u_osc ON d.osc_id = u_osc.id
+    JOIN users u_sender ON d.uploaded_by_user_id = u_sender.id
     WHERE o.assigned_contador_id = ? AND u_sender.role = ?
     ORDER BY d.created_at DESC
   `;
-  const [rows] = await pool.execute(query, [contadorId, ROLES.OSC]); // Filtra docs enviados pela OSC
+  const [rows] = await pool.execute(query, [contadorId, ROLES.OSC]);
   
   return rows.map(row => ({
     ...row,
-    type: 'received', // Do ponto de vista do Contador, são sempre recebidos
-    from: row.from_name // Garante que o 'from' é o nome da OSC
+    type: 'received',
+    from: row.from_name
   }));
 };
 
@@ -44,7 +44,7 @@ export const findDocsByOscId = async (oscId) => {
       d.original_name as name,
       d.created_at as date,
       u_sender.role as uploader_role,
-      u_sender.name as from_name -- Nome de quem enviou (Contador ou a própria OSC)
+      u_sender.name as from_name
     FROM documents d
     JOIN users u_sender ON d.uploaded_by_user_id = u_sender.id
     WHERE d.osc_id = ?
@@ -54,7 +54,7 @@ export const findDocsByOscId = async (oscId) => {
   
   return rows.map(row => ({
     ...row,
-    type: row.uploader_role === ROLES.OSC ? 'sent' : 'received', // Ponto de vista da OSC
+    type: row.uploader_role === ROLES.OSC ? 'sent' : 'received',
     from: row.from_name,
   }));
 };
@@ -88,7 +88,7 @@ export const createDocumentRecord = async (docData) => {
     mime_type,
     from_name,
     to_name,
-    to_contador_id // Coluna adicionada pela migração
+    to_contador_id
   } = docData;
 
   const query = `
@@ -128,7 +128,7 @@ export const checkPermission = async (fileId, userId, userRole) => {
 };
 
 /**
- * Conta o número de documentos recebidos por um Contador (enviados pelas OSCs associadas).
+ * Conta o número de documentos recebidos por um Contador.
  * @param {number} contadorId - O ID do utilizador (Contador).
  * @returns {Promise<number>} O número de documentos recebidos.
  */
@@ -138,7 +138,6 @@ export const countReceivedByContadorId = async (contadorId) => {
     FROM documents d
     JOIN oscs o ON d.osc_id = o.id
     WHERE o.assigned_contador_id = ? AND d.uploaded_by_user_id = d.osc_id
-    -- AND d.read_status = false -- (Adicionar se implementar 'read_status' em documentos)
   `;
   try {
     const [rows] = await pool.execute(query, [contadorId]);
@@ -151,7 +150,7 @@ export const countReceivedByContadorId = async (contadorId) => {
 
 /**
  * Busca as últimas N atividades de documentos enviados por OSCs a um Contador.
- * (Usado pelo Dashboard do Contador)
+ * (CORRIGIDO com os 3 argumentos no pool.execute)
  * @param {number} contadorId - O ID do utilizador (Contador).
  * @param {number} limit - O número máximo de atividades a retornar.
  * @returns {Promise<Array>} Um array de objetos representando a atividade.
@@ -162,7 +161,7 @@ export const findRecentActivityByContadorId = async (contadorId, limit = 5) => {
       d.id,
       d.original_name,
       d.created_at,
-      u.name as from_name -- Nome da OSC que enviou (da tabela users)
+      u.name as from_name
     FROM documents d
     JOIN oscs o ON d.osc_id = o.id
     JOIN users u ON d.osc_id = u.id
@@ -171,7 +170,10 @@ export const findRecentActivityByContadorId = async (contadorId, limit = 5) => {
     LIMIT ?
   `;
   try {
+    // --- CORREÇÃO AQUI ---
+    // Adiciona ROLES.OSC ao array de argumentos
     const [rows] = await pool.execute(query, [contadorId, ROLES.OSC, limit]);
+    // --- FIM DA CORREÇÃO ---
     return rows;
   } catch (error) {
     console.error('Erro em findRecentActivityByContadorId:', error);
@@ -187,8 +189,6 @@ export const findRecentActivityByContadorId = async (contadorId, limit = 5) => {
  * @returns {Promise<Array>} Um array de objetos de documento.
  */
 export const findRecentUnreadByContadorId = async (contadorId, limit = 5) => {
-  // NOTA: Esta query é quase idêntica a findRecentActivityByContadorId.
-  // (Não temos 'read_status' em documentos, então apenas buscamos os recentes)
   const query = `
     SELECT
       d.id, d.original_name, d.created_at, d.osc_id,
@@ -201,10 +201,11 @@ export const findRecentUnreadByContadorId = async (contadorId, limit = 5) => {
     LIMIT ?
   `;
   try {
+    // Esta função também precisava da correção (3 argumentos)
     const [rows] = await pool.execute(query, [contadorId, ROLES.OSC, limit]);
     return rows;
   } catch (error) {
     console.error('Erro em findRecentUnreadByContadorId (Document):', error);
-    throw error; // Propaga o erro
+    throw error;
   }
 };
