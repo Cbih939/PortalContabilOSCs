@@ -23,7 +23,7 @@ const triggerDownload = (data, fileName) => {
 
 /**
  * Busca os documentos recebidos pelo Contador logado.
- * (Função que estava em falta e causava TypeError)
+ * (Usado pelo Contador - DocumentsPage.jsx)
  */
 export const getReceivedDocuments = () => {
   return api.get('/documents/received');
@@ -31,6 +31,7 @@ export const getReceivedDocuments = () => {
 
 /**
  * Busca os documentos (enviados e recebidos) da OSC logada.
+ * (Usado pela OSC - OSCDocumentsPage.jsx)
  */
 export const getMyDocuments = () => {
   return api.get('/documents/my');
@@ -38,6 +39,7 @@ export const getMyDocuments = () => {
 
 /**
  * Faz o upload de um novo documento.
+ * (Usado pela OSC - OSCDocumentsPage.jsx)
  */
 export const uploadDocument = (formData) => {
   return api.post('/documents/upload', formData, {
@@ -48,7 +50,7 @@ export const uploadDocument = (formData) => {
 };
 
 /**
- * Faz o download de um ficheiro específico.
+ * Faz o download de um ficheiro específico e aciona o 'save' no browser.
  */
 export const downloadDocument = async (fileId, fileName) => {
   if (!fileId || !fileName) {
@@ -75,7 +77,7 @@ export const downloadDocument = async (fileId, fileName) => {
 };
 
 /**
- * Faz o download de um ficheiro de template.
+ * Faz o download de um ficheiro de template (ex: modelo.xlsx).
  */
 export const downloadTemplate = async (templateName) => {
   try {
@@ -86,5 +88,34 @@ export const downloadTemplate = async (templateName) => {
   } catch (error) {
     console.error('Erro ao fazer o download do template:', error);
     throw new Error('Não foi possível fazer o download do template.');
+  }
+};
+
+// --- FUNÇÃO QUE FALTAVA ---
+/**
+ * Busca os dados brutos (blob) de um ficheiro.
+ * (Usado pelo DocumentViewModal para pré-visualização)
+ * @param {string|number} fileId - O ID do ficheiro.
+ * @returns {Promise<Blob>} Os dados do ficheiro como um Blob.
+ */
+export const getDocumentBlob = async (fileId) => {
+  try {
+    const response = await api.get(`/documents/download/${fileId}`, {
+      responseType: 'blob', // Pede dados binários
+    });
+    return response.data; // Retorna o blob
+  } catch (error) {
+    console.error('Erro ao buscar blob do documento:', error);
+    // Tenta ler o erro (caso a API tenha retornado JSON em vez de blob)
+    if (error.response?.data?.constructor === Blob) {
+        try {
+            const errText = await error.response.data.text();
+            const errJson = JSON.parse(errText);
+            throw new Error(errJson.message || 'Não foi possível carregar o ficheiro.');
+        } catch(e) {
+             throw new Error('Não foi possível carregar o ficheiro.');
+        }
+    }
+    throw new Error(error.response?.data?.message || 'Não foi possível carregar o ficheiro.');
   }
 };
