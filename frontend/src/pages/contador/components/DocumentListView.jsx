@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { ViewIcon, PrintIcon, SearchIcon } from '../../../components/common/Icons.jsx';
 import Input from '../../../components/common/Input.jsx';
 import styles from './DocumentListView.module.css';
-import { formatDate } from '../../../utils/formatDate.js'; // Importa helper
+import { formatDate } from '../../../utils/formatDate.js';
 
 /**
  * Componente "burro" DocumentListView (CSS Modules).
@@ -16,9 +16,9 @@ export default function DocumentListView({ files = [], onView, onPrint }) {
 
   const filteredFiles = files.filter(
     (file) =>
-      // Filtro de data
-      (!filterDate || (file.date || file.created_at).startsWith(filterDate)) && // Compara o início da data
-      // Filtro de nome da OSC
+      // Filtro de data: compara a data (YYYY-MM-DD)
+      (!filterDate || (file.date || file.created_at).startsWith(filterDate)) &&
+      // Filtro de nome da OSC: usa 'from_name' ou 'from'
       (!filterOsc ||
         (file.from_name || file.from || '').toLowerCase().includes(filterOsc.toLowerCase()))
   );
@@ -43,7 +43,7 @@ export default function DocumentListView({ files = [], onView, onPrint }) {
             placeholder="Filtrar por data..."
             value={filterDate}
             onChange={(e) => setFilterDate(e.target.value)}
-            inputClassName={styles.dateInput} // Usa classe do CSS Module
+            inputClassName={styles.dateInput}
           />
         </div>
       </div>
@@ -64,11 +64,8 @@ export default function DocumentListView({ files = [], onView, onPrint }) {
             filteredFiles.length > 0 ? (
               filteredFiles.map((file) => (
                 <tr key={file.id}>
-                  {/* Usa 'from_name' (da API) ou 'from' (fallback) */}
                   <td>{file.from_name || file.from}</td>
-                  {/* Usa 'original_name' (da API) ou 'name' (fallback) */}
                   <td className={styles.fileNameCell}>{file.original_name || file.name}</td>
-                  {/* Usa 'created_at' (da API) ou 'date' (fallback) */}
                   <td>{formatDate(file.created_at || file.date)}</td>
                   <td>
                     <div className={styles.actionsContainer}>
@@ -80,8 +77,8 @@ export default function DocumentListView({ files = [], onView, onPrint }) {
                       <button
                         onClick={() => onPrint(file)}
                         className={`${styles.actionButton} ${styles.printButton}`}
-                        title="Baixar Documento" // Título atualizado
-                      ><PrintIcon /></button> {/* Ícone de 'Print' usado para 'Download' */}
+                        title="Baixar Documento"
+                      ><PrintIcon /></button>
                     </div>
                   </td>
                 </tr>

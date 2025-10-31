@@ -1,12 +1,10 @@
 // backend/src/models/document.model.js
 
-import pool from '../config/db.js'; // Importa o pool de conexões MySQL
+import pool from '../config/db.js';
 import { ROLES } from '../utils/constants.js';
 
 /**
  * Busca todos os documentos relacionados às OSCs de um Contador.
- * @param {number} contadorId - O ID do utilizador (Contador).
- * @returns {Promise<Array>} Um array de objetos de documento.
  */
 export const findDocsByContadorId = async (contadorId) => {
   const query = `
@@ -34,8 +32,6 @@ export const findDocsByContadorId = async (contadorId) => {
 
 /**
  * Busca todos os documentos (enviados e recebidos) de uma OSC.
- * @param {number} oscId - O ID da OSC (que também é um user.id).
- * @returns {Promise<Array>} Um array de objetos de documento.
  */
 export const findDocsByOscId = async (oscId) => {
   const query = `
@@ -61,8 +57,6 @@ export const findDocsByOscId = async (oscId) => {
 
 /**
  * Busca um único documento pelo seu ID.
- * @param {number} fileId - O ID do documento.
- * @returns {Promise<object | null>} O objeto do documento ou null.
  */
 export const findDocById = async (fileId) => {
   const [rows] = await pool.execute(
@@ -74,8 +68,6 @@ export const findDocById = async (fileId) => {
 
 /**
  * Cria um novo registo de documento no banco de dados.
- * @param {object} docData - Os dados a serem inseridos.
- * @returns {Promise<object>} O novo objeto de documento criado.
  */
 export const createDocumentRecord = async (docData) => {
   const {
@@ -107,10 +99,6 @@ export const createDocumentRecord = async (docData) => {
 
 /**
  * (Segurança) Verifica se um utilizador tem permissão para aceder a um ficheiro.
- * @param {number} fileId - O ID do ficheiro.
- * @param {number} userId - O ID do utilizador que está a pedir.
- * @param {string} userRole - O perfil (role) do utilizador.
- * @returns {Promise<boolean>} True se tiver permissão, false se não.
  */
 export const checkPermission = async (fileId, userId, userRole) => {
   const doc = await findDocById(fileId);
@@ -129,8 +117,6 @@ export const checkPermission = async (fileId, userId, userRole) => {
 
 /**
  * Conta o número de documentos recebidos por um Contador.
- * @param {number} contadorId - O ID do utilizador (Contador).
- * @returns {Promise<number>} O número de documentos recebidos.
  */
 export const countReceivedByContadorId = async (contadorId) => {
   const query = `
@@ -151,9 +137,6 @@ export const countReceivedByContadorId = async (contadorId) => {
 /**
  * Busca as últimas N atividades de documentos enviados por OSCs a um Contador.
  * (CORRIGIDO com os 3 argumentos no pool.execute)
- * @param {number} contadorId - O ID do utilizador (Contador).
- * @param {number} limit - O número máximo de atividades a retornar.
- * @returns {Promise<Array>} Um array de objetos representando a atividade.
  */
 export const findRecentActivityByContadorId = async (contadorId, limit = 5) => {
   const query = `
@@ -171,7 +154,7 @@ export const findRecentActivityByContadorId = async (contadorId, limit = 5) => {
   `;
   try {
     // --- CORREÇÃO AQUI ---
-    // Adiciona ROLES.OSC ao array de argumentos
+    // Passando contadorId, ROLES.OSC, e limit
     const [rows] = await pool.execute(query, [contadorId, ROLES.OSC, limit]);
     // --- FIM DA CORREÇÃO ---
     return rows;
@@ -184,9 +167,7 @@ export const findRecentActivityByContadorId = async (contadorId, limit = 5) => {
 /**
  * Busca os N documentos mais recentes recebidos por um Contador.
  * (Usado para Notificações)
- * @param {number} contadorId - O ID do utilizador (Contador).
- * @param {number} limit - Quantidade a buscar.
- * @returns {Promise<Array>} Um array de objetos de documento.
+ * (CORRIGIDO com os 3 argumentos no pool.execute)
  */
 export const findRecentUnreadByContadorId = async (contadorId, limit = 5) => {
   const query = `
@@ -201,8 +182,10 @@ export const findRecentUnreadByContadorId = async (contadorId, limit = 5) => {
     LIMIT ?
   `;
   try {
-    // Esta função também precisava da correção (3 argumentos)
+    // --- CORREÇÃO AQUI ---
+    // Passando contadorId, ROLES.OSC, e limit
     const [rows] = await pool.execute(query, [contadorId, ROLES.OSC, limit]);
+    // --- FIM DA CORREÇÃO ---
     return rows;
   } catch (error) {
     console.error('Erro em findRecentUnreadByContadorId (Document):', error);

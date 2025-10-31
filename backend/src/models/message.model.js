@@ -1,18 +1,13 @@
 // backend/src/models/message.model.js
 
-import pool from '../config/db.js'; // Importa o pool de conexões MySQL
+import pool from '../config/db.js';
 import { ROLES } from '../utils/constants.js';
 
 /**
  * Busca o histórico de conversa entre uma OSC e um Contador.
- * @param {number} oscId - O ID da OSC.
- * @param {number} contadorId - O ID do Contador.
- * @returns {Promise<Array>} Um array de objetos de mensagem.
  */
 export const findConversationHistory = async (oscId, contadorId) => {
-  // --- LOG DE DEBUG ---
   console.log(`[Model findConversationHistory] Buscando para osc_id: ${oscId} E contador_id: ${contadorId}`);
-
   const query = `
     SELECT 
       m.id,
@@ -27,20 +22,14 @@ export const findConversationHistory = async (oscId, contadorId) => {
     ORDER BY 
       m.created_at ASC; 
   `;
-  
   try {
     const [rows] = await pool.execute(query, [oscId, contadorId]);
-    // --- LOG DE DEBUG ---
     console.log(`[Model findConversationHistory] Query encontrou ${rows.length} linhas.`);
-
-    // Mapeia os dados para o formato esperado pelo frontend
     return rows.map(row => ({
       id: row.id,
       text: row.text,
       date: row.date,
       from: row.from_name,
-      // Define 'to' baseado no sender_role
-      // (Esta lógica pode precisar de nomes reais se houver múltiplos contadores)
       to: row.sender_role === ROLES.OSC ? 'Contador' : row.from_name,
     }));
   } catch (error) {
@@ -51,8 +40,6 @@ export const findConversationHistory = async (oscId, contadorId) => {
 
 /**
  * Cria um novo registo de mensagem no banco de dados.
- * @param {object} messageData - Os dados a serem inseridos.
- * @returns {Promise<object>} O novo objeto de mensagem criado.
  */
 export const createMessage = async (messageData) => {
   const {
@@ -67,48 +54,48 @@ export const createMessage = async (messageData) => {
   const query = `
     INSERT INTO messages 
       (osc_id, contador_id, text, sender_role, sender_id, from_name, read_status) 
-    VALUES (?, ?, ?, ?, ?, ?, FALSE) -- Assume read_status inicia como FALSE (0)
+    VALUES (?, ?, ?, ?, ?, ?, FALSE)
   `;
-  
-  const [result] = await pool.execute(query, [
-    osc_id,
-    contador_id,
-    text,
-    sender_role,
-    sender_id,
-    from_name
-  ]);
+  try {
+    const [result] = await pool.execute(query, [
+      osc_id,
+      contador_id,
+      text,
+      sender_role,
+      sender_id,
+      from_name
+    ]);
 
-  // Retorna a mensagem recém-criada
-  const [newMessages] = await pool.execute(
-    `SELECT 
-       m.id, m.text, m.created_at as date, m.sender_role, m.from_name,
-       u_osc.name as osc_name,
-       u_contador.name as contador_name
-     FROM messages m 
-     JOIN users u_osc ON m.osc_id = u_osc.id
-     JOIN users u_contador ON m.contador_id = u_contador.id
-     WHERE m.id = ?`,
-    [result.insertId]
-  );
-  
-  const newMessage = newMessages[0];
-  if (!newMessage) throw new Error("Falha ao buscar mensagem recém-criada.");
-  
-  // Formata a resposta para corresponder ao que o frontend espera
-  return {
-    id: newMessage.id,
-    text: newMessage.text,
-    date: newMessage.date,
-    from: newMessage.from_name,
-    to: newMessage.sender_role === ROLES.OSC ? newMessage.contador_name : newMessage.osc_name,
-  };
+    const [newMessages] = await pool.execute(
+      `SELECT 
+         m.id, m.text, m.created_at as date, m.sender_role, m.from_name,
+         u_osc.name as osc_name,
+         u_contador.name as contador_name
+       FROM messages m 
+       JOIN users u_osc ON m.osc_id = u_osc.id
+       JOIN users u_contador ON m.contador_id = u_contador.id
+       WHERE m.id = ?`,
+      [result.insertId]
+    );
+    
+    const newMessage = newMessages[0];
+    if (!newMessage) throw new Error("Falha ao buscar mensagem recém-criada.");
+    
+    return {
+      id: newMessage.id,
+      text: newMessage.text,
+      date: newMessage.date,
+      from: newMessage.from_name,
+      to: newMessage.sender_role === ROLES.OSC ? newMessage.contador_name : newMessage.osc_name,
+    };
+  } catch (error) {
+    console.error('[createMessage Model] Erro ao inserir mensagem:', error);
+    throw error;
+  }
 };
 
 /**
  * Conta o número de mensagens NÃO LIDAS destinadas a um Contador.
- * @param {number} contadorId - O ID do utilizador (Contador).
- * @returns {Promise<number>} O número de mensagens não lidas.
  */
 export const countUnreadByContadorId = async (contadorId) => {
   const query = `
@@ -124,7 +111,7 @@ export const countUnreadByContadorId = async (contadorId) => {
   } catch (error) {
     console.error('Erro em countUnreadByContadorId:', error);
     if (error.code === 'ER_BAD_FIELD_ERROR' && error.sqlMessage.includes('read_status')) {
-        console.warn("[Aviso] A coluna 'read_status' parece não existir na tabela 'messages'. Execute a migração.");
+        console.warn("[Aviso] A coluna 'read_status' parece não existir na tabela 'messages'.");
         return 0; 
     }
     throw new Error('Erro ao contar mensagens não lidas.');
@@ -134,9 +121,7 @@ export const countUnreadByContadorId = async (contadorId) => {
 /**
  * Busca as N mensagens mais recentes não lidas para um Contador.
  * (Usado pelo Controlador de Notificações)
- * @param {number} contadorId - O ID do utilizador (Contador).
- * @param {number} limit - Quantidade a buscar.
- * @returns {Promise<Array>} Um array de objetos de mensagem.
+ * (CORRIGIDO com os 3 argumentos no pool.execute)
  */
 export const findRecentUnreadByContadorId = async (contadorId, limit = 5) => {
   const query = `
@@ -152,10 +137,13 @@ export const findRecentUnreadByContadorId = async (contadorId, limit = 5) => {
     LIMIT ?
   `;
   try {
+    // --- CORREÇÃO AQUI ---
+    // Passando contadorId, ROLES.OSC, e limit
     const [rows] = await pool.execute(query, [contadorId, ROLES.OSC, limit]);
+    // --- FIM DA CORREÇÃO ---
     return rows;
   } catch (error) {
     console.error('Erro em findRecentUnreadByContadorId (Message):', error);
-    throw error; // Propaga o erro para o controlador
+    throw error;
   }
 };
