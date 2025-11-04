@@ -2,7 +2,7 @@
 
 .footer {
   padding: 2rem 1rem; /* p-8 (vertical) p-4 (horizontal) */
-  color: #9ca3af; /* text-gray-400 */
+  color: #6b7280; /* text-gray-400 */
   text-align: center;
   font-size: 0.875rem; /* text-sm */
   flex-shrink: 0; /* Impede que o footer encolha (importante para AppLayout) */
@@ -17,7 +17,7 @@
 }
 
 .copyright {
-  color: #d1d5db; /* text-gray-300 */
+  color: #6b7280; /* text-gray-500 */
 }
 
 .link {

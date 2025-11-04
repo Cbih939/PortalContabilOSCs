@@ -20,7 +20,7 @@
 
 /* Efeito Focus (anel de foco) */
 .buttonBase:focus-visible {
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4); /* Anel azul similar ao ring */
+  box-shadow: 0 0 0 3px rgba(233, 133, 45, 0.4); /* Anel azul similar ao ring */
 }
 
 /* Estado Desabilitado */
