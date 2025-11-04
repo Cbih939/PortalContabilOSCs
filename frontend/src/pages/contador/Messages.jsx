@@ -141,22 +141,18 @@ export default function ContadorMessagesPage() {
       {/* Coluna da Janela de Chat / Placeholder */}
       <div className={styles.chatWindowColumn}>
         {selectedOsc ? (
-          // --- Renderiza ChatWindow quando OSC está selecionada ---
-          isLoadingMessages ? ( // Mostra spinner enquanto carrega histórico
+          isLoadingMessages ? (
             <Spinner text={`Carregando mensagens de ${selectedOsc.name}...`} />
-          ) : errorLoading ? ( // Mostra erro se falhar ao carregar histórico
+          ) : errorLoading ? (
              <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>{errorLoading}</div>
           ) : (
-            // Renderiza a janela de chat com os dados carregados
             <ChatWindow
-              key={selectedOsc.id} // Força recriação ao mudar de OSC
+              key={selectedOsc.id}
               otherParty={selectedOsc}
               messages={messages}
-              user={currentUser} // Passa o utilizador logado (Contador)
+              user={currentUser}
               onSendMessage={handleSendMessage}
-              // Passa estado de envio para desabilitar input (opcional)
-              // isSending={isSending}
-              className="w-full h-full" // Garante que ChatWindow ocupe o espaço
+              // className="w-full h-full" // <-- REMOVA (ou comente) ESTA LINHA
             />
           )
         ) : (
