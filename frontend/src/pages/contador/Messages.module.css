@@ -25,6 +25,33 @@
   background-color: #f3f4f6;
 }
 
+/* Estilo para a logo placeholder (MODIFICADO) */
+.placeholderLogo {
+  width: 8rem; /* 128px (w-32) */
+  height: 8rem; /* 128px (h-32) */
+  
+  /* Garante que a imagem preencha o círculo */
+  object-fit: cover; 
+  
+  /* Mantém o formato circular */
+  border-radius: 50%; 
+  
+  margin-bottom: 1.5rem; /* mb-6 */
+  
+  /* Cor de fundo para o caso da imagem falhar ou ser transparente */
+  background-color: #e5e7eb; 
+  
+  /* Remove estilos de texto que estavam aqui antes */
+  /* display: flex; */
+  /* align-items: center; */
+  /* justify-content: center; */
+  /* font-size: 0.875rem; */
+  /* color: #4b5563; */
+}
+
+.placeholderText {
+  font-size: 1.125rem; /* text-lg */
+}
 @media (min-width: 768px) {
   .contactListColumn {
     width: 33.333333%; /* md:w-1/3 */

@@ -160,9 +160,11 @@ export default function ContadorMessagesPage() {
           !errorLoading && ( // Só mostra placeholder se não houver erro geral
             <div className={styles.placeholderContainer}>
               {/* Logo Placeholder */}
-              <div className={styles.placeholderLogo}>
-                <span>Logo Contador</span>
-              </div>
+              <img
+                src="/logo_portal.png" // Busca a logo da pasta 'public'
+                alt="Logo Portal Contábil"
+                className={styles.placeholderLogo} // Usa o estilo do CSS Module
+              />
               {/* Mensagem */}
               <p className={styles.placeholderText}>
                 Selecione uma OSC para iniciar a conversa
