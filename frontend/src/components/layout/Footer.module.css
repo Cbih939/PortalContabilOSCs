@@ -1,0 +1,38 @@
+/* src/components/layout/Footer.module.css */
+
+.footer {
+  padding: 2rem 1rem; /* p-8 (vertical) p-4 (horizontal) */
+  background-color: #1f2937; /* Um cinza bem escuro (bg-gray-800/900) */
+  color: #9ca3af; /* text-gray-400 */
+  text-align: center;
+  font-size: 0.875rem; /* text-sm */
+  flex-shrink: 0; /* Impede que o footer encolha (importante para AppLayout) */
+}
+
+.footer p {
+  margin: 0; /* Remove margem padrão */
+  padding-bottom: 0.5rem; /* Espaçamento entre as linhas */
+}
+.footer p:last-child {
+  padding-bottom: 0; /* Remove espaçamento do último item */
+}
+
+.copyright {
+  color: #d1d5db; /* text-gray-300 */
+}
+
+.link {
+  color: #f97316; /* Laranja (como na imagem) */
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.version {
+  color: #6b7280; /* text-gray-500 */
+  font-size: 0.75rem; /* text-xs */
+  margin-top: 1rem;
+}

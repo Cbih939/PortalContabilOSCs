@@ -3,6 +3,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import styles from './AppLayout.module.css'; // <-- Importa o CSS Module
+import Footer from './Footer.jsx'; // Importa o Footer
 
 export default function AppLayout({
   sidebarComponent,
@@ -33,7 +34,7 @@ export default function AppLayout({
         <div className={styles.pageContent}>
           <Outlet />
         </div>
-
+        <Footer />
       </main>
     </div>
   );

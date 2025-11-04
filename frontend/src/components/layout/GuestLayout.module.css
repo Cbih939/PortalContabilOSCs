@@ -8,3 +8,11 @@
   align-items: center; /* Centraliza horizontalmente */
   padding: 1rem; /* Espaçamento nas bordas (equivale a p-4) */
 }
+.contentWrapper {
+  flex: 1 1 0%; /* Faz esta área crescer (empurra o footer) */
+  display: flex;
+  align-items: center; /* Centraliza o card verticalmente nesta área */
+  justify-content: center; /* Centraliza o card horizontalmente */
+  padding: 1rem;
+  width: 100%;
+}
