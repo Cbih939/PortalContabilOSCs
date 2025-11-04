@@ -2,7 +2,7 @@
 
 .pageContainer {
   display: flex;
-  height: 100%; /* <-- ISTO AGORA FUNCIONA! Ocupa 100% do .pageContent */
+  height: 100%; /* ESSENCIAL: Ocupa 100% do .pageContent */
   overflow: hidden; /* Garante que o container não transborde */
 }
 

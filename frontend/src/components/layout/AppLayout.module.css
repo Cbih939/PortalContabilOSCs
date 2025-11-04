@@ -1,34 +1,40 @@
 /* src/components/layout/AppLayout.module.css */
 
 .layoutContainer {
-  display: flex; /* <-- ESSENCIAL: Coloca Sidebar e Main lado a lado */
-  height: 100vh; /* Ocupa a altura total */
-  background-color: #f3f4f6; /* bg-gray-100 - Fundo da área de conteúdo */
+  display: flex;
+  height: 100vh; /* Altura total da tela */
+  background-color: #f3f4f6; /* bg-gray-100 */
 }
 
 .mainContent {
-  flex: 1 1 0%;
+  flex: 1 1 0%; /* Ocupa o espaço restante ao lado da sidebar */
   display: flex;
   flex-direction: column;
-  overflow-y: hidden; /* <-- MUDANÇA: (de 'auto' para 'hidden') Impede <main> de rolar */
-  height: 100vh; /* Garante altura total */
+  height: 100vh; /* Altura total */
+  overflow-y: hidden; /* Impede este container principal de rolar */
 }
 
 .headerContainer {
-  flex-shrink: 0; /* Impede que o header encolha */
-  position: sticky; /* Opcional: Faz o header ficar fixo no topo ao rolar */
+  flex-shrink: 0; /* Não encolhe */
+  position: sticky; /* Opcional: Fica no topo */
   top: 0;
-  z-index: 10; /* Garante que fica acima do conteúdo */
-  /* O estilo (bg-white, shadow) vem do componente Header específico */
+  z-index: 20; /* Garante que fica acima */
 }
 
-.navigationContainer { /* Para as abas da OSC */
-    flex-shrink: 0;
-    /* O estilo (bg-white, border) vem do componente OSCNavigationTabs */
+.navigationContainer {
+  flex-shrink: 0; /* Não encolhe */
+  z-index: 10; /* Abaixo do header, acima do conteúdo */
+  background-color: white; /* Garante fundo branco para as abas */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
 }
 
 .pageContent {
-  flex: 1 1 0%; /* Faz esta área crescer e ocupar o espaço */
-  overflow-y: auto; /* <-- MUDANÇA: Adiciona scroll SÓ nesta área */
-  position: relative; /* Contexto de layout para filhos com altura 100% */
+  flex: 1 1 0%; /* ESSENCIAL: Faz esta área crescer */
+  overflow-y: auto; /* ESSENCIAL: Adiciona scroll SÓ nesta área */
+  position: relative; /* Para páginas com height: 100% funcionarem */
+}
+
+.footerContainer {
+  flex-shrink: 0; /* Não encolhe */
+  z-index: 10;
 }

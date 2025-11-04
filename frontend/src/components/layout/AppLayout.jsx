@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import styles from './AppLayout.module.css'; // <-- Importa o CSS Module
-import Footer from './Footer.jsx'; // Importa o Footer
+import styles from './AppLayout.module.css';
+import Footer from './Footer.jsx'; // Garanta que o Footer está importado
 
 export default function AppLayout({
   sidebarComponent,
@@ -11,30 +11,35 @@ export default function AppLayout({
   navigationComponent,
 }) {
   return (
-    // Aplica a classe flex container principal
     <div className={styles.layoutContainer}>
-      {sidebarComponent} {/* A Sidebar já tem seus próprios estilos */}
+      
+      {sidebarComponent} {/* A Sidebar (ex: ContadorSidebar) */}
 
-      {/* Aplica a classe flex-1 e flex-col à <main> */}
+      {/* O container principal (Header + Conteúdo + Footer) */}
       <main className={styles.mainContent}>
 
-        {/* Container para o Header */}
+        {/* 1. Header */}
         <div className={styles.headerContainer}>
           {headerComponent}
         </div>
 
-        {/* Container para Navegação (se existir) */}
+        {/* 2. Navegação (ex: Abas da OSC) */}
         {navigationComponent && (
           <div className={styles.navigationContainer}>
             {navigationComponent}
           </div>
         )}
 
-        {/* Container para o conteúdo da página */}
+        {/* 3. Conteúdo da Página (Onde o Chat vive) */}
         <div className={styles.pageContent}>
-          <Outlet />
+          <Outlet /> {/* Aqui é onde a ContadorMessagesPage entra */}
         </div>
-        <Footer />
+
+        {/* 4. Footer (Irmão do .pageContent) */}
+        <div className={styles.footerContainer}>
+          <Footer />
+        </div>
+
       </main>
     </div>
   );
