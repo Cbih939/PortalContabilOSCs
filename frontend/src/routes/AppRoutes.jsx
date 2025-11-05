@@ -24,6 +24,7 @@ import ManageUsers from '../pages/admin/ManageUsers.jsx';
 import ManageOSCs from '../pages/admin/ManageOSCs.jsx';
 import AdminSidebar from '../pages/admin/components/AdminSidebar.jsx';
 import AdminHeader from '../pages/admin/components/AdminHeader.jsx';
+import AdminNoticesPage from '../pages/admin/AdminNoticesPage.jsx';
 
 // Páginas e Componentes do Contador (Reais)
 import ContadorDashboard from '../pages/contador/ContadorDashboard.jsx';
@@ -93,6 +94,8 @@ function AdminLayoutWrapper() {
     <AppLayout
       sidebarComponent={<AdminSidebar isOpen={isSidebarOpen} />}
       headerComponent={<AdminHeader onToggleSidebar={toggleSidebar} />}
+      
+      
     />
   );
 }
@@ -120,6 +123,7 @@ export default function AppRoutes() {
           <Route element={<AdminLayoutWrapper />}>
               <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/avisos" element={<AdminNoticesPage />} />
               <Route path="/admin/usuarios" element={<ManageUsers />} />
               <Route path="/admin/oscs" element={<ManageOSCs />} />
           </Route>

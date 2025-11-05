@@ -39,6 +39,9 @@ export default function AdminSidebar({ isOpen }) {
       <SidebarLink to="/admin/oscs" icon={BuildingIcon}>
         Gerenciar OSCs
       </SidebarLink>
+      <SidebarLink to="/admin/avisos" icon={MegaphoneIcon}> {/* <-- ADICIONE LINK */}
+        Canal de Avisos
+      </SidebarLink>
     </Sidebar>
   );
 }

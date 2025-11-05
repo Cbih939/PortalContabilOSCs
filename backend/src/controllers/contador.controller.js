@@ -5,6 +5,7 @@ import * as OscModel from '../models/osc.model.js';
 import * as DocumentModel from '../models/document.model.js';
 import * as MessageModel from '../models/message.model.js';
 import { ROLES } from '../utils/constants.js'; // Garanta que ROLES está importado
+import * as AlertModel from '../models/alert.model.js';
 
 /**
  * @desc    Busca estatísticas para o Dashboard do Contador.
@@ -85,6 +86,8 @@ export const getNotifications = async (req, res) => { // <-- A FUNÇÃO QUE FALT
     // (O modelo usa findRecentUnreadByContadorId, que busca os docs recentes)
     const newDocuments = await DocumentModel.findRecentUnreadByContadorId(contadorId, 5); 
 
+    const globalAlerts = [];
+    
     // 3. Formatar e combinar
     const messageNotifs = newMessages.map(msg => ({
         id: `msg-${msg.id}`,

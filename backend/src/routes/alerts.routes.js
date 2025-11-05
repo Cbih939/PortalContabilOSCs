@@ -43,7 +43,7 @@ router.patch(
 router.post(
   '/',
   protect,
-  checkRole([ROLES.CONTADOR]),
+  checkRole([ROLES.CONTADOR, ROLES.ADMIN]),
   // createAlertRules, // Adicionar validação se necessário
   // validate,
   createAlert // Controlador para criar alerta/aviso
@@ -58,7 +58,7 @@ router.post(
 router.post(
   '/', // Note: a rota é POST /api/notices
   protect,
-  checkRole([ROLES.CONTADOR]),
+  checkRole([ROLES.CONTADOR, ROLES.ADMIN]),
   // createAlertRules, // Usar as mesmas regras ou regras específicas
   // validate,
   createAlert // Reutiliza o controlador createAlert
@@ -69,7 +69,7 @@ router.post(
 router.get(
     '/history', // Rota completa será /api/notices/history
     protect,
-    checkRole([ROLES.CONTADOR]),
+    checkRole([ROLES.CONTADOR, ROLES.ADMIN]),
     getSentNoticesHistory // Chama o controlador do histórico
 );
 
