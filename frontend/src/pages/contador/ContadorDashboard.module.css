@@ -4,6 +4,19 @@
   padding: 2rem; /* p-8 */
 }
 
+.dashboardLogo {
+  width: 8rem; /* 128px (w-32) - Mesmo tamanho do placeholder do chat */
+  height: 8rem; /* 128px (h-32) */
+  object-fit: cover; /* Garante que a imagem preencha */
+  border-radius: 50%; /* Círculo */
+  margin-left: auto; /* Centraliza */
+  margin-right: auto;
+  margin-bottom: 1rem; /* Espaço abaixo da logo */
+  background-color: #e5e7eb; /* Fundo caso a imagem não carregue */
+  border: 4px solid white; /* Borda branca (opcional) */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Sombra */
+}
+
 .title {
   font-size: 1.875rem; /* text-3xl */
   font-weight: 700; /* font-bold */
