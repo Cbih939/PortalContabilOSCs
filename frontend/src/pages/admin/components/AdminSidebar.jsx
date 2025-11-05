@@ -30,7 +30,7 @@ export default function AdminSidebar({ isOpen }) {
   return (
     <Sidebar isOpen={isOpen} logo={logo} footer={footer} className={styles.sidebar}>
       {/* Links do Admin */}
-      <SidebarLink to="/admin/dashboard" icon={UsersIcon}> {/* TODO: Usar ícone de Dashboard */}
+      <SidebarLink to="/admin/dashboard" icon={UsersIcon}> {/* TODO: Usar ícone de Dashboard correto */}
         Dashboard
       </SidebarLink>
       <SidebarLink to="/admin/usuarios" icon={UsersIcon}>
@@ -39,9 +39,10 @@ export default function AdminSidebar({ isOpen }) {
       <SidebarLink to="/admin/oscs" icon={BuildingIcon}>
         Gerenciar OSCs
       </SidebarLink>
-      <SidebarLink to="/admin/avisos" icon={MegaphoneIcon}> {/* <-- ADICIONE LINK */}
+      <SidebarLink to="/admin/avisos" icon={MegaphoneIcon}> {/* <-- Canal de avisos admin */}
         Canal de Avisos
       </SidebarLink>
     </Sidebar>
   );
 }
+
