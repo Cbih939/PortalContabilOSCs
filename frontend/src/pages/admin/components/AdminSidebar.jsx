@@ -2,7 +2,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import Sidebar from '../../../components/layout/Sidebar.jsx'; // Molde
-import { UsersIcon, BuildingIcon, LogoutIcon } from '../../../components/common/Icons.jsx';
+import { UsersIcon, BuildingIcon, LogoutIcon, MegaphoneIcon } from '../../../components/common/Icons.jsx';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 import styles from './AdminSidebar.module.css'; // CSS Específico
 
