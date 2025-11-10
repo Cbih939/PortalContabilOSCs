@@ -42,13 +42,13 @@ export default function LoginPage() {
       {/* --- ADICIONADO --- */}
       <img
         src="/logo_portal.png" // Busca a imagem da pasta 'public'
-        alt="Logo Portal Contábil"
+        alt="Logo Conta Comigo App"
         className={styles.logo} // Classe de estilo que vamos adicionar
       />
       {/* --- FIM DA ADIÇÃO --- */}
 
       <h1 className={styles.title}>
-        Portal Contábil
+        Conta Comigo App
       </h1>
       <p className={styles.subtitle}>
         Aceda à sua conta
