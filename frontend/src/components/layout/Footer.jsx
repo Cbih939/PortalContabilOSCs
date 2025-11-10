@@ -6,7 +6,7 @@ export default function Footer() {
   return (
     <footer className={styles.footer}>
       <p className={styles.copyright}>
-        Copyright 2025. Selo Cidadania. Todos os direitos reservados.
+        Copyright 2025. Conta Comigo App. Todos os direitos reservados.
       </p>
       <p>
         Desenvolvido por <a href="https://baygroups.com.br" className={styles.link} target="_blank" rel="noopener noreferrer">
@@ -14,7 +14,7 @@ export default function Footer() {
         </a>
       </p>
       <p className={styles.version}>
-        Versão: 1.0.0
+        Versão: 1.0.1
       </p>
     </footer>
   );
