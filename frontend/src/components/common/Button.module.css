@@ -5,6 +5,7 @@
   align-items: center;
   justify-content: center;
   font-weight: 700;
+  background-color: #ED8223; /* laranja claro */
   border-radius: 0.5rem; /* rounded-lg */
   border: 1px solid transparent; /* Adiciona borda para consistência */
   cursor: pointer;
@@ -32,13 +33,13 @@
 
 /* --- Variantes de Cor --- */
 .primary {
-  background-color: #3b82f6; /* Azul */
+  background-color: #ED8223; /* laranja claro */
   color: white;
-  border-color: #3b82f6;
+  border-color: #EF4138;
 }
 .primary:hover:not(:disabled) {
-  background-color: #2563eb; /* Azul mais escuro */
-  border-color: #2563eb;
+  background-color: #EF4138; /* Azul mais escuro */
+  border-color: #ED8223;
 }
 
 .secondary {
