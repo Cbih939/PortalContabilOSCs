@@ -10,7 +10,7 @@
 .spinner {
   border-radius: 50%; /* rounded-full */
   border-style: solid;
-  border-color: #3b82f6; /* border-blue-600 */
+  border-color: #ef4444; /* border-blue-600 */
   border-top-color: transparent; /* border-t-transparent */
   animation: spin 1s linear infinite; /* animate-spin */
 }
