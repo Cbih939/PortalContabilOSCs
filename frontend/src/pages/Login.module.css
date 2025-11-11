@@ -53,6 +53,7 @@
   font-weight: 700; /* Equivalente a font-bold */
   color: white;
   border: none;
+  background-color: #ED8223; /* laranja claro */
   border-radius: 0.5rem; /* Equivalente a rounded-lg */
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.1s ease;
