@@ -71,10 +71,10 @@
 }
 
 .buttonContador {
-  background-color: #3b82f6; /* Azul */
+  background-color: #ED8223; /* Azul */
 }
 .buttonContador:hover {
-  background-color: #2563eb; /* Azul mais escuro */
+  background-color: #EF4138; /* Azul mais escuro */
 }
 
 .buttonAdmin {
