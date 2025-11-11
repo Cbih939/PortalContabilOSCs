@@ -47,13 +47,10 @@ export default function LoginPage() {
       />
       {/* --- FIM DA ADIÇÃO --- */}
 
-      <h1 className={styles.title}>
-        Conta Comigo App
-      </h1>
-      <p className={styles.subtitle}>
-        Aceda à sua conta
-      </p>
-
+      <h3 className={styles.title}>
+        Entre na sua conta
+      </h3>
+      
       {/* Formulário de Login Real */}
       <form onSubmit={handleSubmit} className={styles.buttonContainer}>
         <Input
