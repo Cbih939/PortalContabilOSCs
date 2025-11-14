@@ -30,6 +30,30 @@
   text-decoration: underline;
 }
 
+.legalLinks {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem; /* Espaço entre os links e a barra | */
+}
+
+.legalLink {
+  color: #9ca3af; /* text-gray-400 */
+  text-decoration: none;
+  font-size: 0.875rem; /* text-sm */
+}
+
+.legalLink:hover {
+  color: #d1d5db; /* hover:text-gray-300 */
+  text-decoration: underline;
+}
+
+/* Estilo para o separador | */
+.legalLinks span {
+  color: #4b5563; /* text-gray-600 */
+}
+
 .version {
   color: #6b7280; /* text-gray-500 */
   font-size: 0.75rem; /* text-xs */

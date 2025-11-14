@@ -1,5 +1,6 @@
 // src/components/layout/Footer.jsx
 import React from 'react';
+import { Link } from 'react-router-dom';
 import styles from './Footer.module.css';
 
 export default function Footer() {
@@ -13,6 +14,16 @@ export default function Footer() {
           Agência Bay Groups
         </a>
       </p>
+      {/* --- LINKS LEGAIS ADICIONADOS --- */}
+      <div className={styles.legalLinks}>
+        <Link to="/politica-de-privacidade" className={styles.legalLink}>
+          Política de Privacidade
+        </Link>
+        <span>|</span>
+        <Link to="/termos-de-uso" className={styles.legalLink}>
+          Termos de Uso
+        </Link>
+      </div>
       <p className={styles.version}>
         Versão: 1.0.1
       </p>

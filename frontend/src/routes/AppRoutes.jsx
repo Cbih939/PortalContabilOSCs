@@ -17,6 +17,8 @@ import ProtectedRoute from './ProtectedRoute.jsx';
 // Páginas Públicas (Guest)
 import LoginPage from '../pages/Login.jsx';
 import NotFoundPage from '../pages/NotFound.jsx';
+import PrivacyPolicyPage from '../pages/legal/PrivacyPolicyPage.jsx'; 
+import TermsOfUsePage from '../pages/legal/TermsOfUsePage.jsx';
 
 // Páginas e Componentes do Admin (Reais)
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
@@ -114,6 +116,9 @@ export default function AppRoutes() {
         {/* --- Rotas Públicas (Guest) --- */}
         <Route element={<GuestLayout />}>
           <Route path="/login" element={<LoginPage />} />
+          {/* ROTAS LEGAIS */}
+          <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
+          <Route path="/termos-de-uso" element={<TermsOfUsePage />} />
         </Route>
 
         {/* --- Rotas Protegidas --- */}
