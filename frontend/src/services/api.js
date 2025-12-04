@@ -4,7 +4,7 @@ import axios from 'axios';
 
 // 1. Define o URL base da sua API
 //    Use variáveis de ambiente (.env) para isto em produção
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'; // Porta do backend
+const API_BASE_URL = "/api";
 
 // 2. Cria a instância do Axios
 const api = axios.create({
