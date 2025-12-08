@@ -1,5 +1,3 @@
-// backend/src/models/message.model.js
-
 import pool from '../config/db.js';
 import { ROLES } from '../utils/constants.js';
 
@@ -7,7 +5,6 @@ import { ROLES } from '../utils/constants.js';
  * Busca o histórico de conversa entre uma OSC e um Contador.
  */
 export const findConversationHistory = async (oscId, contadorId) => {
-  console.log(`[Model findConversationHistory] Buscando para osc_id: ${oscId} E contador_id: ${contadorId}`);
   const query = `
     SELECT 
       m.id,
@@ -23,8 +20,11 @@ export const findConversationHistory = async (oscId, contadorId) => {
       m.created_at ASC; 
   `;
   try {
+    // --- CORREÇÃO FEITA AQUI ---
+    // A query pede 2 parâmetros: osc_id e contador_id.
+    // Removemos o 'limit' e 'ROLES.OSC' que não existem nesta query.
     const [rows] = await pool.execute(query, [oscId, contadorId]);
-    console.log(`[Model findConversationHistory] Query encontrou ${rows.length} linhas.`);
+    
     return rows.map(row => ({
       id: row.id,
       text: row.text,
@@ -68,13 +68,13 @@ export const createMessage = async (messageData) => {
 
     const [newMessages] = await pool.execute(
       `SELECT 
-         m.id, m.text, m.created_at as date, m.sender_role, m.from_name,
-         u_osc.name as osc_name,
-         u_contador.name as contador_name
-       FROM messages m 
-       JOIN users u_osc ON m.osc_id = u_osc.id
-       JOIN users u_contador ON m.contador_id = u_contador.id
-       WHERE m.id = ?`,
+          m.id, m.text, m.created_at as date, m.sender_role, m.from_name,
+          u_osc.name as osc_name,
+          u_contador.name as contador_name
+        FROM messages m 
+        JOIN users u_osc ON m.osc_id = u_osc.id
+        JOIN users u_contador ON m.contador_id = u_contador.id
+        WHERE m.id = ?`,
       [result.insertId]
     );
     
@@ -121,7 +121,6 @@ export const countUnreadByContadorId = async (contadorId) => {
 /**
  * Busca as N mensagens mais recentes não lidas para um Contador.
  * (Usado pelo Controlador de Notificações)
- * (CORRIGIDO com os 3 argumentos no pool.execute)
  */
 export const findRecentUnreadByContadorId = async (contadorId, limit = 5) => {
   const query = `
@@ -137,10 +136,8 @@ export const findRecentUnreadByContadorId = async (contadorId, limit = 5) => {
     LIMIT ?
   `;
   try {
-    // --- CORREÇÃO AQUI ---
-    // Passando contadorId, ROLES.OSC, e limit
-    const [rows] = await pool.execute(query, [contadorId, ROLES.OSC, limit]);
-    // --- FIM DA CORREÇÃO ---
+    // CORREÇÃO: Passando os 3 argumentos corretos para os 3 placeholders (?)
+    const [rows] = await pool.execute(query, [contadorId, ROLES.OSC, limit.toString()]);
     return rows;
   } catch (error) {
     console.error('Erro em findRecentUnreadByContadorId (Message):', error);
