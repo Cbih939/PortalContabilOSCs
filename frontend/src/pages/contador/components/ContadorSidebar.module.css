@@ -1,14 +1,19 @@
-/* Container Principal - Fundo Escuro para contraste */
+/* Container Principal - Fundo Laranja Claro */
 .sidebarContainer {
   width: 17rem;
   height: 100vh;
-  /* Cor escura (Cinza Chumbo) - Padrão moderno de dashboards */
-  background-color: #1f2937 !important; 
-  color: #f3f4f6 !important; /* Texto claro */
+  
+  /* Tom de Laranja Claro (Creme/Pêssego suave) */
+  background-color: #FFF3E0 !important; 
+  
+  /* Texto padrão (Laranja escuro ou Marrom para contraste) */
+  color: #7c2d12 !important; 
+  
+  border-right: 1px solid #fed7aa; /* Borda laranja sutil */
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 0 10px rgba(236, 109, 18, 0.1);
   z-index: 50;
 }
 
@@ -18,17 +23,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Fundo ligeiramente mais escuro para o logo */
-  background-color: #111827 !important; 
-  border-bottom: 1px solid #374151; /* Borda escura sutil */
+  /* Fundo ligeiramente mais escuro que a barra para destacar o topo, ou igual */
+  background-color: #FFEDD5 !important; 
+  border-bottom: 1px solid #fed7aa;
 }
 
 .logo {
-  height: 3.5rem;
+  height: 4rem; /* Logo um pouco maior */
   width: auto;
   object-fit: contain;
-  /* Filtro opcional para deixar logo branca se ela for escura, remova se não precisar */
-  /* filter: brightness(0) invert(1); */
 }
 
 /* Área de Navegação */
@@ -38,35 +41,40 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
-/* Links do Menu */
+/* Links do Menu (Estado Normal) */
 .navLink {
   display: flex;
   align-items: center;
   padding: 0.875rem 1rem;
   border-radius: 0.5rem;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
-  color: #d1d5db; /* Cinza claro */
+  
+  /* Cor do texto normal */
+  color: #9a3412; /* Marrom alaranjado */
+  
   transition: all 0.2s ease-in-out;
-  border-left: 4px solid transparent; /* Prepara a borda lateral */
 }
 
-/* Estado Hover (Passar o mouse) */
+/* Hover (Passar o mouse) */
 .navLink:hover {
-  background-color: #374151 !important; /* Cinza médio */
-  color: #ffffff !important;
-  border-left-color: #EC6D12; /* Borda laranja no hover */
+  background-color: #ffccbc !important; /* Laranja um pouco mais forte */
+  color: #7c2d12 !important;
 }
 
-/* Estado Ativo (Página Atual) */
+/* Link ATIVO (O "Botão Laranja Escuro") */
 .activeLink {
-  background-color: #374151 !important; /* Fundo ativo */
-  color: #EC6D12 !important; /* Texto Laranja */
+  /* Fundo Laranja Vibrante da Marca */
+  background-color: #EC6D12 !important; 
+  
+  /* Texto Branco para contraste total */
+  color: #ffffff !important; 
+  
   font-weight: 700 !important;
-  border-left-color: #EC6D12 !important; /* Borda Laranja Fixa */
+  box-shadow: 0 4px 6px rgba(236, 109, 18, 0.4); /* Sombra laranja */
 }
 
 /* Ícones */
@@ -80,8 +88,8 @@
 /* Rodapé / Botão Sair */
 .footerContainer {
   padding: 1rem;
-  border-top: 1px solid #374151;
-  background-color: #1f2937;
+  border-top: 1px solid #fed7aa;
+  background-color: #FFF3E0;
 }
 
 .logoutButton {
@@ -90,16 +98,16 @@
   align-items: center;
   padding: 0.875rem 1rem;
   background-color: transparent;
-  color: #9ca3af;
-  border: 1px solid #374151;
+  color: #c2410c; /* Laranja queimado */
+  border: 1px solid #fed7aa;
   border-radius: 0.5rem;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.2s;
 }
 
 .logoutButton:hover {
-  background-color: #374151;
-  color: #ef4444; /* Vermelho no hover */
-  border-color: #ef4444;
+  background-color: #ffedd5;
+  color: #EC6D12;
+  border-color: #EC6D12;
 }
