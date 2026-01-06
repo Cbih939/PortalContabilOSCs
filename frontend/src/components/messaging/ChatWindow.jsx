@@ -1,95 +1,77 @@
-// src/components/messaging/ChatWindow.jsx
+import React, { useState, useEffect, useRef } from 'react';
+import MessageInput from './MessageInput.jsx';
+import * as messageService from '../../services/messageService.js';
+import styles from './ChatWindow.module.css';
 
-import React, { useEffect, useRef } from 'react';
-// import { clsx } from 'clsx'; // Não mais necessário
-import MessageInput from './MessageInput.jsx'; // Importa Input refatorado
-import styles from './ChatWindow.module.css'; // Importa CSS Module
-import { formatTime } from '../../utils/formatDate.js'; // Importa helper de data
+export default function ChatWindow({ contact }) {
+  const [messages, setMessages] = useState([]);
+  const messagesEndRef = useRef(null);
 
-/**
- * Componente ChatWindow (CSS Modules).
- */
-export default function ChatWindow({
-  otherParty,
-  messages = [], // Garante que é um array
-  user,
-  onSendMessage,
-  className = '',
-}) {
-  const chatEndRef = useRef(null);
-
+  // Carrega mensagens quando o contato muda
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (contact) {
+      // Simulação de carregamento (substituir por chamada real da API)
+      const loadMessages = async () => {
+        const msgs = await messageService.getMessages(contact.id);
+        setMessages(msgs);
+      };
+      loadMessages();
+    }
+  }, [contact]);
+
+  // Scroll para o fim
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Garante que otherParty e user existem para evitar erros
-  if (!otherParty || !user) {
-    return <div className={styles.chatContainer}>Carregando dados...</div>; // Ou um placeholder melhor
-  }
+  const handleSendMessage = async (text, file) => {
+    // Cria objeto de mensagem temporário (otimista)
+    const newMessage = {
+      id: Date.now(),
+      text,
+      sender: 'me', // 'me' = contador, 'them' = osc
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      file: file ? { name: file.name } : null
+    };
+
+    setMessages([...messages, newMessage]);
+    
+    // Aqui você chamaria a API real: await messageService.sendMessage(...)
+  };
 
   return (
-    <div className={`${styles.chatContainer} ${className}`}>
-      {/* Cabeçalho */}
+    <div className={styles.container}>
+      {/* Cabeçalho do Chat */}
       <div className={styles.header}>
-        <div className={styles.avatarPlaceholder}>
-          {otherParty.name?.charAt(0) || '?'}
+        <div className={styles.headerInfo}>
+          <h3>{contact.name}</h3>
+          <span>{contact.role || 'OSC'}</span>
         </div>
-        <h3 className={styles.headerName}>
-          {otherParty.name || 'Desconhecido'}
-        </h3>
       </div>
 
-      {/* Área de Mensagens */}
-      <div className={styles.messagesArea}>
-        <div className={styles.messagesList}>
-          {messages
-            .sort((a, b) => new Date(a.date) - new Date(b.date))
-            .map((msg) => {
-              const isSentByUser = msg.from === user.name; // Verifica se a mensagem foi enviada pelo utilizador logado
-              return (
-                <div
-                  key={msg.id}
-                  className={`
-                    ${styles.messageRow}
-                    ${isSentByUser ? styles.messageRowSent : styles.messageRowReceived}
-                  `}
-                >
-                  {/* Avatar (só para mensagens recebidas) */}
-                  {!isSentByUser && (
-                    <div className={styles.messageAvatar}>
-                      {msg.from?.charAt(0) || '?'}
-                    </div>
-                  )}
-
-                  {/* Balão da Mensagem */}
-                  <div
-                    className={`
-                      ${styles.messageBubble}
-                      ${isSentByUser ? styles.bubbleSent : styles.bubbleReceived}
-                    `}
-                  >
-                    <p className={styles.messageText}>{msg.text}</p>
-                    <p
-                      className={`
-                        ${styles.messageTimestamp}
-                        ${isSentByUser ? styles.timestampSent : styles.timestampReceived}
-                      `}
-                    >
-                      {formatTime(msg.date)} {/* Usa helper para formatar */}
-                    </p>
-                  </div>
+      {/* Lista de Mensagens */}
+      <div className={styles.messagesList}>
+        {messages.map((msg) => (
+          <div 
+            key={msg.id} 
+            className={`${styles.messageRow} ${msg.sender === 'me' ? styles.sent : styles.received}`}
+          >
+            <div className={styles.bubble}>
+              {msg.text}
+              {msg.file && (
+                <div style={{ marginTop: '0.5rem', fontStyle: 'italic', fontSize: '0.8rem' }}>
+                  📎 {msg.file.name}
                 </div>
-              );
-            })}
-          {/* Âncora para scroll */}
-          <div ref={chatEndRef} />
-        </div>
+              )}
+              <span className={styles.timestamp}>{msg.timestamp}</span>
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Input de Mensagem */}
-      <div className={styles.inputContainer}>
-        <MessageInput onSendMessage={onSendMessage} />
-      </div>
+      {/* Input */}
+      <MessageInput onSendMessage={handleSendMessage} />
     </div>
   );
 }

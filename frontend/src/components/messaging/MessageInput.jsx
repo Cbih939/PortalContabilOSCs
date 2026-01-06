@@ -1,43 +1,47 @@
-// src/components/messaging/MessageInput.jsx
-
 import React, { useState } from 'react';
-import { SendIcon } from '../common/Icons.jsx'; // Importa ícone
-import styles from './MessageInput.module.css'; // Importa CSS Module
+import styles from './MessageInput.module.css';
 
-/**
- * Componente para input de mensagem (CSS Modules).
- */
+// Ícones SVG
+const PaperClipIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+  </svg>
+);
+
+const SendIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+  </svg>
+);
+
 export default function MessageInput({ onSendMessage }) {
   const [text, setText] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const trimmedText = text.trim();
-    if (trimmedText) {
-      onSendMessage(trimmedText);
+    if (text.trim()) {
+      onSendMessage(text, null); // Envia texto e null para arquivo por enquanto
       setText('');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.formContainer}>
-      <div className={styles.inputGroup}>
-        <input
-          type="text"
-          className={styles.textInput}
-          placeholder="Digite uma mensagem..."
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
-        <button
-          type="submit"
-          className={styles.sendButton}
-          disabled={!text.trim()}
-          aria-label="Enviar mensagem"
-        >
-          <SendIcon /> {/* CSS Module estiliza o SVG */}
-        </button>
-      </div>
+    <form className={styles.inputContainer} onSubmit={handleSubmit}>
+      <button type="button" className={styles.attachButton} title="Anexar arquivo">
+        <PaperClipIcon className={styles.icon} />
+      </button>
+      
+      <input
+        type="text"
+        className={styles.textField}
+        placeholder="Escreva uma mensagem..."
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
+      
+      <button type="submit" className={styles.sendButton} disabled={!text.trim()}>
+        <SendIcon className={styles.icon} />
+      </button>
     </form>
   );
 }

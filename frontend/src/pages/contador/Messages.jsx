@@ -1,181 +1,67 @@
-// src/pages/contador/Messages.jsx
-
-import React, { useState, useEffect, useCallback } from 'react';
-// Componentes
+import React, { useState, useEffect } from 'react';
 import ContactList from '../../components/messaging/ContactList.jsx';
 import ChatWindow from '../../components/messaging/ChatWindow.jsx';
-// Serviços API
-import * as oscService from '../../services/oscService.js';
 import * as messageService from '../../services/messageService.js';
-// Mocks e Constantes (Fallback)
-import { mockUsers } from '../../utils/mockData.js'; // Apenas para fallback
-import { ROLES } from '../../utils/constants.js';
-// Hooks e UI
-import { useAuth } from '../../hooks/useAuth.jsx';
-import Spinner from '../../components/common/Spinner.jsx';
-import useApi from '../../hooks/useApi.jsx';
-import { useNotification } from '../../contexts/NotificationContext.jsx';
-import styles from './Messages.module.css'; // Importa CSS Module da página
+import styles from './Messages.module.css';
 
-/**
- * Página de Mensagens do Contador (Conectada à API).
- */
-export default function ContadorMessagesPage() {
-  const { user } = useAuth(); // Pega utilizador logado
-  const currentUser = user || mockUsers.contador; // Usa fallback se user for null inicialmente
-  const addNotification = useNotification();
+// Ícone para o estado vazio (quando nenhum chat está selecionado)
+const EmptyChatIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+  </svg>
+);
 
-  // --- Estados ---
-  const [oscs, setOscs] = useState([]); // Lista de contatos (OSCs)
-  const [messages, setMessages] = useState([]); // Mensagens da conversa ATIVA
-  const [selectedOsc, setSelectedOsc] = useState(null); // OSC selecionada
-  const [isLoadingContacts, setIsLoadingContacts] = useState(true); // Loading inicial (lista de OSCs)
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false); // Loading para CADA conversa
-  const [errorLoading, setErrorLoading] = useState(null); // Erros de busca
+export default function Messages() {
+  const [contacts, setContacts] = useState([]);
+  const [selectedContact, setSelectedContact] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Hook para enviar mensagem
-  const { request: sendMessageRequest, isLoading: isSending } = useApi(messageService.sendMessage);
-
-  // --- Efeito para buscar a lista de OSCs (Contatos) ---
+  // Carrega contatos (mock ou API)
   useEffect(() => {
-    const fetchContacts = async () => {
-      setIsLoadingContacts(true);
-      setErrorLoading(null);
+    const loadContacts = async () => {
       try {
-        const response = await oscService.getMyOSCs();
-        setOscs(response.data || []);
-      } catch (err) {
-        console.error("Erro ao buscar contatos (OSCs):", err);
-        const errorMsg = err.response?.data?.message || "Não foi possível carregar a lista de contatos.";
-        setErrorLoading(errorMsg);
-        addNotification("Erro ao carregar contatos.", "error");
+        const data = await messageService.getContacts();
+        setContacts(data);
+      } catch (error) {
+        console.error("Erro ao carregar contatos:", error);
       } finally {
-        setIsLoadingContacts(false);
+        setIsLoading(false);
       }
     };
-    fetchContacts();
-  }, [addNotification]); // addNotification é estável, roda 1 vez
+    loadContacts();
+  }, []);
 
-  // --- Efeito para buscar o histórico da conversa SELECIONADA ---
-  const fetchHistory = useCallback(async (oscId, oscName) => { // Recebe nome para notificação
-      if (!oscId) return;
-      setIsLoadingMessages(true);
-      setErrorLoading(null);
-      setMessages([]);
-      try {
-        const response = await messageService.getMessagesHistory(oscId);
-        setMessages(response.data || []);
-      } catch (err) {
-        console.error(`Erro ao buscar histórico para OSC ${oscId}:`, err);
-        const errorMsg = err.response?.data?.message || `Não foi possível carregar as mensagens para ${oscName}.`;
-        setErrorLoading(errorMsg); // Mostra erro na área de chat
-        addNotification(`Erro ao carregar mensagens de ${oscName}.`, "error");
-      } finally {
-        setIsLoadingMessages(false);
-      }
-  }, [addNotification]); // Dependências estáveis
-
-  // Dispara a busca de histórico quando selectedOsc muda
-  useEffect(() => {
-    if (selectedOsc?.id) {
-        fetchHistory(selectedOsc.id, selectedOsc.name);
-    } else {
-        setMessages([]); // Limpa mensagens se nenhuma OSC estiver selecionada
-        setErrorLoading(null); // Limpa erro específico da conversa
-    }
-  }, [selectedOsc, fetchHistory]);
-
-  // --- Handler Enviar Mensagem ---
-  const handleSendMessage = async (text) => {
-    if (!selectedOsc || !currentUser) return; // Garante que user existe
-    const tempId = Date.now(); // ID Otimista
-    const newMessage = {
-        id: tempId,
-        from: currentUser.name, // Nome do contador logado
-        to: selectedOsc.name,
-        text,
-        date: new Date().toISOString(),
-        sender_role: ROLES.CONTADOR,
-    };
-    setMessages((prev) => [...prev, newMessage]); // Atualização otimista
-    try {
-      await sendMessageRequest({ toOscId: selectedOsc.id, text });
-      // Sucesso! A API salvou. Poderia atualizar msg com ID real se necessário.
-    } catch (err) {
-      // Reverte a atualização otimista em caso de erro
-      setMessages((prev) => prev.filter(m => m.id !== tempId));
-      console.error('Falha ao enviar mensagem:', err);
-      // useApi já mostra notificação de erro vinda da API
-      addNotification("Falha ao enviar mensagem. Tente novamente.", "error"); // Feedback extra opcional
-    }
+  const handleSelectContact = (contact) => {
+    setSelectedContact(contact);
   };
 
-  // --- Renderização ---
-
-  // Loading inicial da lista de contatos
-  if (isLoadingContacts) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-        <Spinner text="Carregando contatos..." />
-      </div>
-    );
-  }
-
-  // Erro irrecuperável ao carregar contatos
-   if (errorLoading && !selectedOsc && oscs.length === 0) {
-       return <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>{errorLoading}</div>;
-   }
-
   return (
-    // Container Flex principal da página (ocupa toda a altura disponível no AppLayout)
     <div className={styles.pageContainer}>
+      <div className={styles.contentContainer}>
+        
+        {/* Painel Esquerdo: Lista de Contatos */}
+        <div className={styles.sidebar}>
+          <ContactList 
+            contacts={contacts} 
+            selectedContact={selectedContact} 
+            onSelectContact={handleSelectContact} 
+            isLoading={isLoading}
+          />
+        </div>
 
-      {/* Coluna da Lista de Contatos */}
-      <ContactList
-        contacts={oscs}
-        selectedContact={selectedOsc}
-        onSelectContact={setSelectedOsc}
-        className={styles.contactListColumn}
-      />
-
-      {/* Coluna da Janela de Chat / Placeholder */}
-      <div className={styles.chatWindowColumn}>
-        {selectedOsc ? (
-          isLoadingMessages ? (
-            <Spinner text={`Carregando mensagens de ${selectedOsc.name}...`} />
-          ) : errorLoading ? (
-             <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>{errorLoading}</div>
+        {/* Painel Direito: Janela de Chat */}
+        <div className={styles.chatArea}>
+          {selectedContact ? (
+            <ChatWindow contact={selectedContact} />
           ) : (
-            <ChatWindow
-              key={selectedOsc.id}
-              otherParty={selectedOsc}
-              messages={messages}
-              user={currentUser}
-              onSendMessage={handleSendMessage}
-              // className="w-full h-full" // <-- REMOVA (ou comente) ESTA LINHA
-            />
-          )
-        ) : (
-          // --- Renderiza Placeholder se NENHUMA OSC está selecionada ---
-          !errorLoading && ( // Só mostra placeholder se não houver erro geral
-            <div className={styles.placeholderContainer}>
-              {/* Logo Placeholder */}
-              <img
-                src="/logo_portal.png" // Busca a logo da pasta 'public'
-                alt="Logo Portal Contábil"
-                className={styles.placeholderLogo} // Usa o estilo do CSS Module
-              />
-              {/* Mensagem */}
-              <p className={styles.placeholderText}>
-                Selecione uma OSC para iniciar a conversa
-              </p>
+            <div className={styles.emptyState}>
+              <EmptyChatIcon className={styles.emptyIcon} />
+              <h3>Selecione uma conversa</h3>
+              <p>Escolha um contato à esquerda para começar a trocar mensagens.</p>
             </div>
-          )
-        )}
-        {/* Mostra erro geral se houver e nenhuma OSC selecionada */}
-        {!selectedOsc && errorLoading && (
-             <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>{errorLoading}</div>
-        )}
+          )}
+        </div>
+
       </div>
     </div>
   );
