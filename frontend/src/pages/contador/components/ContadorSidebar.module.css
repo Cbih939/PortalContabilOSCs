@@ -1,72 +1,95 @@
-/* src/pages/contador/components/ContadorSidebar.module.css */
+/* frontend/src/pages/contador/components/ContadorSidebar.module.css */
 
-/* Cor de fundo específica desta sidebar */
-.sidebar {
-    background-color: #1f2937; /* bg-gray-800 */
-    color: white;
-}
-
-.logoTitle {
-  font-size: 1.5rem; /* text-2xl */
-  font-weight: 700; /* font-bold */
-}
-
-.sidebarLink {
-  width: 100%;
-  text-align: left;
+.sidebarContainer {
+  width: 16rem; /* w-64 */
+  height: 100vh;
+  background-color: #ffffff; /* Fundo BRANCO (antes era azul/escuro) */
+  color: #374151; /* Texto cinza escuro (text-gray-700) */
   display: flex;
-  align-items: center;
-  padding: 0.75rem; /* p-3 */
-  border-radius: 0.5rem; /* rounded-lg */
-  white-space: nowrap;
-  color: #d1d5db; /* Cor padrão do texto do link (cinza claro) */
-  text-decoration: none;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.sidebarLink:hover {
-  background-color: #374151; /* hover:bg-gray-700 */
-  color: white;
-}
-
-.sidebarLinkActive {
-  background-color: #3b82f6; /* bg-blue-600 */
-  color: white;
-  font-weight: 600; /* font-semibold */
-}
-.sidebarLinkActive:hover {
-    background-color: #2563eb; /* Azul mais escuro no hover ativo */
-}
-
-.linkIcon {
-  height: 1.25rem; /* h-5 */
-  width: 1.25rem; /* w-5 */
+  flex-direction: column;
   flex-shrink: 0;
-  margin-right: 0.75rem; /* ml-3 */
+  border-right: 1px solid #e5e7eb; /* Borda sutil à direita */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.03); /* Sombra muito suave */
+  transition: all 0.3s ease;
 }
 
-.logoutButton {
-  width: 100%;
-  text-align: left;
+/* Área do Logo no topo do Sidebar */
+.logoContainer {
   display: flex;
   align-items: center;
-  padding: 0.75rem; /* p-3 */
+  justify-content: center;
+  height: 5rem; /* h-20 */
+  border-bottom: 1px solid #f3f4f6;
+  background-color: #ffffff;
+}
+
+.logo {
+  height: 3rem; /* h-12 */
+  width: auto;
+  object-fit: contain;
+}
+
+/* Container de Navegação */
+.navContainer {
+  flex: 1;
+  padding-top: 1.5rem;
+  padding-bottom: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  overflow-y: auto;
+}
+
+/* Links do Menu */
+.navLink {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
   border-radius: 0.5rem;
-  white-space: nowrap;
-  color: #d1d5db;
-  background: none;
+  font-weight: 500;
+  text-decoration: none;
+  color: #6b7280; /* Cor padrão do texto (cinza médio) */
+  transition: all 0.2s ease-in-out;
+}
+
+.navLink:hover {
+  background-color: #fff7ed; /* Fundo laranja muito claro no hover */
+  color: #EC6D12; /* Texto laranja no hover */
+}
+
+/* Link Ativo */
+.activeLink {
+  background-color: #fff7ed; /* Fundo laranja claro */
+  color: #EC6D12; /* Texto Laranja Forte */
+  font-weight: 600;
+  border-left: 4px solid #EC6D12; /* Indicador lateral laranja */
+}
+
+/* Ícones */
+.icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.75rem;
+  color: inherit; /* Herda a cor do link (cinza ou laranja) */
+}
+
+/* Botão de Sair (Footer do Sidebar) */
+.logoutButton {
+  margin-top: auto; /* Empurra para o fundo */
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 1rem;
+  background-color: #f9fafb; /* Fundo levemente diferente para o footer */
+  color: #4b5563;
   border: none;
+  border-top: 1px solid #e5e7eb;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.2s;
+  font-weight: 500;
 }
 
 .logoutButton:hover {
-  background-color: #dc2626; /* hover:bg-red-700 (vermelho mais escuro) */
-  color: white;
-}
-.logoutIcon {
-    height: 1.25rem; /* h-5 */
-    width: 1.25rem; /* w-5 */
-    flex-shrink: 0;
-    margin-right: 0.75rem; /* ml-3 */
+  background-color: #fee2e2; /* Vermelho bem claro no hover */
+  color: #dc2626; /* Vermelho escuro */
 }
