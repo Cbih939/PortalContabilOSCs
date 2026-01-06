@@ -1,101 +1,76 @@
-/* src/pages/Login.module.css */
-.logo {
-  /* Define um tamanho. 1080px é muito grande para a web. */
-  width: 120px; 
-  height: 120px;
-  
-  /* Garante que o aspect ratio seja mantido se a imagem não for quadrada */
-  object-fit: cover; 
-  
-  /* Centraliza a logo */
-  margin-left: auto;
-  margin-right: auto;
-  
-  /* Espaço entre a logo e o título */
-  margin-bottom: 1rem; 
-  
-  /* Opcional: Se quiser a logo redonda */
-  /* border-radius: 50%; */
-}
+/* frontend/src/pages/Login.module.css */
 
 .loginCard {
-  background-color: white;
-  padding: 2.5rem; /* Equivalente a p-10 */
-  border-radius: 1rem; /* Equivalente a rounded-2xl */
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Equivalente a shadow-xl */
-  max-width: 28rem; /* Equivalente a max-w-md */
+  background-color: #ffffff;
+  padding: 2.5rem;
+  border-radius: 1rem; /* Bordas arredondadas */
+  /* Sombra suave para destacar o card do fundo */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  max-width: 450px; /* Largura máxima confortável para login */
   width: 100%;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logo {
+  /* Ajuste o tamanho conforme a necessidade, mas mantendo a proporção */
+  width: auto;
+  max-width: 150px; 
+  height: auto;
+  max-height: 100px;
+  object-fit: contain;
+  margin-bottom: 1.5rem; /* Espaço entre logo e título */
 }
 
 .title {
-  font-size: 1.875rem; /* Equivalente a text-3xl */
-  font-weight: 700; /* Equivalente a font-bold */
-  color: #1f2937; /* Equivalente a text-gray-800 */
-  margin-bottom: 0.5rem; /* Equivalente a mb-2 */
-}
-
-.subtitle {
-  color: #6b7280; /* Equivalente a text-gray-500 */
-  margin-bottom: 2rem; /* Equivalente a mb-8 */
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937; /* Cinza escuro */
+  margin-bottom: 1.5rem;
 }
 
 .buttonContainer {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1rem; /* Equivalente a space-y-4 */
+  gap: 1rem;
 }
 
-/* Estilo base para botões (pode refinar mais tarde no Button.jsx) */
+/* --- Atualização das Cores do Botão --- */
 .loginButton {
   width: 100%;
-  padding: 0.75rem 1rem; /* Equivalente a py-3 px-4 */
-  font-weight: 700; /* Equivalente a font-bold */
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 1rem;
   color: white;
   border: none;
-  background-color: #ED8223; /* laranja claro */
-  border-radius: 0.5rem; /* Equivalente a rounded-lg */
+  background-color: #EC6D12; /* Cor Base solicitada */
+  border-radius: 0.5rem;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition: all 0.2s ease-in-out;
 }
 
 .loginButton:hover {
-  transform: scale(1.03); /* Efeito hover similar ao scale-105 */
+  background-color: #EF4138; /* Cor Hover solicitada */
+  transform: translateY(-1px); /* Pequeno efeito de elevação */
 }
 
-/* Cores específicas */
-.buttonOsc {
-  background-color: #22c55e; /* Verde */
-}
-.buttonOsc:hover {
-  background-color: #16a34a; /* Verde mais escuro */
-}
-
-.buttonContador {
-  background-color: #ED8223; /* Azul */
-}
-.buttonContador:hover {
-  background-color: #EF4138; /* Azul mais escuro */
-}
-
-.buttonAdmin {
-  background-color: #374151; /* Cinza escuro */
-}
-.buttonAdmin:hover {
-  background-color: #1f2937; /* Cinza mais escuro */
-}
-
-.disclaimer {
-  font-size: 0.75rem; /* Equivalente a text-xs */
-  color: #9ca3af; /* Equivalente a text-gray-400 */
-  margin-top: 2.5rem; /* Equivalente a mt-10 */
+.loginButton:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .errorMessage {
-  color: #dc2626; /* text-red-600 */
-  font-size: 0.875rem; /* text-sm */
-  /* Ajusta margens para ficar entre os inputs e o botão */
+  color: #dc2626;
+  font-size: 0.875rem;
   margin-top: -0.5rem;
   margin-bottom: 0.5rem;
-  text-align: left; /* Alinha o erro à esquerda */
+  text-align: left;
+  background-color: #fee2e2;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  width: 100%;
 }

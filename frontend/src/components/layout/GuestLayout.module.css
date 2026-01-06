@@ -1,18 +1,18 @@
-/* src/components/layout/GuestLayout.module.css */
+/* frontend/src/components/layout/GuestLayout.module.css */
+
 .layout {
-  min-height: 100vh; /* Ocupa a altura total da tela */
-  background-color: #f3f4f6; /* Cor de fundo cinza claro (bg-gray-100) */
+  min-height: 100vh;
+  width: 100vw;
+  /* Cor de fundo sólida (cinza claro neutro) para destacar o card */
+  background-color: #f3f4f6; 
   display: flex;
-  flex-direction: column; /* Organiza itens verticalmente (opcional se só tiver 1 item) */
-  justify-content: center; /* Centraliza verticalmente */
-  align-items: center; /* Centraliza horizontalmente */
-  padding: 1rem; /* Espaçamento nas bordas (equivale a p-4) */
+  flex-direction: column;
 }
+
 .contentWrapper {
-  flex: 1 1 0%; /* Faz esta área crescer (empurra o footer) */
+  flex: 1;
   display: flex;
-  align-items: center; /* Centraliza o card verticalmente nesta área */
-  justify-content: center; /* Centraliza o card horizontalmente */
+  align-items: center;
+  justify-content: center;
   padding: 1rem;
-  width: 100%;
 }

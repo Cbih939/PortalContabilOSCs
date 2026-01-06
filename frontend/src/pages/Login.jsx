@@ -72,7 +72,7 @@ export default function LoginPage() {
 
         {formError && <p className={styles.errorMessage}>{formError}</p>}
 
-        <Button type="submit" className="loginButton" disabled={isLoading} style={{ width: '100%' }}>
+        <Button type="submit" className={styles.loginButton} disabled={isLoading} style={{ width: '100%' }}>
           {isLoading ? <Spinner size="sm" className="mr-2" /> : null}
           {isLoading ? 'A entrar...' : 'Entrar'}
         </Button>
