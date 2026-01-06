@@ -1,5 +1,3 @@
-// backend/src/models/document.model.js
-
 import pool from '../config/db.js';
 import { ROLES } from '../utils/constants.js';
 
@@ -136,7 +134,6 @@ export const countReceivedByContadorId = async (contadorId) => {
 
 /**
  * Busca as últimas N atividades de documentos enviados por OSCs a um Contador.
- * (CORRIGIDO com os 3 argumentos no pool.execute)
  */
 export const findRecentActivityByContadorId = async (contadorId, limit = 5) => {
   const query = `
@@ -153,10 +150,9 @@ export const findRecentActivityByContadorId = async (contadorId, limit = 5) => {
     LIMIT ?
   `;
   try {
-    // --- CORREÇÃO AQUI ---
-    // Passando contadorId, ROLES.OSC, e limit
-    const [rows] = await pool.execute(query, [contadorId, ROLES.OSC, limit]);
-    // --- FIM DA CORREÇÃO ---
+    // Garante que limit seja inteiro para o MySQL
+    const limitInt = parseInt(limit, 10);
+    const [rows] = await pool.execute(query, [contadorId, ROLES.OSC, limitInt]);
     return rows;
   } catch (error) {
     console.error('Erro em findRecentActivityByContadorId:', error);
@@ -166,8 +162,7 @@ export const findRecentActivityByContadorId = async (contadorId, limit = 5) => {
 
 /**
  * Busca os N documentos mais recentes recebidos por um Contador.
- * (Usado para Notificações)
- * (CORRIGIDO com os 3 argumentos no pool.execute)
+ * (Esta era a função que estava faltando)
  */
 export const findRecentUnreadByContadorId = async (contadorId, limit = 5) => {
   const query = `
@@ -182,10 +177,9 @@ export const findRecentUnreadByContadorId = async (contadorId, limit = 5) => {
     LIMIT ?
   `;
   try {
-    // --- CORREÇÃO AQUI ---
-    // Passando contadorId, ROLES.OSC, e limit
-    const [rows] = await pool.execute(query, [contadorId, ROLES.OSC, limit]);
-    // --- FIM DA CORREÇÃO ---
+    // Garante que limit seja inteiro
+    const limitInt = parseInt(limit, 10);
+    const [rows] = await pool.execute(query, [contadorId, ROLES.OSC, limitInt]);
     return rows;
   } catch (error) {
     console.error('Erro em findRecentUnreadByContadorId (Document):', error);
