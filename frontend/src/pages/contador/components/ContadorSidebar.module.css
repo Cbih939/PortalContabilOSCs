@@ -7,9 +7,8 @@
   background-color: #F2994A !important; 
   
   /* Texto padrão (Laranja escuro ou Marrom para contraste) */
-  color: #7c2d12 !important; 
-  
-  border-right: 1px solid #fed7aa; /* Borda laranja sutil */
+  color: #F3F4F6 !important; 
+  border-right: 1px solid #F3F4F6; /* Borda laranja sutil */
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -54,15 +53,15 @@
   text-decoration: none;
   
   /* Cor do texto normal */
-  color: #9a3412; /* Marrom alaranjado */
+  color: #F3F4F6; /* Marrom alaranjado */
   
   transition: all 0.2s ease-in-out;
 }
 
 /* Hover (Passar o mouse) */
 .navLink:hover {
-  background-color: #ffccbc !important; /* Laranja um pouco mais forte */
-  color: #7c2d12 !important;
+  background-color: #EC6D12 !important; /* Laranja um pouco mais forte */
+  color: #F3F4F6 !important;
 }
 
 /* Link ATIVO (O "Botão Laranja Escuro") */
