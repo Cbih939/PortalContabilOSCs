@@ -1,16 +1,13 @@
-// src/pages/contador/ContadorDashboard.jsx
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  BuildingIcon, FolderIcon, MessageIcon, MegaphoneIcon, ChartIcon, FileIcon
+  BuildingIcon, FolderIcon, MessageIcon, MegaphoneIcon, FileIcon
 } from '../../components/common/Icons.jsx';
 import * as contadorService from '../../services/contadorService.js';
 import { formatDateTime } from '../../utils/formatDate.js';
-import styles from './ContadorDashboard.module.css'; // Importa o CSS Module
+import styles from './ContadorDashboard.module.css';
 import Spinner from '../../components/common/Spinner.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
-// Não precisamos do useAuth aqui se não formos buscar a logo *específica* do user
 
 /**
  * Página Dashboard do Contador (Conectada à API).
@@ -20,7 +17,7 @@ export default function ContadorDashboard() {
   const [recentActivity, setRecentActivity] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const addNotification = useNotification(); // Hook para notificações
+  const addNotification = useNotification();
 
   // --- Efeito para Buscar Dados da API ---
   useEffect(() => {
@@ -38,8 +35,7 @@ export default function ContadorDashboard() {
 
       } catch (err) {
         console.error("Erro ao buscar dados do dashboard:", err);
-        setError("Não foi possível carregar os dados do dashboard. Tente novamente mais tarde.");
-        // Adiciona notificação de erro
+        setError("Não foi possível carregar os dados do dashboard.");
         addNotification("Erro ao carregar dados do dashboard.", "error"); 
       } finally {
         setIsLoading(false);
@@ -47,18 +43,18 @@ export default function ContadorDashboard() {
     };
 
     fetchData();
-  }, [addNotification]); // addNotification é estável
+  }, [addNotification]);
 
   // --- Renderização ---
 
   if (error) {
-    return <div className={styles.pageContainer} style={{ textAlign: 'center', color: 'red' }}>{error}</div>;
+    return <div className={styles.pageContainer} style={{ textAlign: 'center', color: '#dc2626', marginTop: '2rem' }}>{error}</div>;
   }
 
   if (isLoading) {
      return (
-       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 100px)' }}>
-          <Spinner text="Carregando dashboard..." />
+       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+          <Spinner text="A carregar dashboard..." color="#EC6D12" />
        </div>
      );
   }
@@ -66,20 +62,20 @@ export default function ContadorDashboard() {
   return (
     <div className={styles.pageContainer}>
 
-      {/* --- LOGO ADICIONADA AQUI --- */}
+      {/* Logo Centralizada no topo do Dashboard */}
       <img
-        src="/logo_portal.png" // Busca a logo da pasta /public
+        src="/logo_portal.png"
         alt="Logo Portal Contábil"
-        className={styles.dashboardLogo} // Nova classe CSS
+        className={styles.dashboardLogo}
       />
-      {/* --- FIM DA ADIÇÃO --- */}
       
       <h2 className={styles.title}>
-        Dashboard do Contador
+        Painel de Controle
       </h2>
 
       {/* Grid de Estatísticas */}
       <div className={styles.statsGrid}>
+        
         {/* Card OSCs Ativas */}
         <div className={styles.statCard}>
           <div className={`${styles.statIconContainer} ${styles.iconBlue}`}>
@@ -90,6 +86,7 @@ export default function ContadorDashboard() {
             <p className={styles.statValue}>{stats.activeOSCs}</p>
           </div>
         </div>
+
         {/* Card Documentos Pendentes */}
         <div className={styles.statCard}>
           <div className={`${styles.statIconContainer} ${styles.iconYellow}`}>
@@ -100,13 +97,14 @@ export default function ContadorDashboard() {
             <p className={styles.statValue}>{stats.pendingDocs}</p>
           </div>
         </div>
+
         {/* Card Mensagens Não Lidas */}
         <div className={styles.statCard}>
           <div className={`${styles.statIconContainer} ${styles.iconGreen}`}>
             <MessageIcon className={styles.statIcon} />
           </div>
           <div>
-            <p className={styles.statLabel}>Mensagens Não Lidas</p>
+            <p className={styles.statLabel}>Mensagens Novas</p>
             <p className={styles.statValue}>{stats.unreadMessages}</p>
           </div>
         </div>
@@ -114,25 +112,26 @@ export default function ContadorDashboard() {
 
       {/* Grid Principal (Ações + Atividades) */}
       <div className={styles.mainGrid}>
+        
         {/* Coluna de Ações Rápidas */}
         <div className={styles.actionsColumn}>
           <div className={styles.sectionCard}>
-            <h3 className={styles.sectionTitle}>Ações Rápidas</h3>
+            <h3 className={styles.sectionTitle}>Acesso Rápido</h3>
             <div className={styles.quickLinksContainer}>
               <Link to="/contador/oscs" className={styles.quickLink}>
-                <BuildingIcon className={`${styles.quickLinkIcon} ${styles.iconLinkBlue}`} />
+                <BuildingIcon className={styles.quickLinkIcon} />
                 Gerenciar OSCs
               </Link>
               <Link to="/contador/documentos" className={styles.quickLink}>
-                <FolderIcon className={`${styles.quickLinkIcon} ${styles.iconLinkYellow}`} />
+                <FolderIcon className={styles.quickLinkIcon} />
                 Ver Documentos
               </Link>
               <Link to="/contador/mensagens" className={styles.quickLink}>
-                <MessageIcon className={`${styles.quickLinkIcon} ${styles.iconLinkGreen}`} />
-                Abrir Mensagens
+                <MessageIcon className={styles.quickLinkIcon} />
+                Mensagens
               </Link>
               <Link to="/contador/avisos" className={styles.quickLink}>
-                <MegaphoneIcon className={`${styles.quickLinkIcon} ${styles.iconLinkRed}`} />
+                <MegaphoneIcon className={styles.quickLinkIcon} />
                 Enviar Avisos
               </Link>
             </div>
@@ -157,21 +156,23 @@ export default function ContadorDashboard() {
                     <div className={styles.activityText}>
                       <p>
                         <strong>{item.oscName}</strong>
-                        {item.type === 'file' ? ' enviou o arquivo ' : ' enviou a mensagem '}
-                        <i>"{item.content}"</i>
+                        {item.type === 'file' ? ' enviou um arquivo ' : ' enviou uma mensagem '}
+                        <br />
+                        <span style={{ color: '#6b7280', fontStyle: 'italic' }}>"{item.content}"</span>
                       </p>
-                      <p className={styles.activityTimestamp}>
+                      <span className={styles.activityTimestamp}>
                         {formatDateTime(item.timestamp)}
-                      </p>
+                      </span>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className={styles.emptyText}>Nenhuma atividade recente.</p>
+                <p className={styles.emptyText}>Nenhuma atividade recente encontrada.</p>
               )}
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );

@@ -1,40 +1,42 @@
-/* src/components/layout/AppLayout.module.css */
-
 .layoutContainer {
   display: flex;
-  height: 100vh; /* Altura total da tela */
-  background-color: #f3f4f6; /* bg-gray-100 */
+  height: 100vh;
+  width: 100vw;
+  background-color: #f3f4f6; /* Fundo cinza claro global */
+  overflow: hidden; /* Impede scroll na janela inteira */
 }
 
 .mainContent {
-  flex: 1 1 0%; /* Ocupa o espaço restante ao lado da sidebar */
+  flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Altura total */
-  overflow-y: hidden; /* Impede este container principal de rolar */
+  height: 100%;
+  overflow: hidden;
+  position: relative;
 }
 
 .headerContainer {
-  flex-shrink: 0; /* Não encolhe */
-  position: sticky; /* Opcional: Fica no topo */
-  top: 0;
-  z-index: 20; /* Garante que fica acima */
+  flex-shrink: 0;
+  z-index: 20;
+  background-color: white;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .navigationContainer {
-  flex-shrink: 0; /* Não encolhe */
-  z-index: 10; /* Abaixo do header, acima do conteúdo */
-  background-color: white; /* Garante fundo branco para as abas */
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+  flex-shrink: 0;
+  z-index: 19;
+  background-color: white;
+  border-top: 1px solid #f3f4f6;
 }
 
 .pageContent {
-  flex: 1 1 0%; /* ESSENCIAL: Faz esta área crescer */
-  overflow-y: auto; /* ESSENCIAL: Adiciona scroll SÓ nesta área */
-  position: relative; /* Para páginas com height: 100% funcionarem */
+  flex: 1;
+  overflow-y: auto; /* Scroll apenas nesta área */
+  overflow-x: hidden;
+  /* Espaçamento interno é tratado pelo componente filho (ex: pageContainer do Dashboard) */
 }
 
-.footerContainer {
-  flex-shrink: 0; /* Não encolhe */
-  z-index: 10;
+.footerWrapper {
+  margin-top: auto; /* Empurra footer para baixo se o conteúdo for curto */
+  width: 100%;
 }

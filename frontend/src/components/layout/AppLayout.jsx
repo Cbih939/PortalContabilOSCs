@@ -1,9 +1,7 @@
-// src/components/layout/AppLayout.jsx
-
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import styles from './AppLayout.module.css';
-import Footer from './Footer.jsx'; // Garanta que o Footer está importado
+import Footer from './Footer.jsx';
 
 export default function AppLayout({
   sidebarComponent,
@@ -13,31 +11,32 @@ export default function AppLayout({
   return (
     <div className={styles.layoutContainer}>
       
-      {sidebarComponent} {/* A Sidebar (ex: ContadorSidebar) */}
+      {/* Sidebar Fixa à Esquerda */}
+      {sidebarComponent}
 
-      {/* O container principal (Header + Conteúdo + Footer) */}
+      {/* Área Principal de Conteúdo */}
       <main className={styles.mainContent}>
 
-        {/* 1. Header */}
+        {/* 1. Header Fixo no Topo */}
         <div className={styles.headerContainer}>
           {headerComponent}
         </div>
 
-        {/* 2. Navegação (ex: Abas da OSC) */}
+        {/* 2. Navegação secundária (opcional) */}
         {navigationComponent && (
           <div className={styles.navigationContainer}>
             {navigationComponent}
           </div>
         )}
 
-        {/* 3. Conteúdo da Página (Onde o Chat vive) */}
+        {/* 3. Conteúdo da Página (Scrollável) */}
         <div className={styles.pageContent}>
-          <Outlet /> {/* Aqui é onde a ContadorMessagesPage entra */}
-        </div>
-
-        {/* 4. Footer (Irmão do .pageContent) */}
-        <div className={styles.footerContainer}>
-          <Footer />
+          <Outlet />
+          
+          {/* Footer no final do conteúdo */}
+          <div className={styles.footerWrapper}>
+            <Footer />
+          </div>
         </div>
 
       </main>

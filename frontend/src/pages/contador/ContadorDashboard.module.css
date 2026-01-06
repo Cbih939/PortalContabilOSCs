@@ -1,200 +1,238 @@
-/* src/pages/contador/ContadorDashboard.module.css */
-
 .pageContainer {
-  padding: 2rem; /* p-8 */
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
 }
 
+/* Estilo da Logo Circular no Dashboard */
 .dashboardLogo {
-  width: 8rem; /* 128px (w-32) - Mesmo tamanho do placeholder do chat */
-  height: 8rem; /* 128px (h-32) */
-  object-fit: cover; /* Garante que a imagem preencha */
-  border-radius: 50%; /* Círculo */
-  margin-left: auto; /* Centraliza */
-  margin-right: auto;
-  margin-bottom: 1rem; /* Espaço abaixo da logo */
-  background-color: #e5e7eb; /* Fundo caso a imagem não carregue */
-  border: 4px solid white; /* Borda branca (opcional) */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Sombra */
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 50%;
+  background-color: white;
+  padding: 10px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  display: block;
+  margin: 0 auto 1.5rem auto; /* Centraliza e dá margem inferior */
 }
 
 .title {
-  font-size: 1.875rem; /* text-3xl */
-  font-weight: 700; /* font-bold */
-  color: #1f2937; /* text-gray-800 */
-  margin-bottom: 1.5rem; /* mb-6 */
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 2rem;
+  text-align: center; /* Centraliza o título */
 }
 
+/* --- Grid de Estatísticas (Topo) --- */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr)); /* 1 coluna por padrão */
-  gap: 1.5rem; /* gap-6 */
-  margin-bottom: 2rem; /* mb-8 */
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
 }
 
-/* 2 colunas em telas médias */
 @media (min-width: 768px) {
   .statsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-/* 3 colunas em telas grandes */
-@media (min-width: 1024px) {
-  .statsGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 .statCard {
   background-color: white;
-  padding: 1.5rem; /* p-6 */
-  border-radius: 0.5rem; /* rounded-lg */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  border: 1px solid #f3f4f6;
   display: flex;
   align-items: center;
-  gap: 1rem; /* space-x-4 */
+  gap: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.statIconContainer {
-  padding: 0.75rem; /* p-3 */
-  border-radius: 9999px; /* rounded-full */
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
-/* Cores específicas para os ícones */
-.iconBlue { background-color: #dbeafe; /* bg-blue-100 */ color: #3b82f6; /* text-blue-600 */ }
-.iconYellow { background-color: #fef3c7; /* bg-yellow-100 */ color: #ca8a04; /* text-yellow-600 */ }
-.iconGreen { background-color: #dcfce7; /* bg-green-100 */ color: #16a34a; /* text-green-600 */ }
+
+/* Ícones das estatísticas */
+.statIconContainer {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Cores dos ícones */
+.iconBlue {
+  background-color: #eff6ff;
+  color: #EC6D12; /* Mudado para Laranja da marca para consistência, ou manter azul se preferir distinção */
+}
+.iconYellow {
+  background-color: #fefce8;
+  color: #eab308;
+}
+.iconGreen {
+  background-color: #f0fdf4;
+  color: #22c55e;
+}
 
 .statIcon {
-  height: 1.5rem; /* h-6 */
-  width: 1.5rem; /* w-6 */
-  display: block;
+  height: 1.75rem;
+  width: 1.75rem;
 }
 
 .statLabel {
-  font-size: 0.875rem; /* text-sm */
-  font-weight: 500; /* font-medium */
-  color: #6b7280; /* text-gray-500 */
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .statValue {
-  font-size: 1.875rem; /* text-3xl */
-  font-weight: 700; /* font-bold */
-  color: #111827; /* text-gray-900 */
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1f2937;
+  line-height: 1;
 }
 
-/* Grid Principal (Ações + Atividades) */
+/* --- Grid Principal (Ações e Atividades) --- */
 .mainGrid {
   display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: 2rem; /* gap-8 */
+  grid-template-columns: 1fr;
+  gap: 2rem;
 }
-/* 3 colunas em telas grandes, 1 para Ações, 2 para Atividades */
+
 @media (min-width: 1024px) {
   .mainGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .actionsColumn {
-    grid-column: span 1 / span 1; /* lg:col-span-1 */
-  }
-  .activityColumn {
-    grid-column: span 2 / span 2; /* lg:col-span-2 */
+    grid-template-columns: 1fr 2fr; /* Coluna da direita é mais larga */
+    align-items: start;
   }
 }
 
 .sectionCard {
   background-color: white;
-  padding: 1.5rem; /* p-6 */
-  border-radius: 0.5rem; /* rounded-lg */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  height: 100%;
 }
 
 .sectionTitle {
-  font-size: 1.25rem; /* text-xl */
-  font-weight: 600; /* font-semibold */
-  color: #374151; /* text-gray-700 */
-  margin-bottom: 1rem; /* mb-4 */
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #f3f4f6;
 }
 
+/* --- Lista de Ações Rápidas --- */
 .quickLinksContainer {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem; /* space-y-3 */
+  gap: 1rem;
 }
 
 .quickLink {
   display: flex;
   align-items: center;
-  padding: 0.75rem; /* p-3 */
-  border-radius: 0.5rem; /* rounded-lg */
-  color: #374151; /* text-gray-700 */
-  font-weight: 500; /* font-medium */
-  background-color: #f9fafb; /* bg-gray-50 */
+  padding: 1rem;
+  border-radius: 0.75rem;
+  color: #4b5563;
+  font-weight: 600;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
   text-decoration: none;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
 }
+
 .quickLink:hover {
-  background-color: #f3f4f6; /* hover:bg-gray-100 */
+  background-color: #fff7ed; /* Fundo laranja muito claro */
+  border-color: #EC6D12; /* Borda laranja */
+  color: #EC6D12;
+  transform: translateX(5px);
 }
 
 .quickLinkIcon {
-  height: 1.25rem; /* h-5 */
-  width: 1.25rem; /* w-5 */
-  margin-right: 0.75rem; /* mr-3 */
-  flex-shrink: 0;
+  height: 1.5rem;
+  width: 1.5rem;
+  margin-right: 1rem;
+  color: #9ca3af;
+  transition: color 0.2s;
 }
-/* Cores específicas para ícones dos links */
-.iconLinkBlue { color: #3b82f6; }
-.iconLinkYellow { color: #ca8a04; }
-.iconLinkGreen { color: #16a34a; }
-.iconLinkRed { color: #ef4444; }
 
+.quickLink:hover .quickLinkIcon {
+  color: #EC6D12;
+}
+
+/* --- Feed de Atividades --- */
 .activityFeedContainer {
   display: flex;
   flex-direction: column;
-  gap: 1rem; /* space-y-4 */
+  gap: 0; /* Gap removido para usar padding/border */
 }
 
 .activityItem {
   display: flex;
-  align-items: flex-start; /* Alinha ícone com topo do texto */
-  padding-bottom: 1rem; /* pb-4 (ou use gap no container) */
-  border-bottom: 1px solid #f3f4f6; /* border-b border-gray-100 */
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #f3f4f6;
 }
+
 .activityItem:last-child {
-  border-bottom: none; /* last:border-b-0 */
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.activityItem:first-child {
+  padding-top: 0;
 }
 
 .activityIconContainer {
+  background-color: #f3f4f6;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  padding-top: 0.25rem; /* pt-1 */
-  color: #6b7280; /* text-gray-500 */
-  margin-right: 0.75rem; /* ml-3 (aplicado no div pai no original) */
 }
 
 .activityIcon {
-    height: 1.25rem; /* h-5 */
-    width: 1.25rem; /* w-5 */
+  height: 1rem;
+  width: 1rem;
+  color: #6b7280;
 }
 
 .activityText {
-  flex: 1 1 0%; /* flex-1 */
-  font-size: 0.875rem; /* text-sm */
-  color: #1f2937; /* text-gray-800 */
+  flex: 1;
+  font-size: 0.95rem;
+  color: #374151;
+  line-height: 1.5;
 }
-.activityText strong { /* Nome da OSC */
-    font-weight: 700; /* font-bold */
-}
-.activityText i { /* Conteúdo da mensagem/ficheiro */
-    font-style: italic;
+
+.activityText strong {
+  color: #EC6D12; /* Nome da OSC em laranja */
+  font-weight: 700;
 }
 
 .activityTimestamp {
-  font-size: 0.75rem; /* text-xs */
-  color: #6b7280; /* text-gray-500 */
-  margin-top: 0.25rem; /* mt-1 */
+  display: block;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.25rem;
 }
 
 .emptyText {
-    text-align: center;
-    color: #6b7280;
-    padding-top: 1rem;
+  text-align: center;
+  color: #9ca3af;
+  padding: 2rem;
+  font-style: italic;
 }
