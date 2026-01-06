@@ -4,7 +4,7 @@
   height: 100vh; /* Altura total */
   
   /* --- A CORREÇÃO PRINCIPAL ESTÁ AQUI --- */
-  background-color: #ffffff !important; /* Força o fundo BRANCO */
+  background-color: #F2994A !important; /* Força o fundo LARANJA */
   color: #374151 !important; /* Força o texto cinza escuro */
   border-right: 1px solid #e5e7eb; /* Borda cinza clara na direita */
   
