@@ -1,51 +1,70 @@
-// src/pages/contador/components/ContadorSidebar.jsx
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-// import { clsx } from 'clsx'; // Não mais necessário para NavLink
-import Sidebar from '../../../components/layout/Sidebar.jsx';
-import { /* ... Ícones ... */ LogoutIcon, ChartIcon, BuildingIcon, FolderIcon, MegaphoneIcon, MessageIcon, ProfileIcon, UploadIcon } from '../../../components/common/Icons.jsx';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth.jsx';
-import styles from './ContadorSidebar.module.css'; // Importa CSS Module específico
+import {
+  BuildingIcon,
+  FolderIcon,
+  MessageIcon,
+  MegaphoneIcon,
+  ChartIcon // Certifique-se que este ícone existe, ou remova se der erro
+} from '../../../components/common/Icons.jsx';
+import styles from './ContadorSidebar.module.css'; // O arquivo CSS deve estar na mesma pasta
 
-// Componente SidebarLink modificado para usar CSS Modules
-const SidebarLink = ({ to, icon: Icon, children }) => {
-  return (
-    <NavLink
-      to={to}
-      // Usa a função para aplicar classe ativa
-      className={({ isActive }) =>
-        `${styles.sidebarLink} ${isActive ? styles.sidebarLinkActive : ''}`
-      }
-    >
-      <Icon className={styles.linkIcon} />
-      <span>{children}</span>
-    </NavLink>
-  );
-};
-
-export default function ContadorSidebar({ isOpen }) {
+export default function ContadorSidebar() {
   const { logout } = useAuth();
-  const handleLogout = () => logout();
-  const logo = <h2 className={styles.logoTitle}>Contábil OSC</h2>;
+  const navigate = useNavigate();
 
-  const footer = (
-    <button onClick={handleLogout} className={styles.logoutButton}>
-      <LogoutIcon className={styles.logoutIcon} />
-      <span>Sair</span>
-    </button>
-  );
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  // Definição dos links do menu
+  const navItems = [
+    { to: "/contador", label: "Visão Geral", icon: ChartIcon, end: true },
+    { to: "/contador/oscs", label: "Minhas OSCs", icon: BuildingIcon },
+    { to: "/contador/documentos", label: "Documentos", icon: FolderIcon },
+    { to: "/contador/mensagens", label: "Mensagens", icon: MessageIcon },
+    { to: "/contador/avisos", label: "Avisos", icon: MegaphoneIcon },
+  ];
 
   return (
-    // Passa a classe de cor específica para o molde Sidebar
-    <Sidebar isOpen={isOpen} logo={logo} footer={footer} className={styles.sidebar}>
-      {/* Links de Navegação */}
-      <SidebarLink to="/contador/dashboard" icon={ChartIcon}>Dashboard</SidebarLink>
-      <SidebarLink to="/contador/oscs" icon={BuildingIcon}>Lista de OSCs</SidebarLink>
-      <SidebarLink to="/contador/documentos" icon={FolderIcon}>Documentos</SidebarLink>
-      <SidebarLink to="/contador/avisos" icon={MegaphoneIcon}>Canal de Avisos</SidebarLink>
-      <SidebarLink to="/contador/modelos" icon={UploadIcon}> Gerenciar Modelos</SidebarLink>
-      <SidebarLink to="/contador/mensagens" icon={MessageIcon}>Mensagens</SidebarLink>
-      <SidebarLink to="/contador/perfil" icon={ProfileIcon}>Editar Perfil</SidebarLink>
-    </Sidebar>
+    <aside className={styles.sidebarContainer}>
+      
+      {/* 1. Logo Centralizado */}
+      <div className={styles.logoContainer}>
+        <img 
+          src="/logo_portal.png" 
+          alt="Portal Contábil" 
+          className={styles.logo} 
+        />
+      </div>
+
+      {/* 2. Navegação */}
+      <nav className={styles.navContainer}>
+        {navItems.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.end}
+            className={({ isActive }) => 
+              `${styles.navLink} ${isActive ? styles.activeLink : ''}`
+            }
+          >
+            {/* Renderiza o ícone se existir, senão ignora */}
+            {item.icon && <item.icon className={styles.icon} />}
+            <span>{item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* 3. Botão de Sair */}
+      <div className={styles.footerContainer}>
+        <button onClick={handleLogout} className={styles.logoutButton}>
+          <span style={{ fontSize: '1.25rem', marginRight: '0.75rem' }}>←</span>
+          Sair da Conta
+        </button>
+      </div>
+    </aside>
   );
 }
