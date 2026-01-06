@@ -4,7 +4,7 @@
   height: 100vh;
   
   /* Tom de Laranja Claro (Creme/Pêssego suave) */
-  background-color: #FFF3E0 !important; 
+  background-color: #F2994A !important; 
   
   /* Texto padrão (Laranja escuro ou Marrom para contraste) */
   color: #7c2d12 !important; 
@@ -24,7 +24,7 @@
   align-items: center;
   justify-content: center;
   /* Fundo ligeiramente mais escuro que a barra para destacar o topo, ou igual */
-  background-color: #FFEDD5 !important; 
+  background-color: #F2994A !important; 
   border-bottom: 1px solid #fed7aa;
 }
 
@@ -89,7 +89,7 @@
 .footerContainer {
   padding: 1rem;
   border-top: 1px solid #fed7aa;
-  background-color: #FFF3E0;
+  background-color: #F2994A;
 }
 
 .logoutButton {
