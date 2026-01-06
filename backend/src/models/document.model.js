@@ -134,8 +134,12 @@ export const countReceivedByContadorId = async (contadorId) => {
 
 /**
  * Busca as últimas N atividades de documentos enviados por OSCs a um Contador.
+ * CORREÇÃO APLICADA: Limit inserido diretamente na string para evitar erro de driver.
  */
 export const findRecentActivityByContadorId = async (contadorId, limit = 5) => {
+  // Garante que limit seja um número inteiro seguro
+  const limitInt = parseInt(limit, 10) || 5;
+
   const query = `
     SELECT
       d.id,
@@ -147,12 +151,11 @@ export const findRecentActivityByContadorId = async (contadorId, limit = 5) => {
     JOIN users u ON d.osc_id = u.id
     WHERE o.assigned_contador_id = ? AND d.uploaded_by_user_id = d.osc_id AND u.role = ?
     ORDER BY d.created_at DESC
-    LIMIT ?
+    LIMIT ${limitInt} 
   `;
+  // Nota: Removemos o terceiro parâmetro do array e colocamos na string acima
   try {
-    // Garante que limit seja inteiro para o MySQL
-    const limitInt = parseInt(limit, 10);
-    const [rows] = await pool.execute(query, [contadorId, ROLES.OSC, limitInt]);
+    const [rows] = await pool.execute(query, [contadorId, ROLES.OSC]);
     return rows;
   } catch (error) {
     console.error('Erro em findRecentActivityByContadorId:', error);
@@ -162,9 +165,12 @@ export const findRecentActivityByContadorId = async (contadorId, limit = 5) => {
 
 /**
  * Busca os N documentos mais recentes recebidos por um Contador.
- * (Esta era a função que estava faltando)
+ * CORREÇÃO APLICADA: Limit inserido diretamente na string.
  */
 export const findRecentUnreadByContadorId = async (contadorId, limit = 5) => {
+  // Garante que limit seja um número inteiro seguro
+  const limitInt = parseInt(limit, 10) || 5;
+
   const query = `
     SELECT
       d.id, d.original_name, d.created_at, d.osc_id,
@@ -174,12 +180,11 @@ export const findRecentUnreadByContadorId = async (contadorId, limit = 5) => {
     JOIN users u ON d.osc_id = u.id
     WHERE o.assigned_contador_id = ? AND d.uploaded_by_user_id = d.osc_id AND u.role = ?
     ORDER BY d.created_at DESC
-    LIMIT ?
+    LIMIT ${limitInt}
   `;
+   // Nota: Removemos o terceiro parâmetro do array e colocamos na string acima
   try {
-    // Garante que limit seja inteiro
-    const limitInt = parseInt(limit, 10);
-    const [rows] = await pool.execute(query, [contadorId, ROLES.OSC, limitInt]);
+    const [rows] = await pool.execute(query, [contadorId, ROLES.OSC]);
     return rows;
   } catch (error) {
     console.error('Erro em findRecentUnreadByContadorId (Document):', error);
