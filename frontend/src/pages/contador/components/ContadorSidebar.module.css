@@ -1,95 +1,105 @@
-/* frontend/src/pages/contador/components/ContadorSidebar.module.css */
-
+/* Container Principal da Sidebar */
 .sidebarContainer {
-  width: 16rem; /* w-64 */
-  height: 100vh;
-  background-color: #ffffff; /* Fundo BRANCO (antes era azul/escuro) */
-  color: #374151; /* Texto cinza escuro (text-gray-700) */
+  width: 16rem; /* Largura fixa (w-64) */
+  height: 100vh; /* Altura total */
+  
+  /* --- A CORREÇÃO PRINCIPAL ESTÁ AQUI --- */
+  background-color: #ffffff !important; /* Força o fundo BRANCO */
+  color: #374151 !important; /* Força o texto cinza escuro */
+  border-right: 1px solid #e5e7eb; /* Borda cinza clara na direita */
+  
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  border-right: 1px solid #e5e7eb; /* Borda sutil à direita */
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.03); /* Sombra muito suave */
-  transition: all 0.3s ease;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05); /* Sombra leve para destacar */
+  z-index: 50; /* Garante que fique acima de outros elementos se necessário */
 }
 
-/* Área do Logo no topo do Sidebar */
+/* Container do Logo */
 .logoContainer {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 5rem; /* h-20 */
+  height: 6rem; /* Altura confortável para o logo */
   border-bottom: 1px solid #f3f4f6;
-  background-color: #ffffff;
+  background-color: #ffffff !important; /* Garante fundo branco também aqui */
 }
 
 .logo {
-  height: 3rem; /* h-12 */
+  height: 3.5rem;
   width: auto;
   object-fit: contain;
 }
 
-/* Container de Navegação */
+/* Área de Navegação (Links) */
 .navContainer {
   flex: 1;
-  padding-top: 1.5rem;
-  padding-bottom: 1rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding: 1.5rem 1rem;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* Espaço entre os links */
 }
 
-/* Links do Menu */
+/* Link Padrão */
 .navLink {
   display: flex;
   align-items: center;
-  padding: 0.75rem 1rem;
-  margin-bottom: 0.5rem;
+  padding: 0.875rem 1rem;
   border-radius: 0.5rem;
   font-weight: 500;
   text-decoration: none;
-  color: #6b7280; /* Cor padrão do texto (cinza médio) */
+  
+  /* Cores normais (inativo) */
+  color: #6b7280; 
+  background-color: transparent;
+  
   transition: all 0.2s ease-in-out;
 }
 
+/* Hover (Passar o mouse) */
 .navLink:hover {
-  background-color: #fff7ed; /* Fundo laranja muito claro no hover */
-  color: #EC6D12; /* Texto laranja no hover */
+  background-color: #fff7ed !important; /* Laranja muito claro */
+  color: #EC6D12 !important; /* Laranja da marca */
+  transform: translateX(4px); /* Efeito sutil de movimento */
 }
 
-/* Link Ativo */
+/* Link Ativo (Página atual) */
 .activeLink {
-  background-color: #fff7ed; /* Fundo laranja claro */
-  color: #EC6D12; /* Texto Laranja Forte */
-  font-weight: 600;
-  border-left: 4px solid #EC6D12; /* Indicador lateral laranja */
+  background-color: #fff7ed !important; /* Fundo laranja claro */
+  color: #EC6D12 !important; /* Texto Laranja */
+  font-weight: 700 !important;
+  box-shadow: inset 4px 0 0 #EC6D12; /* Barra laranja vertical na esquerda */
 }
 
-/* Ícones */
+/* Ícones dentro dos links */
 .icon {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
   margin-right: 0.75rem;
-  color: inherit; /* Herda a cor do link (cinza ou laranja) */
+  /* A cor do ícone herda do link pai (cinza ou laranja) */
 }
 
-/* Botão de Sair (Footer do Sidebar) */
+/* Botão de Sair (Rodapé) */
 .logoutButton {
-  margin-top: auto; /* Empurra para o fundo */
+  margin-top: auto;
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 1rem;
-  background-color: #f9fafb; /* Fundo levemente diferente para o footer */
-  color: #4b5563;
+  padding: 1.5rem;
+  
+  background-color: #ffffff;
+  color: #6b7280;
   border: none;
   border-top: 1px solid #e5e7eb;
+  
   cursor: pointer;
-  transition: background-color 0.2s;
   font-weight: 500;
+  transition: all 0.2s;
+  text-align: left;
 }
 
 .logoutButton:hover {
-  background-color: #fee2e2; /* Vermelho bem claro no hover */
-  color: #dc2626; /* Vermelho escuro */
+  background-color: #fef2f2 !important; /* Vermelho bem claro */
+  color: #dc2626 !important; /* Vermelho alerta */
 }
