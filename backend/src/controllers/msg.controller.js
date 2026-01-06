@@ -2,8 +2,62 @@
 
 // Importa os modelos necessários
 import * as MessageModel from '../models/message.model.js';
-import * as OscModel from '../models/osc.model.js'; // Precisamos disto para verificar permissões
-import { ROLES } from '../utils/constants.js'; // Importa ROLES
+import * as OscModel from '../models/osc.model.js';
+import { ROLES } from '../utils/constants.js';
+import pool from '../config/db.js'; // IMPORTANTE: Necessário para a query de contatos
+
+/**
+ * @desc    Busca a lista de contatos (OSCs) para o Contador logado (Sidebar).
+ * @route   GET /api/messages/contacts
+ * @access  Privado (Contador)
+ */
+export const getChatContacts = async (req, res) => {
+  try {
+    const contadorId = req.user.id;
+
+    // Apenas contadores podem acessar esta lista
+    if (req.user.role !== ROLES.CONTADOR) {
+      return res.status(403).json({ message: 'Acesso negado.' });
+    }
+
+    console.log(`[getChatContacts] Buscando OSCs para o contador ID: ${contadorId}`);
+
+    // Query para buscar OSCs vinculadas + resumo da última mensagem + contagem de não lidas
+    const query = `
+      SELECT 
+        o.id, 
+        o.name, 
+        'OSC' as role,
+        
+        -- Última mensagem (texto)
+        (SELECT text FROM messages m 
+         WHERE (m.sender_id = o.id OR m.receiver_id = o.id) 
+         ORDER BY m.created_at DESC LIMIT 1) as lastMessage,
+         
+        -- Data da última mensagem
+        (SELECT created_at FROM messages m 
+         WHERE (m.sender_id = o.id OR m.receiver_id = o.id) 
+         ORDER BY m.created_at DESC LIMIT 1) as lastMessageTime,
+
+        -- Contagem de mensagens não lidas enviadas pela OSC para este contador
+        (SELECT COUNT(*) FROM messages m 
+         WHERE m.sender_id = o.id 
+           AND m.receiver_id = ? 
+           AND m.read_at IS NULL) as unreadCount
+
+      FROM oscs o
+      WHERE o.assigned_contador_id = ?
+    `;
+
+    // Passamos o contadorId para os placeholders (?) da query
+    const [rows] = await pool.execute(query, [contadorId, contadorId]);
+    
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Erro no controlador getChatContacts:', error);
+    res.status(500).json({ message: 'Erro ao buscar lista de contatos.' });
+  }
+};
 
 /**
  * @desc    Busca o histórico de mensagens da OSC logada.
@@ -12,26 +66,22 @@ import { ROLES } from '../utils/constants.js'; // Importa ROLES
  */
 export const getMyMessages = async (req, res) => {
   try {
-    // 1. O 'req.user.id' é o ID da OSC (injetado pelo middleware de auth)
     const oscId = req.user.id;
-    console.log(`[getMyMessages] Buscando mensagens para OSC ID: ${oscId}`); // <-- LOG 1
+    console.log(`[getMyMessages] Buscando mensagens para OSC ID: ${oscId}`);
 
     if (req.user.role !== ROLES.OSC) {
       return res.status(403).json({ message: 'Acesso negado.' });
     }
 
-    // 2. A OSC só fala com o seu Contador. Encontra quem é.
     const contador = await OscModel.findContadorForOsc(oscId);
-    console.log(`[getMyMessages] Contador encontrado para esta OSC:`, contador); // <-- LOG 2
-
+    
     if (!contador) {
       console.log('[getMyMessages] OSC não associada a um contador. Retornando [].');
-      return res.status(200).json([]); // Retorna histórico vazio
+      return res.status(200).json([]);
     }
 
-    // 3. Busca a conversa entre esta OSC e o seu Contador
     const messages = await MessageModel.findConversationHistory(oscId, contador.id);
-    console.log(`[getMyMessages] Modelo encontrou ${messages.length} mensagens.`); // <-- LOG 3
+    console.log(`[getMyMessages] Modelo encontrou ${messages.length} mensagens.`);
 
     res.status(200).json(messages);
   } catch (error) {
@@ -47,17 +97,14 @@ export const getMyMessages = async (req, res) => {
  */
 export const getMessagesHistory = async (req, res) => {
   try {
-    // 1. O 'req.user.id' é o ID do Contador
     const contadorId = req.user.id;
     if (req.user.role !== ROLES.CONTADOR) {
       return res.status(403).json({ message: 'Acesso negado.' });
     }
 
-    // 2. O ID da OSC vem da URL (ex: /api/messages/123)
     const { oscId } = req.params;
 
-    // 3. VERIFICAÇÃO DE SEGURANÇA (Crítico):
-    //    Este Contador tem permissão para ver as mensagens desta OSC?
+    // VERIFICAÇÃO DE SEGURANÇA
     const isAssigned = await OscModel.isOscAssignedToContador(oscId, contadorId);
     
     if (!isAssigned) {
@@ -66,7 +113,6 @@ export const getMessagesHistory = async (req, res) => {
       });
     }
 
-    // 4. Busca a conversa
     const messages = await MessageModel.findConversationHistory(oscId, contadorId);
 
     res.status(200).json(messages);
@@ -80,45 +126,37 @@ export const getMessagesHistory = async (req, res) => {
  * @desc    Envia uma nova mensagem.
  * @route   POST /api/messages
  * @access  Privado (OSC ou Contador)
- * @body    { text: string, toOscId?: string } (Se Contador envia)
- * @body    { text: string } (Se OSC envia)
  */
 export const sendMessage = async (req, res) => {
   try {
     const { id: fromId, role: fromRole, name: fromName } = req.user;
-    const { text, toOscId } = req.body; // 'toOscId' só vem do Contador
+    const { text, toOscId } = req.body;
 
-    // --- LOG DE DEBUG ---
     console.log(`[SendMessage] Recebido: role=${fromRole}, fromId=${fromId}, text=${text}, toOscId=${toOscId}`);
 
-    // 1. Validação de entrada
     if (!text || text.trim().length === 0) {
       return res.status(400).json({ message: 'O texto da mensagem não pode estar vazio.' });
     }
 
     let oscId, contadorId, senderRole;
 
-    // 2. Determina os IDs da conversa (osc_id, contador_id)
+    // Lógica para definir quem envia para quem
     if (fromRole === ROLES.OSC) {
       oscId = fromId;
-      // 1. A OSC está a enviar. Descobre para qual contador.
       const contador = await OscModel.findContadorForOsc(oscId);
       if (!contador) {
-        console.error(`[SendMessage] Falha: OSC ${oscId} não tem contador associado.`);
         return res.status(400).json({ message: 'Não é possível enviar mensagem. OSC não associada a um contador.' });
       }
       contadorId = contador.id;
       senderRole = ROLES.OSC;
-      console.log(`[SendMessage] OSC (id:${oscId}) a enviar para Contador (id:${contadorId})`);
 
     } else if (fromRole === ROLES.CONTADOR) {
       contadorId = fromId;
-      oscId = toOscId; // ID da OSC para quem o Contador está a enviar
+      oscId = toOscId;
       if (!oscId) {
         return res.status(400).json({ message: 'O ID da OSC destinatária (toOscId) é obrigatório.' });
       }
       
-      // VERIFICAÇÃO DE SEGURANÇA: O Contador pode enviar para esta OSC?
       const isAssigned = await OscModel.isOscAssignedToContador(oscId, contadorId);
       if (!isAssigned) {
         return res.status(403).json({ message: 'Acesso negado. Esta OSC não está associada a si.' });
@@ -129,7 +167,6 @@ export const sendMessage = async (req, res) => {
       return res.status(403).json({ message: 'Perfil de utilizador inválido para enviar mensagens.' });
     }
 
-    // 3. Prepara os dados para o modelo do banco de dados
     const messageData = {
       osc_id: oscId,
       contador_id: contadorId,
@@ -139,23 +176,12 @@ export const sendMessage = async (req, res) => {
       from_name: fromName,
     };
     
-    // --- LOG DE DEBUG ---
-    console.log('[SendMessage] A inserir no DB:', messageData);
-
-    // 4. Cria a mensagem no banco
     const newMessage = await MessageModel.createMessage(messageData);
 
-    // --- LOG DE DEBUG ---
-    console.log('[SendMessage] Mensagem criada com sucesso:', newMessage);
-
-    // 5. (Opcional) Emitir evento de WebSocket/Socket.io aqui
-
-    // 6. Retorna a mensagem criada
     res.status(201).json(newMessage);
 
   } catch (error) {
-    // --- LOG DE DEBUG ---
-    console.error('Erro no controlador sendMessage:', error); // O erro que procuramos estará aqui
+    console.error('Erro no controlador sendMessage:', error);
     res.status(500).json({ message: 'Erro interno do servidor ao enviar mensagem.' });
   }
 };
