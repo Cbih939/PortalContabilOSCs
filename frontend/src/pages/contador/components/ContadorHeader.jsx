@@ -1,106 +1,71 @@
-// src/pages/contador/components/ContadorHeader.jsx
-
-import React, { useState, useEffect } from 'react';
-import Header from '../../../components/layout/Header.jsx';
-import { MenuIcon, BellIcon } from '../../../components/common/Icons.jsx';
+import React from 'react';
 import { useAuth } from '../../../hooks/useAuth.jsx';
+import { useNotification } from '../../../contexts/NotificationContext.jsx';
 import styles from './ContadorHeader.module.css';
-import NotificationModal from './NotificationModal.jsx';
-import * as contadorService from '../../../services/contadorService.js';
-import { useNotification as useToast } from '../../../contexts/NotificationContext.jsx';
-import { ROLES } from '../../../utils/constants.js';
 
-/**
- * Componente Header do Contador (com lógica de notificações).
- */
+// --- Ícones Embutidos (SVG) para evitar erros de importação ---
+const MenuIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+);
+
+const BellIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+  </svg>
+);
+
+const UserCircleIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
 export default function ContadorHeader({ onToggleSidebar }) {
   const { user } = useAuth();
-  const addToast = useToast();
-
-  const [notifications, setNotifications] = useState([]);
-  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
-  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
-
-  // Efeito para buscar Notificações
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      if (!user?.id || user?.role !== ROLES.CONTADOR) {
-          setNotifications([]);
-          return;
-      };
-      setIsLoadingNotifications(true);
-      try {
-        const response = await contadorService.getNotifications();
-        const sortedNotifications = (response.data || [])
-            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-            .slice(0, 20);
-        setNotifications(sortedNotifications);
-      } catch (error) {
-        console.error("Erro ao buscar notificações:", error);
-        // addToast("Não foi possível buscar as notificações.", "error");
-      } finally {
-        setIsLoadingNotifications(false);
-      }
-    };
-    fetchNotifications();
-    // const intervalId = setInterval(fetchNotifications, 60000); // Opcional
-    // return () => clearInterval(intervalId);
-  }, [user?.id, user?.role, addToast]);
-
-  // Handlers Modal
-  const handleOpenNotificationModal = () => setIsNotificationModalOpen(true);
-  const handleCloseNotificationModal = () => setIsNotificationModalOpen(false);
-
-  // Calcula contagem
-  const notificationCount = notifications.length;
-
-  // --- Renderização ---
-  const leftContent = (
-    <button
-      onClick={onToggleSidebar}
-      className={styles.menuButton}
-      aria-label="Abrir/Fechar menu lateral"
-    >
-      <MenuIcon />
-    </button>
-  );
-
-  const rightContent = (
-    // Usa o .rightContainer do Header.jsx para gerir espaçamento
-    <>
-      {/* Botão de Notificações */}
-      <button
-        onClick={handleOpenNotificationModal}
-        className={styles.notificationButton}
-        title="Ver Notificações"
-        disabled={isLoadingNotifications}
-      >
-        <BellIcon /> {/* Ícone */}
-        {/* Badge Renderizado Condicionalmente - Sintaxe Verificada */}
-        {!isLoadingNotifications && notificationCount > 0 && (
-          <span className={styles.notificationBadge}>
-            {notificationCount > 9 ? '9+' : notificationCount}
-          </span>
-        )} {/* Fim da condição do Badge */}
-      </button>
-
-      {/* Texto de Boas-vindas */}
-      <span className={styles.welcomeText}>
-        Bem-vindo(a), {user?.name || 'Utilizador'}
-      </span>
-    </>
-  ); // Fim do rightContent
+  const { unreadCount } = useNotification();
 
   return (
-    <>
-      <Header leftContent={leftContent} rightContent={rightContent} />
+    <header className={styles.headerContainer}>
+      
+      {/* Botão Menu (Visível apenas no Mobile) */}
+      <button 
+        type="button" 
+        className={styles.menuButton} 
+        onClick={onToggleSidebar}
+        aria-label="Abrir menu"
+      >
+        <MenuIcon className={styles.icon} />
+      </button>
 
-      {/* Renderiza o Modal */}
-      <NotificationModal
-        isOpen={isNotificationModalOpen}
-        onClose={handleCloseNotificationModal}
-        notifications={notifications}
-      />
-    </>
+      {/* Espaçador para empurrar conteúdo para a direita */}
+      <div style={{ flex: 1 }}></div>
+
+      {/* Área de Ações do Usuário */}
+      <div className={styles.actionsContainer}>
+        
+        {/* Botão de Notificação */}
+        <button type="button" className={styles.iconButton} aria-label="Notificações">
+          <BellIcon className={styles.icon} />
+          {unreadCount > 0 && (
+            <span className={styles.badge}>{unreadCount}</span>
+          )}
+        </button>
+
+        {/* Perfil do Usuário */}
+        <div className={styles.profileContainer}>
+          <div className={styles.userInfo}>
+            <span className={styles.userName}>{user?.name || 'Contador'}</span>
+            <span className={styles.userRole}>Painel Contábil</span>
+          </div>
+          <div className={styles.avatarCircle}>
+             <span className={styles.avatarInitial}>
+                {user?.name ? user.name.charAt(0).toUpperCase() : 'C'}
+             </span>
+          </div>
+        </div>
+      </div>
+    </header>
   );
 }

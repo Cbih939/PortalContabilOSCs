@@ -1,97 +1,131 @@
-.sidebarContainer {
-  width: 17rem; /* Largura fixa */
-  height: 100vh;
-  background-color: #ffffff !important; /* Fundo branco */
-  border-right: 1px solid #e5e7eb;
+.headerContainer {
+  height: 4rem; /* 64px */
+  background-color: #ffffff !important; /* Fundo BRANCO */
+  border-bottom: 1px solid #e5e7eb; /* Linha divisória sutil */
   display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 50;
-  box-shadow: 4px 0 24px rgba(0,0,0,0.02); /* Sombra muito leve */
+  align-items: center;
+  padding: 0 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* Sombra leve */
 }
 
-.logoContainer {
-  height: 5rem;
+/* Botão de Menu (Mobile) */
+.menuButton {
+  display: none; /* Escondido no Desktop */
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+@media (max-width: 1024px) {
+  .menuButton {
+    display: block;
+    margin-right: 1rem;
+  }
+}
+
+.actionsContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Botões de Ícone (Sino, etc) */
+.iconButton {
+  position: relative;
+  background-color: transparent;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 50%;
+  color: #6b7280; /* Cinza suave */
+  cursor: pointer;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid #f3f4f6;
-  margin-bottom: 1rem;
 }
 
-.logo {
-  height: 3rem;
-  width: auto;
-  object-fit: contain;
-}
-
-.navContainer {
-  flex: 1;
-  padding: 0 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  overflow-y: auto;
-}
-
-.navLink {
-  display: flex;
-  align-items: center;
-  padding: 0.875rem 1rem;
-  border-radius: 0.5rem;
-  font-weight: 500;
-  text-decoration: none;
-  color: #6b7280; /* Cinza suave */
-  transition: all 0.2s ease-in-out;
-  border: 1px solid transparent; /* Para evitar pulo no hover */
-}
-
-.navLink:hover {
-  background-color: #fff7ed; /* Laranja muito claro */
-  color: #EC6D12;
-}
-
-.activeLink {
-  background-color: #fff7ed !important;
-  color: #EC6D12 !important;
-  font-weight: 600;
-  border: 1px solid #ffedd5; /* Borda laranja sutil */
+.iconButton:hover {
+  background-color: #fff7ed; /* Fundo laranja muito claro */
+  color: #EC6D12; /* Ícone laranja */
 }
 
 .icon {
   width: 1.5rem;
   height: 1.5rem;
-  flex-shrink: 0;
 }
 
-.linkText {
-  margin-left: 0.75rem;
-  white-space: nowrap;
-}
-
-.footerContainer {
-  padding: 1rem;
-  border-top: 1px solid #f3f4f6;
-  background-color: #ffffff;
-}
-
-.logoutButton {
-  width: 100%;
+/* Badge de Notificação */
+.badge {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  background-color: #ef4444; /* Vermelho */
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  height: 1rem;
+  min-width: 1rem;
+  padding: 0 0.25rem;
   display: flex;
   align-items: center;
-  padding: 0.875rem 1rem;
-  background-color: transparent;
-  color: #6b7280;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 2px solid white;
 }
 
-.logoutButton:hover {
-  background-color: #fef2f2;
-  color: #dc2626;
-  border-color: #fee2e2;
+/* Área de Perfil */
+.profileContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-left: 1rem;
+  border-left: 1px solid #e5e7eb; /* Divisória vertical */
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  display: none; /* Esconde texto no mobile */
+}
+
+@media (min-width: 768px) {
+  .userInfo {
+    display: flex;
+  }
+}
+
+.userName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.userRole {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+/* Círculo do Avatar */
+.avatarCircle {
+  height: 2.25rem;
+  width: 2.25rem;
+  border-radius: 50%;
+  background-color: #EC6D12; /* Fundo Laranja */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(236, 109, 18, 0.2);
+}
+
+.avatarInitial {
+  font-size: 1rem;
+  line-height: 1;
 }
