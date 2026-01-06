@@ -1,11 +1,10 @@
+/* frontend/src/pages/contador/ContadorDashboard.module.css */
 .pageContainer {
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
-  width: 100%;
 }
 
-/* Estilo da Logo Circular no Dashboard */
 .dashboardLogo {
   width: 80px;
   height: 80px;
@@ -15,7 +14,7 @@
   padding: 10px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   display: block;
-  margin: 0 auto 1.5rem auto; /* Centraliza e dá margem inferior */
+  margin: 0 auto 1.5rem auto;
 }
 
 .title {
@@ -23,10 +22,9 @@
   font-weight: 800;
   color: #1f2937;
   margin-bottom: 2rem;
-  text-align: center; /* Centraliza o título */
+  text-align: center;
 }
 
-/* --- Grid de Estatísticas (Topo) --- */
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(1, 1fr);
@@ -35,29 +33,19 @@
 }
 
 @media (min-width: 768px) {
-  .statsGrid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  .statsGrid { grid-template-columns: repeat(3, 1fr); }
 }
 
 .statCard {
   background-color: white;
   padding: 1.5rem;
   border-radius: 1rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  border: 1px solid #f3f4f6;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.statCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
-
-/* Ícones das estatísticas */
 .statIconContainer {
   padding: 1rem;
   border-radius: 0.75rem;
@@ -66,42 +54,15 @@
   justify-content: center;
 }
 
-/* Cores dos ícones */
-.iconBlue {
-  background-color: #eff6ff;
-  color: #EC6D12; /* Mudado para Laranja da marca para consistência, ou manter azul se preferir distinção */
-}
-.iconYellow {
-  background-color: #fefce8;
-  color: #eab308;
-}
-.iconGreen {
-  background-color: #f0fdf4;
-  color: #22c55e;
-}
+.iconBlue { background-color: #eff6ff; color: #EC6D12; }
+.iconYellow { background-color: #fefce8; color: #eab308; }
+.iconGreen { background-color: #f0fdf4; color: #22c55e; }
 
-.statIcon {
-  height: 1.75rem;
-  width: 1.75rem;
-}
+.statIcon { height: 1.75rem; width: 1.75rem; }
 
-.statLabel {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #6b7280;
-  margin-bottom: 0.25rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
+.statLabel { font-size: 0.875rem; font-weight: 600; color: #6b7280; text-transform: uppercase; }
+.statValue { font-size: 2rem; font-weight: 800; color: #1f2937; }
 
-.statValue {
-  font-size: 2rem;
-  font-weight: 800;
-  color: #1f2937;
-  line-height: 1;
-}
-
-/* --- Grid Principal (Ações e Atividades) --- */
 .mainGrid {
   display: grid;
   grid-template-columns: 1fr;
@@ -109,10 +70,7 @@
 }
 
 @media (min-width: 1024px) {
-  .mainGrid {
-    grid-template-columns: 1fr 2fr; /* Coluna da direita é mais larga */
-    align-items: start;
-  }
+  .mainGrid { grid-template-columns: 1fr 2fr; }
 }
 
 .sectionCard {
@@ -128,16 +86,11 @@
   font-weight: 700;
   color: #1f2937;
   margin-bottom: 1.5rem;
-  padding-bottom: 0.75rem;
   border-bottom: 2px solid #f3f4f6;
+  padding-bottom: 0.75rem;
 }
 
-/* --- Lista de Ações Rápidas --- */
-.quickLinksContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
+.quickLinksContainer { display: flex; flex-direction: column; gap: 1rem; }
 
 .quickLink {
   display: flex;
@@ -146,52 +99,29 @@
   border-radius: 0.75rem;
   color: #4b5563;
   font-weight: 600;
-  background-color: #ffffff;
+  background-color: white;
   border: 1px solid #e5e7eb;
   text-decoration: none;
   transition: all 0.2s ease;
 }
 
 .quickLink:hover {
-  background-color: #fff7ed; /* Fundo laranja muito claro */
-  border-color: #EC6D12; /* Borda laranja */
+  background-color: #fff7ed;
+  border-color: #EC6D12;
   color: #EC6D12;
   transform: translateX(5px);
 }
 
-.quickLinkIcon {
-  height: 1.5rem;
-  width: 1.5rem;
-  margin-right: 1rem;
-  color: #9ca3af;
-  transition: color 0.2s;
-}
+.quickLinkIcon { height: 1.5rem; width: 1.5rem; margin-right: 1rem; color: #9ca3af; }
+.quickLink:hover .quickLinkIcon { color: #EC6D12; }
 
-.quickLink:hover .quickLinkIcon {
-  color: #EC6D12;
-}
-
-/* --- Feed de Atividades --- */
-.activityFeedContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 0; /* Gap removido para usar padding/border */
-}
+.activityFeedContainer { display: flex; flex-direction: column; }
 
 .activityItem {
   display: flex;
   gap: 1rem;
   padding: 1rem 0;
   border-bottom: 1px solid #f3f4f6;
-}
-
-.activityItem:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.activityItem:first-child {
-  padding-top: 0;
 }
 
 .activityIconContainer {
@@ -202,37 +132,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 
-.activityIcon {
-  height: 1rem;
-  width: 1rem;
-  color: #6b7280;
-}
-
-.activityText {
-  flex: 1;
-  font-size: 0.95rem;
-  color: #374151;
-  line-height: 1.5;
-}
-
-.activityText strong {
-  color: #EC6D12; /* Nome da OSC em laranja */
-  font-weight: 700;
-}
-
-.activityTimestamp {
-  display: block;
-  font-size: 0.75rem;
-  color: #9ca3af;
-  margin-top: 0.25rem;
-}
-
-.emptyText {
-  text-align: center;
-  color: #9ca3af;
-  padding: 2rem;
-  font-style: italic;
-}
+.activityIcon { height: 1rem; width: 1rem; color: #6b7280; }
+.activityText { flex: 1; font-size: 0.95rem; color: #374151; }
+.activityText strong { color: #EC6D12; font-weight: 700; }
+.activityTimestamp { display: block; font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem; }
+.emptyText { text-align: center; color: #9ca3af; padding: 2rem; font-style: italic; }

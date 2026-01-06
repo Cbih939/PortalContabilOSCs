@@ -133,13 +133,11 @@ export const countReceivedByContadorId = async (contadorId) => {
 };
 
 /**
- * Busca as últimas N atividades de documentos enviados por OSCs a um Contador.
- * CORREÇÃO APLICADA: Limit inserido diretamente na string para evitar erro de driver.
+ * Busca as últimas N atividades.
+ * CORREÇÃO: Limit inserido diretamente na string para evitar erro de driver.
  */
 export const findRecentActivityByContadorId = async (contadorId, limit = 5) => {
-  // Garante que limit seja um número inteiro seguro
   const limitInt = parseInt(limit, 10) || 5;
-
   const query = `
     SELECT
       d.id,
@@ -153,7 +151,7 @@ export const findRecentActivityByContadorId = async (contadorId, limit = 5) => {
     ORDER BY d.created_at DESC
     LIMIT ${limitInt} 
   `;
-  // Nota: Removemos o terceiro parâmetro do array e colocamos na string acima
+  // Nota: Removemos o terceiro parâmetro do array
   try {
     const [rows] = await pool.execute(query, [contadorId, ROLES.OSC]);
     return rows;
@@ -164,13 +162,11 @@ export const findRecentActivityByContadorId = async (contadorId, limit = 5) => {
 };
 
 /**
- * Busca os N documentos mais recentes recebidos por um Contador.
- * CORREÇÃO APLICADA: Limit inserido diretamente na string.
+ * Busca os N documentos mais recentes.
+ * CORREÇÃO: Limit inserido diretamente na string.
  */
 export const findRecentUnreadByContadorId = async (contadorId, limit = 5) => {
-  // Garante que limit seja um número inteiro seguro
   const limitInt = parseInt(limit, 10) || 5;
-
   const query = `
     SELECT
       d.id, d.original_name, d.created_at, d.osc_id,
@@ -182,7 +178,7 @@ export const findRecentUnreadByContadorId = async (contadorId, limit = 5) => {
     ORDER BY d.created_at DESC
     LIMIT ${limitInt}
   `;
-   // Nota: Removemos o terceiro parâmetro do array e colocamos na string acima
+   // Nota: Removemos o terceiro parâmetro do array
   try {
     const [rows] = await pool.execute(query, [contadorId, ROLES.OSC]);
     return rows;
