@@ -2,9 +2,26 @@
   display: flex;
   height: 100vh;
   width: 100vw;
-  background-color: #f3f4f6; /* Fundo cinza claro global */
-  overflow: hidden; /* Impede scroll na janela inteira */
+  background-color: #f3f4f6;
+  overflow: hidden;
 }
+
+/* --- NOVO: Wrapper da Sidebar --- */
+.sidebarWrapper {
+  flex-shrink: 0;
+  transition: all 0.3s ease-in-out; /* Animação suave */
+  width: auto; /* A largura é definida pelo componente filho (ContadorSidebar) */
+  overflow: hidden;
+  position: relative;
+}
+
+/* Classe aplicada quando o sidebar deve sumir */
+.sidebarHidden {
+  width: 0 !important; /* Colapsa a largura para 0 */
+  opacity: 0;
+  margin-left: 0;
+}
+/* -------------------------------- */
 
 .mainContent {
   flex: 1;
@@ -13,13 +30,13 @@
   height: 100%;
   overflow: hidden;
   position: relative;
+  min-width: 0; /* Garante que o conteúdo encolha se necessário */
 }
 
 .headerContainer {
   flex-shrink: 0;
   z-index: 20;
   background-color: white;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .navigationContainer {
@@ -31,12 +48,13 @@
 
 .pageContent {
   flex: 1;
-  overflow-y: auto; /* Scroll apenas nesta área */
+  overflow-y: auto;
   overflow-x: hidden;
-  /* Espaçamento interno é tratado pelo componente filho (ex: pageContainer do Dashboard) */
+  display: flex;
+  flex-direction: column;
 }
 
 .footerWrapper {
-  margin-top: auto; /* Empurra footer para baixo se o conteúdo for curto */
+  margin-top: auto;
   width: 100%;
 }

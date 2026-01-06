@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import styles from './AppLayout.module.css';
 import Footer from './Footer.jsx';
@@ -8,32 +8,46 @@ export default function AppLayout({
   headerComponent,
   navigationComponent,
 }) {
+  // Estado para controlar a visibilidade da Sidebar
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // Função que será chamada pelo botão do Header
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
     <div className={styles.layoutContainer}>
       
-      {/* Sidebar Fixa à Esquerda */}
-      {sidebarComponent}
+      {/* Wrapper da Sidebar com controle de visibilidade */}
+      <div 
+        className={`${styles.sidebarWrapper} ${!isSidebarOpen ? styles.sidebarHidden : ''}`}
+      >
+        {sidebarComponent}
+      </div>
 
-      {/* Área Principal de Conteúdo */}
+      {/* Conteúdo Principal */}
       <main className={styles.mainContent}>
 
-        {/* 1. Header Fixo no Topo */}
+        {/* Header (Injetamos a função toggleSidebar aqui) */}
         <div className={styles.headerContainer}>
-          {headerComponent}
+          {React.isValidElement(headerComponent) 
+            ? React.cloneElement(headerComponent, { onToggleSidebar: toggleSidebar })
+            : headerComponent
+          }
         </div>
 
-        {/* 2. Navegação secundária (opcional) */}
+        {/* Navegação Secundária (Abas) */}
         {navigationComponent && (
           <div className={styles.navigationContainer}>
             {navigationComponent}
           </div>
         )}
 
-        {/* 3. Conteúdo da Página (Scrollável) */}
+        {/* Conteúdo da Página */}
         <div className={styles.pageContent}>
           <Outlet />
           
-          {/* Footer no final do conteúdo */}
           <div className={styles.footerWrapper}>
             <Footer />
           </div>
