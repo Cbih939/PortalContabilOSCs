@@ -1,88 +1,68 @@
-/* src/pages/contador/Messages.module.css */
-
 .pageContainer {
+  height: calc(100vh - 4rem); /* Altura total menos o header */
   display: flex;
-  height: 100%; /* ESSENCIAL: Ocupa 100% do .pageContent */
-  overflow: hidden; /* Garante que o container não transborde */
+  background-color: #f3f4f6; /* Fundo cinza para destacar os painéis brancos */
+  padding: 1.5rem;
+  gap: 1.5rem;
+  overflow: hidden;
 }
 
-.contactListColumn {
-  width: 100%; /* Mobile first */
+/* Painel da Esquerda (Lista) e Direita (Chat) */
+.contentContainer {
+  display: flex;
+  width: 100%;
   height: 100%;
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* Garante que bordas arredondadas funcionem */
+}
+
+/* Área da Lista de Contatos (Esquerda) */
+.sidebar {
+  width: 20rem; /* 320px */
   border-right: 1px solid #e5e7eb;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Área do Chat (Direita) */
+.chatArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  position: relative;
+}
+
+/* Estado vazio (sem chat selecionado) */
+.emptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
   background-color: #f9fafb;
-  display: flex;
-  flex-direction: column; /* Para o scroll interno da lista de contactos */
 }
 
-.chatWindowColumn {
-  flex: 1 1 0%;
-  height: 100%; /* Ocupa 100% da altura do .pageContainer */
-  display: flex;
-  flex-direction: column;
-  align-items: center; /* Centraliza o placeholder */
-  justify-content: center; /* Centraliza o placeholder */
-  background-color: #f3f4f6;
+.emptyIcon {
+  width: 4rem;
+  height: 4rem;
+  margin-bottom: 1rem;
+  color: #d1d5db;
 }
 
-/* Estilo para a logo placeholder (MODIFICADO) */
-.placeholderLogo {
-  width: 8rem; /* 128px (w-32) */
-  height: 8rem; /* 128px (h-32) */
+@media (max-width: 768px) {
+  .pageContainer { padding: 0; height: calc(100vh - 4rem); }
+  .contentContainer { border-radius: 0; }
   
-  /* Garante que a imagem preencha o círculo */
-  object-fit: cover; 
+  /* No mobile, ou mostra um ou outro */
+  .sidebar { width: 100%; display: flex; }
+  .chatArea { display: none; }
   
-  /* Mantém o formato circular */
-  border-radius: 50%; 
-  
-  margin-bottom: 1.5rem; /* mb-6 */
-  
-  /* Cor de fundo para o caso da imagem falhar ou ser transparente */
-  background-color: #e5e7eb; 
-  
-  /* Remove estilos de texto que estavam aqui antes */
-  /* display: flex; */
-  /* align-items: center; */
-  /* justify-content: center; */
-  /* font-size: 0.875rem; */
-  /* color: #4b5563; */
+  /* Classe utilitária para alternar (gerenciada pelo JS se necessário) */
+  .showChat .sidebar { display: none; }
+  .showChat .chatArea { display: flex; width: 100%; }
 }
-
-.placeholderText {
-  font-size: 1.125rem; /* text-lg */
-}
-@media (min-width: 768px) {
-  .contactListColumn {
-    width: 33.333333%; /* md:w-1/3 */
-    flex-shrink: 0;
-  }
-}
-
-.placeholderContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 2rem;
-  color: #6b7280;
-}
-
-.placeholderLogo {
-  width: 8rem;
-  height: 8rem;
-  background-color: #e5e7eb;
-  border-radius: 50%;
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.875rem;
-  color: #4b5563;
-}
-
-.placeholderText {
-  font-size: 1.125rem;
-}
-

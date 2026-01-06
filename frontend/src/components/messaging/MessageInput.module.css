@@ -1,54 +1,72 @@
-/* src/components/messaging/MessageInput.module.css */
-
-.formContainer {
-  padding: 1rem; /* p-4 */
-  border-top: 1px solid #e5e7eb; /* border-t bg-white (fundo é padrão) */
+.inputContainer {
+  padding: 1rem 1.5rem;
   background-color: white;
-}
-
-.inputGroup {
+  border-top: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
-  gap: 0.75rem; /* space-x-3 */
+  gap: 0.75rem;
 }
 
-.textInput {
-  flex: 1 1 0%; /* flex-1 */
-  padding: 0.75rem 1rem; /* p-3 (ajustado ligeiramente para altura) */
-  border: 1px solid #d1d5db; /* border border-gray-300 */
-  border-radius: 9999px; /* rounded-full */
+.attachButton {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: color 0.2s;
+}
+
+.attachButton:hover {
+  color: #EC6D12;
+  background-color: #fff7ed;
+}
+
+.textField {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 1.5rem; /* Arredondado estilo pílula */
+  font-size: 0.95rem;
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s;
+  background-color: #f9fafb;
 }
 
-.textInput:focus {
-  border-color: #3b82f6; /* focus:ring-blue-500 (cor da borda) */
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); /* focus:ring-2 */
+.textField:focus {
+  border-color: #EC6D12;
+  background-color: white;
+  box-shadow: 0 0 0 2px rgba(236, 109, 18, 0.1);
 }
 
 .sendButton {
-  background-color: #f97316; /* bg-blue-600 */
+  background-color: #EC6D12;
   color: white;
-  padding: 0.75rem; /* p-3 */
-  border-radius: 9999px; /* rounded-full */
   border: none;
-  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(236, 109, 18, 0.3);
 }
 
-.sendButton:hover:not(:disabled) {
-  background-color: #f97316; /* hover:bg-blue-700 */
+.sendButton:hover {
+  background-color: #c2410c; /* Laranja mais escuro */
+  transform: scale(1.05);
 }
 
 .sendButton:disabled {
-  opacity: 0.5;
+  background-color: #e5e7eb;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-.sendButton svg {
-  height: 1.25rem; /* h-5 */
-  width: 1.25rem; /* w-5 */
+.icon {
+  width: 1.25rem;
+  height: 1.25rem;
 }
