@@ -1,5 +1,3 @@
-// src/pages/Login.jsx
-
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
@@ -39,19 +37,16 @@ export default function LoginPage() {
   return (
     <div className={styles.loginCard}>
       
-      {/* --- ADICIONADO --- */}
       <img
-        src="/logo_portal.png" // Busca a imagem da pasta 'public'
+        src="/logo_portal.png" 
         alt="Logo Conta Comigo App"
-        className={styles.logo} // Classe de estilo que vamos adicionar
+        className={styles.logo}
       />
-      {/* --- FIM DA ADIÇÃO --- */}
 
       <h3 className={styles.title}>
         Entre na sua conta
       </h3>
       
-      {/* Formulário de Login Real */}
       <form onSubmit={handleSubmit} className={styles.buttonContainer}>
         <Input
           id="email"
@@ -72,6 +67,7 @@ export default function LoginPage() {
 
         {formError && <p className={styles.errorMessage}>{formError}</p>}
 
+        {/* Correção aplicada aqui: styles.loginButton */}
         <Button type="submit" className={styles.loginButton} disabled={isLoading} style={{ width: '100%' }}>
           {isLoading ? <Spinner size="sm" className="mr-2" /> : null}
           {isLoading ? 'A entrar...' : 'Entrar'}

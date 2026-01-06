@@ -1,10 +1,7 @@
-/* frontend/src/components/layout/GuestLayout.module.css */
-
 .layout {
   min-height: 100vh;
   width: 100vw;
-  /* Cor de fundo sólida (cinza claro neutro) para destacar o card */
-  background-color: #f3f4f6; 
+  background-color: #f3f4f6; /* Cor de fundo sólida (Cinza claro) */
   display: flex;
   flex-direction: column;
 }
@@ -15,4 +12,5 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  width: 100%;
 }
