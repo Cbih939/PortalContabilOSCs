@@ -69,10 +69,6 @@ function RootRedirect() {
   }
 }
 
-/**
- * Componente Wrapper para o Layout do Contador
- * Isola o estado 'isSidebarOpen' aqui.
- */
 function ContadorLayoutWrapper() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
