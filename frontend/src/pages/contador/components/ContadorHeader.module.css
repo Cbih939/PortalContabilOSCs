@@ -1,131 +1,94 @@
 .headerContainer {
-  height: 4rem; /* 64px */
+  height: 4rem;
   background-color: #ffffff !important; /* Fundo BRANCO */
-  border-bottom: 1px solid #e5e7eb; /* Linha divisória sutil */
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
-  padding: 0 1.5rem;
+  padding: 0 2rem;
   position: sticky;
   top: 0;
   z-index: 40;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* Sombra leve */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-/* Botão de Menu (Mobile) */
 .menuButton {
-  display: none; /* Escondido no Desktop */
+  display: none;
   background: none;
   border: none;
   color: #6b7280;
   cursor: pointer;
-  padding: 0.5rem;
 }
 
 @media (max-width: 1024px) {
-  .menuButton {
-    display: block;
-    margin-right: 1rem;
-  }
+  .menuButton { display: block; margin-right: 1rem; }
 }
 
-.actionsContainer {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
+.actionsContainer { display: flex; align-items: center; gap: 1.5rem; }
 
-/* Botões de Ícone (Sino, etc) */
 .iconButton {
   position: relative;
-  background-color: transparent;
+  background: none;
   border: none;
   padding: 0.5rem;
-  border-radius: 50%;
-  color: #6b7280; /* Cinza suave */
+  color: #6b7280;
   cursor: pointer;
-  transition: all 0.2s;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s;
 }
 
 .iconButton:hover {
-  background-color: #fff7ed; /* Fundo laranja muito claro */
-  color: #EC6D12; /* Ícone laranja */
+  background-color: #f3f4f6;
+  color: #EC6D12; /* Ícone fica laranja ao passar mouse */
 }
 
-.icon {
-  width: 1.5rem;
-  height: 1.5rem;
-}
+.icon { width: 1.5rem; height: 1.5rem; }
 
-/* Badge de Notificação */
 .badge {
   position: absolute;
-  top: 0.25rem;
-  right: 0.25rem;
-  background-color: #ef4444; /* Vermelho */
+  top: 0;
+  right: 0;
+  background-color: #ef4444;
   color: white;
-  font-size: 0.65rem;
-  font-weight: 700;
-  height: 1rem;
-  min-width: 1rem;
-  padding: 0 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 0.1rem 0.3rem;
   border-radius: 9999px;
-  border: 2px solid white;
+  min-width: 1rem;
+  text-align: center;
 }
 
-/* Área de Perfil */
 .profileContainer {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding-left: 1rem;
-  border-left: 1px solid #e5e7eb; /* Divisória vertical */
+  gap: 1rem;
+  padding-left: 1.5rem;
+  border-left: 1px solid #e5e7eb;
 }
 
 .userInfo {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  display: none; /* Esconde texto no mobile */
+  display: none;
 }
+@media (min-width: 768px) { .userInfo { display: flex; } }
 
-@media (min-width: 768px) {
-  .userInfo {
-    display: flex;
-  }
-}
+.userName { font-size: 0.9rem; font-weight: 600; color: #1f2937; }
+.userRole { font-size: 0.75rem; color: #6b7280; }
 
-.userName {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.userRole {
-  font-size: 0.75rem;
-  color: #9ca3af;
-}
-
-/* Círculo do Avatar */
 .avatarCircle {
-  height: 2.25rem;
-  width: 2.25rem;
+  height: 2.5rem;
+  width: 2.5rem;
   border-radius: 50%;
-  background-color: #EC6D12; /* Fundo Laranja */
+  background-color: #EC6D12; /* Laranja da Marca */
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-weight: 600;
-  box-shadow: 0 2px 4px rgba(236, 109, 18, 0.2);
-}
-
-.avatarInitial {
-  font-size: 1rem;
-  line-height: 1;
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 5px rgba(236, 109, 18, 0.3);
 }
