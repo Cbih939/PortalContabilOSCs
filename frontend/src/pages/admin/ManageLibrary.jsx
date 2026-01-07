@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as fileService from '../../services/publicFileService.js';
-import styles from './ManageLibrary.module.css'; // Crie um CSS básico para tabela e form
+import styles from './ManageLibrary.module.css';
 
 export default function ManageLibrary() {
   const [files, setFiles] = useState([]);
@@ -13,7 +13,6 @@ export default function ManageLibrary() {
 
   const loadFiles = async () => {
     try {
-      // Carrega tudo sem filtro
       const data = await fileService.getFilesByCategory('');
       setFiles(data);
     } catch (error) {
@@ -33,94 +32,128 @@ export default function ManageLibrary() {
     setLoading(true);
     try {
       await fileService.uploadFile(formData);
-      alert("Arquivo enviado!");
+      alert("Arquivo enviado com sucesso!");
       setForm({ title: '', category: 'BIBLIOTECA', file: null });
+      
+      // Limpa o input de arquivo visualmente
+      document.getElementById('fileInput').value = "";
+      
       loadFiles();
     } catch (error) {
-      alert("Erro ao enviar");
+      console.error(error);
+      alert("Erro ao enviar arquivo.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if(!window.confirm("Tem certeza?")) return;
+    if(!window.confirm("Tem certeza que deseja excluir este arquivo?")) return;
     try {
       await fileService.deleteFile(id);
       loadFiles();
     } catch (e) {
-      alert("Erro ao deletar");
+      alert("Erro ao deletar arquivo.");
     }
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Gestão de Biblioteca e Modelos</h1>
+    <div className={styles.container}>
+      <h1 className={styles.title}>Gestão de Biblioteca e Modelos</h1>
       
       {/* Formulário de Upload */}
-      <div style={{ background: 'white', padding: '1.5rem', borderRadius: '8px', marginBottom: '2rem' }}>
-        <h3>Adicionar Novo Arquivo</h3>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-          <div>
-            <label>Título do Arquivo</label>
+      <div className={styles.card}>
+        <h3 className={styles.cardTitle}>Adicionar Novo Arquivo</h3>
+        
+        <form onSubmit={handleSubmit} className={styles.form}>
+          
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Título do Arquivo</label>
             <input 
               type="text" 
+              className={styles.input}
               value={form.title}
               onChange={e => setForm({...form, title: e.target.value})}
               required
-              style={{ display: 'block', padding: '8px' }}
+              placeholder="Ex: Manual de Procedimentos 2025"
             />
           </div>
-          <div>
-            <label>Categoria</label>
+
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Categoria</label>
             <select 
+              className={styles.select}
               value={form.category} 
               onChange={e => setForm({...form, category: e.target.value})}
-              style={{ display: 'block', padding: '8px' }}
             >
               <option value="BIBLIOTECA">Biblioteca (E-books)</option>
               <option value="MODELO_DOC">Modelos de Documentos</option>
               <option value="MODELO_INSTITUCIONAL">Comunicação Institucional</option>
             </select>
           </div>
-          <div>
-            <label>Arquivo</label>
+
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Arquivo</label>
             <input 
+              id="fileInput"
               type="file" 
+              className={styles.input}
               onChange={e => setForm({...form, file: e.target.files[0]})}
               required
-              style={{ display: 'block' }}
             />
           </div>
-          <button type="submit" disabled={loading} style={{ padding: '8px 16px', backgroundColor: '#EC6D12', color: 'white', border: 'none', borderRadius: '4px' }}>
-            {loading ? 'Enviando...' : 'Publicar'}
+
+          <button type="submit" disabled={loading} className={styles.submitButton}>
+            {loading ? 'Enviando...' : 'Publicar Arquivo'}
           </button>
+
         </form>
       </div>
 
       {/* Lista de Arquivos */}
-      <div style={{ background: 'white', padding: '1.5rem', borderRadius: '8px' }}>
-        <h3>Arquivos Publicados</h3>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ textAlign: 'left', borderBottom: '1px solid #eee' }}>
-              <th style={{ padding: '8px' }}>Título</th>
-              <th style={{ padding: '8px' }}>Categoria</th>
-              <th style={{ padding: '8px' }}>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {files.map(file => (
-              <tr key={file.id} style={{ borderBottom: '1px solid #f9f9f9' }}>
-                <td style={{ padding: '8px' }}>{file.title}</td>
-                <td style={{ padding: '8px' }}>{file.category}</td>
-                <td style={{ padding: '8px' }}>
-                  <button onClick={() => handleDelete(file.id)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>Excluir</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className={styles.card}>
+        <h3 className={styles.cardTitle}>Arquivos Publicados</h3>
+        
+        <div className={styles.tableContainer}>
+            <table className={styles.table}>
+            <thead>
+                <tr>
+                <th className={styles.th}>Título</th>
+                <th className={styles.th}>Categoria</th>
+                <th className={styles.th}>Data Upload</th>
+                <th className={styles.th}>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {files.length === 0 ? (
+                    <tr>
+                        <td colSpan="4" className={styles.td} style={{textAlign: 'center', color: '#999'}}>
+                            Nenhum arquivo encontrado.
+                        </td>
+                    </tr>
+                ) : (
+                    files.map(file => (
+                    <tr key={file.id}>
+                        <td className={styles.td}>{file.title}</td>
+                        <td className={styles.td}>
+                            {file.category === 'BIBLIOTECA' && 'Biblioteca'}
+                            {file.category === 'MODELO_DOC' && 'Modelo Doc.'}
+                            {file.category === 'MODELO_INSTITUCIONAL' && 'Inst.'}
+                        </td>
+                        <td className={styles.td}>
+                            {new Date(file.created_at).toLocaleDateString()}
+                        </td>
+                        <td className={styles.td}>
+                            <button onClick={() => handleDelete(file.id)} className={styles.deleteButton}>
+                                Excluir
+                            </button>
+                        </td>
+                    </tr>
+                    ))
+                )}
+            </tbody>
+            </table>
+        </div>
       </div>
     </div>
   );
