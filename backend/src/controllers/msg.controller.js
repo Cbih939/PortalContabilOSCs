@@ -1,175 +1,107 @@
-// backend/src/controllers/msg.controller.js
-
-import * as MessageModel from '../models/message.model.js';
-import * as OscModel from '../models/osc.model.js';
-import { ROLES } from '../utils/constants.js';
 import pool from '../config/db.js';
 
-/**
- * @desc    Busca a lista de contatos (OSCs) para o Contador logado (Sidebar).
- * @route   GET /api/messages/contacts
- * @access  Privado (Contador)
- */
-export const getChatContacts = async (req, res) => {
-  try {
-    const contadorId = req.user.id;
-
-    if (req.user.role !== ROLES.CONTADOR) {
-      return res.status(403).json({ message: 'Acesso negado.' });
-    }
-
-    console.log(`[getChatContacts] Buscando OSCs para o contador ID: ${contadorId}`);
-
-    const query = `
-      SELECT 
-        o.id, 
-        o.name, 
-        'OSC' as role,
-        
-        (SELECT text FROM messages m 
-         WHERE (m.sender_id = o.id OR m.receiver_id = o.id) 
-         ORDER BY m.created_at DESC LIMIT 1) as lastMessage,
-         
-        (SELECT created_at FROM messages m 
-         WHERE (m.sender_id = o.id OR m.receiver_id = o.id) 
-         ORDER BY m.created_at DESC LIMIT 1) as lastMessageTime,
-
-        (SELECT COUNT(*) FROM messages m 
-         WHERE m.sender_id = o.id 
-           AND m.receiver_id = ? 
-           AND m.read_at IS NULL) as unreadCount
-
-      FROM oscs o
-      WHERE o.assigned_contador_id = ?
-    `;
-
-    const [rows] = await pool.execute(query, [contadorId, contadorId]);
-    
-    res.status(200).json(rows);
-  } catch (error) {
-    console.error('Erro no controlador getChatContacts:', error);
-    res.status(500).json({ message: 'Erro ao buscar lista de contatos.' });
-  }
-};
-
-/**
- * @desc    Busca o histórico de mensagens da OSC logada.
- * @route   GET /api/messages/my
- * @access  Privado (OSC)
- */
-export const getMyMessages = async (req, res) => {
-  try {
-    const oscId = req.user.id;
-    
-    if (req.user.role !== ROLES.OSC) {
-      return res.status(403).json({ message: 'Acesso negado.' });
-    }
-
-    // Busca quem é o contador desta OSC
-    const contador = await OscModel.findContadorForOsc(oscId);
-    
-    // --- LÓGICA CRÍTICA: Retorna 404 se não houver contador ---
-    if (!contador) {
-      console.log('[getMyMessages] OSC sem contador vinculado.');
-      return res.status(404).json({ 
-        code: 'NO_CONTADOR', 
-        message: 'Esta OSC não está vinculada a nenhum escritório de contabilidade.' 
-      });
-    }
-
-    // Se tiver contador, busca as mensagens
-    const messages = await MessageModel.findConversationHistory(oscId, contador.id);
-    res.status(200).json(messages);
-
-  } catch (error) {
-    console.error('Erro no controlador getMyMessages:', error);
-    res.status(500).json({ message: 'Erro interno do servidor ao buscar mensagens.' });
-  }
-};
-
-/**
- * @desc    Busca o histórico de mensagens de uma OSC específica.
- * @route   GET /api/messages/:oscId
- * @access  Privado (Contador)
- */
-export const getMessagesHistory = async (req, res) => {
-  try {
-    const contadorId = req.user.id;
-    if (req.user.role !== ROLES.CONTADOR) {
-      return res.status(403).json({ message: 'Acesso negado.' });
-    }
-
-    const { oscId } = req.params;
-
-    const isAssigned = await OscModel.isOscAssignedToContador(oscId, contadorId);
-    if (!isAssigned) {
-      return res.status(403).json({ message: 'Acesso negado. Esta OSC não está associada a si.' });
-    }
-
-    const messages = await MessageModel.findConversationHistory(oscId, contadorId);
-    res.status(200).json(messages);
-
-  } catch (error) {
-    console.error('Erro no controlador getMessagesHistory:', error);
-    res.status(500).json({ message: 'Erro interno do servidor.' });
-  }
-};
-
-/**
- * @desc    Envia uma nova mensagem.
- * @route   POST /api/messages
- * @access  Privado (OSC ou Contador)
- */
+// Enviar Mensagem
 export const sendMessage = async (req, res) => {
   try {
-    const { id: fromId, role: fromRole, name: fromName } = req.user;
-    const { text, toOscId } = req.body;
-
-    if (!text || text.trim().length === 0) {
-      return res.status(400).json({ message: 'O texto da mensagem não pode estar vazio.' });
+    // Verificação de segurança
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'Usuário não autenticado.' });
     }
 
-    let oscId, contadorId, senderRole;
+    const { receiver_id, content } = req.body;
+    const sender_id = req.user.id;
 
-    if (fromRole === ROLES.OSC) {
-      oscId = fromId;
-      const contador = await OscModel.findContadorForOsc(oscId);
-      if (!contador) {
-        return res.status(400).json({ message: 'Não é possível enviar mensagem. OSC não associada a um contador.' });
-      }
-      contadorId = contador.id;
-      senderRole = ROLES.OSC;
+    if (!receiver_id || !content) {
+      return res.status(400).json({ message: 'Dados incompletos (receiver_id ou content faltando).' });
+    }
 
-    } else if (fromRole === ROLES.CONTADOR) {
-      contadorId = fromId;
-      oscId = toOscId;
-      if (!oscId) {
-        return res.status(400).json({ message: 'O ID da OSC destinatária (toOscId) é obrigatório.' });
-      }
-      const isAssigned = await OscModel.isOscAssignedToContador(oscId, contadorId);
-      if (!isAssigned) {
-        return res.status(403).json({ message: 'Acesso negado. Esta OSC não está associada a si.' });
-      }
-      senderRole = ROLES.CONTADOR;
+    const query = `
+      INSERT INTO messages (sender_id, receiver_id, content) 
+      VALUES (?, ?, ?)
+    `;
     
+    await pool.execute(query, [sender_id, receiver_id, content]);
+
+    res.status(201).json({ message: 'Mensagem enviada com sucesso.' });
+  } catch (error) {
+    console.error('Erro detalhado ao enviar mensagem:', error);
+    res.status(500).json({ message: 'Erro interno ao enviar mensagem.' });
+  }
+};
+
+// Buscar Mensagens (Chat)
+export const getMessages = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'Usuário não autenticado.' });
+    }
+
+    const { otherUserId } = req.params;
+    const currentUserId = req.user.id;
+
+    // Busca mensagens trocadas entre os dois usuários (enviadas ou recebidas)
+    const query = `
+      SELECT * FROM messages 
+      WHERE (sender_id = ? AND receiver_id = ?) 
+         OR (sender_id = ? AND receiver_id = ?)
+      ORDER BY created_at ASC
+    `;
+
+    const [rows] = await pool.execute(query, [currentUserId, otherUserId, otherUserId, currentUserId]);
+
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Erro detalhado ao buscar mensagens:', error);
+    // Se a tabela não existir, o erro aparecerá aqui
+    res.status(500).json({ message: 'Erro interno ao buscar histórico de mensagens.' });
+  }
+};
+
+// Buscar Contatos
+export const getContacts = async (req, res) => {
+  try {
+    // Debug: Ver o que está chegando no req.user
+    // console.log("getContacts - req.user:", req.user);
+
+    if (!req.user || !req.user.id) {
+      console.error("getContacts - Erro: req.user está indefinido. Verifique o AuthMiddleware.");
+      return res.status(401).json({ message: 'Usuário não identificado.' });
+    }
+
+    const currentUserId = req.user.id;
+    const userRole = req.user.role; // Certifique-se que no banco é 'Adm', 'Contador' ou 'OSC'
+
+    let query = '';
+    let params = [];
+
+    // Lógica de quem pode ver quem
+    if (userRole === 'Adm') {
+      // Admin vê todos (exceto ele mesmo)
+      query = 'SELECT id, name, email, role FROM users WHERE id != ?';
+      params = [currentUserId];
+
+    } else if (userRole === 'Contador') {
+      // Contador vê Admin e OSCs
+      query = 'SELECT id, name, email, role FROM users WHERE id != ? AND (role = "OSC" OR role = "Adm")';
+      params = [currentUserId];
+
+    } else if (userRole === 'OSC') {
+      // OSC vê Admin e Contadores
+      query = 'SELECT id, name, email, role FROM users WHERE id != ? AND (role = "Contador" OR role = "Adm")';
+      params = [currentUserId];
+      
     } else {
-      return res.status(403).json({ message: 'Perfil inválido.' });
+      // Fallback genérico (para evitar query vazia)
+      query = 'SELECT id, name, email, role FROM users WHERE id != ?';
+      params = [currentUserId];
     }
 
-    const messageData = {
-      osc_id: oscId,
-      contador_id: contadorId,
-      text: text.trim(),
-      sender_role: senderRole,
-      sender_id: fromId,
-      from_name: fromName,
-    };
+    const [contacts] = await pool.execute(query, params);
     
-    const newMessage = await MessageModel.createMessage(messageData);
-    res.status(201).json(newMessage);
+    res.status(200).json(contacts || []);
 
   } catch (error) {
-    console.error('Erro no controlador sendMessage:', error);
-    res.status(500).json({ message: 'Erro interno do servidor ao enviar mensagem.' });
+    console.error('Erro CRÍTICO ao buscar contatos:', error); 
+    res.status(500).json({ message: 'Erro interno ao buscar lista de contatos.' });
   }
 };
