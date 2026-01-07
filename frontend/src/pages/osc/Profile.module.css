@@ -3,10 +3,15 @@
   padding: 2rem;
   background-color: #f3f4f6;
   min-height: 100vh;
-  padding-bottom: 6rem; /* Espaço para o rodapé */
+  
+  /* --- AJUSTE CRÍTICO: Aumentado para 10rem (aprox 160px) --- */
+  /* Isso garante que o rodapé fixo não cubra os últimos campos */
+  padding-bottom: 10rem; 
+  
   display: flex;
   flex-direction: column;
-  align-items: flex-start; /* Alinha tudo à esquerda/topo */
+  align-items: flex-start;
+  box-sizing: border-box; /* Garante que o padding conte no tamanho total */
 }
 
 /* Título "Editar Perfil" */
@@ -15,7 +20,7 @@
   font-weight: 700;
   color: #1f2937;
   margin-bottom: 1.5rem;
-  margin-left: 0.5rem; /* Leve recuo para alinhar com o card visualmente */
+  margin-left: 0.5rem;
 }
 
 .loading {
@@ -29,18 +34,22 @@
 .formCard {
   background-color: #ffffff;
   width: 100%;
-  max-width: 1000px; /* Limita largura em telas muito grandes */
-  border-radius: 1rem; /* Bordas arredondadas */
+  max-width: 1000px;
+  border-radius: 1rem;
   padding: 2.5rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   display: flex;
-  flex-direction: column; /* FORÇA empilhamento vertical das seções */
+  flex-direction: column;
+  
+  /* Garante que o cartão em si não tenha overflow oculto */
+  overflow: visible;
+  margin-bottom: 2rem; /* Margem extra de segurança */
 }
 
 /* Cabeçalho do Card (Onde fica o botão) */
 .cardHeader {
   display: flex;
-  justify-content: flex-end; /* Botão à direita */
+  justify-content: flex-end;
   margin-bottom: 1rem;
 }
 
@@ -57,16 +66,16 @@
 }
 
 .editButton {
-  background-color: #EC6D12; /* Laranja */
+  background-color: #EC6D12;
 }
 .editButton:hover { background-color: #d85c0a; }
 
 .saveButton {
-  background-color: #16a34a; /* Verde */
+  background-color: #16a34a;
 }
 .saveButton:hover { background-color: #15803d; }
 
-/* Seções (1, 2, 3, 4...) */
+/* Seções */
 .section {
   margin-bottom: 2.5rem;
   width: 100%;
@@ -79,13 +88,13 @@
   border-bottom: 1px solid #e5e7eb;
   padding-bottom: 0.75rem;
   margin-bottom: 1.5rem;
-  display: block; /* Garante que ocupa a linha toda */
+  display: block;
 }
 
 /* Grid de Inputs (2 Colunas) */
 .gridRow {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Duas colunas iguais */
+  grid-template-columns: 1fr 1fr;
   column-gap: 2rem;
   row-gap: 1.5rem;
   width: 100%;
@@ -106,14 +115,14 @@
 }
 
 .input {
-  width: 100%; /* Ocupa toda a largura da coluna da grid */
+  width: 100%;
   padding: 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 0.5rem;
   font-size: 0.95rem;
   background-color: #fff;
   color: #1f2937;
-  box-sizing: border-box; /* Importante para o padding não estourar */
+  box-sizing: border-box;
 }
 
 .input:disabled {
@@ -129,13 +138,18 @@
   box-shadow: 0 0 0 3px rgba(236, 109, 18, 0.1);
 }
 
-/* Responsividade Mobile */
+/* Responsividade */
 @media (max-width: 768px) {
   .gridRow {
-    grid-template-columns: 1fr; /* Vira 1 coluna no celular */
+    grid-template-columns: 1fr;
   }
   
   .formCard {
     padding: 1.5rem;
+  }
+  
+  .pageContainer {
+    padding: 1rem;
+    padding-bottom: 12rem; /* Ainda mais espaço no mobile */
   }
 }
