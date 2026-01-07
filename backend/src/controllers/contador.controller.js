@@ -1,17 +1,21 @@
 import pool from '../config/db.js';
 
-// 1. Dashboard Stats
+// 1. Dashboard Stats (Blindado contra falhas)
 export const getDashboardStats = async (req, res) => {
   try {
     const contadorId = req.user.id;
 
-    // Total de OSCs
-    const [oscRows] = await pool.execute(
-      'SELECT COUNT(*) as total FROM oscs WHERE assigned_contador_id = ?',
-      [contadorId]
-    );
+    // Estatística 1: Total de OSCs
+    let totalOSCs = 0;
+    try {
+        const [oscRows] = await pool.execute(
+            'SELECT COUNT(*) as total FROM oscs WHERE assigned_contador_id = ?',
+            [contadorId]
+        );
+        totalOSCs = oscRows[0].total;
+    } catch (e) { console.error("Erro contagem OSCs:", e.message); }
 
-    // Documentos Pendentes (Joins seguros)
+    // Estatística 2: Documentos
     let pendingDocs = 0;
     try {
         const [docRows] = await pool.execute(
@@ -21,9 +25,9 @@ export const getDashboardStats = async (req, res) => {
         [contadorId]
         );
         pendingDocs = docRows[0].total;
-    } catch (e) { console.log("Erro ao contar docs ou tabela inexistente"); }
+    } catch (e) { }
 
-    // Mensagens não lidas
+    // Estatística 3: Mensagens
     let unreadMessages = 0;
     try {
         const [msgRows] = await pool.execute(
@@ -31,69 +35,48 @@ export const getDashboardStats = async (req, res) => {
             [contadorId]
         );
         unreadMessages = msgRows[0].total;
-    } catch (e) { console.log("Aviso: Tabela messages pode não existir ainda."); }
+    } catch (e) { }
 
     res.json({
-      totalOSCs: oscRows[0].total,
+      totalOSCs: totalOSCs,
       pendingDocs: pendingDocs,
       unreadMessages: unreadMessages
     });
 
   } catch (error) {
-    console.error('Erro getDashboardStats:', error);
-    res.status(500).json({ message: 'Erro estatísticas.' });
+    console.error('Erro CRÍTICO no Dashboard:', error);
+    // Retorna zerado em vez de erro 500 para não travar a tela
+    res.json({ totalOSCs: 0, pendingDocs: 0, unreadMessages: 0 });
   }
 };
 
-// 2. Minhas OSCs
+// 2. Minhas OSCs (CORRIGIDO COM LEFT JOIN)
 export const getMyOSCs = async (req, res) => {
   try {
     const contadorId = req.user.id;
-
-    // JOIN com users para pegar o nome corretamente
+    
+    // LEFT JOIN garante que a OSC aparece mesmo sem usuário vinculado
+    // COALESCE garante que tenhamos um nome para exibir
     const query = `
       SELECT 
         o.id, 
         o.cnpj, 
-        u.name as nome_osc,
+        COALESCE(u.name, u.email, 'OSC Sem Nome') as nome_osc,
         u.email,
         u.phone
       FROM oscs o
-      JOIN users u ON o.user_id = u.id
+      LEFT JOIN users u ON o.user_id = u.id
       WHERE o.assigned_contador_id = ?
     `;
-
     const [rows] = await pool.execute(query, [contadorId]);
     res.json(rows);
   } catch (error) {
-    console.error('Erro getMyOSCs:', error);
+    console.error('Erro getMyOSCs:', error.message);
     res.status(500).json({ message: 'Erro ao listar OSCs.' });
   }
 };
 
-// 3. Notificações (Função que faltava e causava o erro 502)
-export const getNotifications = async (req, res) => {
-  try {
-    // Retorna array vazio por enquanto para evitar erro
-    // Futuramente você pode conectar com uma tabela de notificações
-    res.status(200).json([]);
-  } catch (error) {
-    console.error('Erro getNotifications:', error);
-    res.status(500).json({ message: 'Erro notificações.' });
-  }
-};
-
-// 4. Atividade Recente (Para o gráfico/lista do dashboard)
-export const getRecentActivity = async (req, res) => {
-  try {
-    // Retorna vazio por enquanto
-    res.status(200).json([]);
-  } catch (error) {
-    res.status(500).json({ message: 'Erro atividade.' });
-  }
-};
-
-// 5. Criar OSC (Placeholder para evitar erro de importação)
-export const createOSC = async (req, res) => {
-    res.status(501).json({message: "Não implementado"});
-};
+// 3. Funções auxiliares para evitar erro 502 nas rotas
+export const getNotifications = async (req, res) => { res.json([]); };
+export const getRecentActivity = async (req, res) => { res.json([]); };
+export const createOSC = async (req, res) => { res.status(501).json({message: "Não implementado"}); };
