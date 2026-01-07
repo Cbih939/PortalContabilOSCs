@@ -1,6 +1,7 @@
 /* src/components/layout/Footer.module.css */
 
 .footer {
+  margin-top: 30px;
   padding: 2rem 1rem; /* p-8 (vertical) p-4 (horizontal) */
   color: #6b7280; /* text-gray-400 */
   text-align: center;
