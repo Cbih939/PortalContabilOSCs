@@ -1,57 +1,67 @@
 .layoutContainer {
   display: flex;
-  height: 100vh; /* Ocupa a tela toda */
+  height: 100vh;
   width: 100vw;
   background-color: #f3f4f6;
-  overflow: hidden; /* Impede rolagem na tela inteira (só no conteúdo) */
+  overflow: hidden; /* Apenas o .pageScrollArea rola */
 }
 
-/* Wrapper da Sidebar */
+/* Sidebar */
 .sidebarWrapper {
   flex-shrink: 0;
-  transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
   width: auto;
   overflow: hidden;
-  height: 100%; /* Altura total */
+  height: 100%;
 }
 
 .sidebarHidden {
   width: 0 !important;
   opacity: 0;
+  margin-left: 0;
 }
 
-/* Área Principal (Direita) */
+/* Main Content */
 .mainContent {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Força altura total */
-  overflow: hidden; /* Impede vazamento */
+  height: 100vh;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .headerContainer {
-  flex-shrink: 0; /* Header não encolhe */
+  flex-shrink: 0;
   z-index: 20;
 }
 
 .navigationContainer {
-  flex-shrink: 0; /* Abas não encolhem */
+  flex-shrink: 0;
   z-index: 19;
 }
 
-/* Conteúdo Rolável (Página + Footer) */
-.pageContent {
-  flex: 1; /* Ocupa todo o espaço restante */
-  overflow-y: auto; /* Habilita rolagem aqui */
+/* --- ÁREA DE ROLAGEM CORRIGIDA --- */
+.pageScrollArea {
+  flex: 1;
+  overflow-y: auto; /* Scroll acontece AQUI */
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
 }
 
-/* Container do Footer */
-.footerWrapper {
-  margin-top: auto; /* Empurra o footer para o fundo se o conteúdo for pequeno */
+/* Wrapper do conteúdo da página (Outlet) */
+.contentWrapper {
+  flex: 1 0 auto; /* Cresce para ocupar espaço, mas não encolhe menor que o conteúdo */
   width: 100%;
-  padding-top: 4rem; /* --- AQUI ESTÁ A CORREÇÃO PRINCIPAL: Espaço mínimo antes do footer --- */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Wrapper do Footer */
+.footerWrapper {
+  flex-shrink: 0; /* Nunca encolhe */
+  width: 100%;
+  padding-top: 2rem; /* Respiro padrão */
 }

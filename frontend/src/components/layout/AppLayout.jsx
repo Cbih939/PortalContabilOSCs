@@ -8,10 +8,8 @@ export default function AppLayout({
   headerComponent,
   navigationComponent,
 }) {
-  // Estado para controlar a visibilidade da Sidebar
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // Função que será chamada pelo botão do Header
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -19,17 +17,17 @@ export default function AppLayout({
   return (
     <div className={styles.layoutContainer}>
       
-      {/* Wrapper da Sidebar com controle de visibilidade */}
+      {/* Sidebar Wrapper */}
       <div 
         className={`${styles.sidebarWrapper} ${!isSidebarOpen ? styles.sidebarHidden : ''}`}
       >
         {sidebarComponent}
       </div>
 
-      {/* Conteúdo Principal */}
+      {/* Main Area */}
       <main className={styles.mainContent}>
 
-        {/* Header (Injetamos a função toggleSidebar aqui) */}
+        {/* Header */}
         <div className={styles.headerContainer}>
           {React.isValidElement(headerComponent) 
             ? React.cloneElement(headerComponent, { onToggleSidebar: toggleSidebar })
@@ -37,20 +35,26 @@ export default function AppLayout({
           }
         </div>
 
-        {/* Navegação Secundária (Abas) */}
+        {/* Navigation Tabs */}
         {navigationComponent && (
           <div className={styles.navigationContainer}>
             {navigationComponent}
           </div>
         )}
 
-        {/* Conteúdo da Página */}
-        <div className={styles.pageContent}>
-          <Outlet />
+        {/* Scrollable Page Content */}
+        <div className={styles.pageScrollArea}>
           
+          {/* Wrapper que cresce com o conteúdo */}
+          <div className={styles.contentWrapper}>
+             <Outlet />
+          </div>
+
+          {/* Footer sempre no final do fluxo */}
           <div className={styles.footerWrapper}>
             <Footer />
           </div>
+
         </div>
 
       </main>

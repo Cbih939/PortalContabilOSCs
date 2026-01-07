@@ -1,20 +1,17 @@
-/* Container da Página inteira (Fundo Cinza) */
+/* Container da Página */
 .pageContainer {
   padding: 2rem;
   background-color: #f3f4f6;
-  min-height: 100vh;
   
-  /* --- AJUSTE CRÍTICO: Aumentado para 10rem (aprox 160px) --- */
-  /* Isso garante que o rodapé fixo não cubra os últimos campos */
-  padding-bottom: 10rem; 
-  
+  /* --- IMPORTANTE: REMOVIDO min-height: 100vh --- */
+  /* Deixe a altura automática para o div crescer com o formulário */
+  width: 100%; 
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  box-sizing: border-box; /* Garante que o padding conte no tamanho total */
+  box-sizing: border-box;
 }
 
-/* Título "Editar Perfil" */
 .pageTitle {
   font-size: 1.5rem;
   font-weight: 700;
@@ -26,11 +23,10 @@
 .loading {
   padding: 3rem;
   text-align: center;
-  font-size: 1.2rem;
   color: #6b7280;
 }
 
-/* O Cartão Branco Principal */
+/* O Cartão Branco */
 .formCard {
   background-color: #ffffff;
   width: 100%;
@@ -40,42 +36,31 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  
-  /* Garante que o cartão em si não tenha overflow oculto */
-  overflow: visible;
-  margin-bottom: 2rem; /* Margem extra de segurança */
+  /* Garante que o cartão cresça com o conteúdo interno */
+  height: auto; 
 }
 
-/* Cabeçalho do Card (Onde fica o botão) */
 .cardHeader {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 1rem;
 }
 
-/* Botões */
 .editButton, .saveButton {
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   font-weight: 600;
-  font-size: 0.9rem;
   cursor: pointer;
-  transition: background-color 0.2s;
   color: white;
+  transition: background-color 0.2s;
 }
 
-.editButton {
-  background-color: #EC6D12;
-}
+.editButton { background-color: #EC6D12; }
 .editButton:hover { background-color: #d85c0a; }
-
-.saveButton {
-  background-color: #16a34a;
-}
+.saveButton { background-color: #16a34a; }
 .saveButton:hover { background-color: #15803d; }
 
-/* Seções */
 .section {
   margin-bottom: 2.5rem;
   width: 100%;
@@ -91,7 +76,6 @@
   display: block;
 }
 
-/* Grid de Inputs (2 Colunas) */
 .gridRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -100,7 +84,6 @@
   width: 100%;
 }
 
-/* Input Individual */
 .inputGroup {
   display: flex;
   flex-direction: column;
@@ -129,7 +112,6 @@
   background-color: #f9fafb;
   color: #9ca3af;
   cursor: not-allowed;
-  border-color: #e5e7eb;
 }
 
 .input:focus {
@@ -138,18 +120,8 @@
   box-shadow: 0 0 0 3px rgba(236, 109, 18, 0.1);
 }
 
-/* Responsividade */
 @media (max-width: 768px) {
-  .gridRow {
-    grid-template-columns: 1fr;
-  }
-  
-  .formCard {
-    padding: 1.5rem;
-  }
-  
-  .pageContainer {
-    padding: 1rem;
-    padding-bottom: 12rem; /* Ainda mais espaço no mobile */
-  }
+  .gridRow { grid-template-columns: 1fr; }
+  .formCard { padding: 1.5rem; }
+  .pageContainer { padding: 1rem; }
 }
