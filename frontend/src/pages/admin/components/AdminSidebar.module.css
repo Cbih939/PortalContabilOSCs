@@ -1,28 +1,45 @@
+/* Sidebar com fundo Branco e Borda Sutil */
 .sidebar {
-  background-color: #111827; /* Azul Escuro Quase Preto */
-  color: #e5e7eb;
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb; /* Divisória suave */
   height: 100vh;
   display: flex;
   flex-direction: column;
   width: 17rem;
   transition: width 0.3s ease;
   flex-shrink: 0;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.02);
 }
 
+/* Área do Logo */
 .logoContainer {
   height: 5rem;
   display: flex;
   align-items: center;
   padding: 0 1.5rem;
-  border-bottom: 1px solid #1f2937;
+  border-bottom: 1px solid #f3f4f6;
 }
 
 .logoText {
   font-size: 1.25rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-weight: 800;
+  color: #1f2937; /* Cinza Escuro */
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
+/* Ponto laranja para detalhe da marca */
+.logoText::after {
+  content: '';
+  display: block;
+  width: 8px;
+  height: 8px;
+  background-color: #EC6D12; /* Laranja da Marca */
+  border-radius: 50%;
+}
+
+/* Navegação */
 .nav {
   flex: 1;
   padding: 1.5rem 1rem;
@@ -31,36 +48,50 @@
   gap: 0.5rem;
 }
 
+/* Item de Menu Base */
 .navItem {
   display: flex;
   align-items: center;
   padding: 0.75rem 1rem;
   text-decoration: none;
-  color: #9ca3af; /* Cinza claro */
+  color: #6b7280; /* Cinza médio */
   border-radius: 0.5rem;
-  transition: all 0.2s;
-  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
+/* Hover (Passar o mouse) */
 .navItem:hover {
-  background-color: #1f2937;
-  color: #ffffff;
+  background-color: #fff7ed; /* Laranja muito claro (fundo) */
+  color: #EC6D12; /* Laranja (texto) */
 }
 
+/* Item Ativo (Selecionado) */
 .active {
-  background-color: #6366f1; /* Roxo/Azul do Admin (Indigo-500) */
-  color: #ffffff;
+  background-color: #EC6D12; /* Laranja da Marca */
+  color: #ffffff !important;
+  box-shadow: 0 4px 6px -1px rgba(236, 109, 18, 0.2);
+}
+
+/* Garante que o ícone mude de cor no hover/active */
+.navItem:hover .icon,
+.active .icon {
+  stroke-width: 2.5px; /* Engrossa levemente o ícone */
 }
 
 .icon {
   width: 1.5rem;
   height: 1.5rem;
   margin-right: 0.75rem;
+  transition: all 0.2s;
 }
 
+/* Rodapé (Logout) */
 .footer {
   padding: 1rem;
-  border-top: 1px solid #1f2937;
+  border-top: 1px solid #f3f4f6;
+  background-color: #fafafa;
 }
 
 .logoutButton {
@@ -70,13 +101,15 @@
   padding: 0.75rem;
   background: none;
   border: none;
-  color: #9ca3af;
+  color: #6b7280;
   cursor: pointer;
   border-radius: 0.5rem;
   transition: all 0.2s;
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
 .logoutButton:hover {
-  background-color: #1f2937;
-  color: #ef4444; /* Vermelho no hover */
+  background-color: #fef2f2; /* Vermelho muito claro */
+  color: #ef4444; /* Vermelho */
 }
