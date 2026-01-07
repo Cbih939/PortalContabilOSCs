@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../../hooks/useAuth.jsx'; // Ajuste o caminho conforme sua estrutura
+// CORREÇÃO AQUI: Apenas 3 níveis de retorno (../../../)
+import { useAuth } from '../../../hooks/useAuth.jsx'; 
 import styles from './AdminSidebar.module.css';
 
 // --- Ícones SVG ---
@@ -37,7 +38,7 @@ export default function AdminSidebar({ isOpen }) {
     { path: '/admin/dashboard', label: 'Dashboard', icon: DashboardIcon },
     { path: '/admin/usuarios', label: 'Gerenciar Usuários', icon: UsersIcon },
     { path: '/admin/oscs', label: 'Gerenciar OSCs', icon: BuildingIcon },
-    { path: '/admin/biblioteca', label: 'Biblioteca e Modelos', icon: LibraryIcon }, // NOVO
+    { path: '/admin/biblioteca', label: 'Biblioteca e Modelos', icon: LibraryIcon },
     { path: '/admin/avisos', label: 'Canal de Avisos', icon: MegaphoneIcon },
   ];
 
