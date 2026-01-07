@@ -47,7 +47,6 @@ export const findByContadorId = async (contadorId) => {
 
 /**
  * Busca uma OSC pelo seu ID (incluindo dados da tabela users).
- * (ATUALIZADO com todos os campos das migrações 006 e 007)
  */
 export const findById = async (id) => {
   const query = `
@@ -91,10 +90,7 @@ export const findByCnpj = async (cnpj) => {
 
 /**
  * Cria uma nova OSC e o seu Utilizador (Coordenador) associado (Transação).
- * (ATUALIZADO para todos os campos do formulário e ficheiros)
- * @param {object} oscData - Dados da tabela 'oscs'
- * @param {object} userData - Dados da tabela 'users' (Coordenador)
- * @returns {Promise<object>} A nova OSC criada (com dados combinados).
+ * CORRIGIDO: Tratamento de campos opcionais para NULL.
  */
 export const createOscAndUser = async (oscData, userData) => {
   const connection = await pool.getConnection();
@@ -108,12 +104,12 @@ export const createOscAndUser = async (oscData, userData) => {
       ) VALUES (?, ?, ?, ?, 'Ativo', ?, ?)
     `;
     const [userResult] = await connection.execute(userQuery, [
-      userData.name,          // coordNome
+      userData.name,          // coordNome ou Nome Fantasia
       userData.email,         // coordEmail
       userData.password_hash,
       ROLES.OSC,
-      userData.cpf,           // coordCpf
-      userData.phone          // coordTelefone
+      userData.cpf || null,   // coordCpf (Pode ser null)
+      userData.phone || null  // coordTelefone (Pode ser null)
     ]);
     const newUserId = userResult.insertId;
 
@@ -127,13 +123,15 @@ export const createOscAndUser = async (oscData, userData) => {
         logotipo_path, ata_path, estatuto_path
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
+    
+    // AQUI ESTAVA O ERRO: Use || null em todos os campos opcionais
     await connection.execute(oscQuery, [
       newUserId,
       oscData.cnpj,
       oscData.razao_social,
-      oscData.data_fundacao || null,
+      oscData.data_fundacao || null, // DATA pode vir vazia string, converte pra null
       oscData.responsible,
-      oscData.responsible_cpf,
+      oscData.responsible_cpf || null,
       oscData.email,
       oscData.phone,
       oscData.address,
@@ -143,12 +141,12 @@ export const createOscAndUser = async (oscData, userData) => {
       oscData.cidade,
       oscData.estado,
       oscData.pais || 'Brasil',
-      oscData.website,
-      oscData.instagram,
+      oscData.website || null,   // Evita undefined
+      oscData.instagram || null, // Evita undefined
       oscData.assigned_contador_id,
-      oscData.logotipo_path,
-      oscData.ata_path,
-      oscData.estatuto_path
+      oscData.logotipo_path || null,
+      oscData.ata_path || null,
+      oscData.estatuto_path || null
     ]);
 
     await connection.commit();
@@ -165,7 +163,6 @@ export const createOscAndUser = async (oscData, userData) => {
 
 /**
  * Atualiza uma OSC e o seu Utilizador associado (usando Transação).
- * (ATUALIZADO para todos os campos das migrações 006 e 007)
  */
 export const updateOscAndUser = async (oscId, updateData) => {
   const connection = await pool.getConnection();
@@ -179,7 +176,6 @@ export const updateOscAndUser = async (oscId, updateData) => {
     const oscFieldsToUpdate = [];
     const oscParams = [];
     const allowedOscFields = [
-        'cnpj', // (Embora talvez não deva ser editável pela OSC)
         'razao_social', 'data_fundacao', 'responsible', 'responsible_cpf',
         'email', 'phone', 'address', 'cep', 'numero', 'bairro', 'cidade', 'estado', 'pais',
         'website', 'instagram', 'assigned_contador_id',
@@ -201,22 +197,32 @@ export const updateOscAndUser = async (oscId, updateData) => {
     // 2. Atualiza a tabela 'users'
     const userFieldsToUpdate = [];
     const userParams = [];
-    // Mapeia nomes do formulário (ex: login_email) para nomes da coluna (email)
+    
+    // Mapeamento de campos do formulário para o banco
     const userFieldMap = {
         name: updateData.name, // Nome Fantasia
-        login_name: updateData.name, // (Se o nome do Coordenador for separado)
-        email: updateData.login_email,
-        cpf: updateData.login_cpf,
-        phone: updateData.login_phone,
-        status: updateData.status
+        login_email: 'email', // Mapeia login_email -> email
+        login_cpf: 'cpf',     // Mapeia login_cpf -> cpf
+        login_phone: 'phone', // Mapeia login_phone -> phone
+        status: 'status'
     };
     
-    for (const key in userFieldMap) {
-        const dbKey = (key === 'login_email' ? 'email' : (key === 'login_cpf' ? 'cpf' : (key === 'login_phone' ? 'phone' : key)));
-        if (updateData[key] !== undefined) {
-             userFieldsToUpdate.push(`${dbKey} = ?`);
-             userParams.push(updateData[key]);
-        }
+    // Iteramos sobre o objeto de mapeamento
+    for (const [formKey, dbKey] of Object.entries(userFieldMap)) {
+       // Se o valor direto do mapa for string (ex: 'email'), usamos ela como chave do banco
+       // Se o valor for undefined no updateData, ignoramos
+       const value = updateData[formKey];
+       const column = typeof dbKey === 'string' ? dbKey : formKey; // Se dbKey não for string, usa a chave original
+
+       if (value !== undefined) {
+           userFieldsToUpdate.push(`${column} = ?`);
+           userParams.push(value);
+       }
+    }
+
+    // Caso especial para login_name se vier separado
+    if (updateData.name !== undefined) {
+       // Já tratado acima
     }
 
      if (userFieldsToUpdate.length > 0) {
@@ -236,7 +242,6 @@ export const updateOscAndUser = async (oscId, updateData) => {
     connection.release();
   }
 };
-
 
 /**
  * Associa uma OSC a um Contador (Admin).
@@ -288,7 +293,6 @@ export const isOscAssignedToContador = async (oscId, contadorId) => {
 
 /**
  * Conta o número de OSCs ATIVAS associadas a um Contador específico.
- * (CORRIGIDO com JOIN em 'users')
  */
 export const countActiveByContadorId = async (contadorId) => {
   const query = `

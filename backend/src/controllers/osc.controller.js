@@ -87,7 +87,7 @@ export const createOSC = async (req, res) => {
     
     // Dados vêm de req.body (texto) e req.files (ficheiros)
     const data = req.body; 
-    const files = req.files;
+    const files = req.files || {}; // Garante objeto vazio se não houver files
 
     console.log('[CreateOSC] Dados de Texto (body):', data);
     console.log('[CreateOSC] Ficheiros Recebidos (files):', files);
@@ -118,16 +118,22 @@ export const createOSC = async (req, res) => {
       name: data.coordNome || data.nomeFantasia,
       email: data.coordEmail,
       password_hash: passwordHash,
-      cpf: data.coordCpf,
-      phone: data.coordTelefone,
+      cpf: data.coordCpf || null,
+      phone: data.coordTelefone || null,
     };
     
+    // Tratamento de data vazia (evita enviar string vazia para o banco)
+    let dataFundacao = data.dataFundacao;
+    if (!dataFundacao || dataFundacao.trim() === '') {
+        dataFundacao = null;
+    }
+
     const oscData = {
       cnpj: data.cnpj,
       razao_social: data.razaoSocial,
-      data_fundacao: data.dataFundacao || null,
+      data_fundacao: dataFundacao,
       responsible: data.respNome,
-      responsible_cpf: data.respCpf,
+      responsible_cpf: data.respCpf || null,
       email: data.emailContato,
       phone: data.telefone,
       address: data.endereco,
@@ -137,13 +143,13 @@ export const createOSC = async (req, res) => {
       cidade: data.cidade,
       estado: data.estado,
       pais: data.pais || 'Brasil',
-      website: data.website,
-      instagram: data.instagram,
+      website: data.website || null,
+      instagram: data.instagram || null,
       assigned_contador_id: creatingContadorId,
       // Adiciona caminhos dos ficheiros (se existirem)
-      logotipo_path: files?.logotipo ? files.logotipo[0].path : null,
-      ata_path: files?.ata ? files.ata[0].path : null,
-      estatuto_path: files?.estatuto ? files.estatuto[0].path : null,
+      logotipo_path: files.logotipo ? files.logotipo[0].path : null,
+      ata_path: files.ata ? files.ata[0].path : null,
+      estatuto_path: files.estatuto ? files.estatuto[0].path : null,
     };
 
     // 5. O Modelo 'createOscAndUser' usa TRANSAÇÃO
@@ -208,7 +214,7 @@ export const updateOSC = async (req, res) => {
     
     const updatedOSC = await OscModel.updateOscAndUser(oscId, updateData);
     if (!updatedOSC) {
-         return res.status(404).json({ message: 'OSC não encontrada durante a atualização.' });
+          return res.status(404).json({ message: 'OSC não encontrada durante a atualização.' });
     }
 
     res.status(200).json(updatedOSC);
