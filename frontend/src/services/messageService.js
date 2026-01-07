@@ -1,78 +1,60 @@
-// frontend/src/services/messageService.js
+import api from './api.js';
 
 /**
- * Simula uma chamada à API para buscar a lista de contatos (OSCs).
+ * Busca a lista de contatos (OSCs vinculadas) para a barra lateral do Contador.
+ * Rota: GET /api/messages/contacts
+ * Retorna: Array de objetos com { id, name, lastMessage, unreadCount, ... }
  */
 export const getContacts = async () => {
-  // Simula um delay de rede de 500ms
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  return [
-    {
-      id: 1,
-      name: 'Associação Viver Bem',
-      role: 'OSC',
-      unreadCount: 2,
-      lastMessage: 'Enviamos os extratos pendentes.',
-      lastMessageTime: '10:30',
-      avatar: 'A'
-    },
-    {
-      id: 2,
-      name: 'ONG Esperança e Vida',
-      role: 'OSC',
-      unreadCount: 0,
-      lastMessage: 'Obrigado pelo retorno!',
-      lastMessageTime: 'Ontem',
-      avatar: 'O'
-    },
-    {
-      id: 3,
-      name: 'Instituto Futuro Jovem',
-      role: 'OSC',
-      unreadCount: 5,
-      lastMessage: 'Precisamos de ajuda com a nota fiscal.',
-      lastMessageTime: 'Segunda',
-      avatar: 'I'
-    },
-    {
-      id: 4,
-      name: 'Casa do Idoso Feliz',
-      role: 'OSC',
-      unreadCount: 0,
-      lastMessage: 'Documentação aprovada.',
-      lastMessageTime: '20/05',
-      avatar: 'C'
-    }
-  ];
+  const response = await api.get('/messages/contacts');
+  return response.data;
 };
 
 /**
- * Simula uma chamada à API para buscar as mensagens de um contato específico.
+ * Busca o histórico de mensagens de uma OSC específica.
+ * Usado pelo CONTADOR ao clicar em um contato na barra lateral.
+ * Rota: GET /api/messages/:oscId
  */
-export const getMessages = async (contactId) => {
-  await new Promise(resolve => setTimeout(resolve, 300));
+export const getMessages = async (oscId) => {
+  const response = await api.get(`/messages/${oscId}`);
+  return response.data;
+};
 
-  // Retorna mensagens baseadas no ID para parecer real
-  if (contactId === 1) {
-    return [
-      { id: 1, sender: 'them', text: 'Bom dia, Carlos. Tudo bem?', timestamp: '10:00' },
-      { id: 2, sender: 'me', text: 'Bom dia! Tudo ótimo. Como posso ajudar?', timestamp: '10:05' },
-      { id: 3, sender: 'them', text: 'Enviamos os extratos pendentes do mês passado.', timestamp: '10:30', file: { name: 'extratos_maio.pdf' } }
-    ];
+/**
+ * Busca o histórico de mensagens da própria OSC logada.
+ * Usado pela OSC na tela de Mensagens.
+ * Rota: GET /api/messages/my
+ * Nota: Retorna 404 se a OSC não tiver contador vinculado.
+ */
+export const getMyMessages = async () => {
+  const response = await api.get('/messages/my');
+  return response.data;
+};
+
+/**
+ * Envia uma nova mensagem.
+ * Rota: POST /api/messages
+ * * @param {number|null} toOscId - ID da OSC destinatária (Obrigatório se for Contador enviando). Null se for OSC.
+ * @param {string} text - O conteúdo da mensagem.
+ * @param {File|null} file - Arquivo anexo (Preparado para implementação futura).
+ */
+export const sendMessage = async (toOscId, text, file) => {
+  // Prepara o corpo da requisição
+  const payload = {
+    text: text
+  };
+
+  // Se for o Contador enviando, ele precisa especificar para qual OSC é
+  if (toOscId) {
+    payload.toOscId = toOscId;
   }
 
-  return [
-    { id: 1, sender: 'me', text: 'Olá, precisamos da confirmação do pagamento.', timestamp: '09:00' },
-    { id: 2, sender: 'them', text: 'Já enviamos o comprovante por e-mail.', timestamp: '09:15' }
-  ];
+  // Nota: Se o backend suportar upload de arquivos na mesma rota no futuro,
+  // esta lógica mudará para usar 'FormData'. Por enquanto, envia JSON.
+  
+  const response = await api.post('/messages', payload);
+  return response.data;
 };
 
-/**
- * Simula o envio de uma mensagem.
- */
-export const sendMessage = async (contactId, text, file) => {
-  await new Promise(resolve => setTimeout(resolve, 300));
-  console.log(`Mensagem enviada para ${contactId}: ${text}`);
-  return { success: true };
-};
+// Funções auxiliares para compatibilidade (caso algum componente antigo as chame)
+export const getMessagesHistory = (oscId) => getMessages(oscId);
