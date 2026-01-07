@@ -147,22 +147,24 @@ export default function AppRoutes() {
         </Route>
 
         {/* 3. Rotas da OSC */}
-        <Route element={<ProtectedRoute allowedRoles={[ROLES.OSC]} />}>
-          <Route
-            element={
-              <AppLayout
-                headerComponent={<OSCHeader />}
-                navigationComponent={<OSCNavigationTabs />}
-              />
-            }
-          >
+        <Route
+        path="/osc"
+        element={
+          <PrivateRoute allowedRoles={[ROLES.OSC]}>
+            {/* Aqui injetamos a Sidebar Laranja e o Header Novo */}
+            <AppLayout 
+              sidebarComponent={<OSCSidebar />} 
+              headerComponent={<OSCHeader />} 
+            />
+          </PrivateRoute>
+        }
+      >
             <Route path="/osc" element={<Navigate to="/osc/inicio" replace />} />
             <Route path="/osc/inicio" element={<OSCDashboard />} />
             <Route path="/osc/documentos" element={<OSCDocumentsPage />} />
             <Route path="/osc/mensagens" element={<OSCMessagesPage />} />
             <Route path="/osc/perfil" element={<OSCProfilePage />} />
           </Route>
-        </Route>
 
         {/* --- Página 404 (Not Found) --- */}
         <Route path="*" element={<NotFoundPage />} />
