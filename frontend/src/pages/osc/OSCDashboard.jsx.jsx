@@ -1,112 +1,115 @@
-// src/pages/osc/OSCDashboard.jsx
-
-import React, { useState, useEffect } from 'react'; // Importa hooks
-// Hooks
+import React from 'react';
 import { useAuth } from '../../hooks/useAuth.jsx';
-import { useNotification } from '../../contexts/NotificationContext.jsx';
-// Serviços API
-import * as templateService from '../../services/templateService.js';
-// Componentes
-import UsefulDownloads from './components/UsefulDownloads.jsx';
-import Spinner from '../../components/common/Spinner.jsx'; // Para loading
-import { ExcelIcon, FileIcon } from '../../components/common/Icons.jsx'; // Ícones
-// Estilos
+import { Link } from 'react-router-dom';
 import styles from './OSCDashboard.module.css';
 
-/**
- * Página principal (Início/Dashboard) da OSC (Conectada à API de Templates).
- */
+// Ícones para os Cards
+const FileIcon = () => (
+  <svg className={styles.cardIconBlue} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+);
+const FolderWarningIcon = () => (
+  <svg className={styles.cardIconYellow} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" /></svg>
+);
+const MsgIcon = () => (
+  <svg className={styles.cardIconGreen} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+);
+
 export default function OSCDashboard() {
   const { user } = useAuth();
-  const addNotification = useNotification();
 
-  // --- Estados ---
-  const [templates, setTemplates] = useState([]); // Armazena a lista de modelos da API
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // --- Efeito para Buscar os Modelos (Downloads Úteis) ---
-  useEffect(() => {
-    const fetchTemplates = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await templateService.getAllTemplates(); // Chama a API
-        setTemplates(response.data || []); // Guarda a lista no estado
-      } catch (err) {
-        console.error("Erro ao buscar modelos (downloads):", err);
-        setError("Não foi possível carregar os downloads úteis.");
-        addNotification("Erro ao carregar downloads.", "error");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTemplates();
-  }, [addNotification]); // addNotification é estável, roda 1 vez
-
-  // --- Handler para o Download (agora dinâmico) ---
-  const handleDownloadTemplate = async (template) => {
-    addNotification(`A iniciar download de: ${template.file_name}`, 'info');
-    try {
-      // Chama o serviço de download com o ID e o nome real do ficheiro (guardado em 'description')
-      await templateService.downloadTemplate(template.id, template.description);
-    } catch (err) {
-      console.error("Erro no download do modelo:", err);
-      addNotification(err.message || 'Falha no download.', 'error');
-    }
-  };
-
-  // Helper para escolher o ícone (opcional, mas melhora a UI)
-  const getIconForFile = (fileName) => {
-    if (fileName?.endsWith('.xlsx') || fileName?.endsWith('.xls')) {
-      return ExcelIcon;
-    }
-    // (Adicionar .pdf, .docx, etc. se quiser)
-    return FileIcon; // Padrão
-  };
+  // Dados Mockados para o visual
+  const recentActivities = [
+    { id: 1, text: 'OSC Esperança enviou um arquivo "Liderança_Nexialista.pdf"', date: '17/12/2025, 09:09' },
+    { id: 2, text: 'OSC Esperança enviou o arquivo "Ebook 10 Receitas.pdf"', date: '24/10/2025, 19:06' },
+    { id: 3, text: 'OSC Esperança enviou o arquivo "download.jpg"', date: '24/10/2025, 19:05' },
+    { id: 4, text: 'OSC Esperança enviou o arquivo "Relatório Anual.pdf"', date: '24/10/2025, 15:48' },
+  ];
 
   return (
-    <div className={styles.pageContainer}>
-      <div className={styles.card}>
-        {/* ... (Logo Placeholder, Título de Boas-vindas, Subtítulo) ... */}
-        <div className={styles.logoPlaceholder}>
-          <span>Logo do Escritório</span>
+    <div className={styles.container}>
+      
+      {/* 1. Área de Boas Vindas com Logo */}
+      <div className={styles.welcomeSection}>
+        <div className={styles.logoCircle}>
+          <img src="/logo_portal.png" alt="Logo" className={styles.logoImg} />
         </div>
-        <h2 className={styles.title}>
-          Bem-vindo(a) ao Portal do Cliente, {user?.name || 'Utilizador'}!
-        </h2>
-        <p className={styles.subtitle}>
-          Este é o seu canal direto com a nossa equipa de contabilidade. Use os separadores acima para enviar documentos e trocar mensagens.
-        </p>
-        
+        <div>
+          <h1 className={styles.welcomeTitle}>Bem-vindo (a) ao Portal do cliente, {user?.name || 'OSC'}!</h1>
+          <p className={styles.welcomeSubtitle}>Este é seu canal direto com a nossa equipe de contabilidade. Use o menu ao lado para enviar documentos e trocar mensagens.</p>
+        </div>
+      </div>
 
-        {/* --- Seção de Downloads Úteis (Dinâmica) --- */}
-        <div className={styles.downloadsSection}>
-          <h3 className={styles.downloadsTitle}>
-            Downloads Úteis
-          </h3>
-          <div className={styles.downloadsContainer}>
-            {isLoading ? (
-              <Spinner text="Carregando downloads..." />
-            ) : error ? (
-              <p style={{ color: 'red' }}>{error}</p>
-            ) : templates.length > 0 ? (
-              // Mapeia a lista de templates vinda da API
-              templates.map((template) => (
-                <UsefulDownloads
-                  key={template.id}
-                  title={template.file_name} // Nome de exibição
-                  fileName={template.description} // Nome real do ficheiro
-                  IconComponent={getIconForFile(template.description)} // Ícone dinâmico
-                  onDownload={() => handleDownloadTemplate(template)} // Passa o objeto
-                />
-              ))
-            ) : (
-              <p style={{ color: '#6b7280' }}>Nenhum modelo disponível no momento.</p>
-            )}
+      {/* 2. Cards de Resumo (Stats) */}
+      <div className={styles.statsGrid}>
+        
+        {/* Card 1: Modelo Download */}
+        <div className={styles.card}>
+          <div className={styles.iconCircleBlue}><FileIcon /></div>
+          <div className={styles.cardContent}>
+            <span className={styles.cardLabel}>Docs | Modelos</span>
+            <strong className={styles.cardValueText}>Planilha Formato Base</strong>
+            <span className={styles.cardSubtext}>planilha-formato-base.xlsx</span>
+          </div>
+          <button className={styles.downloadBtn}>↓</button>
+        </div>
+
+        {/* Card 2: Docs Pendentes */}
+        <div className={styles.card}>
+          <div className={styles.iconCircleYellow}><FolderWarningIcon /></div>
+          <div className={styles.cardContent}>
+            <span className={styles.cardLabel}>Docs. Pendentes</span>
+            <strong className={styles.cardValue}>4</strong>
           </div>
         </div>
+
+        {/* Card 3: Mensagens */}
+        <div className={styles.card}>
+          <div className={styles.iconCircleGreen}><MsgIcon /></div>
+          <div className={styles.cardContent}>
+            <span className={styles.cardLabel}>Mensagens Não Lidas</span>
+            <strong className={styles.cardValue}>3</strong>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Área Inferior: Ações e Histórico */}
+      <div className={styles.bottomGrid}>
+        
+        {/* Coluna Esquerda: Ações Rápidas */}
+        <div className={styles.panel}>
+          <h3 className={styles.panelTitle}>Ações Rápidas</h3>
+          <div className={styles.actionsList}>
+             <Link to="/osc" className={styles.actionItem}>
+               <span className={styles.actionIcon}>📊</span> Dashboard
+             </Link>
+             <Link to="/osc/documentos" className={styles.actionItem}>
+               <span className={styles.actionIcon}>📂</span> Ver Documentos
+             </Link>
+             <Link to="/osc/mensagens" className={styles.actionItem}>
+               <span className={styles.actionIcon}>💬</span> Abrir Mensagens
+             </Link>
+             <Link to="/osc/perfil" className={styles.actionItem}>
+               <span className={styles.actionIcon}>👤</span> Perfil
+             </Link>
+          </div>
+        </div>
+
+        {/* Coluna Direita: Documentos Enviados */}
+        <div className={styles.panel}>
+          <h3 className={styles.panelTitle}>Documentos Enviados</h3>
+          <div className={styles.activityList}>
+            {recentActivities.map((act) => (
+              <div key={act.id} className={styles.activityItem}>
+                <div className={styles.fileIconSmall}>📄</div>
+                <div>
+                  <p className={styles.activityText}>{act.text}</p>
+                  <span className={styles.activityDate}>{act.date}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </div>
   );

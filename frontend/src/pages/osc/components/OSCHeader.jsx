@@ -1,144 +1,79 @@
-// src/pages/osc/components/OSCHeader.jsx
-
 import React, { useState, useEffect } from 'react';
-// Layout e Componentes Comuns
-import Header from '../../../components/layout/Header.jsx';
-import { AlertTriangleIcon } from '../../../components/common/Icons.jsx';
-import Button from '../../../components/common/Button.jsx';
-import Spinner from '../../../components/common/Spinner.jsx'; // Importa Spinner
-// Hooks e Serviços
 import { useAuth } from '../../../hooks/useAuth.jsx';
-import useApi from '../../../hooks/useApi.jsx';
 import { useNotification } from '../../../contexts/NotificationContext.jsx';
 import * as alertService from '../../../services/alertService.js';
-// Componentes Específicos
-import AlertsModal from './AlertsModal.jsx';
-// Estilos e Constantes
 import styles from './OSCHeader.module.css';
-import { ROLES } from '../../../utils/constants.js'; // Importa ROLES
 
-/**
- * Componente Header específico para o painel da OSC.
- * Inclui título, botão de alertas (funcional) e botão de logout.
- */
-export default function OSCHeader() {
-  const { user, logout } = useAuth();
-  const addNotification = useNotification();
+// Ícones SVG embutidos para garantir consistência
+const MenuIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+);
 
-  // --- Estados para Alertas ---
+const BellIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+  </svg>
+);
+
+export default function OSCHeader({ onToggleSidebar }) {
+  const { user } = useAuth();
   const [alerts, setAlerts] = useState([]);
-  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
-  const [isLoadingAlerts, setIsLoadingAlerts] = useState(false); // Loading inicial
+  const unreadCount = alerts.filter(a => !a.read).length;
 
-  // Hook para a API de 'marcar como lido'
-  const { request: markAsReadRequest, isLoading: isMarkingRead } = useApi(alertService.markAlertAsRead);
-
-  // --- Efeito para buscar Alertas ---
+  // Busca alertas (Simples)
   useEffect(() => {
-    const fetchAlerts = async () => {
-      // Não busca se não estiver logado ou não for OSC
-      if (!user?.id || user?.role !== ROLES.OSC) {
-          setAlerts([]); // Garante que a lista está vazia se não for para buscar
-          return;
-      };
-
-      setIsLoadingAlerts(true);
+    const loadAlerts = async () => {
       try {
-        const response = await alertService.getAlerts();
-        setAlerts(response.data || []); // Garante que é um array
-      } catch (error) {
-        console.error("Erro ao buscar alertas:", error);
-        addNotification("Não foi possível buscar os avisos.", "error");
-        setAlerts([]); // Define como vazio em caso de erro
-      } finally {
-        setIsLoadingAlerts(false);
+        const res = await alertService.getAlerts();
+        setAlerts(res.data || []);
+      } catch (e) {
+        console.error("Erro ao carregar alertas", e);
       }
     };
-
-    fetchAlerts();
-    // Poderia adicionar um intervalo aqui para re-buscar periodicamente
-  }, [user?.id, user?.role, addNotification]); // Dependências corretas
-
-  // --- Handlers ---
-  const handleLogout = () => logout();
-
-  const handleOpenAlertModal = () => setIsAlertModalOpen(true);
-  const handleCloseAlertModal = () => setIsAlertModalOpen(false);
-
-  /** Chamado pelo AlertsModal ao clicar 'Marcar como lido' */
-  const handleMarkAsRead = async (alertId) => {
-    try {
-      await markAsReadRequest(alertId); // Chama API via useApi
-      // Sucesso! Atualiza o estado local
-      setAlerts(prevAlerts =>
-        prevAlerts.map(alert =>
-          alert.id === alertId ? { ...alert, read: true } : alert
-        )
-      );
-      // addNotification("Aviso marcado como lido.", "success"); // Opcional, pode ser redundante
-    } catch (err) {
-      console.error("Falha ao marcar como lido:", err);
-      addNotification("Falha ao marcar aviso como lido.", "error"); // Feedback de erro
-      // useApi já mostra notificação da API também
-    }
-  };
-
-  // Calcula contagem de não lidos a partir do estado 'alerts'
-  const unreadAlertsCount = alerts.filter(a => !a.read).length;
-
-  // --- Renderização ---
-  const leftContent = (
-    <h1 className={styles.leftTitle}>Portal da OSC</h1> // Usa classe CSS Module
-  );
-
-  const rightContent = ( // Garanta que não há caracteres estranhos aqui
-    <div className={styles.rightContentContainer}>
-      {/* Botão de Alertas */}
-      <button
-        onClick={handleOpenAlertModal}
-        className={styles.alertButton}
-        title="Ver Avisos"
-        disabled={isLoadingAlerts} // Desabilita enquanto carrega
-      >
-        <AlertTriangleIcon className={styles.alertIcon} />
-        {/* Badge */}
-        {!isLoadingAlerts && unreadAlertsCount > 0 && (
-          <span className={styles.alertBadge}>
-            {unreadAlertsCount}
-          </span>
-        )}
-      </button>
-
-      {/* WelcomeText */}
-      <span className={styles.welcomeText}>
-        Bem-vindo(a), {user?.name || 'Utilizador'}
-      </span>
-
-      {/* Logout Button */}
-      <Button
-        variant="danger"
-        size="sm"
-        onClick={handleLogout}
-        className={styles.logoutButton} // Classe opcional para ajustes
-      >
-        Sair
-      </Button>
-    </div>
-  ); // Fim do rightContent
+    if (user) loadAlerts();
+  }, [user]);
 
   return (
-    <>
-      {/* Renderiza o Header base com o conteúdo definido */}
-      <Header leftContent={leftContent} rightContent={rightContent} />
+    <header className={styles.headerContainer}>
+      
+      {/* Botão Menu (Mobile) */}
+      <button 
+        type="button" 
+        className={styles.menuButton} 
+        onClick={onToggleSidebar}
+        aria-label="Abrir menu"
+      >
+        <MenuIcon className={styles.icon} />
+      </button>
 
-      {/* Renderiza o Modal de Alertas (controlado por este componente) */}
-      <AlertsModal
-        isOpen={isAlertModalOpen}
-        onClose={handleCloseAlertModal}
-        alerts={alerts}
-        onMarkAsRead={handleMarkAsRead}
-        isLoading={isMarkingRead} // Passa o loading da ação de marcar
-      />
-    </>
+      {/* Espaço flexível */}
+      <div style={{ flex: 1 }}></div>
+
+      {/* Área Direita */}
+      <div className={styles.actionsContainer}>
+        
+        {/* Notificações */}
+        <button className={styles.iconButton} aria-label="Notificações">
+          <BellIcon className={styles.icon} />
+          {unreadCount > 0 && (
+            <span className={styles.badge}>{unreadCount}</span>
+          )}
+        </button>
+
+        {/* Perfil Simplificado */}
+        <div className={styles.profileContainer}>
+          <div className={styles.userInfo}>
+            <span className={styles.userName}>{user?.name || 'Minha OSC'}</span>
+            <span className={styles.userRole}>Cliente</span>
+          </div>
+          <div className={styles.avatarCircle}>
+             {user?.name ? user.name.charAt(0).toUpperCase() : 'O'}
+          </div>
+        </div>
+
+      </div>
+    </header>
   );
 }

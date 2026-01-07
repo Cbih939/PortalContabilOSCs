@@ -1,0 +1,96 @@
+.sidebarContainer {
+  width: 17rem;
+  height: 100vh;
+  /* Laranja Sólido da marca */
+  background-color: #EC6D12 !important; 
+  color: #ffffff !important;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+  z-index: 50;
+}
+
+.logoContainer {
+  height: 5rem;
+  display: flex;
+  align-items: center;
+  padding-left: 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.sidebarTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+
+.navContainer {
+  flex: 1;
+  padding: 1.5rem 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 9999px; /* Botões arredondados como na imagem */
+  font-weight: 500;
+  text-decoration: none;
+  
+  /* Estado normal: borda branca fina, fundo transparente */
+  color: #ffffff;
+  border: 1px solid rgba(255,255,255,0.4);
+  background-color: transparent;
+  
+  transition: all 0.2s ease;
+}
+
+.navLink:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: #ffffff;
+}
+
+/* Estado Ativo: Fundo laranja um pouco mais escuro (ou preenchido) */
+.activeLink {
+  background-color: #d85c0a !important; /* Laranja mais escuro para destaque */
+  border-color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.75rem;
+  color: #ffffff;
+}
+
+.footerContainer {
+  padding: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+.logoutButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 9999px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.logoutButton:hover {
+  background-color: rgba(255,255,255,0.1);
+  border-color: #ffffff;
+}
