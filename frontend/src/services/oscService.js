@@ -3,41 +3,65 @@ import api from './api.js';
 
 /**
  * [ADMIN] Busca TODAS as OSCs no sistema.
- * @returns {Promise<Array>} Lista de todas as OSCs com nome do contador.
+ * Rota: GET /api/oscs
  */
-export const getAllOSCs = () => {
-  // Rota: GET /api/oscs
-  return api.get('/oscs');
+export const getAllOSCs = async () => {
+  const response = await api.get('/oscs');
+  return response.data;
 };
+
 /**
- * [ADMIN] Associa uma OSC a um Contador.
- * @param {string|number} oscId
- * @param {string|number} contadorId
- * @returns {Promise<object>}
+ * [CONTADOR] Busca as OSCs associadas ao Contador logado.
+ * Rota: GET /api/oscs/my
  */
-
-export const assignContador = (oscId, contadorId) => {
-  return api.patch(`/oscs/${oscId}/assign`, { contadorId });
+export const getMyOSCs = async () => {
+  const response = await api.get('/oscs/my');
+  return response.data;
 };
 
-/** Busca as OSCs associadas ao Contador logado */
-export const getMyOSCs = () => {
-  return api.get('/oscs/my');
+/**
+ * [GERAL] Busca detalhes de uma OSC pelo ID.
+ * Usado no Perfil da OSC e na edição pelo Contador/Admin.
+ * Rota: GET /api/oscs/:id
+ */
+export const getOSCById = async (oscId) => {
+  const response = await api.get(`/oscs/${oscId}`);
+  return response.data;
 };
 
-/** Busca detalhes de uma OSC pelo ID */
-export const getOSCById = (oscId) => {
-  return api.get(`/oscs/${oscId}`); // Rota: GET /api/oscs/:id
+/**
+ * [CONTADOR/ADMIN] Cria uma nova OSC.
+ * Nota: oscData deve ser um objeto FormData se houver envio de arquivos.
+ * Rota: POST /api/oscs
+ */
+export const createOSC = async (oscData) => {
+  const response = await api.post('/oscs', oscData);
+  return response.data;
 };
 
-/** Cria uma nova OSC */
-export const createOSC = (oscData) => {
-  return api.post('/oscs', oscData);
+/**
+ * [GERAL] Atualiza os dados de uma OSC.
+ * Rota: PUT /api/oscs/:id
+ */
+export const updateOSC = async (oscId, oscData) => {
+  const response = await api.put(`/oscs/${oscId}`, oscData);
+  return response.data;
 };
 
-/** Atualiza uma OSC */
-export const updateOSC = (oscId, oscData) => {
-  return api.put(`/oscs/${oscId}`, oscData);
+/**
+ * [ADMIN] Associa uma OSC a um Contador manualmente.
+ * Rota: PATCH /api/oscs/:id/assign
+ */
+export const assignContador = async (oscId, contadorId) => {
+  const response = await api.patch(`/oscs/${oscId}/assign`, { contadorId });
+  return response.data;
 };
 
-// (Adicionar assignContador, deleteOSC se necessário)
+/**
+ * [ADMIN] Remove uma OSC do sistema.
+ * Rota: DELETE /api/oscs/:id
+ */
+export const deleteOSC = async (oscId) => {
+  const response = await api.delete(`/oscs/${oscId}`);
+  return response.data;
+};

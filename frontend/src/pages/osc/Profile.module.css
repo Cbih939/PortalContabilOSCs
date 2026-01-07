@@ -1,98 +1,141 @@
-/* src/pages/osc/Profile.module.css */
-
+/* Container da Página inteira (Fundo Cinza) */
 .pageContainer {
-  padding: 2rem; /* p-8 */
-}
-
-.card {
-  background-color: white;
-  padding: 2rem; /* p-8 */
-  border-radius: 0.5rem; /* rounded-lg */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
-  max-width: 56rem; /* max-w-4xl */
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.header {
+  padding: 2rem;
+  background-color: #f3f4f6;
+  min-height: 100vh;
+  padding-bottom: 6rem; /* Espaço para o rodapé */
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem; /* mb-6 */
-  padding-bottom: 1rem; /* pb-4 */
-  border-bottom: 1px solid #e5e7eb; /* border-b */
+  flex-direction: column;
+  align-items: flex-start; /* Alinha tudo à esquerda/topo */
 }
 
-.title {
-  font-size: 1.5rem; /* text-2xl */
-  font-weight: 600; /* font-semibold */
-  color: #374151; /* text-gray-700 */
+/* Título "Editar Perfil" */
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+  margin-left: 0.5rem; /* Leve recuo para alinhar com o card visualmente */
 }
 
-/* --- Modo de Visualização --- */
-.viewGrid {
-  display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr)); /* Padrão (1 coluna) */
-  gap: 1.5rem 2rem; /* gap-y-6 gap-x-8 */
-  color: #374151; /* text-gray-700 */
+.loading {
+  padding: 3rem;
+  text-align: center;
+  font-size: 1.2rem;
+  color: #6b7280;
 }
 
-/* Em telas médias (md) e maiores */
-@media (min-width: 768px) {
-  .viewGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)); /* md:grid-cols-2 */
-  }
-  .span2 {
-    grid-column: span 2 / span 2; /* md:col-span-2 */
-  }
-}
-
-.fieldLabel {
-  font-size: 0.875rem; /* text-sm */
-  font-weight: 500; /* font-medium */
-  color: #6b7280; /* text-gray-500 */
-  display: block; /* Para ficar acima do valor */
-  margin-bottom: 0.125rem;
-}
-
-.fieldValue {
-  /* Estilos para o valor, se necessário */
-}
-
-/* --- Modo de Edição (Formulário) --- */
-.formGrid {
-  display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: 1.5rem; /* gap-6 */
-}
-
-@media (min-width: 768px) {
-  .formGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .span2Form {
-     grid-column: span 2 / span 2;
-  }
-}
-
-.formActions {
-  margin-top: 2rem; /* mt-8 */
-  padding-top: 1.5rem; /* pt-6 */
-  border-top: 1px solid #e5e7eb; /* border-t */
+/* O Cartão Branco Principal */
+.formCard {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 1000px; /* Limita largura em telas muito grandes */
+  border-radius: 1rem; /* Bordas arredondadas */
+  padding: 2.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem; /* space-x-3 */
+  flex-direction: column; /* FORÇA empilhamento vertical das seções */
 }
 
-/* Estilo para o Input dentro do formulário (se precisar de ajustes) */
-/* .formInput { ... } */
-
-.loadingContainer,
-.errorContainer {
-    padding: 2rem;
-    text-align: center;
-    color: #6b7280;
+/* Cabeçalho do Card (Onde fica o botão) */
+.cardHeader {
+  display: flex;
+  justify-content: flex-end; /* Botão à direita */
+  margin-bottom: 1rem;
 }
-.errorContainer {
-    color: #dc2626; /* text-red-600 */
+
+/* Botões */
+.editButton, .saveButton {
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: white;
+}
+
+.editButton {
+  background-color: #EC6D12; /* Laranja */
+}
+.editButton:hover { background-color: #d85c0a; }
+
+.saveButton {
+  background-color: #16a34a; /* Verde */
+}
+.saveButton:hover { background-color: #15803d; }
+
+/* Seções (1, 2, 3, 4...) */
+.section {
+  margin-bottom: 2.5rem;
+  width: 100%;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
+  display: block; /* Garante que ocupa a linha toda */
+}
+
+/* Grid de Inputs (2 Colunas) */
+.gridRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Duas colunas iguais */
+  column-gap: 2rem;
+  row-gap: 1.5rem;
+  width: 100%;
+}
+
+/* Input Individual */
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.input {
+  width: 100%; /* Ocupa toda a largura da coluna da grid */
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  background-color: #fff;
+  color: #1f2937;
+  box-sizing: border-box; /* Importante para o padding não estourar */
+}
+
+.input:disabled {
+  background-color: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  border-color: #e5e7eb;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #EC6D12;
+  box-shadow: 0 0 0 3px rgba(236, 109, 18, 0.1);
+}
+
+/* Responsividade Mobile */
+@media (max-width: 768px) {
+  .gridRow {
+    grid-template-columns: 1fr; /* Vira 1 coluna no celular */
+  }
+  
+  .formCard {
+    padding: 1.5rem;
+  }
 }
