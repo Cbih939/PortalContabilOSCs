@@ -78,6 +78,8 @@ export const getOSCById = async (req, res) => {
  * @route   POST /api/oscs (multipart/form-data)
  * @access  Privado (Contador, Admin)
  */
+// Substitua APENAS a função createOSC dentro de osc.controller.js
+
 export const createOSC = async (req, res) => {
   try {
     if (req.user.role !== ROLES.CONTADOR && req.user.role !== ROLES.ADMIN) {
@@ -87,12 +89,11 @@ export const createOSC = async (req, res) => {
     
     // Dados vêm de req.body (texto) e req.files (ficheiros)
     const data = req.body; 
-    const files = req.files || {}; // Garante objeto vazio se não houver files
+    const files = req.files || {}; 
 
     console.log('[CreateOSC] Dados de Texto (body):', data);
-    console.log('[CreateOSC] Ficheiros Recebidos (files):', files);
     
-    // 1. Validação
+    // 1. Validação Básica
     if (!data.nomeFantasia || !data.cnpj || !data.coordEmail || !data.coordSenha) {
       return res.status(400).json({ message: 'Nome Fantasia, CNPJ, Email do Coordenador e Senha são obrigatórios.' });
     }
@@ -110,10 +111,10 @@ export const createOSC = async (req, res) => {
       return res.status(409).json({ message: 'Este CNPJ já está registado.' });
     }
 
-    // 3. Hash da senha do Coordenador
+    // 3. Hash da senha
     const passwordHash = await hashPassword(data.coordSenha);
 
-    // 4. Prepara os dados para os Modelos
+    // 4. Preparação de Dados
     const userData = {
       name: data.coordNome || data.nomeFantasia,
       email: data.coordEmail,
@@ -122,16 +123,30 @@ export const createOSC = async (req, res) => {
       phone: data.coordTelefone || null,
     };
     
-    // Tratamento de data vazia (evita enviar string vazia para o banco)
-    let dataFundacao = data.dataFundacao;
-    if (!dataFundacao || dataFundacao.trim() === '') {
-        dataFundacao = null;
+    // --- CORREÇÃO DA DATA DE FUNDAÇÃO ---
+    let dataFundacaoFormatada = null;
+    
+    if (data.dataFundacao && data.dataFundacao !== 'null' && data.dataFundacao !== 'undefined') {
+        try {
+            // Tenta criar um objeto Date
+            const dateObj = new Date(data.dataFundacao);
+            
+            // Verifica se é uma data válida
+            if (!isNaN(dateObj.getTime())) {
+                // Converte para YYYY-MM-DD
+                dataFundacaoFormatada = dateObj.toISOString().split('T')[0];
+            }
+        } catch (e) {
+            console.error('Erro ao converter data:', e);
+            dataFundacaoFormatada = null; // Se falhar, salva como null
+        }
     }
+    // ------------------------------------
 
     const oscData = {
       cnpj: data.cnpj,
       razao_social: data.razaoSocial,
-      data_fundacao: dataFundacao,
+      data_fundacao: dataFundacaoFormatada, // Usa a data formatada
       responsible: data.respNome,
       responsible_cpf: data.respCpf || null,
       email: data.emailContato,
@@ -146,27 +161,25 @@ export const createOSC = async (req, res) => {
       website: data.website || null,
       instagram: data.instagram || null,
       assigned_contador_id: creatingContadorId,
-      // Adiciona caminhos dos ficheiros (se existirem)
       logotipo_path: files.logotipo ? files.logotipo[0].path : null,
       ata_path: files.ata ? files.ata[0].path : null,
       estatuto_path: files.estatuto ? files.estatuto[0].path : null,
     };
 
-    // 5. O Modelo 'createOscAndUser' usa TRANSAÇÃO
+    // 5. Criação no Banco
     const newOSC = await OscModel.createOscAndUser(oscData, userData);
     console.log('[CreateOSC] OSC criada com sucesso:', newOSC.id);
 
     res.status(201).json(newOSC);
+
   } catch (error) {
     console.error('Erro no controlador createOSC (detalhado):', error);
     
-    // Se a transação falhar, apaga ficheiros órfãos que o multer já salvou
+    // Limpeza de ficheiros em caso de erro
     if (req.files) {
         Object.values(req.files).forEach(fileArray => {
             if (fileArray && fileArray[0] && fs.existsSync(fileArray[0].path)) {
-                fs.unlink(fileArray[0].path, (err) => {
-                    if (err) console.error(`[CreateOSC] Falha ao apagar ficheiro órfão ${fileArray[0].path}:`, err);
-                });
+                fs.unlink(fileArray[0].path, (err) => {});
             }
         });
     }
