@@ -1,146 +1,66 @@
-// src/pages/admin/AdminDashboard.jsx
-
-import React, { useState, useEffect } from 'react'; // Importa hooks
+import React from 'react';
 import { Link } from 'react-router-dom';
-// Importa ícones e componentes
-import { UsersIcon, BuildingIcon } from '../../components/common/Icons.jsx';
-import Button from '../../components/common/Button.jsx';
-import Spinner from '../../components/common/Spinner.jsx'; // Para loading
-// Importa serviços API e constantes
-import * as userService from '../../services/userService.js';
-import * as oscService from '../../services/oscService.js';
-import { ROLES } from '../../utils/constants.js';
-import { useNotification } from '../../contexts/NotificationContext.jsx';
-// Importa estilos
-import styles from './AdminDashboard.module.css';
+import styles from './AdminDashboard.module.css'; // Reutilize ou crie um CSS básico
 
-/**
- * Página Dashboard do Admin (Conectada à API).
- */
+// Componentes de Ícones simples
+const UserIcon = () => <span>👥</span>;
+const BuildingIcon = () => <span>🏢</span>;
+const FileIcon = () => <span>📂</span>;
+
 export default function AdminDashboard() {
-  // Estado para estatísticas
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalOSCs: 0,
-    totalContadores: 0,
-  });
-  // Estados de controlo
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const addNotification = useNotification();
+  // Você pode buscar estatísticas reais aqui futuramente
+  const stats = [
+    { title: 'Total de Usuários', value: '7', icon: UserIcon, color: '#e0e7ff', textColor: '#4338ca' },
+    { title: 'OSCs Cadastradas', value: '5', icon: BuildingIcon, color: '#dcfce7', textColor: '#15803d' },
+    { title: 'Arquivos Publicados', value: '12', icon: FileIcon, color: '#ffedd5', textColor: '#c2410c' },
+  ];
 
-  // Efeito para buscar os dados da API na montagem
-  useEffect(() => {
-    const fetchStats = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        // Busca todos os utilizadores e todas as OSCs em paralelo
-        const [usersResponse, oscsResponse] = await Promise.all([
-          userService.getAllUsers(),
-          oscService.getAllOSCs(),
-        ]);
-
-        const users = usersResponse.data || [];
-        const oscs = oscsResponse.data || [];
-
-        // Calcula as estatísticas
-        // Filtra por Contadores que estão 'Ativos'
-        const contadorCount = users.filter(
-          u => u.role === ROLES.CONTADOR && u.status === 'Ativo'
-        ).length;
-        
-        setStats({
-          totalUsers: users.length,
-          totalOSCs: oscs.length,
-          totalContadores: contadorCount,
-        });
-
-      } catch (err) {
-        console.error("Erro ao buscar estatísticas do admin:", err);
-        setError("Não foi possível carregar as estatísticas.");
-        addNotification("Erro ao carregar estatísticas.", "error");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, [addNotification]); // addNotification é estável
-
-  // Renderização
   return (
-    <div className={styles.pageContainer}>
-      <h2 className={styles.title}>
-        Dashboard do Administrador
-      </h2>
+    <div style={{ padding: '2rem' }}>
+      <h1 style={{ marginBottom: '2rem', color: '#111827' }}>Dashboard do Administrador</h1>
 
-      {isLoading ? (
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
-          <Spinner text="Carregando estatísticas..." />
+      {/* Stats Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+        {stats.map((stat, idx) => (
+          <div key={idx} style={{ background: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ background: stat.color, padding: '1rem', borderRadius: '50%', color: stat.textColor, display: 'flex' }}>
+              <stat.icon />
+            </div>
+            <div>
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>{stat.title}</p>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827', margin: 0 }}>{stat.value}</h2>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Ações Rápidas */}
+      <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <h3 style={{ marginBottom: '1.5rem', color: '#374151' }}>Ações Rápidas</h3>
+        
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          
+          <Link to="/admin/usuarios" style={{ textDecoration: 'none' }}>
+            <button style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#f97316', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+              <UserIcon /> Gerenciar Usuários
+            </button>
+          </Link>
+
+          <Link to="/admin/oscs" style={{ textDecoration: 'none' }}>
+            <button style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+              <BuildingIcon /> Gerenciar OSCs
+            </button>
+          </Link>
+          
+          {/* NOVO BOTÃO */}
+          <Link to="/admin/biblioteca" style={{ textDecoration: 'none' }}>
+            <button style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#6366f1', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+              <FileIcon /> Biblioteca e Modelos
+            </button>
+          </Link>
+
         </div>
-      ) : error ? (
-         <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>
-            {error}
-          </div>
-      ) : (
-        <>
-          {/* Grid de Estatísticas (agora usa o estado 'stats') */}
-          <div className={styles.statsGrid}>
-            {/* Card Total de Usuários */}
-            <Link to="/admin/usuarios" className={styles.statCard}>
-              <div className={`${styles.statIconContainer} ${styles.iconBlue}`}>
-                <UsersIcon className={styles.statIcon} />
-              </div>
-              <div>
-                <p className={styles.statLabel}>Total de Usuários</p>
-                <p className={styles.statValue}>{stats.totalUsers}</p>
-              </div>
-            </Link>
-
-            {/* Card Total de OSCs */}
-            <Link to="/admin/oscs" className={styles.statCard}>
-              <div className={`${styles.statIconContainer} ${styles.iconGreen}`}>
-                <BuildingIcon className={styles.statIcon} />
-              </div>
-              <div>
-                <p className={styles.statLabel}>OSCs Cadastradas</p>
-                <p className={styles.statValue}>{stats.totalOSCs}</p>
-              </div>
-            </Link>
-
-            {/* Card Total de Contadores */}
-            {/* Remove o Link, pois não temos uma página só de contadores */}
-            <div className={styles.statCard} style={{cursor: 'default', transform: 'none'}}>
-              <div className={`${styles.statIconContainer} ${styles.iconYellow}`}>
-                <UsersIcon className={styles.statIcon} />
-              </div>
-              <div>
-                <p className={styles.statLabel}>Contadores Ativos</p>
-                <p className={styles.statValue}>{stats.totalContadores}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Ações Rápidas (sem alterações) */}
-          <div className={styles.actionsCard}>
-            <h3 className={styles.actionsTitle}>
-              Ações Rápidas
-            </h3>
-            <div className={styles.actionsContainer}>
-              <Button as={Link} to="/admin/usuarios" variant="primary" className={styles.actionButton}>
-                <UsersIcon className="w-5 h-5 mr-2" /> {/* Ajuste CSS se 'mr-2' não funcionar */}
-                Gerenciar Usuários
-              </Button>
-              <Button as={Link} to="/admin/oscs" variant="success" className={styles.actionButton}>
-                <BuildingIcon className="w-5 h-5 mr-2" /> {/* Ajuste CSS se 'mr-2' não funcionar */}
-                Gerenciar OSCs
-              </Button>
-            </div>
-          </div>
-        </>
-      )}
+      </div>
     </div>
   );
 }
-
