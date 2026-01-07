@@ -1,58 +1,61 @@
 import pool from '../config/db.js';
 
-// Dashboard: Estatísticas
+// 1. Dashboard Stats
 export const getDashboardStats = async (req, res) => {
   try {
     const contadorId = req.user.id;
 
-    // 1. Total de OSCs vinculadas a este contador
+    // Total de OSCs
     const [oscRows] = await pool.execute(
       'SELECT COUNT(*) as total FROM oscs WHERE assigned_contador_id = ?',
       [contadorId]
     );
-    
-    // 2. Documentos pendentes (exemplo: status 'Pendente')
-    // Ajuste 'documents' para o nome real da sua tabela de docs se for diferente
-    const [docRows] = await pool.execute(
-      `SELECT COUNT(*) as total FROM documents d
-       JOIN oscs o ON d.osc_id = o.id
-       WHERE o.assigned_contador_id = ? AND d.status = 'Pendente'`,
-      [contadorId]
-    );
 
-    // 3. Mensagens não lidas (Opcional, se tabela messages existir)
+    // Documentos Pendentes (Joins seguros)
+    let pendingDocs = 0;
+    try {
+        const [docRows] = await pool.execute(
+        `SELECT COUNT(*) as total FROM documents d
+         JOIN oscs o ON d.osc_id = o.id
+         WHERE o.assigned_contador_id = ? AND d.status = 'Pendente'`,
+        [contadorId]
+        );
+        pendingDocs = docRows[0].total;
+    } catch (e) { console.log("Erro ao contar docs ou tabela inexistente"); }
+
+    // Mensagens não lidas
     let unreadMessages = 0;
     try {
         const [msgRows] = await pool.execute(
-            'SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = FALSE',
+            'SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0',
             [contadorId]
         );
         unreadMessages = msgRows[0].total;
-    } catch (e) { console.log("Tabela messages ainda não populada ou erro ignorável"); }
+    } catch (e) { console.log("Aviso: Tabela messages pode não existir ainda."); }
 
     res.json({
       totalOSCs: oscRows[0].total,
-      pendingDocs: docRows[0].total || 0,
+      pendingDocs: pendingDocs,
       unreadMessages: unreadMessages
     });
 
   } catch (error) {
-    console.error('Erro Dashboard Contador:', error);
-    res.status(500).json({ message: 'Erro ao carregar estatísticas.' });
+    console.error('Erro getDashboardStats:', error);
+    res.status(500).json({ message: 'Erro estatísticas.' });
   }
 };
 
-// Listar Minhas OSCs
+// 2. Minhas OSCs
 export const getMyOSCs = async (req, res) => {
   try {
     const contadorId = req.user.id;
 
-    // AQUI ESTAVA O ERRO: Fazemos JOIN com users para pegar o nome correto
+    // JOIN com users para pegar o nome corretamente
     const query = `
       SELECT 
         o.id, 
         o.cnpj, 
-        u.name as nome_osc,  -- Pega o nome da tabela USERS
+        u.name as nome_osc,
         u.email,
         u.phone
       FROM oscs o
@@ -62,16 +65,35 @@ export const getMyOSCs = async (req, res) => {
 
     const [rows] = await pool.execute(query, [contadorId]);
     res.json(rows);
-
   } catch (error) {
     console.error('Erro getMyOSCs:', error);
     res.status(500).json({ message: 'Erro ao listar OSCs.' });
   }
 };
 
-// Criar/Vincular Nova OSC (Simplificado)
+// 3. Notificações (Função que faltava e causava o erro 502)
+export const getNotifications = async (req, res) => {
+  try {
+    // Retorna array vazio por enquanto para evitar erro
+    // Futuramente você pode conectar com uma tabela de notificações
+    res.status(200).json([]);
+  } catch (error) {
+    console.error('Erro getNotifications:', error);
+    res.status(500).json({ message: 'Erro notificações.' });
+  }
+};
+
+// 4. Atividade Recente (Para o gráfico/lista do dashboard)
+export const getRecentActivity = async (req, res) => {
+  try {
+    // Retorna vazio por enquanto
+    res.status(200).json([]);
+  } catch (error) {
+    res.status(500).json({ message: 'Erro atividade.' });
+  }
+};
+
+// 5. Criar OSC (Placeholder para evitar erro de importação)
 export const createOSC = async (req, res) => {
-    // ... (Mantenha sua lógica de criação se já tiver, ou me peça para enviar)
-    // Se não tiver essa função usada, pode deixar vazia ou retornar erro 501
-    res.status(501).json({message: "Não implementado neste snippet"});
-}
+    res.status(501).json({message: "Não implementado"});
+};
