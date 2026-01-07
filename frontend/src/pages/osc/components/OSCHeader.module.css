@@ -1,96 +1,102 @@
-.headerContainer {
+.header {
+  background-color: #ffffff;
   height: 4rem; /* 64px */
-  background-color: #ffffff !important; /* Branco Limpo */
-  border-bottom: 1px solid #e5e7eb;
+  padding: 0 1.5rem;
   display: flex;
   align-items: center;
-  padding: 0 2rem;
+  justify-content: space-between;
+  border-bottom: 1px solid #e5e7eb;
   position: sticky;
   top: 0;
-  z-index: 40;
+  z-index: 10;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
 
-.menuButton {
-  display: none;
-  background: none;
-  border: none;
-  color: #6b7280;
-  padding: 0.5rem;
-  cursor: pointer;
-}
-
-@media (max-width: 1024px) {
-  .menuButton { display: block; margin-right: 1rem; }
-}
-
-.actionsContainer {
+.leftSection {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
-.iconButton {
-  position: relative;
+/* Estilo do Botão Hambúrguer */
+.menuButton {
   background: none;
   border: none;
-  padding: 0.5rem;
-  color: #6b7280;
   cursor: pointer;
-  border-radius: 50%;
+  color: #6b7280;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: background-color 0.2s;
 }
 
-.iconButton:hover {
-  background-color: #fff7ed;
-  color: #EC6D12;
-}
-
-.icon { width: 1.5rem; height: 1.5rem; }
-
-.badge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  background-color: #ef4444;
-  color: white;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.1rem 0.3rem;
-  border-radius: 9999px;
-  min-width: 1rem;
-}
-
-.profileContainer {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding-left: 1.5rem;
-  border-left: 1px solid #e5e7eb;
+.menuButton:hover {
+  background-color: #f3f4f6;
+  color: #EC6D12; /* Fica laranja ao passar o mouse */
 }
 
 .userInfo {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  display: none;
 }
-@media (min-width: 768px) { .userInfo { display: flex; } }
 
-.userName { font-size: 0.875rem; font-weight: 600; color: #374151; }
-.userRole { font-size: 0.75rem; color: #9ca3af; }
+.greeting {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
 
-.avatarCircle {
-  height: 2.25rem;
-  width: 2.25rem;
+.role {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  position: relative;
+  padding: 0.5rem;
   border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.iconButton:hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+.notificationBadge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.avatar {
+  width: 2.25rem;
+  height: 2.25rem;
   background-color: #EC6D12; /* Laranja da Marca */
+  color: white;
+  font-weight: 600;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: 700;
   font-size: 1rem;
 }
