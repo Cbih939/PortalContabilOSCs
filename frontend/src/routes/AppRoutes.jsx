@@ -31,7 +31,7 @@ import AdminNoticesPage from '../pages/admin/AdminNoticesPage.jsx';
 // Páginas e Componentes do Contador (Reais)
 import ContadorDashboard from '../pages/contador/ContadorDashboard.jsx';
 import OSCsPage from '../pages/contador/OSCs.jsx';
-import CreateOSCPage from '../pages/contador/CreateOSCPage.jsx'; // <-- Página de Criação
+import CreateOSCPage from '../pages/contador/CreateOSCPage.jsx';
 import DocumentsPage from '../pages/contador/Documents.jsx';
 import NoticesPage from '../pages/contador/Notices.jsx';
 import ContadorMessagesPage from '../pages/contador/Messages.jsx';
@@ -45,12 +45,12 @@ import OSCDashboard from '../pages/osc/OSCDashboard.jsx';
 import OSCDocumentsPage from '../pages/osc/Documents.jsx';
 import OSCMessagesPage from '../pages/osc/Messages.jsx';
 import OSCProfilePage from '../pages/osc/Profile.jsx';
+import OSCSidebar from '../pages/osc/components/OSCSidebar.jsx'; // <--- IMPORTADO
 import OSCHeader from '../pages/osc/components/OSCHeader.jsx';
-import OSCNavigationTabs from '../pages/osc/components/OSCNavigationTabs.jsx';
+// OSCNavigationTabs foi removido pois agora usamos Sidebar
 
 /**
  * Componente "Redirecionador"
- * Trata o acesso à rota raiz "/".
  */
 function RootRedirect() {
   const { isAuthenticated, user } = useAuth();
@@ -69,6 +69,7 @@ function RootRedirect() {
   }
 }
 
+// Wrapper para Contador (Sidebar + Header)
 function ContadorLayoutWrapper() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -81,9 +82,7 @@ function ContadorLayoutWrapper() {
   );
 }
 
-/**
- * Componente Wrapper para o Layout do Admin
- */
+// Wrapper para Admin (Sidebar + Header)
 function AdminLayoutWrapper() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -92,12 +91,23 @@ function AdminLayoutWrapper() {
     <AppLayout
       sidebarComponent={<AdminSidebar isOpen={isSidebarOpen} />}
       headerComponent={<AdminHeader onToggleSidebar={toggleSidebar} />}
-      
-      
     />
   );
 }
 
+// Wrapper para OSC (Sidebar + Header) -- NOVO!
+function OSCLayoutWrapper() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  return (
+    <AppLayout
+      // Aqui passamos a OSCSidebar nova que criamos
+      sidebarComponent={<OSCSidebar isOpen={isSidebarOpen} />}
+      headerComponent={<OSCHeader onToggleSidebar={toggleSidebar} />}
+    />
+  );
+}
 
 /**
  * Define todas as rotas da aplicação.
@@ -112,7 +122,6 @@ export default function AppRoutes() {
         {/* --- Rotas Públicas (Guest) --- */}
         <Route element={<GuestLayout />}>
           <Route path="/login" element={<LoginPage />} />
-          {/* ROTAS LEGAIS */}
           <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
           <Route path="/termos-de-uso" element={<TermsOfUsePage />} />
         </Route>
@@ -136,35 +145,25 @@ export default function AppRoutes() {
               <Route path="/contador" element={<Navigate to="/contador/dashboard" replace />} />
               <Route path="/contador/dashboard" element={<ContadorDashboard />} />
               <Route path="/contador/oscs" element={<OSCsPage />} />
-              <Route path="/contador/oscs/novo" element={<CreateOSCPage />} /> {/* <-- ROTA DA NOVA PÁGINA */}
+              <Route path="/contador/oscs/novo" element={<CreateOSCPage />} />
               <Route path="/contador/documentos" element={<DocumentsPage />} />
               <Route path="/contador/avisos" element={<NoticesPage />} />
               <Route path="/contador/perfil" element={<ContadorProfilePage />} />
               <Route path="/contador/modelos" element={<TemplatesPage />} />
               <Route path="/contador/mensagens" element={<ContadorMessagesPage />} />
-              <Route path="/contador/perfil" element={<ContadorProfilePage />} />
           </Route>
         </Route>
 
-        {/* 3. Rotas da OSC */}
-        <Route
-        path="/osc"
-        element={
-          <PrivateRoute allowedRoles={[ROLES.OSC]}>
-            {/* Aqui injetamos a Sidebar Laranja e o Header Novo */}
-            <AppLayout 
-              sidebarComponent={<OSCSidebar />} 
-              headerComponent={<OSCHeader />} 
-            />
-          </PrivateRoute>
-        }
-      >
+        {/* 3. Rotas da OSC - ATUALIZADO PARA USAR SIDEBAR */}
+        <Route element={<ProtectedRoute allowedRoles={[ROLES.OSC]} />}>
+          <Route element={<OSCLayoutWrapper />}> 
             <Route path="/osc" element={<Navigate to="/osc/inicio" replace />} />
             <Route path="/osc/inicio" element={<OSCDashboard />} />
             <Route path="/osc/documentos" element={<OSCDocumentsPage />} />
             <Route path="/osc/mensagens" element={<OSCMessagesPage />} />
             <Route path="/osc/perfil" element={<OSCProfilePage />} />
           </Route>
+        </Route>
 
         {/* --- Página 404 (Not Found) --- */}
         <Route path="*" element={<NotFoundPage />} />
