@@ -1,5 +1,3 @@
-// src/routes/AppRoutes.jsx
-
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
@@ -20,15 +18,16 @@ import NotFoundPage from '../pages/NotFound.jsx';
 import PrivacyPolicyPage from '../pages/legal/PrivacyPolicyPage.jsx'; 
 import TermsOfUsePage from '../pages/legal/TermsOfUsePage.jsx';
 
-// Páginas e Componentes do Admin (Reais)
+// --- ADMIN ---
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import ManageUsers from '../pages/admin/ManageUsers.jsx';
 import ManageOSCs from '../pages/admin/ManageOSCs.jsx';
+import ManageLibrary from '../pages/admin/ManageLibrary.jsx'; // <--- NOVO
 import AdminSidebar from '../pages/admin/components/AdminSidebar.jsx';
 import AdminHeader from '../pages/admin/components/AdminHeader.jsx';
 import AdminNoticesPage from '../pages/admin/AdminNoticesPage.jsx';
 
-// Páginas e Componentes do Contador (Reais)
+// --- CONTADOR ---
 import ContadorDashboard from '../pages/contador/ContadorDashboard.jsx';
 import OSCsPage from '../pages/contador/OSCs.jsx';
 import CreateOSCPage from '../pages/contador/CreateOSCPage.jsx';
@@ -36,18 +35,19 @@ import DocumentsPage from '../pages/contador/Documents.jsx';
 import NoticesPage from '../pages/contador/Notices.jsx';
 import ContadorMessagesPage from '../pages/contador/Messages.jsx';
 import ContadorProfilePage from '../pages/contador/Profile.jsx';
-import TemplatesPage from '../pages/contador/TemplatesPage.jsx';
+import ContadorTemplatesPage from '../pages/contador/TemplatesPage.jsx'; // Renomeado para evitar conflito
 import ContadorSidebar from '../pages/contador/components/ContadorSidebar.jsx';
 import ContadorHeader from '../pages/contador/components/ContadorHeader.jsx';
 
-// Páginas e Componentes da OSC (Reais)
+// --- OSC ---
 import OSCDashboard from '../pages/osc/OSCDashboard.jsx';
 import OSCDocumentsPage from '../pages/osc/Documents.jsx';
 import OSCMessagesPage from '../pages/osc/Messages.jsx';
 import OSCProfilePage from '../pages/osc/Profile.jsx';
-import OSCSidebar from '../pages/osc/components/OSCSidebar.jsx'; // <--- IMPORTADO
+import OSCTemplatesPage from '../pages/osc/TemplatesPage.jsx'; // <--- NOVO
+import OSCLibraryPage from '../pages/osc/LibraryPage.jsx';     // <--- NOVO
+import OSCSidebar from '../pages/osc/components/OSCSidebar.jsx';
 import OSCHeader from '../pages/osc/components/OSCHeader.jsx';
-// OSCNavigationTabs foi removido pois agora usamos Sidebar
 
 /**
  * Componente "Redirecionador"
@@ -69,7 +69,7 @@ function RootRedirect() {
   }
 }
 
-// Wrapper para Contador (Sidebar + Header)
+// Wrapper para Contador
 function ContadorLayoutWrapper() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -82,7 +82,7 @@ function ContadorLayoutWrapper() {
   );
 }
 
-// Wrapper para Admin (Sidebar + Header)
+// Wrapper para Admin
 function AdminLayoutWrapper() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -95,14 +95,13 @@ function AdminLayoutWrapper() {
   );
 }
 
-// Wrapper para OSC (Sidebar + Header) -- NOVO!
+// Wrapper para OSC
 function OSCLayoutWrapper() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   return (
     <AppLayout
-      // Aqui passamos a OSCSidebar nova que criamos
       sidebarComponent={<OSCSidebar isOpen={isSidebarOpen} />}
       headerComponent={<OSCHeader onToggleSidebar={toggleSidebar} />}
     />
@@ -136,6 +135,7 @@ export default function AppRoutes() {
               <Route path="/admin/avisos" element={<AdminNoticesPage />} />
               <Route path="/admin/usuarios" element={<ManageUsers />} />
               <Route path="/admin/oscs" element={<ManageOSCs />} />
+              <Route path="/admin/biblioteca" element={<ManageLibrary />} /> {/* <--- NOVA ROTA */}
           </Route>
         </Route>
 
@@ -149,12 +149,12 @@ export default function AppRoutes() {
               <Route path="/contador/documentos" element={<DocumentsPage />} />
               <Route path="/contador/avisos" element={<NoticesPage />} />
               <Route path="/contador/perfil" element={<ContadorProfilePage />} />
-              <Route path="/contador/modelos" element={<TemplatesPage />} />
+              <Route path="/contador/modelos" element={<ContadorTemplatesPage />} />
               <Route path="/contador/mensagens" element={<ContadorMessagesPage />} />
           </Route>
         </Route>
 
-        {/* 3. Rotas da OSC - ATUALIZADO PARA USAR SIDEBAR */}
+        {/* 3. Rotas da OSC */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.OSC]} />}>
           <Route element={<OSCLayoutWrapper />}> 
             <Route path="/osc" element={<Navigate to="/osc/inicio" replace />} />
@@ -162,6 +162,8 @@ export default function AppRoutes() {
             <Route path="/osc/documentos" element={<OSCDocumentsPage />} />
             <Route path="/osc/mensagens" element={<OSCMessagesPage />} />
             <Route path="/osc/perfil" element={<OSCProfilePage />} />
+            <Route path="/osc/modelos" element={<OSCTemplatesPage />} /> {/* <--- NOVA ROTA */}
+            <Route path="/osc/biblioteca" element={<OSCLibraryPage />} /> {/* <--- NOVA ROTA */}
           </Route>
         </Route>
 
