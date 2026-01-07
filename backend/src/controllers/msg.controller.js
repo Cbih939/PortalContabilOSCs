@@ -1,6 +1,6 @@
 import pool from '../config/db.js';
 
-// Enviar Mensagem
+// 1. Enviar Mensagem
 export const sendMessage = async (req, res) => {
   try {
     if (!req.user || !req.user.id) return res.status(401).json({ message: 'Não autorizado' });
@@ -22,8 +22,8 @@ export const sendMessage = async (req, res) => {
   }
 };
 
-// Buscar Mensagens
-export const getMessages = async (req, res) => {
+// 2. Buscar Histórico (Renomeado para bater com suas rotas)
+export const getMessagesHistory = async (req, res) => {
   try {
     const { otherUserId } = req.params;
     const currentUserId = req.user.id;
@@ -37,13 +37,12 @@ export const getMessages = async (req, res) => {
 
     res.status(200).json(rows);
   } catch (error) {
-    console.error('Erro getMessages:', error.message);
+    console.error('Erro getMessagesHistory:', error.message);
     res.status(500).json({ message: 'Erro ao buscar chat.' });
   }
 };
 
-// --- AQUI ESTAVA O PROBLEMA DE COMPATIBILIDADE ---
-// Renomeado de getContacts para getChatContacts para bater com suas Rotas antigas
+// 3. Buscar Contatos (Lógica segura contra erro de coluna)
 export const getChatContacts = async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ message: 'Logue novamente.' });
@@ -52,7 +51,7 @@ export const getChatContacts = async (req, res) => {
     const myId = req.user.id;
     let query = '';
     
-    // Define quem vê quem (buscando na tabela users para evitar erro de coluna)
+    // Busca direto na tabela USERS para evitar erro de coluna "o.name" em tabelas de OSC
     if (role === 'Adm') {
       query = 'SELECT * FROM users WHERE id != ?';
     } else if (role === 'Contador') {
@@ -65,12 +64,12 @@ export const getChatContacts = async (req, res) => {
 
     const [users] = await pool.execute(query, [myId]);
 
-    // Mapeia os dados com segurança
+    // Normaliza os dados para o frontend não quebrar
     const contacts = users.map(u => ({
       id: u.id,
       role: u.role,
       email: u.email,
-      // Tenta pegar o nome de várias formas para não dar erro
+      // Garante que tenha um nome, mesmo que a coluna seja diferente
       name: u.name || u.nome || u.razao_social || u.email.split('@')[0],
       avatar: null 
     }));

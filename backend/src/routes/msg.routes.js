@@ -1,58 +1,20 @@
-// backend/src/routes/msg.routes.js
-
 import express from 'express';
-// Middlewares
-import { protect, checkRole } from '../middlewares/auth.middleware.js';
-// Constantes
-import { ROLES } from '../utils/constants.js';
-// Controladores
-import {
-  getMyMessages,
-  getMessagesHistory,
-  sendMessage,
-  getChatContacts, // Importando a nova função
-} from '../controllers/msg.controller.js';
+// Importa as funções com os nomes EXATOS que definimos no controller acima
+import { sendMessage, getMessagesHistory, getChatContacts } from '../controllers/msg.controller.js';
+import { protect } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-/* --- Definição das Rotas para /api/messages --- */
+// Aplica proteção de login em todas as rotas
+router.use(protect);
 
-// GET /api/messages/my
-// Busca o histórico de mensagens da OSC logada.
-router.get(
-  '/my',
-  protect,
-  checkRole([ROLES.OSC]),
-  getMyMessages
-);
+// Rota para buscar contatos (Chat)
+router.get('/contacts', getChatContacts);
 
-// --- IMPORTANTE: Esta rota deve vir ANTES de /:oscId ---
-// GET /api/messages/contacts
-// Busca a lista de contatos para o sidebar do Contador
-router.get(
-  '/contacts',
-  protect,
-  checkRole([ROLES.CONTADOR]),
-  getChatContacts
-);
-// -----------------------------------------------------
+// Rota para enviar mensagem
+router.post('/', sendMessage);
 
-// GET /api/messages/:oscId
-// Busca o histórico de mensagens de uma OSC específica (para o Contador).
-router.get(
-  '/:oscId', 
-  protect,
-  checkRole([ROLES.CONTADOR]),
-  getMessagesHistory
-);
-
-// POST /api/messages
-// Envia uma nova mensagem
-router.post(
-  '/',
-  protect,
-  checkRole([ROLES.OSC, ROLES.CONTADOR]),
-  sendMessage
-);
+// Rota para pegar histórico com um usuário específico
+router.get('/:otherUserId', getMessagesHistory);
 
 export default router;
