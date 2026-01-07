@@ -1,130 +1,124 @@
-// src/pages/osc/Messages.jsx
-
-import React, { useState, useEffect } from 'react';
-// Componentes
-import ChatWindow from '../../components/messaging/ChatWindow.jsx';
-// Hooks
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth.jsx';
-import useApi from '../../hooks/useApi.jsx'; // Hook para API
-import { useNotification } from '../../contexts/NotificationContext.jsx'; // Para feedback
-// Serviços API REAIS
 import * as messageService from '../../services/messageService.js';
-// Mocks (apenas para fallback/placeholder) e Constantes
-import { mockUsers } from '../../utils/mockData.js'; 
-import { ROLES } from '../../utils/constants.js';
-// UI
-import Spinner from '../../components/common/Spinner.jsx';
 import styles from './Messages.module.css';
-import { formatDate } from '../../utils/formatDate.js'; // Importar formatDate (se não estiver em ChatWindow)
 
-/**
- * Página de Mensagens da OSC (Conectada à API).
- */
+// Ícone de Enviar (Aviãozinho)
+const SendIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+  </svg>
+);
+
 export default function OSCMessagesPage() {
   const { user } = useAuth();
-  const currentUser = user || mockUsers.osc; // Fallback
-  const addNotification = useNotification();
-
-  // --- Estados ---
   const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  // Estado para guardar os dados do contador (para o cabeçalho do chat)
-  const [contadorUser, setContadorUser] = useState(null); 
+  const messagesEndRef = useRef(null);
 
-  // Hook para a API de *envio* (agora usa o serviço real)
-  const { request: sendMessageRequest, isLoading: isSending } = useApi(messageService.sendMessage);
-
-  // --- Efeito para Buscar Histórico e Dados do Contador ---
+  // Carrega as mensagens
   useEffect(() => {
-    // Evita chamadas de API se o user não estiver carregado
-    if (!currentUser?.id || currentUser.role !== ROLES.OSC) {
-        setIsLoading(false);
-        return;
-    }
-
-    const fetchData = async () => {
-      setIsLoading(true);
+    const fetchMessages = async () => {
       try {
-        // 1. Busca o histórico de mensagens
-        const messagesResponse = await messageService.getMyMessages();
-        setMessages(messagesResponse.data || []);
-
-        // 2. Define os dados do contador (do mock, ou poderia vir de uma API 'getMyContador')
-        // O backend já sabe quem é o contador, mas o frontend precisa
-        // dos dados (nome) para exibir no cabeçalho do ChatWindow.
-        // Vamos usar o mock por enquanto, assumindo que só há um.
-        setContadorUser(mockUsers.contador); 
-
-      } catch (err) {
-        console.error("Erro ao buscar histórico de mensagens:", err);
-        addNotification("Não foi possível carregar o histórico de mensagens.", "error");
+        const data = await messageService.getMyMessages();
+        setMessages(data);
+      } catch (error) {
+        console.error("Erro ao carregar mensagens:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchData();
-  }, [currentUser?.id, currentUser.role, addNotification]); // Dependências
+    fetchMessages();
+    // Opcional: Polling para atualizar mensagens a cada X segundos
+    const interval = setInterval(fetchMessages, 10000); 
+    return () => clearInterval(interval);
+  }, []);
 
-  // --- Handler para enviar mensagem ---
-  const handleSendMessage = async (text) => {
-    if (!currentUser || !contadorUser) return; // Não envia se os dados não estiverem prontos
-    
-    const tempId = Date.now(); // ID Otimista
-    // Cria a mensagem otimista
-    const newMessage = {
-      id: tempId,
-      from: currentUser.name, // Da OSC logada
-      to: contadorUser.name, // Para o Contador
-      text,
-      date: new Date().toISOString(),
-      sender_role: ROLES.OSC, // Identifica o remetente
+  // Scroll automático para o fim
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+
+    // Otimista: Adiciona na tela antes de confirmar
+    const tempMsg = {
+      id: Date.now(),
+      text: newMessage,
+      sender: 'me', // Front-end flag
+      sender_role: 'OSC',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
-
-    // 1. Atualização Otimista (mostra o balão azul)
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    
+    setMessages([...messages, tempMsg]);
+    setNewMessage('');
 
     try {
-      // 2. Chama a API real
-      // O backend (sendMessage) só espera o { text } da OSC.
-      // Ele descobre o osc_id e o contador_id a partir do token (via req.user).
-      await sendMessageRequest({ text }); 
-
-      // (Opcional: A API poderia retornar a msg salva para atualizar o ID)
-
-    } catch (err) {
-      // 3. Reverte em caso de falha (faz a mensagem desaparecer)
-      console.error('Falha ao enviar mensagem (revertendo):', err);
-      addNotification(`Falha ao enviar mensagem: ${err.response?.data?.message || err.message}`, 'error');
-      setMessages((prevMessages) =>
-        prevMessages.filter((m) => m.id !== tempId) // Remove a mensagem que falhou
-      );
+      await messageService.sendMessage(null, tempMsg.text, null);
+      // Recarrega para garantir sincronia (opcional)
+      // const data = await messageService.getMyMessages();
+      // setMessages(data);
+    } catch (error) {
+      console.error("Erro ao enviar:", error);
+      // Opcional: mostrar erro visual
     }
   };
 
-  // --- Renderização ---
   return (
     <div className={styles.pageContainer}>
-      <div className={styles.chatWrapper}>
-        {isLoading ? (
-          <div className={styles.loadingContainer}>
-            <Spinner text="Carregando histórico de mensagens..." />
+      <h1 className={styles.pageTitle}>Mensagens</h1>
+
+      <div className={styles.chatCard}>
+        {/* Cabeçalho do Chat */}
+        <div className={styles.chatHeader}>
+          <div className={styles.headerInfo}>
+            <h2 className={styles.contactName}>Meu Contador</h2>
+            <span className={styles.status}>Online</span>
           </div>
-        ) : !contadorUser ? ( 
-             <div className={styles.loadingContainer}>
-                {/* Mostra este erro se o backend não encontrou um contador associado */}
-                <p style={{color: 'red'}}>Utilizador não associado a um contador.</p>
-             </div>
-        ) : (
-          // Passa os dados corretos para ChatWindow
-          <ChatWindow
-            otherParty={contadorUser} // O objeto do Contador
-            messages={messages}       // O histórico de mensagens
-            user={currentUser}      // O objeto da OSC logada
-            onSendMessage={handleSendMessage}
-            // isSending={isSending} // Opcional: para desabilitar input
+        </div>
+
+        {/* Área de Mensagens */}
+        <div className={styles.messagesArea}>
+          {isLoading ? (
+            <div className={styles.loading}>Carregando conversas...</div>
+          ) : messages.length === 0 ? (
+            <div className={styles.emptyState}> Nenhuma mensagem ainda. Comece a conversa! </div>
+          ) : (
+            messages.map((msg, index) => {
+              // Verifica se a mensagem é minha (OSC)
+              // O backend retorna 'sender_role' ou verificamos pelo ID
+              const isMe = msg.sender === 'me' || msg.sender_role === 'OSC' || msg.sender_id === user.id;
+              
+              return (
+                <div key={index} className={`${styles.messageRow} ${isMe ? styles.sent : styles.received}`}>
+                  <div className={styles.bubble}>
+                    <p className={styles.messageText}>{msg.text}</p>
+                    <span className={styles.timestamp}>{msg.timestamp}</span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input */}
+        <form className={styles.inputArea} onSubmit={handleSendMessage}>
+          <input
+            type="text"
+            className={styles.inputField}
+            placeholder="Digite uma mensagem..."
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
           />
-        )}
+          <button type="submit" className={styles.sendButton} disabled={!newMessage.trim()}>
+            <SendIcon className={styles.icon} />
+          </button>
+        </form>
       </div>
     </div>
   );
