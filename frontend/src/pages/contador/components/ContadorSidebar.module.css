@@ -1,112 +1,92 @@
-/* Container Principal - Fundo Laranja Claro */
-.sidebarContainer {
-  width: 17rem;
+/* Pode copiar exatamente o CSS do Admin acima, pois o design é o mesmo */
+.sidebar {
+  background-color: #EC6D12;
+  color: white;
   height: 100vh;
-  
-  /* Tom de Laranja Claro (Creme/Pêssego suave) */
-  background-color: #F2994A !important; 
-  
-  /* Texto padrão (Laranja escuro ou Marrom para contraste) */
-  color: #F3F4F6 !important; 
-  border-right: 1px solid #F3F4F6; /* Borda laranja sutil */
   display: flex;
   flex-direction: column;
+  width: 17rem;
+  transition: width 0.3s ease;
   flex-shrink: 0;
-  box-shadow: 2px 0 10px rgba(236, 109, 18, 0.1);
-  z-index: 50;
+  box-shadow: 4px 0 10px rgba(0,0,0,0.1);
 }
 
-/* Área do Logo */
 .logoContainer {
-  height: 6rem;
+  height: 5rem;
   display: flex;
   align-items: center;
-  justify-content: center;
-  /* Fundo ligeiramente mais escuro que a barra para destacar o topo, ou igual */
-  background-color: #F2994A !important; 
-  border-bottom: 1px solid #fed7aa;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.logo {
-  height: 4rem; /* Logo um pouco maior */
-  width: auto;
-  object-fit: contain;
+.logoText {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #ffffff;
 }
 
-/* Área de Navegação */
-.navContainer {
+.nav {
   flex: 1;
   padding: 1.5rem 1rem;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  overflow-y: auto;
 }
 
-/* Links do Menu (Estado Normal) */
-.navLink {
+.navItem {
   display: flex;
   align-items: center;
-  padding: 0.875rem 1rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
+  padding: 0.75rem 1.25rem;
   text-decoration: none;
-  
-  /* Cor do texto normal */
-  color: #F3F4F6; /* Marrom alaranjado */
-  
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50px;
   transition: all 0.2s ease-in-out;
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 
-/* Hover (Passar o mouse) */
-.navLink:hover {
-  background-color: #EC6D12 !important; /* Laranja um pouco mais forte */
-  color: #F3F4F6 !important;
+.navItem:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: #ffffff;
 }
 
-/* Link ATIVO (O "Botão Laranja Escuro") */
-.activeLink {
-  /* Fundo Laranja Vibrante da Marca */
-  background-color: #EC6D12 !important; 
-  
-  /* Texto Branco para contraste total */
-  color: #ffffff !important; 
-  
-  font-weight: 700 !important;
-  box-shadow: 0 4px 6px rgba(236, 109, 18, 0.4); /* Sombra laranja */
+.active {
+  background-color: #ffffff;
+  color: #EC6D12 !important;
+  border-color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-/* Ícones */
 .icon {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.4rem;
+  height: 1.4rem;
   margin-right: 0.75rem;
-  flex-shrink: 0;
 }
 
-/* Rodapé / Botão Sair */
-.footerContainer {
-  padding: 1rem;
-  border-top: 1px solid #fed7aa;
-  background-color: #F2994A;
+.footer {
+  padding: 1.5rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .logoutButton {
-  width: 100%;
   display: flex;
   align-items: center;
-  padding: 0.875rem 1rem;
-  background-color: transparent;
-  color: #F3F4F6; /* Laranja queimado */
-  border: 1px solid #fed7aa;
-  border-radius: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #ffffff;
   cursor: pointer;
-  font-weight: 600;
+  border-radius: 50px;
   transition: all 0.2s;
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 
 .logoutButton:hover {
-  background-color: #ffedd5;
-  color: #EC6D12;
-  border-color: #EC6D12;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: #ffffff;
 }

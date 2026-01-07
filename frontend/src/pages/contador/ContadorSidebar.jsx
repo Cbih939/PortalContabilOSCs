@@ -1,89 +1,92 @@
-// src/pages/contador/components/ContadorSidebar.jsx
+/* Pode copiar exatamente o CSS do Admin acima, pois o design é o mesmo */
+.sidebar {
+  background-color: #EC6D12;
+  color: white;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  width: 17rem;
+  transition: width 0.3s ease;
+  flex-shrink: 0;
+  box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+}
 
-import React, { useState } from 'react'; // Import useState for sidebar toggle state
-import { NavLink } from 'react-router-dom';
-import { clsx } from 'clsx';
-// Importa o molde genérico
-import Sidebar from '../../../components/layout/Sidebar.jsx';
-// Importa ícones e o hook de autenticação
-import {
-  BuildingIcon,
-  FolderIcon,
-  ChartIcon,
-  MegaphoneIcon,
-  MessageIcon,
-  ProfileIcon,
-  LogoutIcon,
-  MenuIcon // Icon for the toggle button in Header
-} from '../../../components/common/Icons.jsx';
-import { useAuth } from '../../../hooks/useAuth.jsx';
+.logoContainer {
+  height: 5rem;
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
 
-// Componente auxiliar reutilizável para os links da Sidebar
-const SidebarLink = ({ to, icon: Icon, children }) => {
-  return (
-    <NavLink
-      to={to}
-      // NavLink passa 'isActive' para a função className
-      className={({ isActive }) =>
-        clsx(
-          'w-full text-left flex items-center p-3 rounded-lg hover:bg-gray-700 whitespace-nowrap transition-colors duration-200',
-          isActive ? 'bg-blue-600 font-semibold' : '' // Estilo ativo
-        )
-      }
-    >
-      <Icon className="h-5 w-5 flex-shrink-0" />
-      <span className="ml-3">{children}</span>
-    </NavLink>
-  );
-};
+.logoText {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #ffffff;
+}
 
+.nav {
+  flex: 1;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+}
 
-/**
- * Componente Sidebar específico para o painel do Contador.
- */
-export default function ContadorSidebar({ isOpen }) { // Recebe isOpen do AppLayout/ContadorHeader
-  const { logout } = useAuth(); // Pega a função de logout
+.navItem {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  text-decoration: none;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50px;
+  transition: all 0.2s ease-in-out;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
 
-  const handleLogout = () => {
-    logout();
-  };
+.navItem:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: #ffffff;
+}
 
-  // Define o logo/título
-  const logo = <h2 className="text-2xl font-bold">Contábil OSC</h2>;
+.active {
+  background-color: #ffffff;
+  color: #EC6D12 !important;
+  border-color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
 
-  // Define o rodapé com o botão de logout
-  const footer = (
-    <button
-      onClick={handleLogout}
-      className="w-full text-left flex items-center p-3 rounded-lg hover:bg-red-700 hover:text-white transition-colors duration-200 text-gray-300"
-    >
-      <LogoutIcon className="h-5 w-5 flex-shrink-0" />
-      <span className="ml-3 whitespace-nowrap">Sair</span>
-    </button>
-  );
+.icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-right: 0.75rem;
+}
 
-  return (
-    // Renderiza o "molde" Sidebar
-    <Sidebar isOpen={isOpen} logo={logo} footer={footer} className="bg-gray-800">
-      {/* Links de Navegação (passados como children) */}
-      <SidebarLink to="/contador/dashboard" icon={ChartIcon}>
-        Dashboard
-      </SidebarLink>
-      <SidebarLink to="/contador/oscs" icon={BuildingIcon}>
-        Lista de OSCs
-      </SidebarLink>
-      <SidebarLink to="/contador/documentos" icon={FolderIcon}>
-        Documentos
-      </SidebarLink>
-      <SidebarLink to="/contador/avisos" icon={MegaphoneIcon}>
-        Canal de Avisos
-      </SidebarLink>
-      <SidebarLink to="/contador/mensagens" icon={MessageIcon}>
-        Mensagens
-      </SidebarLink>
-      <SidebarLink to="/contador/perfil" icon={ProfileIcon}>
-        Editar Perfil
-      </SidebarLink>
-    </Sidebar>
-  );
+.footer {
+  padding: 1.5rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logoutButton {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  cursor: pointer;
+  border-radius: 50px;
+  transition: all 0.2s;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.logoutButton:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: #ffffff;
 }

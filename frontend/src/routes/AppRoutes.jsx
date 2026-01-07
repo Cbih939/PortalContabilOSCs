@@ -95,18 +95,17 @@ function AdminLayoutWrapper() {
   );
 }
 
-// Wrapper para OSC
 function OSCLayoutWrapper() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   return (
     <AppLayout
-      sidebarComponent={<OSCSidebar isOpen={isSidebarOpen} />}
+      // Adicione onClose={toggleSidebar} aqui
+      sidebarComponent={<OSCSidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />} 
       headerComponent={<OSCHeader onToggleSidebar={toggleSidebar} />}
     />
   );
-}
 
 /**
  * Define todas as rotas da aplicação.
