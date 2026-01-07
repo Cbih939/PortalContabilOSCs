@@ -42,8 +42,9 @@ export const getMessages = async (req, res) => {
   }
 };
 
-// Buscar Contatos (CORREÇÃO DO ERRO 500)
-export const getContacts = async (req, res) => {
+// --- AQUI ESTAVA O PROBLEMA DE COMPATIBILIDADE ---
+// Renomeado de getContacts para getChatContacts para bater com suas Rotas antigas
+export const getChatContacts = async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ message: 'Logue novamente.' });
 
@@ -51,14 +52,12 @@ export const getContacts = async (req, res) => {
     const myId = req.user.id;
     let query = '';
     
-    // Define quem vê quem (buscando SEMPRE na tabela users para evitar erro de coluna)
+    // Define quem vê quem (buscando na tabela users para evitar erro de coluna)
     if (role === 'Adm') {
       query = 'SELECT * FROM users WHERE id != ?';
     } else if (role === 'Contador') {
-      // Contador vê OSCs e Admins
       query = 'SELECT * FROM users WHERE id != ? AND (role = "OSC" OR role = "Adm")';
     } else if (role === 'OSC') {
-      // OSC vê Contadores e Admins
       query = 'SELECT * FROM users WHERE id != ? AND (role = "Contador" OR role = "Adm")';
     } else {
       query = 'SELECT * FROM users WHERE id != ?';
@@ -66,20 +65,20 @@ export const getContacts = async (req, res) => {
 
     const [users] = await pool.execute(query, [myId]);
 
-    // Filtra dados sensíveis e normaliza o nome
+    // Mapeia os dados com segurança
     const contacts = users.map(u => ({
       id: u.id,
       role: u.role,
       email: u.email,
-      // Pega o nome de qualquer coluna que existir
+      // Tenta pegar o nome de várias formas para não dar erro
       name: u.name || u.nome || u.razao_social || u.email.split('@')[0],
-      avatar: null // Futuro
+      avatar: null 
     }));
 
     res.status(200).json(contacts);
 
   } catch (error) {
-    console.error('Erro getContacts:', error); // Log detalhado
+    console.error('Erro getChatContacts:', error);
     res.status(500).json({ message: 'Erro ao listar contatos.' });
   }
 };
