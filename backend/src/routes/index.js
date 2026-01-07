@@ -11,6 +11,7 @@ import msgRoutes from './msg.routes.js';
 import alertRoutes from './alerts.routes.js';
 import contadorRoutes from './contador.routes.js';
 import templateRoutes from './template.routes.js';
+import publicFileRoutes from './publicFile.routes.js';
 
 // Cria o roteador principal do Express
 const router = express.Router();
@@ -42,6 +43,7 @@ router.use('/notices', alertRoutes);
 
 //rotas do template
 router.use('/templates', templateRoutes);
+router.use('/public-files', publicFileRoutes);
 
 // Exporta o roteador principal
 export default router;
