@@ -4,19 +4,27 @@ import pool from '../config/db.js';
 export const getDashboardStats = async (req, res) => {
     try {
         const cid = req.user.id;
+        console.log(`[Dashboard] Buscando stats para Contador ID: ${cid}`);
+
         let oscs = 0, docs = 0, msgs = 0;
 
         // 1. Contar OSCs ATIVAS
-        // Fazemos JOIN com a tabela users para verificar u.status = 'Ativo'
+        // Verifica na tabela 'oscs' quem está vinculado a este contador
+        // E faz join com 'users' para garantir que o status é 'Ativo'
         try {
-            const [r1] = await pool.execute(`
-                SELECT COUNT(*) as t 
+            const queryOSC = `
+                SELECT COUNT(o.id) as total 
                 FROM oscs o
                 JOIN users u ON o.user_id = u.id
-                WHERE o.assigned_contador_id = ? AND u.status = 'Ativo'
-            `, [cid]);
-            oscs = r1[0].t;
-        } catch (e) { console.error('Erro Count OSCs:', e.message); }
+                WHERE o.assigned_contador_id = ? 
+                AND u.status = 'Ativo'
+            `;
+            const [r1] = await pool.execute(queryOSC, [cid]);
+            oscs = r1[0].total;
+            console.log(`[Dashboard] OSCs ativas encontradas: ${oscs}`);
+        } catch (e) { 
+            console.error('[Dashboard] Erro Count OSCs:', e.message); 
+        }
 
         // 2. Contar Documentos Pendentes
         try {
@@ -27,7 +35,7 @@ export const getDashboardStats = async (req, res) => {
                 WHERE o.assigned_contador_id = ? AND d.status = 'Pendente'
             `, [cid]);
             docs = r2[0].t;
-        } catch (e) { console.error('Erro Count Docs:', e.message); }
+        } catch (e) { console.error('[Dashboard] Erro Count Docs:', e.message); }
 
         // 3. Contar Mensagens não lidas
         try {
@@ -36,7 +44,7 @@ export const getDashboardStats = async (req, res) => {
                 [cid]
             );
             msgs = r3[0].t;
-        } catch (e) { console.error('Erro Count Msgs:', e.message); }
+        } catch (e) { console.error('[Dashboard] Erro Count Msgs:', e.message); }
 
         res.json({ totalOSCs: oscs, pendingDocs: docs, unreadMessages: msgs });
 
@@ -46,17 +54,16 @@ export const getDashboardStats = async (req, res) => {
     }
 };
 
-// 2. Atividade Recente (Agora busca dados reais do banco)
+// 2. Atividade Recente (Envio de Documentos pelas OSCs)
 export const getRecentActivity = async (req, res) => {
     try {
         const cid = req.user.id;
 
-        // Busca os 5 últimos documentos enviados pelas OSCs deste contador
-        // Inclui o nome da OSC para saber de quem é a atividade
+        // Busca os 5 últimos documentos criados por OSCs vinculadas a este contador
         const query = `
             SELECT 
                 d.id, 
-                d.original_name as doc_title, 
+                d.original_name, 
                 d.created_at, 
                 d.status,
                 o.razao_social as osc_name
@@ -69,12 +76,13 @@ export const getRecentActivity = async (req, res) => {
 
         const [rows] = await pool.execute(query, [cid]);
 
-        // Formata os dados para o frontend
+        // Formata para o frontend exibir a frase completa
         const activities = rows.map(row => ({
             id: row.id,
-            description: `Enviou o documento: ${row.doc_title}`,
-            osc: row.osc_name,
-            date: row.created_at, // O frontend deve formatar a data
+            // Texto formatado conforme solicitado
+            description: `A ${row.osc_name || 'OSC Desconhecida'} enviou o documento ${row.original_name}`,
+            date: row.created_at,
+            type: 'document_upload',
             status: row.status
         }));
 
@@ -86,11 +94,10 @@ export const getRecentActivity = async (req, res) => {
     }
 };
 
-// 3. Minhas OSCs (Lista completa)
+// 3. Minhas OSCs (Lista completa com detalhes)
 export const getMyOSCs = async (req, res) => {
     try {
-        // Traz também o status da tabela users
-        const [rows] = await pool.execute(`
+        const query = `
             SELECT 
                 o.id, 
                 o.cnpj, 
@@ -101,8 +108,9 @@ export const getMyOSCs = async (req, res) => {
             FROM oscs o
             JOIN users u ON o.user_id = u.id
             WHERE o.assigned_contador_id = ?
-        `, [req.user.id]);
+        `;
         
+        const [rows] = await pool.execute(query, [req.user.id]);
         res.json(rows);
     } catch (e) {
         console.error(e);
