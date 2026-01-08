@@ -1,14 +1,15 @@
-import express from 'express';
-import { getAllUsers, createUser, updateUser, deleteUser } from '../controllers/user.controller.js';
+import { Router } from 'express';
 import { protect } from '../middlewares/auth.middleware.js';
+import * as userController from '../controllers/user.controller.js';
 
-const router = express.Router();
+const router = Router();
 
-router.use(protect);
+// Exemplo de rota protegida
+router.get('/profile', protect, (req, res) => {
+    res.json({ message: "Perfil do usuário", user: req.user });
+});
 
-router.get('/', getAllUsers);
-router.post('/', createUser);
-router.put('/:id', updateUser);
-router.delete('/:id', deleteUser);
+// Se houver funções no controller, adicione aqui:
+// router.get('/', protect, userController.getAllUsers);
 
 export default router;

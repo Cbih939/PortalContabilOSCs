@@ -1,39 +1,14 @@
-// backend/src/routes/contador.routes.js
-
-import express from 'express';
-// Middlewares
+import { Router } from 'express';
 import { protect, checkRole } from '../middlewares/auth.middleware.js';
-// Constantes
-import { ROLES } from '../utils/constants.js';
-// Controladores
-import {
-  getDashboardStats,
-  getRecentActivity,
-  getNotifications // <-- Controlador para o sino de notificação
-} from '../controllers/contador.controller.js';
+import { getDashboardStats, getMyOSCs } from '../controllers/contador.controller.js';
 
-// Cria o router
-const router = express.Router();
+const router = Router();
 
-/* --- Middleware de Proteção para TODAS as rotas do contador --- */
-// Garante que o utilizador está logado E tem o perfil de Contador
-router.use(protect, checkRole([ROLES.CONTADOR]));
+// Aplica proteção a todas as rotas abaixo
+router.use(protect);
+router.use(checkRole(['Contador', 'Adm'])); 
 
-/* --- Definição das Rotas para /api/contador --- */
+router.get('/dashboard-stats', getDashboardStats);
+router.get('/my-oscs', getMyOSCs);
 
-// GET /api/contador/dashboard/stats
-// Busca as estatísticas para o dashboard do contador logado.
-router.get('/dashboard/stats', getDashboardStats);
-
-// GET /api/contador/dashboard/activity
-// Busca as atividades recentes para o dashboard do contador logado.
-router.get('/dashboard/activity', getRecentActivity);
-
-// GET /api/contador/notifications
-// Busca as notificações (sino) para o contador logado.
-router.get('/notifications', getNotifications);
-
-// (Outras rotas específicas do contador podem ser adicionadas aqui no futuro)
-
-// Exporta o router
 export default router;

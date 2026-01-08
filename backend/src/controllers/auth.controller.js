@@ -9,12 +9,10 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: 'Preencha todos os campos.' });
+      return res.status(400).json({ message: 'Email e senha são obrigatórios.' });
     }
 
-    console.log('[Auth] Tentativa de login:', email);
-
-    // CORREÇÃO: Selecionar a coluna correta 'password_hash'
+    // 1. Buscar usuário usando a coluna correta (password_hash)
     const [rows] = await pool.execute(
       'SELECT id, name, email, password_hash, role, status FROM users WHERE email = ?',
       [email]
@@ -26,26 +24,26 @@ export const login = async (req, res) => {
 
     const user = rows[0];
 
-    // Verificar status
+    // 2. Verificar Status
     if (user.status !== 'Ativo') {
-        return res.status(403).json({ message: 'Sua conta está inativa ou pendente.' });
+        return res.status(403).json({ message: 'Conta inativa ou aguardando aprovação.' });
     }
 
-    // CORREÇÃO: Comparar senha enviada com 'password_hash' do banco
+    // 3. Comparar Hash
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
-      console.log('[Auth] Senha incorreta para:', email);
       return res.status(401).json({ message: 'Credenciais inválidas.' });
     }
 
-    // Gerar Token
+    // 4. Gerar Token
     const token = jwt.sign(
       { id: user.id, role: user.role, name: user.name },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
 
+    // 5. Retornar Sucesso
     res.json({
       token,
       user: {
@@ -58,12 +56,7 @@ export const login = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('ERRO CRÍTICO NO LOGIN:', error);
+    console.error('Login Error:', error);
     res.status(500).json({ message: 'Erro interno no servidor.' });
   }
-};
-
-// Placeholder para register se necessário
-export const register = async (req, res) => {
-    res.status(501).json({ message: "Rota de registro não implementada publicamente." });
 };
