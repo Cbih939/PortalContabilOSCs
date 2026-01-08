@@ -1,59 +1,57 @@
 // src/pages/contador/OSCs.jsx
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'; // Importa Link
-// Serviços API
+import { Link } from 'react-router-dom';
 import * as oscService from '../../services/oscService.js';
 import * as alertService from '../../services/alertService.js';
 
-// Componentes
 import OSCListView from './components/OSCListView.jsx';
 import ViewOSCModal from './components/ViewOSCModal.jsx';
 import EditOSCModal from './components/EditOSCModal.jsx';
 import SendAlertModal from './components/SendAlertModal.jsx';
-// REMOVIDO: CreateOSCModal (agora é uma página)
 
-// Hooks e UI
 import Spinner from '../../components/common/Spinner.jsx';
 import useApi from '../../hooks/useApi.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 
-/**
- * Página do Contador para listar e gerenciar OSCs (Conectada à API).
- * Gerencia a busca de dados e o estado dos modais (View, Edit, Alert).
- */
 export default function OSCsPage() {
-  // --- Estados de Dados ---
   const [oscs, setOscs] = useState([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [errorLoading, setErrorLoading] = useState(null);
 
-  // --- Estados de UI (Modais) ---
   const [oscToView, setOscToView] = useState(null);
   const [oscToEdit, setOscToEdit] = useState(null);
   const [oscToSendAlert, setOscToSendAlert] = useState(null);
-  // REMOVIDO: isCreateModalOpen
 
-  // --- Contexto e Hooks API ---
   const addNotification = useNotification();
   const { request: updateOSC, isLoading: isUpdating } = useApi(oscService.updateOSC);
   const { request: sendAlert, isLoading: isSendingAlert } = useApi(alertService.sendAlertToOSC);
-  // REMOVIDO: useApi para createOSC (agora na CreateOSCPage)
 
-  // --- Efeito para Buscar Dados da API (Lista de OSCs) ---
+  // --- BUSCA DE DADOS (Aqui estava o problema) ---
   useEffect(() => {
     const fetchOSCs = async () => {
       setIsLoadingData(true);
       setErrorLoading(null);
       try {
         const response = await oscService.getMyOSCs();
-        setOscs((response.data || []).sort((a, b) => a.name.localeCompare(b.name)));
+        const data = response.data || [];
+
+        // LOG DE DEPURAÇÃO: Veja isso no Console do Navegador (F12)
+        console.log("📡 Dados recebidos da API OSCs:", data);
+
+        // ORDENAÇÃO SEGURA: Garante que não quebra se 'name' for nulo
+        const sortedData = data.sort((a, b) => {
+            const nameA = a.name || '';
+            const nameB = b.name || '';
+            return nameA.localeCompare(nameB);
+        });
+
+        setOscs(sortedData);
       } catch (err) {
-        console.error("Erro ao buscar OSCs:", err);
+        console.error("❌ Erro no fetchOSCs:", err);
         const errorMsg = err.response?.data?.message || "Não foi possível carregar a lista de OSCs.";
-        setErrorLoading(errorMsg);
+        // Não apagamos a lista se já tiver algo, apenas mostramos o erro
         addNotification("Erro ao carregar OSCs.", "error");
-        setOscs([]);
       } finally {
         setIsLoadingData(false);
       }
@@ -61,35 +59,30 @@ export default function OSCsPage() {
     fetchOSCs();
   }, [addNotification]);
 
-  // --- Handlers para Abrir/Fechar Modais ---
   const handleView = (osc) => setOscToView(osc);
   const handleEdit = (osc) => setOscToEdit(osc);
   const handleSendAlert = (osc) => setOscToSendAlert(osc);
-  // REMOVIDO: handleCreate (agora é um link)
 
   const handleCloseModals = () => {
     setOscToView(null);
     setOscToEdit(null);
     setOscToSendAlert(null);
-    // REMOVIDO: setIsCreateModalOpen(false)
   };
 
-  // --- Handlers para Ações dos Modais (Salvar/Enviar) ---
   const handleSaveEdit = async (formData) => {
     try {
       const updatedOSCResponse = await updateOSC(formData.id, formData);
       const updatedOSC = updatedOSCResponse;
-      const fullUpdatedOSCResponse = await oscService.getOSCById(updatedOSC.id);
-      const fullUpdatedOSC = fullUpdatedOSCResponse.data;
-
+      
+      // Atualiza a lista localmente para não precisar recarregar tudo
       setOscs((prevOscs) =>
-        prevOscs.map((o) => (o.id === fullUpdatedOSC.id ? fullUpdatedOSC : o))
+        prevOscs.map((o) => (o.id === updatedOSC.id ? { ...o, ...updatedOSC } : o))
       );
       addNotification('OSC salva com sucesso!', 'success');
       handleCloseModals();
     } catch (err) {
       console.error('Falha ao salvar OSC:', err);
-      addNotification(`Falha ao salvar: ${err.response?.data?.message || err.message}`, 'error');
+      addNotification('Erro ao salvar as alterações.', 'error');
     }
   };
 
@@ -100,12 +93,10 @@ export default function OSCsPage() {
       handleCloseModals();
     } catch (err) {
       console.error('Falha ao enviar alerta:', err);
-      addNotification(`Falha ao enviar alerta: ${err.response?.data?.message || err.message}`, 'error');
+      addNotification('Erro ao enviar alerta.', 'error');
     }
   };
-  // REMOVIDO: handleSaveCreate (agora na CreateOSCPage)
 
-  // --- Renderização ---
   if (isLoadingData) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 100px)' }}>
@@ -113,7 +104,9 @@ export default function OSCsPage() {
       </div>
      );
   }
-  if (errorLoading) {
+
+  // Se der erro crítico, mostra mensagem, senão mostra a lista (mesmo vazia)
+  if (errorLoading && oscs.length === 0) {
       return <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>{errorLoading}</div>;
   }
 
@@ -124,20 +117,25 @@ export default function OSCsPage() {
         onView={handleView}
         onEdit={handleEdit}
         onSendAlert={handleSendAlert}
-        // onCreate não é mais passado
       />
 
-      {/* Renderização Condicional dos Modais */}
-      <ViewOSCModal isOpen={!!oscToView} onClose={handleCloseModals} osc={oscToView} />
-      <EditOSCModal
-        isOpen={!!oscToEdit} onClose={handleCloseModals}
-        oscData={oscToEdit} onSave={handleSaveEdit} isLoading={isUpdating}
-      />
-      <SendAlertModal
-        isOpen={!!oscToSendAlert} onClose={handleCloseModals}
-        osc={oscToSendAlert} onSend={handleSendAlertSubmit} isLoading={isSendingAlert}
-      />
-      {/* REMOVIDO: CreateOSCModal */}
+      {oscToView && (
+        <ViewOSCModal isOpen={!!oscToView} onClose={handleCloseModals} osc={oscToView} />
+      )}
+      
+      {oscToEdit && (
+        <EditOSCModal
+          isOpen={!!oscToEdit} onClose={handleCloseModals}
+          oscData={oscToEdit} onSave={handleSaveEdit} isLoading={isUpdating}
+        />
+      )}
+      
+      {oscToSendAlert && (
+        <SendAlertModal
+          isOpen={!!oscToSendAlert} onClose={handleCloseModals}
+          osc={oscToSendAlert} onSend={handleSendAlertSubmit} isLoading={isSendingAlert}
+        />
+      )}
     </>
   );
 }
