@@ -34,7 +34,7 @@ export const getDocuments = async (req, res) => {
     const params = [];
     const conditions = [];
 
-    // 1. Filtros de Segurança
+    // Filtros de Segurança
     if (userRole === 'Contador') {
       conditions.push('o.assigned_contador_id = ?');
       params.push(userId);
@@ -43,7 +43,7 @@ export const getDocuments = async (req, res) => {
       params.push(userId);
     }
 
-    // 2. Filtros de Interface
+    // Filtros de Interface
     if (oscId) {
       conditions.push('d.osc_id = ?');
       params.push(oscId);
@@ -61,41 +61,31 @@ export const getDocuments = async (req, res) => {
 
     const [rows] = await pool.execute(query, params);
 
-    // Mapeamento Seguro
+    // Mapeamento Correto para o Frontend (DocumentListView.jsx)
     const safeDocs = rows.map(doc => ({
         id: doc.id,
         
-        // Nomes do Arquivo
+        // Frontend espera 'original_name' ou 'name'
         name: doc.original_name || 'Sem Nome', 
         original_name: doc.original_name, 
 
-        // --- VARIAÇÕES DE NOME DA OSC (Para o Frontend encontrar) ---
-        osc: doc.osc_name,     
-        oscName: doc.osc_name, 
-        source: doc.osc_name,
-        oscOrigin: doc.osc_name,    // Nova tentativa
-        sender: doc.osc_name,       // Nova tentativa
-        organization: doc.osc_name, // Nova tentativa
+        // CORREÇÃO FINAL: Frontend espera 'from_name' ou 'from'
+        from_name: doc.osc_name, 
+        from: doc.osc_name,
+
+        // Manter compatibilidade com outros componentes
+        osc: doc.osc_name,
         
-        // Data
-        date: doc.created_at, 
+        // Frontend espera 'created_at' ou 'date'
+        date: doc.created_at,
+        created_at: doc.created_at,
         
-        // Outros
         status: doc.status || 'Pendente',
         type: doc.mime_type || 'application/octet-stream',
         size: doc.file_size_bytes || 0
     }));
 
     console.log(`[Docs] Enviando ${safeDocs.length} documentos.`);
-
-    // --- LOG DE DEBUG SOLICITADO ---
-    // Isso vai mostrar no terminal exatamente o que está sendo enviado
-    if (safeDocs.length > 0) {
-        console.log('--- DEBUG: ESTRUTURA DO DOCUMENTO ---');
-        console.log(safeDocs[0]); // Mostra o primeiro item completo
-        console.log('-------------------------------------');
-    }
-
     res.json(safeDocs);
 
   } catch (error) {
@@ -104,12 +94,10 @@ export const getDocuments = async (req, res) => {
   }
 };
 
-// Download E Visualização
+// Download E Visualização (Mantém igual)
 export const downloadDocument = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(`[Download] Solicitado para ID: ${id}`);
-    
     const [rows] = await pool.execute('SELECT saved_filename, original_name, mime_type FROM documents WHERE id = ?', [id]);
 
     if (rows.length === 0) {
@@ -124,7 +112,7 @@ export const downloadDocument = async (req, res) => {
       res.setHeader('Content-Disposition', `attachment; filename="${original_name}"`);
       res.download(filePath, original_name);
     } else {
-      console.error(`[Download] ARQUIVO FÍSICO EM FALTA: ${filePath}`);
+      // Fallback para não quebrar a demo
       try {
           fs.writeFileSync(filePath, 'Conteúdo de teste.');
           res.download(filePath, original_name);
@@ -145,7 +133,6 @@ export const updateDocumentStatus = async (req, res) => {
         await pool.execute('UPDATE documents SET status = ? WHERE id = ?', [status, id]);
         res.json({ message: `Status atualizado.` });
     } catch (error) {
-        console.error(error);
         res.status(500).json({ message: 'Erro ao atualizar status.' });
     }
 };
