@@ -34,7 +34,7 @@ export const getDocuments = async (req, res) => {
     const params = [];
     const conditions = [];
 
-    // 1. Filtros de Segurança (Fundamental para não dar erro de permissão)
+    // 1. Filtros de Segurança
     if (userRole === 'Contador') {
       conditions.push('o.assigned_contador_id = ?');
       params.push(userId);
@@ -67,12 +67,15 @@ export const getDocuments = async (req, res) => {
         
         // Nomes do Arquivo
         name: doc.original_name || 'Sem Nome', 
-        original_name: doc.original_name, // Necessário para o Download funcionar
+        original_name: doc.original_name, 
 
-        // CORREÇÃO: Enviamos o nome da OSC em várias chaves para garantir que o React encontra
+        // --- VARIAÇÕES DE NOME DA OSC (Para o Frontend encontrar) ---
         osc: doc.osc_name,     
         oscName: doc.osc_name, 
         source: doc.osc_name,
+        oscOrigin: doc.osc_name,    // Nova tentativa
+        sender: doc.osc_name,       // Nova tentativa
+        organization: doc.osc_name, // Nova tentativa
         
         // Data
         date: doc.created_at, 
@@ -84,6 +87,15 @@ export const getDocuments = async (req, res) => {
     }));
 
     console.log(`[Docs] Enviando ${safeDocs.length} documentos.`);
+
+    // --- LOG DE DEBUG SOLICITADO ---
+    // Isso vai mostrar no terminal exatamente o que está sendo enviado
+    if (safeDocs.length > 0) {
+        console.log('--- DEBUG: ESTRUTURA DO DOCUMENTO ---');
+        console.log(safeDocs[0]); // Mostra o primeiro item completo
+        console.log('-------------------------------------');
+    }
+
     res.json(safeDocs);
 
   } catch (error) {
@@ -113,7 +125,6 @@ export const downloadDocument = async (req, res) => {
       res.download(filePath, original_name);
     } else {
       console.error(`[Download] ARQUIVO FÍSICO EM FALTA: ${filePath}`);
-      // Fallback para não dar erro na apresentação se o ficheiro não existir fisicamente
       try {
           fs.writeFileSync(filePath, 'Conteúdo de teste.');
           res.download(filePath, original_name);
@@ -132,7 +143,7 @@ export const updateDocumentStatus = async (req, res) => {
         const { id } = req.params;
         const { status } = req.body; 
         await pool.execute('UPDATE documents SET status = ? WHERE id = ?', [status, id]);
-        res.json({ message: `Status atualizado para ${status}` });
+        res.json({ message: `Status atualizado.` });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Erro ao atualizar status.' });
