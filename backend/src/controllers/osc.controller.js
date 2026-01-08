@@ -33,11 +33,18 @@ export const getOSCById = async (req, res) => {
     if (rows.length === 0) return res.status(404).json({ message: 'OSC não encontrada' });
     
     // Busca dados do usuário associado também
-    const [userRows] = await pool.execute('SELECT name, email, phone FROM users WHERE id = ?', [rows[0].user_id]);
-    const oscData = { ...rows[0], ...userRows[0] };
+    // Verifica se user_id existe antes de buscar
+    let oscData = rows[0];
+    if (oscData.user_id) {
+        const [userRows] = await pool.execute('SELECT name, email, phone FROM users WHERE id = ?', [oscData.user_id]);
+        if (userRows.length > 0) {
+            oscData = { ...oscData, ...userRows[0] };
+        }
+    }
 
     res.json(oscData);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Erro ao buscar OSC' });
   }
 };
@@ -48,10 +55,10 @@ export const updateOSC = async (req, res) => {
     const { id } = req.params;
     const { name, email, cnpj, assigned_contador_id } = req.body;
 
-    // Atualiza tabela users (Nome e Email) se fornecidos
+    // Atualiza tabela users (Nome e Email) se fornecidos e se tiver user_id
     if (name || email) {
         const [osc] = await pool.execute('SELECT user_id FROM oscs WHERE id = ?', [id]);
-        if (osc.length > 0) {
+        if (osc.length > 0 && osc[0].user_id) {
             await pool.execute('UPDATE users SET name = ?, email = ? WHERE id = ?', 
                 [name, email, osc[0].user_id]);
         }
@@ -84,7 +91,7 @@ export const createOSC = async (req, res) => {
             [name, email, hashedPassword, 'OSC']
         );
         
-        // Cria OSC
+        // Cria OSC com user_id
         await pool.execute(
             'INSERT INTO oscs (user_id, cnpj) VALUES (?, ?)',
             [userResult.insertId, cnpj]
@@ -103,7 +110,7 @@ export const deleteOSC = async (req, res) => {
     const { id } = req.params;
     const [osc] = await pool.execute('SELECT user_id FROM oscs WHERE id = ?', [id]);
     
-    if (osc.length > 0) {
+    if (osc.length > 0 && osc[0].user_id) {
         await pool.execute('DELETE FROM users WHERE id = ?', [osc[0].user_id]);
     } else {
         await pool.execute('DELETE FROM oscs WHERE id = ?', [id]);
@@ -126,3 +133,26 @@ export const assignContador = async (req, res) => {
     }
 };
 
+// 7. Minhas OSCs (CORREÇÃO: Esta função faltava e quebrava o servidor)
+export const getMyOSCs = async (req, res) => {
+    try {
+        const contadorId = req.user.id;
+        // Busca OSCs vinculadas a este contador
+        const query = `
+            SELECT 
+                o.id, 
+                o.cnpj, 
+                COALESCE(u.name, 'OSC Sem Nome') as name,
+                u.email,
+                u.phone
+            FROM oscs o
+            LEFT JOIN users u ON o.user_id = u.id
+            WHERE o.assigned_contador_id = ?
+        `;
+        const [rows] = await pool.execute(query, [contadorId]);
+        res.json(rows);
+    } catch (error) {
+        console.error('Erro getMyOSCs:', error);
+        res.status(500).json({ message: 'Erro ao buscar suas OSCs.' });
+    }
+};
