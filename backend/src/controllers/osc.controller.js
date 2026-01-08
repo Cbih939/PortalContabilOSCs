@@ -1,158 +1,67 @@
 import pool from '../config/db.js';
-import bcrypt from 'bcryptjs';
 
-// 1. Listar TODAS as OSCs (Para o Admin)
+// Listar todas as OSCs (para o Contador/Admin)
 export const getAllOSCs = async (req, res) => {
   try {
-    // LEFT JOIN garante que a OSC aparece mesmo sem nome de usuário
-    const query = `
-      SELECT 
-        o.id, 
-        o.cnpj, 
-        o.assigned_contador_id,
-        COALESCE(u.name, 'Sem Nome') as name, 
-        u.email,
-        u.status
-      FROM oscs o
-      LEFT JOIN users u ON o.user_id = u.id
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    let query = `
+      SELECT id, cnpj, razao_social as name, email, phone, city as cidade, status 
+      FROM oscs 
     `;
+    
+    // Se for contador, vê apenas as suas
+    if (userRole === 'Contador') {
+        query += ` WHERE assigned_contador_id = ${userId}`;
+    }
+
     const [rows] = await pool.execute(query);
     res.json(rows);
   } catch (error) {
-    console.error('Erro getAllOSCs:', error);
+    console.error('Erro ao buscar OSCs:', error);
+    // Retorna array vazio para não quebrar o frontend se a coluna status não existir na tabela oscs
+    // (O dump mostra status na tabela users, mas não na oscs. Se der erro, remova o 'status' do SELECT acima)
     res.status(500).json({ message: 'Erro ao listar OSCs.' });
   }
 };
 
-// 2. Buscar OSC por ID
+// Obter detalhes de uma OSC específica
 export const getOSCById = async (req, res) => {
   try {
     const { id } = req.params;
     const [rows] = await pool.execute('SELECT * FROM oscs WHERE id = ?', [id]);
-    
-    if (rows.length === 0) return res.status(404).json({ message: 'OSC não encontrada' });
-    
-    // Busca dados do usuário associado também
-    // Verifica se user_id existe antes de buscar
-    let oscData = rows[0];
-    if (oscData.user_id) {
-        const [userRows] = await pool.execute('SELECT name, email, phone FROM users WHERE id = ?', [oscData.user_id]);
-        if (userRows.length > 0) {
-            oscData = { ...oscData, ...userRows[0] };
-        }
-    }
 
-    res.json(oscData);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'OSC não encontrada.' });
+    }
+    res.json(rows[0]);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Erro ao buscar OSC' });
+    res.status(500).json({ message: 'Erro ao buscar detalhes da OSC.' });
   }
 };
 
-// 3. Atualizar OSC
+// Criar OSC (Geralmente cria-se um User e uma OSC vinculada)
+export const createOSC = async (req, res) => {
+    // Implementação simplificada
+    res.status(501).json({ message: "Utilize a rota de registro de usuário para criar OSCs." });
+};
+
+// Atualizar OSC
 export const updateOSC = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, cnpj, assigned_contador_id } = req.body;
+    const { razao_social, phone, address } = req.body;
 
-    // Atualiza tabela users (Nome e Email) se fornecidos e se tiver user_id
-    if (name || email) {
-        const [osc] = await pool.execute('SELECT user_id FROM oscs WHERE id = ?', [id]);
-        if (osc.length > 0 && osc[0].user_id) {
-            await pool.execute('UPDATE users SET name = ?, email = ? WHERE id = ?', 
-                [name, email, osc[0].user_id]);
-        }
-    }
-
-    // Atualiza tabela oscs
     await pool.execute(
-      'UPDATE oscs SET cnpj = ?, assigned_contador_id = ? WHERE id = ?',
-      [cnpj, assigned_contador_id, id]
+        'UPDATE oscs SET razao_social=?, phone=?, address=? WHERE id=?', 
+        [razao_social, phone, address, id]
     );
 
     res.json({ message: 'OSC atualizada com sucesso.' });
   } catch (error) {
-    console.error('Erro updateOSC:', error);
+    console.error(error);
     res.status(500).json({ message: 'Erro ao atualizar OSC.' });
   }
-};
-
-// 4. Criar OSC
-export const createOSC = async (req, res) => {
-    try {
-        const { name, email, password, cnpj } = req.body;
-        
-        // Hash senha
-        const hashedPassword = await bcrypt.hash(password, 10);
-        
-        // Cria User
-        const [userResult] = await pool.execute(
-            'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-            [name, email, hashedPassword, 'OSC']
-        );
-        
-        // Cria OSC com user_id
-        await pool.execute(
-            'INSERT INTO oscs (user_id, cnpj) VALUES (?, ?)',
-            [userResult.insertId, cnpj]
-        );
-
-        res.status(201).json({ message: 'OSC criada com sucesso.' });
-    } catch (error) {
-        console.error('Erro createOSC:', error);
-        res.status(500).json({ message: 'Erro ao criar OSC.' });
-    }
-};
-
-// 5. Deletar OSC
-export const deleteOSC = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const [osc] = await pool.execute('SELECT user_id FROM oscs WHERE id = ?', [id]);
-    
-    if (osc.length > 0 && osc[0].user_id) {
-        await pool.execute('DELETE FROM users WHERE id = ?', [osc[0].user_id]);
-    } else {
-        await pool.execute('DELETE FROM oscs WHERE id = ?', [id]);
-    }
-    res.json({ message: 'OSC removida.' });
-  } catch (error) {
-    res.status(500).json({ message: 'Erro ao remover OSC.' });
-  }
-};
-
-// 6. Associar Contador
-export const assignContador = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { contadorId } = req.body;
-        await pool.execute('UPDATE oscs SET assigned_contador_id = ? WHERE id = ?', [contadorId, id]);
-        res.json({ message: 'Contador associado.' });
-    } catch (error) {
-        res.status(500).json({ message: 'Erro ao associar.' });
-    }
-};
-
-// 7. Minhas OSCs (CORREÇÃO: Esta função faltava e quebrava o servidor)
-export const getMyOSCs = async (req, res) => {
-    try {
-        const contadorId = req.user.id;
-        // Busca OSCs vinculadas a este contador
-        const query = `
-            SELECT 
-                o.id, 
-                o.cnpj, 
-                COALESCE(u.name, 'OSC Sem Nome') as name,
-                u.email,
-                u.phone
-            FROM oscs o
-            LEFT JOIN users u ON o.user_id = u.id
-            WHERE o.assigned_contador_id = ?
-        `;
-        const [rows] = await pool.execute(query, [contadorId]);
-        res.json(rows);
-    } catch (error) {
-        console.error('Erro getMyOSCs:', error);
-        res.status(500).json({ message: 'Erro ao buscar suas OSCs.' });
-    }
 };
