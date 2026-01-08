@@ -4,21 +4,21 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Configurações
+// Configurações e DB
 import pool, { testConnection } from './src/config/db.js';
 
-// Rotas
+// Importação das Rotas
 import authRoutes from './src/routes/auth.routes.js';
 import contadorRoutes from './src/routes/contador.routes.js';
 import userRoutes from './src/routes/user.routes.js';
-// Adicione outras rotas conforme necessário (docRoutes, etc.)
+import oscRoutes from './src/routes/osc.routes.js'; // <--- NOVO
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
@@ -30,11 +30,11 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Testar Banco de Dados
 testConnection();
 
-// Rotas da API
+// Definição das Rotas da API
 app.use('/api/auth', authRoutes);
 app.use('/api/contador', contadorRoutes);
 app.use('/api/users', userRoutes);
-// app.use('/api/docs', docRoutes); 
+app.use('/api/oscs', oscRoutes); // <--- AQUI ESTÁ A CORREÇÃO DO 404
 
 // Rota raiz de teste
 app.get('/', (req, res) => {
