@@ -1,11 +1,12 @@
 import pool from '../config/db.js';
 
+// 1. Estatísticas do Dashboard
 export const getDashboardStats = async (req, res) => {
     try {
         const cid = req.user.id;
         let oscs = 0, docs = 0, msgs = 0;
 
-        // 1. Contar OSCs vinculadas
+        // Contar OSCs
         try {
             const [r1] = await pool.execute(
                 'SELECT COUNT(*) as t FROM oscs WHERE assigned_contador_id = ?', 
@@ -14,10 +15,8 @@ export const getDashboardStats = async (req, res) => {
             oscs = r1[0].t;
         } catch (e) { console.log('Erro OSCs stats:', e.message); }
 
-        // 2. Contar Documentos Pendentes
+        // Contar Documentos Pendentes
         try {
-            // Nota: O dump mostra que a coluna é 'to_contador_id' na tabela documents, 
-            // ou podemos ligar via OSC. Vamos pelo mais seguro (JOIN).
             const [r2] = await pool.execute(`
                 SELECT COUNT(*) as t 
                 FROM documents d
@@ -27,7 +26,7 @@ export const getDashboardStats = async (req, res) => {
             docs = r2[0].t;
         } catch (e) { console.log('Erro Docs stats:', e.message); }
 
-        // 3. Contar Mensagens não lidas
+        // Contar Mensagens não lidas
         try {
             const [r3] = await pool.execute(
                 'SELECT COUNT(*) as t FROM messages WHERE receiver_id = ? AND is_read = 0', 
@@ -44,6 +43,19 @@ export const getDashboardStats = async (req, res) => {
     }
 };
 
+// 2. Atividade Recente (Correção para o erro 404 activity)
+export const getRecentActivity = async (req, res) => {
+    try {
+        // Retornamos um array vazio por enquanto para o erro sumir
+        // Futuramente você pode fazer uma query na tabela de logs ou documentos recentes
+        res.json([]); 
+    } catch (error) {
+        console.error('Erro Activity:', error);
+        res.json([]);
+    }
+};
+
+// 3. Minhas OSCs
 export const getMyOSCs = async (req, res) => {
     try {
         const [rows] = await pool.execute(
