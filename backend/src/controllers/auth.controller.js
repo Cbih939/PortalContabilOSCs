@@ -1,7 +1,9 @@
 import pool from '../config/db.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import config from '../config/index.js'; // Garanta que config exporta JWT_SECRET
+
+// Tenta pegar o segredo do .env, senão usa um fallback para não crashar
+const JWT_SECRET = process.env.JWT_SECRET || 'seusecretoseguro123';
 
 export const login = async (req, res) => {
   try {
@@ -9,25 +11,26 @@ export const login = async (req, res) => {
 
     // 1. Validação básica
     if (!email || !password) {
-      return res.status(400).json({ message: 'Email e senha são obrigatórios.' });
+      return res.status(400).json({ message: 'Por favor, informe email e senha.' });
     }
 
-    // 2. Buscar usuário no banco
+    // 2. Buscar usuário no banco de dados
+    // Selecionamos explicitamente os campos para evitar erros se o DB mudou
     const [rows] = await pool.execute(
       'SELECT id, name, email, password, role, status FROM users WHERE email = ?',
       [email]
     );
 
-    // 3. Usuário não encontrado
+    // 3. Verifica se encontrou alguém
     if (rows.length === 0) {
       return res.status(401).json({ message: 'Credenciais inválidas.' });
     }
 
     const user = rows[0];
 
-    // 4. Verificar se está ativo
+    // 4. Verifica status (se a coluna existir e estiver inativo)
     if (user.status && user.status !== 'Ativo') {
-        return res.status(403).json({ message: 'Usuário inativo.' });
+        return res.status(403).json({ message: 'Usuário inativo ou pendente.' });
     }
 
     // 5. Comparar senha (bcrypt)
@@ -38,8 +41,12 @@ export const login = async (req, res) => {
 
     // 6. Gerar Token JWT
     const token = jwt.sign(
-      { id: user.id, role: user.role, name: user.name },
-      config.JWT_SECRET || 'secret_temp_key', // Fallback se config falhar
+      { 
+        id: user.id, 
+        role: user.role, 
+        name: user.name 
+      },
+      JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -55,12 +62,14 @@ export const login = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erro no Login:', error);
-    res.status(500).json({ message: 'Erro interno no servidor ao logar.' });
+    // Log do erro no terminal para podermos ver o que houve sem crashar o server
+    console.error('ERRO CRÍTICO NO LOGIN:', error);
+    res.status(500).json({ message: 'Erro interno no servidor ao tentar logar.' });
   }
 };
 
-// Função para validar token (opcional, usado em rota de check)
+// Função auxiliar para verificar token (útil para o frontend validar sessão)
 export const verifyToken = async (req, res) => {
+    // Se chegou aqui, o middleware 'protect' já validou o token
     res.json({ valid: true, user: req.user });
 };
