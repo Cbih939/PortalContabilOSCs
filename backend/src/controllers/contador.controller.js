@@ -4,12 +4,8 @@ import pool from '../config/db.js';
 export const getDashboardStats = async (req, res) => {
     try {
         const cid = req.user.id;
-        console.log(`[Dashboard] ID do Contador logado: ${cid}`);
-
-        let oscs = 0, docs = 0, msgs = 0;
-
+        
         // CONTAR OSCs ATIVAS
-        // A query verifica OSCs do contador (ID 2) onde o status do usuário é 'Ativo'
         const [r1] = await pool.execute(`
             SELECT COUNT(o.id) as total 
             FROM oscs o
@@ -17,52 +13,47 @@ export const getDashboardStats = async (req, res) => {
             WHERE o.assigned_contador_id = ? 
             AND (u.status = 'Ativo' OR u.status IS NULL)
         `, [cid]);
-        
-        oscs = r1[0].total;
-        console.log(`[Dashboard] Total de OSCs encontradas: ${oscs}`);
+        const oscs = r1[0].total;
 
         // CONTAR DOCUMENTOS PENDENTES
-        // Conta documentos das OSCs deste contador que estão 'Pendente'
         const [r2] = await pool.execute(`
             SELECT COUNT(d.id) as total 
             FROM documents d
             JOIN oscs o ON d.osc_id = o.id
             WHERE o.assigned_contador_id = ? AND d.status = 'Pendente'
         `, [cid]);
-        
-        docs = r2[0].total;
+        const docs = r2[0].total;
 
         // CONTAR MENSAGENS NÃO LIDAS
         const [r3] = await pool.execute(
             'SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', 
             [cid]
         );
-        msgs = r3[0].total;
+        const msgs = r3[0].total;
 
-        res.json({ totalOSCs: oscs, pendingDocs: docs, unreadMessages: msgs });
+        res.json({ activeOSCs: oscs, pendingDocs: docs, unreadMessages: msgs });
 
     } catch (error) {
         console.error('[Dashboard] Erro fatal:', error);
-        res.json({ totalOSCs: 0, pendingDocs: 0, unreadMessages: 0 });
+        res.json({ activeOSCs: 0, pendingDocs: 0, unreadMessages: 0 });
     }
 };
 
-/// 2. Atividade Recente (Com Logs de Debug)
+// 2. Atividade Recente (AJUSTADO PARA O SEU REACT)
 export const getRecentActivity = async (req, res) => {
     try {
         const cid = req.user.id;
-        
-        // Query robusta para buscar documentos
+
         const query = `
             SELECT 
                 d.id, 
                 d.original_name, 
                 d.created_at, 
                 d.status,
-                COALESCE(o.razao_social, u.name, 'OSC Desconhecida') as osc_name
+                COALESCE(o.razao_social, u.name, u.email, 'OSC Desconhecida') as osc_name
             FROM documents d
             JOIN oscs o ON d.osc_id = o.id
-            LEFT JOIN users u ON d.uploaded_by_user_id = u.id
+            LEFT JOIN users u ON o.user_id = u.id
             WHERE o.assigned_contador_id = ?
             ORDER BY d.created_at DESC
             LIMIT 10
@@ -70,17 +61,17 @@ export const getRecentActivity = async (req, res) => {
 
         const [rows] = await pool.execute(query, [cid]);
 
-        // Formata e adiciona LOG para debug
+        // Mapeamento EXATO para o seu ContadorDashboard.jsx
         const activities = rows.map(row => ({
             id: row.id,
-            description: `A ${row.osc_name} enviou o documento ${row.original_name}`,
-            date: row.created_at, // O frontend deve formatar a data
-            type: 'document_upload', // Tipo fixo para ícone
+            oscName: row.osc_name,        // O React espera 'oscName'
+            content: row.original_name,   // O React espera 'content' (nome do arquivo)
+            timestamp: row.created_at,    // O React espera 'timestamp'
+            type: 'file',                 // O React verifica: item.type === 'file'
             status: row.status
         }));
 
-        console.log(`[Activity] Enviando ${activities.length} atividades para o frontend.`);
-        
+        console.log(`[Activity] Enviando ${activities.length} itens formatados para o React.`);
         res.json(activities);
 
     } catch (error) {
