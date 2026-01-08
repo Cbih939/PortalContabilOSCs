@@ -27,19 +27,36 @@ export default function OSCsPage() {
   const { request: updateOSC, isLoading: isUpdating } = useApi(oscService.updateOSC);
   const { request: sendAlert, isLoading: isSendingAlert } = useApi(alertService.sendAlertToOSC);
 
-  // --- BUSCA DE DADOS (Aqui estava o problema) ---
+  // --- CORREÇÃO AQUI ---
   useEffect(() => {
     const fetchOSCs = async () => {
       setIsLoadingData(true);
       setErrorLoading(null);
       try {
         const response = await oscService.getMyOSCs();
-        const data = response.data || [];
 
-        // LOG DE DEPURAÇÃO: Veja isso no Console do Navegador (F12)
-        console.log("📡 Dados recebidos da API OSCs:", data);
+        console.log("📦 Resposta CRUA do Serviço:", response);
 
-        // ORDENAÇÃO SEGURA: Garante que não quebra se 'name' for nulo
+        // LÓGICA HÍBRIDA: Aceita tanto { data: [...] } quanto [...]
+        let data = [];
+        if (Array.isArray(response)) {
+            // Caso 1: O serviço já devolveu o array direto
+            console.log("✅ Detectado array direto.");
+            data = response;
+        } else if (response && Array.isArray(response.data)) {
+            // Caso 2: O serviço devolveu o objeto Axios completo
+            console.log("✅ Detectado objeto Axios (usando .data).");
+            data = response.data;
+        } else if (response && response.data && Array.isArray(response.data.data)) {
+             // Caso 3: Estrutura aninhada (comum em alguns frameworks)
+             console.log("✅ Detectado objeto aninhado.");
+             data = response.data.data;
+        } else {
+            console.warn("⚠️ Formato de resposta desconhecido ou vazio:", response);
+        }
+
+        console.log(`📊 Processando ${data.length} registros...`);
+
         const sortedData = data.sort((a, b) => {
             const nameA = a.name || '';
             const nameB = b.name || '';
@@ -49,8 +66,6 @@ export default function OSCsPage() {
         setOscs(sortedData);
       } catch (err) {
         console.error("❌ Erro no fetchOSCs:", err);
-        const errorMsg = err.response?.data?.message || "Não foi possível carregar a lista de OSCs.";
-        // Não apagamos a lista se já tiver algo, apenas mostramos o erro
         addNotification("Erro ao carregar OSCs.", "error");
       } finally {
         setIsLoadingData(false);
@@ -58,6 +73,7 @@ export default function OSCsPage() {
     };
     fetchOSCs();
   }, [addNotification]);
+  // --- FIM DA CORREÇÃO ---
 
   const handleView = (osc) => setOscToView(osc);
   const handleEdit = (osc) => setOscToEdit(osc);
@@ -72,9 +88,9 @@ export default function OSCsPage() {
   const handleSaveEdit = async (formData) => {
     try {
       const updatedOSCResponse = await updateOSC(formData.id, formData);
-      const updatedOSC = updatedOSCResponse;
+      // Tratamento similar aqui para garantir
+      const updatedOSC = updatedOSCResponse.data || updatedOSCResponse; 
       
-      // Atualiza a lista localmente para não precisar recarregar tudo
       setOscs((prevOscs) =>
         prevOscs.map((o) => (o.id === updatedOSC.id ? { ...o, ...updatedOSC } : o))
       );
@@ -103,11 +119,6 @@ export default function OSCsPage() {
          <Spinner text="Carregando OSCs..." />
       </div>
      );
-  }
-
-  // Se der erro crítico, mostra mensagem, senão mostra a lista (mesmo vazia)
-  if (errorLoading && oscs.length === 0) {
-      return <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>{errorLoading}</div>;
   }
 
   return (
