@@ -4,32 +4,24 @@ import pool from '../config/db.js';
 export const getDashboardStats = async (req, res) => {
     try {
         const cid = req.user.id;
-        console.log(`[Dashboard] Buscando stats para Contador ID: ${cid}`);
-
         let oscs = 0, docs = 0, msgs = 0;
 
-        // 1. Contar OSCs ATIVAS
-        // Verifica na tabela 'oscs' quem está vinculado a este contador
-        // E faz join com 'users' para garantir que o status é 'Ativo'
+        // 1. Contar OSCs ATIVAS vinculadas a este contador
         try {
-            const queryOSC = `
+            const [r1] = await pool.execute(`
                 SELECT COUNT(o.id) as total 
                 FROM oscs o
-                JOIN users u ON o.user_id = u.id
+                LEFT JOIN users u ON o.user_id = u.id
                 WHERE o.assigned_contador_id = ? 
-                AND u.status = 'Ativo'
-            `;
-            const [r1] = await pool.execute(queryOSC, [cid]);
+                AND (u.status = 'Ativo' OR u.status IS NULL)
+            `, [cid]);
             oscs = r1[0].total;
-            console.log(`[Dashboard] OSCs ativas encontradas: ${oscs}`);
-        } catch (e) { 
-            console.error('[Dashboard] Erro Count OSCs:', e.message); 
-        }
+        } catch (e) { console.error('[Dashboard] Erro Count OSCs:', e.message); }
 
         // 2. Contar Documentos Pendentes
         try {
             const [r2] = await pool.execute(`
-                SELECT COUNT(*) as t 
+                SELECT COUNT(d.id) as t 
                 FROM documents d
                 JOIN oscs o ON d.osc_id = o.id
                 WHERE o.assigned_contador_id = ? AND d.status = 'Pendente'
@@ -54,21 +46,23 @@ export const getDashboardStats = async (req, res) => {
     }
 };
 
-// 2. Atividade Recente (Envio de Documentos pelas OSCs)
+// 2. Atividade Recente (Envio de Documentos)
 export const getRecentActivity = async (req, res) => {
     try {
         const cid = req.user.id;
 
-        // Busca os 5 últimos documentos criados por OSCs vinculadas a este contador
+        // Busca os 5 últimos documentos.
+        // Usa COALESCE para pegar a Razão Social OU o Nome do Usuário se a razão for nula.
         const query = `
             SELECT 
                 d.id, 
                 d.original_name, 
                 d.created_at, 
                 d.status,
-                o.razao_social as osc_name
+                COALESCE(o.razao_social, u.name, 'OSC Desconhecida') as osc_name
             FROM documents d
             JOIN oscs o ON d.osc_id = o.id
+            LEFT JOIN users u ON o.user_id = u.id
             WHERE o.assigned_contador_id = ?
             ORDER BY d.created_at DESC
             LIMIT 5
@@ -76,11 +70,10 @@ export const getRecentActivity = async (req, res) => {
 
         const [rows] = await pool.execute(query, [cid]);
 
-        // Formata para o frontend exibir a frase completa
+        // Formata a resposta
         const activities = rows.map(row => ({
             id: row.id,
-            // Texto formatado conforme solicitado
-            description: `A ${row.osc_name || 'OSC Desconhecida'} enviou o documento ${row.original_name}`,
+            description: `A ${row.osc_name} enviou o documento ${row.original_name}`,
             date: row.created_at,
             type: 'document_upload',
             status: row.status
@@ -94,23 +87,23 @@ export const getRecentActivity = async (req, res) => {
     }
 };
 
-// 3. Minhas OSCs (Lista completa com detalhes)
+// 3. Minhas OSCs (Lista completa)
 export const getMyOSCs = async (req, res) => {
     try {
-        const query = `
+        // Traz lista com fallback de nome também
+        const [rows] = await pool.execute(`
             SELECT 
                 o.id, 
                 o.cnpj, 
-                o.razao_social as name, 
+                COALESCE(o.razao_social, u.name, 'Sem Nome') as name, 
                 o.email, 
                 o.phone,
                 u.status as status
             FROM oscs o
-            JOIN users u ON o.user_id = u.id
+            LEFT JOIN users u ON o.user_id = u.id
             WHERE o.assigned_contador_id = ?
-        `;
+        `, [req.user.id]);
         
-        const [rows] = await pool.execute(query, [req.user.id]);
         res.json(rows);
     } catch (e) {
         console.error(e);
