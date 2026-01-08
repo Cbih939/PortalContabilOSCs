@@ -4,9 +4,9 @@ import { getDashboardStats, getMyOSCs } from '../controllers/contador.controller
 
 const router = Router();
 
-// Aplica proteção a todas as rotas abaixo
+// Middleware: Todas as rotas abaixo requerem login e role de Contador ou Admin
 router.use(protect);
-router.use(checkRole(['Contador', 'Adm'])); 
+router.use(checkRole(['Contador', 'Adm']));
 
 router.get('/dashboard-stats', getDashboardStats);
 router.get('/my-oscs', getMyOSCs);
