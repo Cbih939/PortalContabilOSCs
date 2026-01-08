@@ -13,6 +13,7 @@ import userRoutes from './src/routes/user.routes.js';
 import oscRoutes from './src/routes/osc.routes.js';
 import docRoutes from './src/routes/doc.routes.js';
 import templateRoutes from './src/routes/template.routes.js';
+import noticeRoutes from './src/routes/notice.routes.js';
 
 dotenv.config();
 
@@ -33,8 +34,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/contador', contadorRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/oscs', oscRoutes);
-app.use('/api/documents', docRoutes); // <--- CONEXÃO FEITA
+app.use('/api/documents', docRoutes);
 app.use('/api/templates', templateRoutes);
+app.use('/api/notices', noticeRoutes);
 
 
 app.get('/', (req, res) => {
