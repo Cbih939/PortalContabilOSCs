@@ -6,46 +6,46 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Listar Documentos
+// Listar Documentos (Recebidos ou Enviados)
 export const getDocuments = async (req, res) => {
   try {
-    const { oscId, status } = req.query;
+    const { oscId, status, type } = req.query;
     const userId = req.user.id;
     const userRole = req.user.role;
+
+    console.log(`[Docs] Buscando documentos para User: ${userId} (${userRole})`);
 
     let query = `
       SELECT 
         d.id, 
-        d.original_name as title, 
-        d.mime_type as type, 
+        d.original_name, 
+        d.mime_type, 
         d.created_at, 
         d.status,
-        d.file_path,
-        o.razao_social as osc_name,
+        d.saved_filename,
+        d.file_size_bytes,
+        COALESCE(o.razao_social, u.name, 'OSC Desconhecida') as osc_name,
         o.cnpj as osc_cnpj
       FROM documents d
-      LEFT JOIN oscs o ON d.osc_id = o.id
+      JOIN oscs o ON d.osc_id = o.id
+      LEFT JOIN users u ON o.user_id = u.id
     `;
     
     const params = [];
     const conditions = [];
 
-    // Filtros de Permissão
-    if (userRole === 'OSC') {
-      // Se for OSC, vê os documentos vinculados à sua OSC
-      const [osc] = await pool.execute('SELECT id FROM oscs WHERE user_id = ?', [userId]);
-      if (osc.length === 0) return res.json([]); 
-      
-      conditions.push('d.osc_id = ?');
-      params.push(osc[0].id);
-    } 
-    else if (userRole === 'Contador') {
-      // Se for Contador, vê documentos das OSCs que ele atende
+    // 1. Filtros de Segurança (Quem pode ver o quê)
+    if (userRole === 'Contador') {
+      // Contador vê documentos das OSCs vinculadas a ele
       conditions.push('o.assigned_contador_id = ?');
+      params.push(userId);
+    } else if (userRole === 'OSC') {
+      // OSC vê apenas seus próprios documentos
+      conditions.push('d.osc_id = (SELECT id FROM oscs WHERE user_id = ? LIMIT 1)');
       params.push(userId);
     }
 
-    // Filtros de Interface
+    // 2. Filtros de Interface (Query Params)
     if (oscId) {
       conditions.push('d.osc_id = ?');
       params.push(oscId);
@@ -62,102 +62,58 @@ export const getDocuments = async (req, res) => {
     query += ' ORDER BY d.created_at DESC';
 
     const [rows] = await pool.execute(query, params);
-    res.json(rows);
+
+    // 3. Blindagem de Dados (Para o Frontend não quebrar)
+    const safeDocs = rows.map(doc => ({
+        id: doc.id,
+        title: doc.original_name || 'Documento sem nome',
+        oscName: doc.osc_name || 'Sem nome',
+        type: doc.mime_type || 'application/octet-stream',
+        createdAt: doc.created_at,
+        status: doc.status || 'Pendente',
+        size: doc.file_size_bytes || 0,
+        hasFile: !!doc.saved_filename
+    }));
+
+    console.log(`[Docs] Enviando ${safeDocs.length} documentos.`);
+    res.json(safeDocs);
 
   } catch (error) {
-    console.error('Erro ao buscar documentos:', error);
+    console.error('[Docs] Erro ao listar:', error);
     res.status(500).json({ message: 'Erro ao listar documentos.' });
   }
 };
 
 // Upload de Documento
 export const uploadDocument = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'Nenhum ficheiro enviado.' });
-    }
-
-    const { oscId } = req.body;
-    let targetOscId = oscId;
-
-    // Se quem envia é a OSC, pega o ID dela automaticamente
-    if (req.user.role === 'OSC') {
-        const [osc] = await pool.execute('SELECT id FROM oscs WHERE user_id = ?', [req.user.id]);
-        if (osc.length > 0) targetOscId = osc[0].id;
-    }
-
-    if (!targetOscId) {
-        return res.status(400).json({ message: 'OSC não identificada.' });
-    }
-
-    // Inserção alinhada com o seu Banco de Dados
-    const [result] = await pool.execute(
-      `INSERT INTO documents 
-      (osc_id, uploaded_by_user_id, original_name, saved_filename, file_path, file_size_bytes, mime_type, status, created_at) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendente', NOW())`,
-      [
-        targetOscId,
-        req.user.id,
-        req.file.originalname, // original_name
-        req.file.filename,     // saved_filename
-        req.file.filename,     // file_path (geralmente salva só o nome ou caminho relativo)
-        req.file.size,         // file_size_bytes
-        req.file.mimetype      // mime_type
-      ]
-    );
-
-    res.status(201).json({ 
-        id: result.insertId, 
-        message: 'Documento enviado com sucesso.' 
-    });
-
-  } catch (error) {
-    console.error('Erro no upload:', error);
-    res.status(500).json({ message: 'Falha ao salvar documento no banco.' });
-  }
+    // Implementaremos se necessário para o contador, 
+    // mas o foco agora é listar o que ele recebeu.
+    res.status(501).json({ message: 'Not implemented yet' });
 };
 
-// Download
+// Download de Documento
 export const downloadDocument = async (req, res) => {
   try {
     const { id } = req.params;
+    // Verifica se o documento existe
     const [rows] = await pool.execute('SELECT saved_filename, original_name FROM documents WHERE id = ?', [id]);
 
     if (rows.length === 0) {
-      return res.status(404).json({ message: 'Documento não encontrado.' });
+      return res.status(404).json({ message: 'Documento não encontrado no banco.' });
     }
 
-    // Ajuste o caminho conforme sua estrutura de pastas
-    const filePath = path.join(__dirname, '../../uploads', rows[0].saved_filename);
+    const { saved_filename, original_name } = rows[0];
+    const filePath = path.join(__dirname, '../../uploads', saved_filename);
 
     if (fs.existsSync(filePath)) {
-      res.download(filePath, rows[0].original_name);
+      res.download(filePath, original_name);
     } else {
-      res.status(404).json({ message: 'Arquivo físico não encontrado.' });
+      console.error(`[Download] Arquivo físico não encontrado: ${filePath}`);
+      res.status(404).json({ message: 'Arquivo físico não encontrado no servidor.' });
     }
   } catch (error) {
-    console.error('Erro download:', error);
+    console.error('[Download] Erro:', error);
     res.status(500).json({ message: 'Erro ao baixar arquivo.' });
-  }
-};
-
-// Deletar
-export const deleteDocument = async (req, res) => {
-  try {
-    const { id } = req.params;
-    // Primeiro buscar o nome do arquivo para deletar do disco
-    const [rows] = await pool.execute('SELECT saved_filename FROM documents WHERE id = ?', [id]);
-    
-    if (rows.length > 0) {
-        const filePath = path.join(__dirname, '../../uploads', rows[0].saved_filename);
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    }
-
-    await pool.execute('DELETE FROM documents WHERE id = ?', [id]);
-    res.json({ message: 'Documento excluído.' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Erro ao excluir.' });
   }
 };
 
@@ -165,10 +121,10 @@ export const deleteDocument = async (req, res) => {
 export const updateDocumentStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body; // 'Aprovado' ou 'Rejeitado'
+        const { status } = req.body; 
 
         await pool.execute('UPDATE documents SET status = ? WHERE id = ?', [status, id]);
-        res.json({ message: `Documento ${status} com sucesso.` });
+        res.json({ message: `Status atualizado para ${status}` });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Erro ao atualizar status.' });
