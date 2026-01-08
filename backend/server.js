@@ -14,6 +14,7 @@ import oscRoutes from './src/routes/osc.routes.js';
 import docRoutes from './src/routes/doc.routes.js';
 import templateRoutes from './src/routes/template.routes.js';
 import noticeRoutes from './src/routes/notice.routes.js';
+import messageRoutes from './src/routes/message.routes.js';
 
 dotenv.config();
 
@@ -37,7 +38,7 @@ app.use('/api/oscs', oscRoutes);
 app.use('/api/documents', docRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/notices', noticeRoutes);
-
+app.use('/api/messages', messageRoutes);
 
 app.get('/', (req, res) => {
     res.send('API Portal Contábil a funcionar 🚀');
