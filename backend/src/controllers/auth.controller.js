@@ -12,7 +12,9 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: 'Preencha todos os campos.' });
     }
 
-    // CORREÇÃO: Usar password_hash
+    console.log('[Auth] Tentativa de login:', email);
+
+    // CORREÇÃO: Selecionar a coluna correta 'password_hash'
     const [rows] = await pool.execute(
       'SELECT id, name, email, password_hash, role, status FROM users WHERE email = ?',
       [email]
@@ -24,17 +26,20 @@ export const login = async (req, res) => {
 
     const user = rows[0];
 
+    // Verificar status
     if (user.status !== 'Ativo') {
-        return res.status(403).json({ message: 'Conta inativa.' });
+        return res.status(403).json({ message: 'Sua conta está inativa ou pendente.' });
     }
 
-    // CORREÇÃO: Comparar com user.password_hash
+    // CORREÇÃO: Comparar senha enviada com 'password_hash' do banco
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
+      console.log('[Auth] Senha incorreta para:', email);
       return res.status(401).json({ message: 'Credenciais inválidas.' });
     }
 
+    // Gerar Token
     const token = jwt.sign(
       { id: user.id, role: user.role, name: user.name },
       JWT_SECRET,
@@ -53,7 +58,12 @@ export const login = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('ERRO LOGIN:', error);
+    console.error('ERRO CRÍTICO NO LOGIN:', error);
     res.status(500).json({ message: 'Erro interno no servidor.' });
   }
+};
+
+// Placeholder para register se necessário
+export const register = async (req, res) => {
+    res.status(501).json({ message: "Rota de registro não implementada publicamente." });
 };

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { login } from '../controllers/auth.controller.js';
-// CORREÇÃO: Importar do middleware correto
+// CORREÇÃO: Importar do middleware correto, não do controller
 import { verifyToken } from '../middlewares/auth.middleware.js'; 
 
 const router = Router();
