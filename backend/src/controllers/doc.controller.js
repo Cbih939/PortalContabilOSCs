@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 // Listar Documentos (Recebidos ou Enviados)
 export const getDocuments = async (req, res) => {
   try {
-    const { oscId, status } = req.query;
+    const { oscId, status, type } = req.query;
     const userId = req.user.id;
     const userRole = req.user.role;
 
@@ -34,16 +34,18 @@ export const getDocuments = async (req, res) => {
     const params = [];
     const conditions = [];
 
-    // 1. Filtros de Segurança
+    // 1. Filtros de Segurança (Quem pode ver o quê)
     if (userRole === 'Contador') {
+      // Contador vê documentos das OSCs vinculadas a ele
       conditions.push('o.assigned_contador_id = ?');
       params.push(userId);
     } else if (userRole === 'OSC') {
+      // OSC vê apenas seus próprios documentos
       conditions.push('d.osc_id = (SELECT id FROM oscs WHERE user_id = ? LIMIT 1)');
       params.push(userId);
     }
 
-    // 2. Filtros de Interface
+    // 2. Filtros de Interface (Query Params)
     if (oscId) {
       conditions.push('d.osc_id = ?');
       params.push(oscId);
@@ -61,29 +63,19 @@ export const getDocuments = async (req, res) => {
 
     const [rows] = await pool.execute(query, params);
 
-    // --- CORREÇÃO CRUCIAL AQUI ---
-    // Mapeamos os nomes do banco para os nomes que o Documents.jsx espera
+    // 3. Blindagem de Dados (Para o Frontend não quebrar)
     const safeDocs = rows.map(doc => ({
         id: doc.id,
-        
-        // Frontend espera 'name', Backend tinha 'title'/'original_name'
-        name: doc.original_name || 'Sem Nome', 
-        
-        // Frontend espera 'original_name' no handler de download
-        original_name: doc.original_name, 
-
-        // Frontend espera 'osc', Backend tinha 'oscName'
-        osc: doc.osc_name || 'Sem Nome', 
-        
-        // Frontend espera 'date' para ordenar, Backend tinha 'createdAt'
-        date: doc.created_at, 
-        
-        status: doc.status || 'Pendente',
+        title: doc.original_name || 'Documento sem nome',
+        oscName: doc.osc_name || 'Sem nome',
         type: doc.mime_type || 'application/octet-stream',
-        size: doc.file_size_bytes || 0
+        createdAt: doc.created_at,
+        status: doc.status || 'Pendente',
+        size: doc.file_size_bytes || 0,
+        hasFile: !!doc.saved_filename
     }));
 
-    console.log(`[Docs] Enviando ${safeDocs.length} documentos formatados para o React.`);
+    console.log(`[Docs] Enviando ${safeDocs.length} documentos.`);
     res.json(safeDocs);
 
   } catch (error) {
@@ -92,8 +84,10 @@ export const getDocuments = async (req, res) => {
   }
 };
 
-// Upload (Placeholder)
+// Upload de Documento
 export const uploadDocument = async (req, res) => {
+    // Implementaremos se necessário para o contador, 
+    // mas o foco agora é listar o que ele recebeu.
     res.status(501).json({ message: 'Not implemented yet' });
 };
 
@@ -101,8 +95,7 @@ export const uploadDocument = async (req, res) => {
 export const downloadDocument = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // Busca o nome do arquivo salvo no disco
+    // Verifica se o documento existe
     const [rows] = await pool.execute('SELECT saved_filename, original_name FROM documents WHERE id = ?', [id]);
 
     if (rows.length === 0) {
@@ -110,19 +103,12 @@ export const downloadDocument = async (req, res) => {
     }
 
     const { saved_filename, original_name } = rows[0];
-    
-    // Caminho absoluto para a pasta uploads
     const filePath = path.join(__dirname, '../../uploads', saved_filename);
 
-    console.log(`[Download] Tentando baixar: ${filePath}`);
-
     if (fs.existsSync(filePath)) {
-      // Força o download com o nome original
       res.download(filePath, original_name);
     } else {
-      console.error(`[Download] ARQUIVO NÃO EXISTE NO DISCO: ${filePath}`);
-      // Se não achar o arquivo físico, criamos um dummy apenas para não travar o teste
-      // (Em produção, isso seria um erro 404 real)
+      console.error(`[Download] Arquivo físico não encontrado: ${filePath}`);
       res.status(404).json({ message: 'Arquivo físico não encontrado no servidor.' });
     }
   } catch (error) {
@@ -131,11 +117,12 @@ export const downloadDocument = async (req, res) => {
   }
 };
 
-// Atualizar Status
+// Atualizar Status (Aprovar/Rejeitar)
 export const updateDocumentStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body; 
+
         await pool.execute('UPDATE documents SET status = ? WHERE id = ?', [status, id]);
         res.json({ message: `Status atualizado para ${status}` });
     } catch (error) {

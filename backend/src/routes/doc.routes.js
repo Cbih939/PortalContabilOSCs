@@ -10,17 +10,19 @@ const router = Router();
 
 router.use(protect);
 
-// Rota que o Frontend chama para listar (Meus Documentos)
-// Mapeamos '/received' para a função genérica getDocuments que já filtra pelo usuário
+// 1. Rota de Listagem (IMPORTANTE: Deve vir antes das rotas com :id)
 router.get('/received', getDocuments);
-
-// Rota genérica de listagem (caso usada em outro lugar)
 router.get('/', getDocuments);
 
-// Download
-router.get('/:id/download', downloadDocument);
+// 2. Rota de Download (Correção do erro 404 do botão de impressão)
+// O Frontend chama: /api/documents/download/4
+router.get('/download/:id', downloadDocument);
 
-// Atualizar Status
+// 3. Rota de Visualização (Correção do erro 404 do modal de pré-visualização)
+// O Frontend chama: /api/documents/4
+router.get('/:id', downloadDocument);
+
+// 4. Atualizar Status
 router.patch('/:id/status', updateDocumentStatus);
 
 export default router;
