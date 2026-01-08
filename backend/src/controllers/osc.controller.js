@@ -1,23 +1,34 @@
 import pool from '../config/db.js';
 
-// Listar "Minhas OSCs" (Chamada pela rota /api/oscs/my)
+// Listar "Minhas OSCs"
 export const getMyOSCs = async (req, res) => {
     try {
         const userId = req.user.id;
         const userRole = req.user.role;
 
-        console.log(`[OSC] Buscando OSCs para o usuário ID: ${userId} (${userRole})`);
+        console.log(`[OSC] Buscando lista para User ID: ${userId}`);
 
-        // CORREÇÃO: Ajustei 'o.city' para 'o.cidade' conforme seu banco de dados
+        // QUERY ROBUSTA: Traz todos os campos possíveis para evitar erros no Frontend
         let query = `
             SELECT 
                 o.id, 
                 o.cnpj, 
-                COALESCE(o.razao_social, u.name, 'OSC Sem Nome') as name, 
+                -- Garante que tenha nome
+                COALESCE(o.razao_social, u.name, 'Sem Nome') as name, 
+                o.razao_social, -- Envia também o original
+                
+                -- Campos de Contato e Responsável (Necessário para a tabela)
+                o.responsible, 
                 o.email, 
                 o.phone, 
+                
+                -- Endereço (Envia com dois nomes para garantir compatibilidade)
                 o.cidade,
+                o.cidade as city, 
                 o.estado,
+                o.estado as state,
+
+                -- Status do Usuário vinculado
                 u.status as status
             FROM oscs o
             LEFT JOIN users u ON o.user_id = u.id
@@ -25,13 +36,11 @@ export const getMyOSCs = async (req, res) => {
         
         const params = [];
 
-        // Se for Contador, filtra apenas as que ele atende
+        // Filtros de Segurança
         if (userRole === 'Contador') {
             query += ' WHERE o.assigned_contador_id = ?';
             params.push(userId);
-        } 
-        // Se for OSC, vê apenas a sua própria
-        else if (userRole === 'OSC') {
+        } else if (userRole === 'OSC') {
             query += ' WHERE o.user_id = ?';
             params.push(userId);
         }
@@ -40,17 +49,16 @@ export const getMyOSCs = async (req, res) => {
 
         const [rows] = await pool.execute(query, params);
         
-        console.log(`[OSC] Sucesso. Encontradas ${rows.length} organizações.`);
+        console.log(`[OSC] Enviando ${rows.length} registros para o frontend.`);
         res.json(rows);
 
     } catch (error) {
-        // Este log vai aparecer no seu terminal se der erro novamente
-        console.error('[OSC] ERRO SQL:', error.message);
+        console.error('[OSC] Erro SQL:', error);
         res.status(500).json({ message: 'Erro ao listar OSCs.' });
     }
 };
 
-// Obter detalhes de uma OSC específica
+// Detalhes da OSC
 export const getOSCById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -61,7 +69,7 @@ export const getOSCById = async (req, res) => {
         }
         res.json(rows[0]);
     } catch (error) {
-        console.error('[OSC] Erro Detalhes:', error.message);
-        res.status(500).json({ message: 'Erro ao buscar detalhes da OSC.' });
+        console.error(error);
+        res.status(500).json({ message: 'Erro ao buscar detalhes.' });
     }
 };
