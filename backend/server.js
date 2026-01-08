@@ -11,7 +11,8 @@ import authRoutes from './src/routes/auth.routes.js';
 import contadorRoutes from './src/routes/contador.routes.js';
 import userRoutes from './src/routes/user.routes.js';
 import oscRoutes from './src/routes/osc.routes.js';
-import docRoutes from './src/routes/doc.routes.js'; // <--- NOVO
+import docRoutes from './src/routes/doc.routes.js';
+import templateRoutes from './src/routes/template.routes.js';
 
 dotenv.config();
 
@@ -33,6 +34,8 @@ app.use('/api/contador', contadorRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/oscs', oscRoutes);
 app.use('/api/documents', docRoutes); // <--- CONEXÃO FEITA
+app.use('/api/templates', templateRoutes);
+
 
 app.get('/', (req, res) => {
     res.send('API Portal Contábil a funcionar 🚀');

@@ -1,60 +1,27 @@
-// backend/src/routes/template.routes.js
-
-import express from 'express';
-// Middlewares
-import { protect, checkRole } from '../middlewares/auth.middleware.js';
-import upload from '../middlewares/upload.middleware.js'; // Nosso middleware Multer
-// Constantes
-import { ROLES } from '../utils/constants.js';
-// Controladores
-import {
-  listTemplates,
-  uploadTemplate,
-  downloadTemplate,
-  deleteTemplate
+import { Router } from 'express';
+import { protect } from '../middlewares/auth.middleware.js';
+import { upload } from '../middlewares/upload.middleware.js'; // Importa o Multer
+import { 
+    getTemplates, 
+    uploadTemplate, 
+    downloadTemplate, 
+    deleteTemplate 
 } from '../controllers/template.controller.js';
 
-// Cria o router
-const router = express.Router();
+const router = Router();
 
-/* --- Definição das Rotas para /api/templates --- */
+router.use(protect); // Todas exigem login
 
-// GET /api/templates
-// Lista todos os modelos (para Contador e OSC)
-router.get(
-  '/',
-  protect,
-  checkRole([ROLES.CONTADOR, ROLES.OSC]),
-  listTemplates
-);
+// Listar
+router.get('/', getTemplates);
 
-// POST /api/templates
-// Faz upload de um novo modelo (Apenas Contador)
-router.post(
-  '/',
-  protect,
-  checkRole([ROLES.CONTADOR]),
-  upload.single('templateFile'), // Espera um campo 'templateFile' no FormData
-  uploadTemplate
-);
+// Upload (Note o upload.single('file') -> 'file' é o nome do campo no formulário do React)
+router.post('/', upload.single('file'), uploadTemplate);
 
-// GET /api/templates/:id/download
-// Baixa um modelo específico (Contador e OSC)
-router.get(
-  '/:id/download',
-  protect,
-  checkRole([ROLES.CONTADOR, ROLES.OSC]),
-  downloadTemplate
-);
+// Download
+router.get('/:id/download', downloadTemplate);
 
-// DELETE /api/templates/:id
-// Apaga um modelo (Apenas Contador)
-router.delete(
-  '/:id',
-  protect,
-  checkRole([ROLES.CONTADOR]),
-  deleteTemplate
-);
+// Excluir
+router.delete('/:id', deleteTemplate);
 
-// Exporta o router
 export default router;
