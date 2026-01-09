@@ -59,13 +59,13 @@ export const login = async (req, res) => {
 
         // CORREÇÃO: Resposta estruturada com 'user' para o Frontend
         return res.json({
-            token,
+            token: token,
             user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                status: user.status
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            status: user.status
             }
         });
 

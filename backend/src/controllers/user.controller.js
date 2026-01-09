@@ -54,7 +54,7 @@ export const createUser = async (req, res) => {
 };
 
 /**
- * CORREÇÃO: Atualiza e retorna o objeto USER para o Frontend não dar "undefined"
+ * UPDATE USERs
  */
 export const updateUser = async (req, res) => {
     try {
@@ -63,7 +63,7 @@ export const updateUser = async (req, res) => {
 
         console.log(`[User Update] Processando ID: ${id}`);
 
-        // 1. Executa a atualização no banco
+        // 1. Atualiza no banco de dados
         const [result] = await pool.execute(
             'UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?',
             [name, email, role || 'Contador', id]
@@ -73,7 +73,7 @@ export const updateUser = async (req, res) => {
             return res.status(404).json({ message: 'Utilizador não encontrado.' });
         }
 
-        // 2. BUSCA OS DADOS ATUALIZADOS para o React atualizar o AuthContext
+        // 2. BUSCA OS DADOS ATUALIZADOS (Isto evita o erro de 'user: undefined' no console)
         const [rows] = await pool.execute(
             'SELECT id, name, email, role, status FROM users WHERE id = ?',
             [id]
@@ -81,13 +81,13 @@ export const updateUser = async (req, res) => {
         
         const updatedUser = rows[0];
 
-        console.log(`[User Update] Sucesso para: ${updatedUser.name}`);
+        console.log(`[User Update] Sucesso total para: ${updatedUser.name}`);
 
-        // 3. Retorna 'user' explicitamente
+        // 3. Resposta que o Frontend (index-EZfsWbwC.js:52) exige
         return res.json({ 
             success: true, 
             message: 'Perfil atualizado com sucesso!',
-            user: updatedUser 
+            user: updatedUser // <--- ESSENCIAL
         });
 
     } catch (error) {
@@ -95,6 +95,10 @@ export const updateUser = async (req, res) => {
         return res.status(500).json({ message: 'Erro interno ao salvar perfil.' });
     }
 };
+
+/**
+ * DELETE USERs
+ */
 
 export const deleteUser = async (req, res) => {
   try {
