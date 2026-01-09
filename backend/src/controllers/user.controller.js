@@ -130,21 +130,21 @@ export const updateUser = async (req, res) => {
         const { id } = req.params;
         const { name, email, role } = req.body;
 
-        // 1. Verificar se o utilizador existe
+        console.log(`[User] Tentativa de atualização para o ID: ${id}`);
+
+        // 1. Verificação simples de existência (usando apenas o ID)
         const [userExists] = await pool.execute('SELECT id FROM users WHERE id = ?', [id]);
         
         if (userExists.length === 0) {
             return res.status(404).json({ message: 'Utilizador não encontrado.' });
         }
 
-        // 2. Atualizar os dados (apenas campos permitidos)
-        // Mantemos o password_hash intacto conforme a sua instrução
+        // 2. Atualização dos campos permitidos
+        // NOTA: Não incluímos password_hash aqui para não gerar o erro 500/502
         await pool.execute(
             'UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?',
             [name, email, role, id]
         );
-
-        console.log(`[User] Perfil do ID ${id} atualizado com sucesso.`);
 
         res.json({ message: 'Perfil atualizado com sucesso!' });
 

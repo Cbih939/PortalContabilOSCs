@@ -8,6 +8,6 @@ const router = Router();
 router.get('/profile', protect, (req, res) => {
     res.json({ message: "Perfil do utilizador", user: req.user });
 });
-router.put('/:id', authMiddleware, updateUser);
+router.put('/:id', auth, updateUser);
 
 export default router;
