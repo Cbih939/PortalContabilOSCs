@@ -111,27 +111,30 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, email } = req.body; // Removemos o 'role' daqui para testar
+        const { name, email, role } = req.body;
 
-        console.log(`[User Debug] Tentando atualizar ID: ${id} com Nome: ${name} e Email: ${email}`);
+        // Log para confirmar que os dados chegaram ao servidor
+        console.log(`[User Update] ID: ${id} | Nome: ${name} | Email: ${email}`);
 
-        // Query ultra-segura: apenas colunas que todo sistema possui
-        const [result] = await pool.execute(
-            'UPDATE users SET name = ?, email = ? WHERE id = ?',
-            [name, email, id]
-        );
+        // Usando a sintaxe mais compatível com versões antigas do mysql2
+        const sql = 'UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?';
+        const values = [name, email, role || 'Contador', id];
+
+        const [result] = await pool.query(sql, values);
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Utilizador não encontrado ou sem alterações.' });
+            return res.status(404).json({ message: 'Utilizador não encontrado.' });
         }
 
-        res.json({ success: true, message: 'Perfil atualizado com sucesso!' });
+        console.log(`[User Update] Sucesso para o ID: ${id}`);
+        return res.json({ success: true, message: 'Perfil atualizado com sucesso!' });
+
     } catch (error) {
-        // Este log vai dizer exatamente qual coluna está faltando
-        console.error('[User SQL Error]:', error.sqlMessage || error);
-        res.status(500).json({ 
-            message: 'Erro interno no banco de dados.',
-            details: error.sqlMessage // Envia o erro do MySQL para o console do navegador
+        // Log detalhado no PM2 para sabermos o motivo exato se falhar
+        console.error('[User SQL Error Details]:', error);
+        return res.status(500).json({ 
+            message: 'Erro interno ao salvar perfil.',
+            error: error.message 
         });
     }
 };
