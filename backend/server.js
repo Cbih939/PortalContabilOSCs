@@ -14,7 +14,7 @@ import docRoutes from './src/routes/doc.routes.js';
 import templateRoutes from './src/routes/template.routes.js';
 import noticeRoutes from './src/routes/notice.routes.js';
 import messageRoutes from './src/routes/message.routes.js';
-import publicFileRoutes from './routes/publicFile.routes.js';
+import publicFileRoutes from './src/routes/publicFile.routes.js';
 
 dotenv.config();
 
