@@ -14,7 +14,6 @@ export const login = async (req, res) => {
 
         console.log('[Auth] Tentativa de login:', email);
 
-        // Busca pelo campo correto: password_hash
         const [rows] = await pool.execute(
             'SELECT id, name, email, password_hash, role, status FROM users WHERE email = ?',
             [email]
@@ -30,15 +29,31 @@ export const login = async (req, res) => {
             return res.status(403).json({ message: 'Conta inativa.' });
         }
 
-        // Compara a senha enviada com o hash do banco
-        const isMatch = await bcrypt.compare(password, user.password_hash);
+        // --- VERIFICAÇÃO HÍBRIDA ---
+        let isMatch = false;
+        try {
+            // Tenta comparar como Bcrypt
+            isMatch = await bcrypt.compare(password, user.password_hash);
+        } catch (e) {
+            isMatch = false;
+        }
+
+        // Fallback: Se não casou, tenta comparar texto simples diretamente
+        if (!isMatch && password === user.password_hash) {
+            console.log('[Auth] Senha em texto plano detectada. Convertendo para Hash...');
+            isMatch = true;
+            
+            // Opcional: Atualiza o banco para Hash para maior segurança
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
+            await pool.execute('UPDATE users SET password_hash = ? WHERE id = ?', [hashedPassword, user.id]);
+        }
 
         if (!isMatch) {
-            console.log('[Auth] Senha incorreta.');
+            console.log('[Auth] Senha incorreta para:', email);
             return res.status(401).json({ message: 'Credenciais inválidas.' });
         }
 
-        // Gera o token
         const token = jwt.sign(
             { id: user.id, role: user.role, name: user.name },
             JWT_SECRET,
@@ -47,13 +62,7 @@ export const login = async (req, res) => {
 
         res.json({
             token,
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                status: user.status
-            }
+            user: { id: user.id, name: user.name, email: user.email, role: user.role, status: user.status }
         });
 
     } catch (error) {
