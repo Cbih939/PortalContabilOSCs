@@ -1,56 +1,76 @@
+// backend/src/controllers/osc.controller.js
 import pool from '../config/db.js';
 
 /**
- * @desc    Lista todas as OSCs para o Administrador
- * @route   GET /api/oscs
+ * @desc    Lista todas as OSCs para o Administrador com Debug Avançado
  */
 export const getAllOSCs = async (req, res) => {
     try {
-        console.log('[Admin] Iniciando busca global de OSCs...');
+        console.log('--- [DEBUG ADMIN OSC] INÍCIO DA REQUISIÇÃO ---');
 
-        // Query sem 'o.status' para evitar ER_BAD_FIELD_ERROR já identificado nos logs
+        // Query sem a coluna 'status' que não existe no seu banco
         const [rows] = await pool.execute(`
             SELECT 
                 o.id, 
                 o.razao_social, 
                 o.cnpj, 
-                u.name as nome_do_contador
+                u.name as nome_do_contador,
+                u.id as contador_id
             FROM oscs o
             LEFT JOIN users u ON o.user_id = u.id
         `);
 
-        // MAPEAMENTO CRÍTICO: Ajustamos os nomes das chaves para o que o React espera
-        const formattedRows = rows.map(osc => ({
-            id: osc.id,
-            // O Frontend busca por esses termos para exibir na tabela:
-            razao_social: osc.razao_social || 'Sem Razão Social',
-            nome: osc.razao_social || 'Sem Razão Social', 
-            cnpj: osc.cnpj || '00.000.000/0000-00',
-            // Coluna 'CONTADOR ASSOCIADO' na sua imagem:
-            contador_associado: osc.nome_do_contador || 'Não atribuído',
-            // Coluna 'STATUS' na sua imagem:
-            status: 'Ativo' // Valor fixo pois a coluna não existe no banco atual
-        }));
+        console.log(`[DEBUG] Linhas brutas vindas do MySQL: ${rows.length}`);
+        if (rows.length > 0) {
+            console.log('[DEBUG] Exemplo da primeira linha bruta:', JSON.stringify(rows[0]));
+        }
 
-        console.log(`[Admin] Sucesso: ${formattedRows.length} OSCs enviadas para a interface.`);
+        // Mapeamento com logs de transformação
+        const formattedRows = rows.map((osc, index) => {
+            const item = {
+                id: osc.id,
+                // Adicionamos múltiplas variações de nome para garantir compatibilidade com o Frontend
+                nome: osc.razao_social || 'Sem Nome',
+                razao_social: osc.razao_social || 'Sem Nome',
+                razaoSocial: osc.razao_social || 'Sem Nome',
+                cnpj: osc.cnpj || '',
+                // Verificamos como o Frontend chama o contador associado
+                contador_associado: osc.nome_do_contador || 'Não atribuído',
+                contadorNome: osc.nome_do_contador || 'Não atribuído',
+                // Injetamos um status fixo para evitar filtros de "Inativo" no Frontend
+                status: 'Ativo'
+            };
+            
+            if (index === 0) console.log('[DEBUG] Exemplo do primeiro objeto formatado que será enviado:', JSON.stringify(item));
+            return item;
+        });
+
+        console.log(`--- [DEBUG ADMIN OSC] SUCESSO: ENVIANDO ${formattedRows.length} OSCs ---`);
         return res.status(200).json(formattedRows);
 
     } catch (error) {
-        console.error('[OSC Controller Error]:', error.sqlMessage || error);
-        return res.status(500).json({ message: 'Erro interno ao carregar lista de OSCs.' });
+        console.error('!!! [DEBUG ADMIN OSC] ERRO CRÍTICO !!!');
+        console.error('Mensagem:', error.message);
+        console.error('SQL State:', error.sqlState);
+        console.error('SQL Message:', error.sqlMessage);
+        return res.status(500).json({ 
+            message: 'Erro interno ao carregar OSCs.',
+            debug_error: error.sqlMessage 
+        });
     }
 };
 
 /**
- * @desc    Lista OSCs vinculadas (Contador/OSC)
+ * @desc    Busca OSCs vinculadas ao Contador ou à própria OSC
  */
 export const getMyOSCs = async (req, res) => {
     try {
         const userId = req.user.id;
         const userRole = req.user.role;
+        console.log(`[DEBUG MY OSCs] UserID: ${userId}, Role: ${userRole}`);
 
         let query = `
-            SELECT o.*, u.status as user_status 
+            SELECT o.*, u.name as contador_nome 
             FROM oscs o 
             LEFT JOIN users u ON o.user_id = u.id
         `;
@@ -69,29 +89,27 @@ export const getMyOSCs = async (req, res) => {
         const formatted = rows.map(r => ({
             ...r,
             name: r.razao_social || 'Sem Nome',
-            status: r.user_status || 'Ativo'
+            status: 'Ativo'
         }));
 
         return res.json(formatted);
     } catch (error) {
-        console.error('[OSC Error getMyOSCs]:', error);
+        console.error('[DEBUG MY OSCs] Erro:', error);
         return res.status(500).json({ message: 'Erro ao buscar OSCs vinculadas.' });
     }
 };
 
 /**
- * @desc    Busca detalhes de uma OSC específica
+ * @desc    Busca detalhes por ID
  */
 export const getOSCById = async (req, res) => {
     try {
         const { id } = req.params;
         const [rows] = await pool.execute('SELECT * FROM oscs WHERE id = ?', [id]);
-
         if (rows.length === 0) return res.status(404).json({ message: 'OSC não encontrada.' });
-
         return res.status(200).json(rows[0]);
     } catch (error) {
-        console.error('[OSC Error getOSCById]:', error);
+        console.error('[DEBUG OSC BY ID] Erro:', error);
         return res.status(500).json({ message: 'Erro ao buscar detalhes.' });
     }
 };
