@@ -113,29 +113,38 @@ export const updateUser = async (req, res) => {
         const { id } = req.params;
         const { name, email, role } = req.body;
 
-        // Log para confirmar que os dados chegaram ao servidor
-        console.log(`[User Update] ID: ${id} | Nome: ${name} | Email: ${email}`);
+        console.log(`[User Update] Processando ID: ${id}`);
 
-        // Usando a sintaxe mais compatível com versões antigas do mysql2
-        const sql = 'UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?';
-        const values = [name, email, role || 'Contador', id];
-
-        const [result] = await pool.query(sql, values);
+        // 1. Executa a atualização no banco
+        const [result] = await pool.execute(
+            'UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?',
+            [name, email, role || 'Contador', id]
+        );
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'Utilizador não encontrado.' });
         }
 
-        console.log(`[User Update] Sucesso para o ID: ${id}`);
-        return res.json({ success: true, message: 'Perfil atualizado com sucesso!' });
+        // 2. BUSCA OS DADOS ATUALIZADOS (Crucial para o Frontend não receber undefined)
+        const [rows] = await pool.execute(
+            'SELECT id, name, email, role, status FROM users WHERE id = ?',
+            [id]
+        );
+        
+        const updatedUser = rows[0];
+
+        console.log(`[User Update] Sucesso para: ${updatedUser.name}`);
+
+        // 3. Retorna o objeto USER completo para o Frontend atualizar o AuthContext
+        return res.json({ 
+            success: true, 
+            message: 'Perfil atualizado com sucesso!',
+            user: updatedUser // <--- O Frontend precisa disso aqui
+        });
 
     } catch (error) {
-        // Log detalhado no PM2 para sabermos o motivo exato se falhar
-        console.error('[User SQL Error Details]:', error);
-        return res.status(500).json({ 
-            message: 'Erro interno ao salvar perfil.',
-            error: error.message 
-        });
+        console.error('[User SQL Error]:', error);
+        return res.status(500).json({ message: 'Erro interno ao salvar perfil.' });
     }
 };
 
