@@ -2,142 +2,75 @@
 import pool from '../config/db.js';
 
 /**
- * @desc    Lista todas as OSCs para o Administrador (Mapeado para ManageOSCs.jsx)
- * @route   GET /api/oscs
+ * @desc    Lista todas as OSCs para o Administrador (Compatível com ManageOSCs.jsx)
  */
 export const getAllOSCs = async (req, res) => {
     try {
-        console.log('[Admin] Iniciando busca global de OSCs...');
+        console.log('[Admin] Buscando OSCs para renderização no Frontend...');
 
-        // Query utilizando as colunas reais confirmadas pelo DESCRIBE
-        // Note: Removemos o.status pois a coluna não existe na tabela oscs
+        // Query direta nas colunas confirmadas pelo seu DESCRIBE
         const [rows] = await pool.execute(`
             SELECT 
                 o.id, 
                 o.razao_social, 
                 o.cnpj, 
-                u.name as contador_extenso
+                u.name as nome_do_contador
             FROM oscs o
             LEFT JOIN users u ON o.assigned_contador_id = u.id
         `);
 
-        // MAPEAMENTO EXATO para o Frontend (ManageOSCs.jsx)
+        // MAPEAMENTO CRÍTICO para o ManageOSCs.jsx não filtrar os resultados como vazios
         const formattedRows = rows.map(osc => ({
             id: osc.id,
             cnpj: osc.cnpj || '00.000.000/0000-00',
-            // O Frontend espera 'name' para exibir e filtrar (ManageOSCs.jsx:82, 117)
+            // O Frontend busca por 'name' (Linhas 82 e 117 do ManageOSCs.jsx)
             name: osc.razao_social || 'Sem Razão Social', 
-            // O Frontend espera 'contadorName' para exibir e filtrar (ManageOSCs.jsx:83, 119)
-            contadorName: osc.contador_extenso || 'Nenhum',
-            // O Frontend espera 'status' para renderizar o badge (ManageOSCs.jsx:123)
-            status: 'Ativo' 
+            // O Frontend busca por 'contadorName' (Linhas 83 e 119 do ManageOSCs.jsx)
+            contadorName: osc.nome_do_contador || 'Nenhum',
+            // O Frontend espera 'status' para o badge (Linha 123 do ManageOSCs.jsx)
+            status: 'Ativo'
         }));
 
-        console.log(`[Admin] Sucesso: ${formattedRows.length} OSCs enviadas com chaves compatíveis.`);
+        console.log(`[Admin] Sucesso: Enviando ${formattedRows.length} OSCs formatadas.`);
         return res.status(200).json(formattedRows);
 
     } catch (error) {
         console.error('[OSC Admin Error]:', error.sqlMessage || error.message);
-        return res.status(500).json({ 
-            message: 'Erro interno ao carregar lista de OSCs.',
-            error: error.sqlMessage 
-        });
-    }
-};
-
-/**
- * @desc    Lista OSCs vinculadas ao utilizador logado (Contador ou OSC)
- * @route   GET /api/oscs/my
- */
-export const getMyOSCs = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const userRole = req.user.role;
-
-        console.log(`[OSC My] Buscando para UserID: ${userId}, Role: ${userRole}`);
-
-        let query = `
-            SELECT o.id, o.razao_social, o.cnpj, o.responsible, o.email
-            FROM oscs o
-        `;
-        const params = [];
-
-        // Lógica de filtro baseada no papel do utilizador
-        if (userRole === 'Contador') {
-            query += ' WHERE o.assigned_contador_id = ?';
-            params.push(userId);
-        } else if (userRole === 'OSC') {
-            query += ' WHERE o.user_id = ?';
-            params.push(userId);
-        }
-
-        const [rows] = await pool.execute(query, params);
-        
-        const formatted = rows.map(r => ({
-            ...r,
-            name: r.razao_social || 'Sem Nome',
-            status: 'Ativo'
-        }));
-
-        return res.json(formatted);
-    } catch (error) {
-        console.error('[OSC MyOSCs Error]:', error);
-        return res.status(500).json({ message: 'Erro ao buscar OSCs vinculadas.' });
-    }
-};
-
-/**
- * @desc    Busca detalhes de uma OSC específica por ID
- * @route   GET /api/oscs/:id
- */
-export const getOSCById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        console.log(`[OSC Detail] Buscando ID: ${id}`);
-
-        const [rows] = await pool.execute('SELECT * FROM oscs WHERE id = ?', [id]);
-
-        if (rows.length === 0) {
-            return res.status(404).json({ message: 'OSC não encontrada.' });
-        }
-
-        // Retorna o objeto completo da OSC
-        return res.status(200).json(rows[0]);
-    } catch (error) {
-        console.error('[OSC Detail Error]:', error);
-        return res.status(500).json({ message: 'Erro ao buscar detalhes da OSC.' });
+        return res.status(500).json({ message: 'Erro ao carregar lista de OSCs.' });
     }
 };
 
 /**
  * @desc    Associa um contador a uma OSC
- * @route   PATCH /api/oscs/:id/assign
  */
 export const assignContador = async (req, res) => {
     try {
         const { id } = req.params;
-        const { contadorId } = req.body; // Espera { contadorId: X }
+        const { contadorId } = req.body;
 
-        console.log(`[Admin] Associando OSC ${id} ao Contador ${contadorId}`);
-
-        const [result] = await pool.execute(
+        await pool.execute(
             'UPDATE oscs SET assigned_contador_id = ? WHERE id = ?',
-            [contadorId, id]
+            [contadorId === "null" ? null : contadorId, id]
         );
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'OSC não encontrada.' });
-        }
-
-        // Busca a OSC atualizada para devolver ao frontend
-        const [updatedRows] = await pool.execute('SELECT * FROM oscs WHERE id = ?', [id]);
+        const [updated] = await pool.execute('SELECT id, razao_social as name FROM oscs WHERE id = ?', [id]);
         
         return res.json({
-            message: 'Contador associado com sucesso!',
-            osc: updatedRows[0]
+            message: 'Sucesso',
+            osc: updated[0]
         });
     } catch (error) {
-        console.error('[OSC Assign Error]:', error);
-        return res.status(500).json({ message: 'Erro ao associar contador.' });
+        return res.status(500).json({ message: 'Erro ao associar.' });
     }
+};
+
+// ... Mantenha getMyOSCs e getOSCById simplificados
+export const getMyOSCs = async (req, res) => {
+    const [rows] = await pool.execute('SELECT id, razao_social as name, cnpj FROM oscs');
+    res.json(rows);
+};
+
+export const getOSCById = async (req, res) => {
+    const [rows] = await pool.execute('SELECT * FROM oscs WHERE id = ?', [req.params.id]);
+    res.json(rows[0]);
 };
