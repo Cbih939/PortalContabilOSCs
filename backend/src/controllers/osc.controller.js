@@ -2,21 +2,16 @@
 import pool from '../config/db.js';
 
 /**
- * @desc    Lista as OSCs vinculadas ao utilizador logado (Contador ou própria OSC)
+ * @desc    Lista as OSCs vinculadas ao utilizador logado
  */
 export const getMyOSCs = async (req, res) => {
     try {
         const userId = req.user.id;
         const userRole = req.user.role;
 
-        console.log('--- DEBUG MY OSCs INÍCIO ---');
-        console.log(`1. Quem está pedindo? ID: ${userId}, Role: ${userRole}`);
+        console.log(`[OSC Debug] Quem pede: ID ${userId}, Role: ${userRole}`);
 
-        // TESTE 1: Verificar se existem OSCs no banco
-        const [total] = await pool.execute('SELECT COUNT(*) as t FROM oscs');
-        console.log(`2. Total absoluto de OSCs no banco: ${total[0].t}`);
-
-        // Query Base (Sem a coluna o.status que causava erro)
+        // Query sem a coluna o.status (usamos u.status da tabela de usuários como fallback)
         let query = `
             SELECT 
                 o.id, 
@@ -34,40 +29,28 @@ export const getMyOSCs = async (req, res) => {
         
         const params = [];
 
-        // Lógica de Filtro baseada no Role
         if (userRole === 'Contador') {
-            console.log('3. Aplicando filtro de Contador');
             query += ' WHERE o.assigned_contador_id = ?';
             params.push(userId);
         } else if (userRole === 'OSC') {
-            console.log('3. Aplicando filtro de OSC');
             query += ' WHERE o.user_id = ?';
             params.push(userId);
-        } else {
-            console.log('3. Sem filtro (Admin)');
         }
 
         const [rows] = await pool.execute(query, params);
-        console.log(`4. Resultado da query: ${rows.length} registros encontrados.`);
 
-        // Formatação segura para o Frontend
         const safeRows = rows.map(row => ({
             id: row.id,
             name: row.name || 'Sem Nome',
             cnpj: row.cnpj || '',
             responsible: row.responsible || 'Não informado',
-            status: row.user_status || 'Ativo' // Fallback para o status do usuário
+            status: row.user_status || 'Ativo'
         }));
 
-        console.log('--- DEBUG MY OSCs FIM ---');
         return res.json(safeRows);
-
     } catch (error) {
-        console.error('ERRO FATAL EM getMyOSCs:', error.sqlMessage || error);
-        return res.status(500).json({ 
-            message: 'Erro ao buscar suas OSCs', 
-            details: error.sqlMessage 
-        });
+        console.error('[OSC Error - getMyOSCs]:', error.sqlMessage || error);
+        return res.status(500).json({ message: 'Erro ao buscar suas OSCs' });
     }
 };
 
@@ -76,9 +59,9 @@ export const getMyOSCs = async (req, res) => {
  */
 export const getAllOSCs = async (req, res) => {
     try {
-        console.log('[Admin] Buscando lista global de OSCs...');
+        console.log('[Admin] Buscando lista global de OSCs (Query Blindada)...');
 
-        // Query direta (Removido o.status para evitar erro ER_BAD_FIELD_ERROR)
+        // REMOVIDO o.status para evitar o erro ER_BAD_FIELD_ERROR
         const [rows] = await pool.execute(`
             SELECT 
                 o.id, 
@@ -90,35 +73,29 @@ export const getAllOSCs = async (req, res) => {
             LEFT JOIN users u ON o.user_id = u.id
         `);
 
-        // Mapeamos os dados para garantir que o campo 'status' exista no JSON enviado ao React
         const formattedRows = rows.map(row => ({
             id: row.id,
             razao_social: row.razao_social || 'N/A',
             cnpj: row.cnpj || '',
             contador_responsavel: row.contador_responsavel || 'Não atribuído',
-            status: row.user_status || 'Ativo'
+            status: row.user_status || 'Ativo' // Injetamos o status do usuário ou 'Ativo' por padrão
         }));
 
-        console.log(`[Admin] Sucesso: ${rows.length} OSCs encontradas.`);
+        console.log(`[Admin] Sucesso: ${formattedRows.length} OSCs enviadas.`);
         return res.status(200).json(formattedRows);
 
     } catch (error) {
         console.error('[OSC Controller Error - getAllOSCs]:', error.sqlMessage || error);
-        return res.status(500).json({ 
-            message: 'Erro interno ao buscar lista de OSCs.',
-            error: error.sqlMessage 
-        });
+        return res.status(500).json({ message: 'Erro interno ao buscar lista de OSCs.' });
     }
 };
 
 /**
- * @desc    Busca os detalhes de uma OSC específica
+ * @desc    Busca detalhes de uma OSC
  */
 export const getOSCById = async (req, res) => {
     try {
         const { id } = req.params;
-        console.log(`[OSC] Buscando detalhes da ID: ${id}`);
-
         const [rows] = await pool.execute('SELECT * FROM oscs WHERE id = ?', [id]);
 
         if (rows.length === 0) {
@@ -127,7 +104,7 @@ export const getOSCById = async (req, res) => {
 
         return res.status(200).json(rows[0]);
     } catch (error) {
-        console.error('[OSC Controller Error - getOSCById]:', error.sqlMessage || error);
-        return res.status(500).json({ message: 'Erro ao buscar detalhes da OSC.' });
+        console.error('[OSC Controller Error]:', error.sqlMessage || error);
+        return res.status(500).json({ message: 'Erro ao buscar detalhes.' });
     }
 };
