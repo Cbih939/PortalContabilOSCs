@@ -2,9 +2,8 @@ import pool from '../config/db.js';
 
 export const getAllOSCs = async (req, res) => {
     try {
-        console.log('[Admin] Iniciando busca global de OSCs...');
+        console.log('[Admin] Buscando OSCs para renderização no Frontend...');
 
-        // Query BASE (apenas o que existe no seu DESCRIBE)
         const [rows] = await pool.execute(`
             SELECT 
                 o.id, 
@@ -15,23 +14,24 @@ export const getAllOSCs = async (req, res) => {
             LEFT JOIN users u ON o.assigned_contador_id = u.id
         `);
 
-        // MAPEAMENTO PARA O FRONTEND
+        // MAPEAMENTO EXATO PARA O SEU ManageOSCs.jsx
         const formattedRows = rows.map(osc => ({
             id: osc.id,
-            // O React busca por estas chaves para preencher as colunas:
-            razao_social: osc.razao_social || 'Sem Nome',
-            nome: osc.razao_social || 'Sem Nome', 
-            cnpj: osc.cnpj || '00.000.000/0000-00',
-            contador_associado: osc.nome_contador || 'Pendente',
-            status: 'Ativo' // Injetamos manual pois a coluna não existe no banco
+            cnpj: osc.cnpj || '',
+            // O Frontend espera 'name' (Linha 117 e Filtro Linha 82)
+            name: osc.razao_social || 'Sem Razão Social', 
+            // O Frontend espera 'contadorName' (Linha 119 e Filtro Linha 83)
+            contadorName: osc.nome_contador || 'Nenhum',
+            // O Frontend espera 'status' (Linha 123)
+            status: 'Ativo'
         }));
 
-        console.log(`[Admin] Sucesso: Enviando ${formattedRows.length} OSCs.`);
+        console.log(`[Admin] Sucesso: Encontradas ${formattedRows.length} OSCs.`);
         return res.status(200).json(formattedRows);
 
     } catch (error) {
         console.error('[OSC Admin Error]:', error.sqlMessage || error);
-        return res.status(500).json({ message: 'Erro interno no servidor' });
+        return res.status(500).json({ message: 'Erro interno' });
     }
 };
 
