@@ -15,12 +15,16 @@ export const verifyToken = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded;
+        req.user = decoded; // Contém id, role e name
         next();
     } catch (error) {
+        console.error('[Auth] Erro na verificação do token:', error.message);
         return res.status(403).json({ message: 'Token inválido ou expirado.' });
     }
 };
+
+// Alias para compatibilidade com outras rotas
+export const protect = verifyToken;
 
 // --- LÓGICA DE LOGIN ---
 export const login = async (req, res) => {
@@ -33,7 +37,7 @@ export const login = async (req, res) => {
 
         console.log('[Auth] Tentativa de login:', email);
 
-        // Busca pelo campo password_hash (conforme seu código atual)
+        // Busca pelo campo password_hash
         const [rows] = await pool.execute(
             'SELECT id, name, email, password_hash, role, status FROM users WHERE email = ?',
             [email]
@@ -49,40 +53,57 @@ export const login = async (req, res) => {
             return res.status(403).json({ message: 'Conta inativa.' });
         }
 
+        // --- VERIFICAÇÃO HÍBRIDA ---
         let isMatch = false;
         try {
+            // Tenta comparar como Bcrypt
             isMatch = await bcrypt.compare(password, user.password_hash);
         } catch (e) {
             isMatch = false;
         }
 
+        // Fallback: Se não casou, tenta comparar texto simples diretamente
         if (!isMatch && password === user.password_hash) {
-            console.log('[Auth] Senha em texto plano detectada.');
+            console.log('[Auth] Senha em texto plano detectada para:', email);
             isMatch = true;
             
-            // Atualização automática para Hash para segurança
+            // Atualização automática para Hash para segurança (Background)
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
-            await pool.execute('UPDATE users SET password_hash = ? WHERE id = ?', [hashedPassword, user.id]);
+            pool.execute('UPDATE users SET password_hash = ? WHERE id = ?', [hashedPassword, user.id])
+                .catch(err => console.error('[Auth] Erro ao atualizar hash:', err));
         }
 
         if (!isMatch) {
+            console.log('[Auth] Senha incorreta para:', email);
             return res.status(401).json({ message: 'Credenciais inválidas.' });
         }
 
+        // Gera o token com as informações necessárias
         const token = jwt.sign(
             { id: user.id, role: user.role, name: user.name },
             JWT_SECRET,
             { expiresIn: '24h' }
         );
 
-        res.json({
+        // RESPOSTA CORRIGIDA: Garante que o objeto 'user' existe
+        const userData = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            status: user.status
+        };
+
+        console.log('[Auth] Login bem-sucedido:', userData.email);
+
+        return res.json({
             token,
-            user: { id: user.id, name: user.name, email: user.email, role: user.role, status: user.status }
+            user: userData
         });
 
     } catch (error) {
-        console.error('Erro Login:', error);
-        res.status(500).json({ message: 'Erro interno do servidor.' });
+        console.error('[Auth Error]:', error);
+        return res.status(500).json({ message: 'Erro interno do servidor.' });
     }
 };
