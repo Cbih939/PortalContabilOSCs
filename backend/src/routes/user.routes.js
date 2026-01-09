@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { updateUser } from '../controllers/user.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 
 const router = Router();
@@ -7,5 +8,6 @@ const router = Router();
 router.get('/profile', protect, (req, res) => {
     res.json({ message: "Perfil do utilizador", user: req.user });
 });
+router.put('/:id', authMiddleware, updateUser);
 
 export default router;

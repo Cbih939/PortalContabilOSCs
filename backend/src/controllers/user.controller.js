@@ -126,62 +126,32 @@ export const createUser = async (req, res) => {
  * @body    { name?: string, email?: string, role?: string, status?: 'Ativo' | 'Inativo' }
  */
 export const updateUser = async (req, res) => {
-  try {
-    const { id: userIdToUpdate } = req.params; // ID do utilizador a ser atualizado (da URL)
-    const { id: loggedInUserId, role: loggedInUserRole } = req.user; // Quem está a pedir (do token)
-    
-    // --- Verificação de Permissão ---
-    const isSelf = Number(userIdToUpdate) === Number(loggedInUserId);
-    const isAdmin = loggedInUserRole === ROLES.ADMIN;
+    try {
+        const { id } = req.params;
+        const { name, email, role } = req.body;
 
-    // Se não for o próprio utilizador E não for um Admin
-    if (!isSelf && !isAdmin) { 
-      console.log(`[UpdateUser] Falha: Utilizador ${loggedInUserId} tentou editar ${userIdToUpdate}.`);
-      return res.status(403).json({ message: 'Acesso negado. Não pode editar este utilizador.' });
-    }
-    
-    const updateData = req.body;
-    
-    // --- Regras de Negócio ---
-    // O utilizador não pode mudar o seu próprio 'role' ou 'status'
-    if (isSelf) {
-        delete updateData.role;
-        delete updateData.status;
-        // Medida de segurança extra: não permitir que Admin se desative/mude perfil por esta rota
-        if (isAdmin && (updateData.role !== ROLES.ADMIN || updateData.status === 'Inativo')) {
-            delete updateData.role;
-            delete updateData.status;
-            console.warn(`[UpdateUser] Admin (ID: ${loggedInUserId}) tentou modificar o próprio role/status via API geral.`);
+        // 1. Verificar se o utilizador existe
+        const [userExists] = await pool.execute('SELECT id FROM users WHERE id = ?', [id]);
+        
+        if (userExists.length === 0) {
+            return res.status(404).json({ message: 'Utilizador não encontrado.' });
         }
-    }
-    
-    // Não permitir atualização de senha por esta rota (deve ter rota própria)
-    delete updateData.password;
-    delete updateData.password_hash;
 
-    // O modelo 'updateUser' lida com a atualização no DB
-    const updatedUser = await UserModel.updateUser(userIdToUpdate, updateData);
+        // 2. Atualizar os dados (apenas campos permitidos)
+        // Mantemos o password_hash intacto conforme a sua instrução
+        await pool.execute(
+            'UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?',
+            [name, email, role, id]
+        );
 
-    if (!updatedUser) {
-      return res.status(404).json({ message: 'Utilizador não encontrado.' });
-    }
+        console.log(`[User] Perfil do ID ${id} atualizado com sucesso.`);
 
-    // Retorna o utilizador atualizado (sem o hash da senha)
-    // eslint-disable-next-line no-unused-vars
-    const { password_hash, ...safeUser } = updatedUser;
-    res.status(200).json(safeUser);
-    
-  } catch (error) {
-    console.error('Erro no controlador updateUser:', error);
-    if (error.code === 'ER_DUP_ENTRY') { // Erro de email duplicado
-      return res.status(409).json({ 
-        message: 'Email já existe.', 
-        // Formato de erro para o frontend ler
-        errors: { email: 'Este email já está em uso por outra conta.' } 
-      });
+        res.json({ message: 'Perfil atualizado com sucesso!' });
+
+    } catch (error) {
+        console.error('[User] Erro ao atualizar perfil:', error);
+        res.status(500).json({ message: 'Erro interno ao salvar perfil.' });
     }
-    res.status(500).json({ message: 'Erro interno do servidor.' });
-  }
 };
 
 /**
