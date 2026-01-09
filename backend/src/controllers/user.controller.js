@@ -111,25 +111,28 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, email, role } = req.body;
+        const { name, email } = req.body; // Removemos o 'role' daqui para testar
 
-        // Log de segurança para PM2
-        console.log(`[User Update] Solicitado para ID: ${id}`);
+        console.log(`[User Debug] Tentando atualizar ID: ${id} com Nome: ${name} e Email: ${email}`);
 
-        // Atualização direta via pool para garantir compatibilidade com o banco atual
+        // Query ultra-segura: apenas colunas que todo sistema possui
         const [result] = await pool.execute(
-            'UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?',
-            [name, email, role, id]
+            'UPDATE users SET name = ?, email = ? WHERE id = ?',
+            [name, email, id]
         );
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'Utilizador não encontrado ou sem alterações.' });
         }
 
-        res.json({ message: 'Perfil atualizado com sucesso!' });
+        res.json({ success: true, message: 'Perfil atualizado com sucesso!' });
     } catch (error) {
-        console.error('[User Error]:', error);
-        res.status(500).json({ message: 'Erro interno ao salvar perfil.' });
+        // Este log vai dizer exatamente qual coluna está faltando
+        console.error('[User SQL Error]:', error.sqlMessage || error);
+        res.status(500).json({ 
+            message: 'Erro interno no banco de dados.',
+            details: error.sqlMessage // Envia o erro do MySQL para o console do navegador
+        });
     }
 };
 
