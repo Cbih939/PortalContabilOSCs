@@ -4,6 +4,25 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'seusecretoseguro123';
 
+// --- MIDDLEWARE DE VERIFICAÇÃO ---
+export const verifyToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ message: 'Acesso negado. Token não fornecido.' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (error) {
+        return res.status(403).json({ message: 'Token inválido ou expirado.' });
+    }
+};
+
+// --- LÓGICA DE LOGIN ---
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -14,6 +33,7 @@ export const login = async (req, res) => {
 
         console.log('[Auth] Tentativa de login:', email);
 
+        // Busca pelo campo password_hash (conforme seu código atual)
         const [rows] = await pool.execute(
             'SELECT id, name, email, password_hash, role, status FROM users WHERE email = ?',
             [email]
@@ -29,28 +49,24 @@ export const login = async (req, res) => {
             return res.status(403).json({ message: 'Conta inativa.' });
         }
 
-        // --- VERIFICAÇÃO HÍBRIDA ---
         let isMatch = false;
         try {
-            // Tenta comparar como Bcrypt
             isMatch = await bcrypt.compare(password, user.password_hash);
         } catch (e) {
             isMatch = false;
         }
 
-        // Fallback: Se não casou, tenta comparar texto simples diretamente
         if (!isMatch && password === user.password_hash) {
-            console.log('[Auth] Senha em texto plano detectada. Convertendo para Hash...');
+            console.log('[Auth] Senha em texto plano detectada.');
             isMatch = true;
             
-            // Opcional: Atualiza o banco para Hash para maior segurança
+            // Atualização automática para Hash para segurança
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
             await pool.execute('UPDATE users SET password_hash = ? WHERE id = ?', [hashedPassword, user.id]);
         }
 
         if (!isMatch) {
-            console.log('[Auth] Senha incorreta para:', email);
             return res.status(401).json({ message: 'Credenciais inválidas.' });
         }
 

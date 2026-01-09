@@ -130,8 +130,7 @@ export const updateUser = async (req, res) => {
         const { id } = req.params;
         const { name, email, role } = req.body;
 
-        // Atualizamos apenas o que é estritamente necessário para o perfil
-        // Sem mencionar password ou password_hash para evitar erros de coluna
+        // Atualização apenas de campos básicos do perfil
         const [result] = await pool.execute(
             'UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?',
             [name, email, role, id]
@@ -144,7 +143,7 @@ export const updateUser = async (req, res) => {
         res.json({ message: 'Perfil atualizado com sucesso!' });
     } catch (error) {
         console.error('[User Error]:', error);
-        res.status(500).json({ message: 'Erro ao processar atualização no servidor.' });
+        res.status(500).json({ message: 'Erro interno ao salvar perfil.' });
     }
 };
 
