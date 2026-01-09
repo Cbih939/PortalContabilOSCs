@@ -130,17 +130,15 @@ export const updateUser = async (req, res) => {
         const { id } = req.params;
         const { name, email, role } = req.body;
 
-        console.log(`[User] Tentativa de atualização para o ID: ${id}`);
-
-        // 1. Verificação simples de existência (usando apenas o ID)
+        // 1. Verificamos se o utilizador existe usando apenas o ID
         const [userExists] = await pool.execute('SELECT id FROM users WHERE id = ?', [id]);
         
         if (userExists.length === 0) {
             return res.status(404).json({ message: 'Utilizador não encontrado.' });
         }
 
-        // 2. Atualização dos campos permitidos
-        // NOTA: Não incluímos password_hash aqui para não gerar o erro 500/502
+        // 2. Atualizamos apenas os campos de perfil
+        // Se o banco usa 'password', o código abaixo não quebrará porque não mexe na senha
         await pool.execute(
             'UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?',
             [name, email, role, id]
@@ -149,7 +147,7 @@ export const updateUser = async (req, res) => {
         res.json({ message: 'Perfil atualizado com sucesso!' });
 
     } catch (error) {
-        console.error('[User] Erro ao atualizar perfil:', error);
+        console.error('[User Error]:', error);
         res.status(500).json({ message: 'Erro interno ao salvar perfil.' });
     }
 };
