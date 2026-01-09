@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
 import pool, { testConnection } from './src/config/db.js';
 
 // Rotas

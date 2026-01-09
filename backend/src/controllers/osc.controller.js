@@ -68,7 +68,49 @@ export const getMyOSCs = async (req, res) => {
     }
 };
 
+/**
+ * @desc    Lista todas as OSCs (para o Admin)
+ * @route   GET /api/oscs
+ */
+export const getAllOSCs = async (req, res) => {
+    try {
+        console.log('[Admin] Buscando lista de OSCs...');
+
+        // Query direta para buscar OSCs e o nome do contador associado (se houver)
+        const [rows] = await pool.execute(`
+            SELECT 
+                o.id, 
+                o.razao_social, 
+                o.cnpj, 
+                o.status, 
+                u.name as contador_responsavel
+            FROM oscs o
+            LEFT JOIN users u ON o.user_id = u.id
+        `);
+
+        res.status(200).json(rows);
+    } catch (error) {
+        console.error('[OSC Controller Error]:', error);
+        res.status(500).json({ message: 'Erro ao buscar OSCs no servidor.' });
+    }
+};
+
+/**
+ * @desc    Busca uma OSC específica
+ * @route   GET /api/oscs/:id
+ */
 export const getOSCById = async (req, res) => {
-    // ... manter igual ...
-    res.json({});
+    try {
+        const { id } = req.params;
+        const [rows] = await pool.execute('SELECT * FROM oscs WHERE id = ?', [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'OSC não encontrada.' });
+        }
+
+        res.status(200).json(rows[0]);
+    } catch (error) {
+        console.error('[OSC Controller Error]:', error);
+        res.status(500).json({ message: 'Erro ao buscar detalhes da OSC.' });
+    }
 };
