@@ -69,3 +69,37 @@ export const getOSCById = async (req, res) => {
     const [rows] = await pool.execute('SELECT * FROM oscs WHERE id = ?', [req.params.id]);
     res.json(rows[0]);
 };
+
+/**
+ * @desc    Atualiza os dados de perfil de uma OSC específica
+ * @route   PUT /api/oscs/:id
+ */
+export const updateOSC = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { razao_social, cnpj, email, phone, address, responsible } = req.body;
+
+        console.log(`[OSC Update] Atualizando perfil da OSC ID: ${id}`);
+
+        const [result] = await pool.execute(
+            `UPDATE oscs SET 
+                razao_social = ?, 
+                cnpj = ?, 
+                email = ?, 
+                phone = ?, 
+                address = ?, 
+                responsible = ? 
+            WHERE id = ?`,
+            [razao_social, cnpj, email, phone, address, responsible, id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'OSC não encontrada para atualização.' });
+        }
+
+        return res.status(200).json({ message: 'Perfil atualizado com sucesso!' });
+    } catch (error) {
+        console.error('[OSC Update Error]:', error);
+        return res.status(500).json({ message: 'Erro ao atualizar o perfil da OSC.' });
+    }
+};
