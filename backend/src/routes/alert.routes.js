@@ -1,15 +1,14 @@
-import express from 'express';
-// Vamos usar um controller "Mock" (falso) se o arquivo não existir, ou apontar para o certo
-// Mas como você fez reset, o controller de alerts talvez não exista.
-// Vamos criar rotas simples que retornam vazio para não quebrar o server.
+import { Router } from 'express';
 import { protect } from '../middlewares/auth.middleware.js';
+import * as controller from '../controllers/alert.controller.js'; // Importe o controller real
 
-const router = express.Router();
+const router = Router();
 router.use(protect);
 
-// Rotas "falsas" para evitar erro 404/500 no frontend
-router.get('/history', (req, res) => res.json([])); 
-router.get('/', (req, res) => res.json([]));
-router.post('/', (req, res) => res.json({ message: 'Aviso enviado' }));
+// Altera as rotas "falsas" pelas funções do controlador existente
+router.get('/', controller.getMyAlerts); 
+router.get('/history', controller.getSentNoticesHistory);
+router.post('/', controller.createAlert);
+router.patch('/:alertId/read', controller.markAsRead);
 
 export default router;
