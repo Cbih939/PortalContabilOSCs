@@ -6,16 +6,20 @@ import { hashPassword } from '../utils/bcrypt.utils.js';
 
 export const getAllUsers = async (req, res) => {
   try {
-    const filters = req.query; 
-    const users = await UserModel.findAll(filters);
-    const safeUsers = users.map(user => {
-      const { password_hash, ...safeUser } = user;
-      return safeUser;
-    });
-    res.status(200).json(safeUsers);
+    console.log('[User Admin] Buscando lista completa de utilizadores...');
+
+    // Busca direta no banco de dados
+    const [rows] = await pool.execute(
+      'SELECT id, name, email, role, status FROM users'
+    );
+
+    console.log(`[User Admin] Foram encontrados ${rows.length} utilizadores.`);
+
+    // Retorna a lista para o Administrador
+    res.status(200).json(rows);
   } catch (error) {
-    console.error('Erro no controlador getAllUsers:', error);
-    res.status(500).json({ message: 'Erro interno do servidor.' });
+    console.error('[User Admin Error]:', error);
+    res.status(500).json({ message: 'Erro ao buscar utilizadores no servidor.' });
   }
 };
 
