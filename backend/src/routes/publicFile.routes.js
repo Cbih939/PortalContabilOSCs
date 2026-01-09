@@ -1,18 +1,13 @@
 import express from 'express';
 import multer from 'multer';
-import * as controller from '../controllers/publicFile.controller.js';
-
-// --- CORREÇÃO IMPORTANTE ---
-// 1. O nome do arquivo tem ponto: auth.middleware.js
-// 2. O nome da função exportada é 'protect'
-import { protect } from '../middlewares/auth.middleware.js'; 
-
 import path from 'path';
 import fs from 'fs';
+import * as controller from '../controllers/publicFile.controller.js';
+import { protect } from '../middlewares/auth.middleware.js'; 
 
 const router = express.Router();
 
-// Configuração do Multer (Uploads)
+// Configuração do Multer (Armazenamento em disco)
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadPath = 'uploads/public/';
@@ -29,16 +24,15 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// --- ROTAS ---
-// Usamos 'protect' para garantir que apenas quem está logado pode mexer nos arquivos
+// --- ROTAS (api/public-files) ---
 
-// Upload (Apenas logado)
+// Listar arquivos (GET /api/public-files)
+router.get('/', protect, controller.getFiles);
+
+// Upload de arquivos (POST /api/public-files)
 router.post('/', protect, upload.single('file'), controller.uploadFile);
 
-// Deletar (Apenas logado)
+// Eliminar arquivo (DELETE /api/public-files/:id)
 router.delete('/:id', protect, controller.deleteFile);
-
-// Listar (Apenas logado)
-router.get('/', protect, controller.getFiles);
 
 export default router;
