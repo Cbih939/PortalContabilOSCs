@@ -64,7 +64,7 @@ export const login = async (req, res) => {
             id: user.id,
             name: user.name,
             email: user.email,
-            role: user.role,
+            role: user.role, // Agora sabemos que é Adm, Contador ou OSC
             status: user.status
             }
         });

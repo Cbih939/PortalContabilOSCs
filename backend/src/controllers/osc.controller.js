@@ -1,81 +1,89 @@
 import pool from '../config/db.js';
 
+/**
+ * @desc    Lista todas as OSCs para o Administrador
+ */
 export const getAllOSCs = async (req, res) => {
     try {
-        console.log('--- [DEBUG ADMIN OSC] PROCESSANDO REQUISIÇÃO ---');
+        console.log('[Admin] Buscando OSCs com colunas confirmadas...');
 
-        // Query ajustada: buscamos especificamente o contador vinculado via assigned_contador_id
-        // se a sua tabela usar esse campo para a relação Contador <-> OSC
+        // Query usando assigned_contador_id conforme seu DESCRIBE
         const [rows] = await pool.execute(`
             SELECT 
                 o.id, 
                 o.razao_social, 
                 o.cnpj, 
-                o.email,
-                u.name as nome_contador
+                u.name as contador_nome
             FROM oscs o
             LEFT JOIN users u ON o.assigned_contador_id = u.id
         `);
 
         const formattedRows = rows.map(osc => ({
             id: osc.id,
-            // Campos que o React costuma usar em tabelas administrativas
             nome: osc.razao_social || 'Sem Razão Social',
             razao_social: osc.razao_social || 'Sem Razão Social',
-            cnpj: osc.cnpj || '00.000.000/0000-00',
-            email: osc.email || '',
-            // Ajuste no nome do contador para garantir exibição
-            contador_associado: osc.nome_contador || 'Pendente de Atribuição',
+            cnpj: osc.cnpj || '',
+            // Este campo preenche a coluna "CONTADOR ASSOCIADO" na sua tela
+            contador_associado: osc.contador_nome || 'Não atribuído',
+            // Como não existe o.status, enviamos 'Ativo' por padrão
             status: 'Ativo'
         }));
 
-        console.log(`[DEBUG] Enviando ${formattedRows.length} OSCs formatadas.`);
-        return res.status(200).json(formattedRows);
-
+        console.log(`[Admin] Sucesso: ${formattedRows.length} OSCs enviadas.`);
+        res.status(200).json(formattedRows);
     } catch (error) {
-        console.error('!!! [DEBUG ADMIN OSC] ERRO SQL !!!', error.sqlMessage);
-        return res.status(500).json({ message: 'Erro ao carregar lista de OSCs.' });
+        console.error('[OSC Admin Error]:', error.sqlMessage || error);
+        res.status(500).json({ message: 'Erro ao carregar lista de OSCs.' });
     }
 };
 
+/**
+ * @desc    Lista OSCs vinculadas (Contador ou própria OSC)
+ */
 export const getMyOSCs = async (req, res) => {
     try {
         const userId = req.user.id;
         const userRole = req.user.role;
 
         let query = `
-            SELECT o.*, u.name as contador_nome 
-            FROM oscs o 
-            LEFT JOIN users u ON o.assigned_contador_id = u.id
+            SELECT o.id, o.cnpj, o.razao_social, o.responsible, o.email
+            FROM oscs o
         `;
         const params = [];
 
         if (userRole === 'Contador') {
             query += ' WHERE o.assigned_contador_id = ?';
             params.push(userId);
+        } else if (userRole === 'OSC') {
+            query += ' WHERE o.user_id = ?';
+            params.push(userId);
         }
 
         const [rows] = await pool.execute(query, params);
+        
         const formatted = rows.map(r => ({
             ...r,
             name: r.razao_social || 'Sem Nome',
             status: 'Ativo'
         }));
 
-        return res.json(formatted);
+        res.json(formatted);
     } catch (error) {
-        console.error('[DEBUG MY OSCs] Erro:', error);
-        return res.status(500).json({ message: 'Erro ao buscar OSCs.' });
+        console.error('[OSC MyOSCs Error]:', error);
+        res.status(500).json({ message: 'Erro ao buscar OSCs vinculadas.' });
     }
 };
 
+/**
+ * @desc    Busca detalhes por ID
+ */
 export const getOSCById = async (req, res) => {
     try {
         const { id } = req.params;
         const [rows] = await pool.execute('SELECT * FROM oscs WHERE id = ?', [id]);
         if (rows.length === 0) return res.status(404).json({ message: 'OSC não encontrada.' });
-        return res.status(200).json(rows[0]);
+        res.status(200).json(rows[0]);
     } catch (error) {
-        return res.status(500).json({ message: 'Erro interno.' });
+        res.status(500).json({ message: 'Erro interno.' });
     }
 };
