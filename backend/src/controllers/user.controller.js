@@ -130,25 +130,21 @@ export const updateUser = async (req, res) => {
         const { id } = req.params;
         const { name, email, role } = req.body;
 
-        // 1. Verificamos se o utilizador existe usando apenas o ID
-        const [userExists] = await pool.execute('SELECT id FROM users WHERE id = ?', [id]);
-        
-        if (userExists.length === 0) {
-            return res.status(404).json({ message: 'Utilizador não encontrado.' });
-        }
-
-        // 2. Atualizamos apenas os campos de perfil
-        // Se o banco usa 'password', o código abaixo não quebrará porque não mexe na senha
-        await pool.execute(
+        // Atualizamos apenas o que é estritamente necessário para o perfil
+        // Sem mencionar password ou password_hash para evitar erros de coluna
+        const [result] = await pool.execute(
             'UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?',
             [name, email, role, id]
         );
 
-        res.json({ message: 'Perfil atualizado com sucesso!' });
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Utilizador não encontrado.' });
+        }
 
+        res.json({ message: 'Perfil atualizado com sucesso!' });
     } catch (error) {
         console.error('[User Error]:', error);
-        res.status(500).json({ message: 'Erro interno ao salvar perfil.' });
+        res.status(500).json({ message: 'Erro ao processar atualização no servidor.' });
     }
 };
 
