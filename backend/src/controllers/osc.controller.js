@@ -59,34 +59,40 @@ export const getMyOSCs = async (req, res) => {
  */
 export const getAllOSCs = async (req, res) => {
     try {
-        console.log('[Admin] Buscando lista global de OSCs (Query Blindada)...');
+        console.log('[Admin] Buscando lista global de OSCs (Mapeamento Completo)...');
 
-        // REMOVIDO o.status para evitar o erro ER_BAD_FIELD_ERROR
+        // Query sem 'o.status' para evitar ER_BAD_FIELD_ERROR
         const [rows] = await pool.execute(`
             SELECT 
                 o.id, 
                 o.razao_social, 
                 o.cnpj, 
-                u.name as contador_responsavel,
-                u.status as user_status
+                o.user_id,
+                u.name as contador_nome
             FROM oscs o
             LEFT JOIN users u ON o.user_id = u.id
         `);
 
-        const formattedRows = rows.map(row => ({
-            id: row.id,
-            razao_social: row.razao_social || 'N/A',
-            cnpj: row.cnpj || '',
-            contador_responsavel: row.contador_responsavel || 'Não atribuído',
-            status: row.user_status || 'Ativo' // Injetamos o status do usuário ou 'Ativo' por padrão
+        // Mapeamos os nomes dos campos para garantir que o Frontend encontre o que procura
+        const formattedRows = rows.map(osc => ({
+            id: osc.id,
+            // O Frontend pode estar procurando por 'nome', 'name' ou 'razao_social'
+            nome: osc.razao_social || 'Sem Razão Social',
+            razao_social: osc.razao_social || 'Sem Razão Social',
+            cnpj: osc.cnpj || '00.000.000/0000-00',
+            // O campo 'CONTADOR ASSOCIADO' na sua imagem espera este valor:
+            contador_associado: osc.contador_nome || 'Não atribuído',
+            contador_nome: osc.contador_nome || 'Não atribuído',
+            // Injetamos o status como 'Ativo' já que a coluna não existe no banco
+            status: 'Ativo'
         }));
 
-        console.log(`[Admin] Sucesso: ${formattedRows.length} OSCs enviadas.`);
+        console.log(`[Admin] Sucesso: ${formattedRows.length} OSCs formatadas e enviadas.`);
         return res.status(200).json(formattedRows);
 
     } catch (error) {
-        console.error('[OSC Controller Error - getAllOSCs]:', error.sqlMessage || error);
-        return res.status(500).json({ message: 'Erro interno ao buscar lista de OSCs.' });
+        console.error('[OSC Controller Error]:', error.sqlMessage || error);
+        return res.status(500).json({ message: 'Erro interno ao processar OSCs.' });
     }
 };
 
