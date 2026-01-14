@@ -30,7 +30,7 @@ const upload = multer({ storage: storage });
 router.get('/', protect, controller.getFiles);
 
 // Upload de arquivos (POST /api/public-files)
-router.post('/', protect, upload.single('file'), controller.uploadFile);
+router.post('/', protect, upload.any(), controller.uploadFile);
 
 // Eliminar arquivo (DELETE /api/public-files/:id)
 router.delete('/:id', protect, controller.deleteFile);
