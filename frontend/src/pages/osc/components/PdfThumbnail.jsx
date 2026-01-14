@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// IMPORTAÇÃO LOCAL DO WORKER (Resolve o erro 404 do CDN)
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.entry';
+// Esta linha diz ao Vite para tratar o worker como um asset separado
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 export default function PdfThumbnail({ fileUrl }) {
   const canvasRef = useRef(null);
@@ -16,11 +16,10 @@ export default function PdfThumbnail({ fileUrl }) {
       if (!fileUrl) return;
       
       try {
-        // Adicionamos { withCredentials: true } se o seu backend exigir token para ver o arquivo
         const loadingTask = pdfjsLib.getDocument({
           url: fileUrl,
-          disableRange: true, // Melhora compatibilidade com alguns servidores
-          disableAutoFetch: true
+          // Necessário para evitar erros de cross-origin em alguns navegadores
+          isEvalDisabled: true 
         });
         
         const pdf = await loadingTask.promise;
@@ -30,9 +29,8 @@ export default function PdfThumbnail({ fileUrl }) {
         if (!canvas) return;
 
         const context = canvas.getContext('2d');
+        const viewport = page.getViewport({ scale: 0.3 }); // Escala baixa para performance
         
-        // Ajustamos a escala para a miniatura não ficar pesada
-        const viewport = page.getViewport({ scale: 0.4 });
         canvas.height = viewport.height;
         canvas.width = viewport.width;
 
@@ -44,7 +42,7 @@ export default function PdfThumbnail({ fileUrl }) {
         await page.render(renderContext).promise;
         setLoading(false);
       } catch (err) {
-        console.error("Erro ao gerar miniatura:", err);
+        console.error("Erro PDF.js:", err);
         setError(true);
         setLoading(false);
       }
@@ -53,22 +51,17 @@ export default function PdfThumbnail({ fileUrl }) {
     renderThumbnail();
   }, [fileUrl]);
 
-  if (error) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#999' }}>
-        <span style={{ fontSize: '10px' }}>Erro na capa</span>
-      </div>
-    );
-  }
+  if (error) return <div style={{ fontSize: '10px', color: '#ccc' }}>Capa indisponível</div>;
   
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-      {loading && (
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', background: '#f3f4f6' }}>
-          ...
-        </div>
-      )}
-      <canvas ref={canvasRef} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {loading && <div style={{ fontSize: '10px' }}>...</div>}
+      <canvas ref={canvasRef} style={{ 
+        maxWidth: '100%', 
+        maxHeight: '100%', 
+        display: loading ? 'none' : 'block',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)' 
+      }} />
     </div>
   );
 }
