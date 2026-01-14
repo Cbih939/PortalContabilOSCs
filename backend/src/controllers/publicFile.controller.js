@@ -5,11 +5,15 @@ import fs from 'fs';
  * @desc    Publicar novo arquivo (Biblioteca/Modelos)
  */
 export const uploadFile = async (req, res) => {
+  console.log('Arquivos recebidos:', req.files);
+
   try {
     const { title, category } = req.body;
-    const file = req.file;
+    const file = req.file || (req.files && req.files[0]);
 
-    if (!file) return res.status(400).json({ message: 'Nenhum arquivo enviado.' });
+    if (!file) {
+        return res.status(400).json({ message: 'Nenhum arquivo recebido no controller.' });
+    }
 
     // Ajuste o nome da tabela conforme o seu banco de dados
     const query = 'INSERT INTO public_files (title, category, file_path) VALUES (?, ?, ?)';
