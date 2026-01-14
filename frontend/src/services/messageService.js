@@ -38,11 +38,15 @@ export const getMyMessages = async () => {
  * @param {string} text - O conteúdo da mensagem.
  * @param {File|null} file - Arquivo anexo (Preparado para implementação futura).
  */
-export const sendMessage = async (messageData) => {
-  // Garantimos que o payload enviado tem os nomes de campos exatos da tabela 'messages'
+export const sendMessage = async (receiverId, content) => {
+  // Se o ID for nulo, não tenta fazer a requisição e avisa o erro
+  if (!receiverId) {
+    throw new Error("Não foi possível identificar o destinatário (contador).");
+  }
+
   const payload = {
-    receiver_id: messageData.receiver_id || messageData.toOscId, 
-    content: messageData.content || messageData.text
+    receiver_id: Number(receiverId),
+    content: content
   };
 
   const response = await api.post('/messages', payload);

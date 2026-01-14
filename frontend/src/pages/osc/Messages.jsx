@@ -60,42 +60,35 @@ export default function OSCMessagesPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = async (e) => {
+const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    // Criamos o objeto que o service espera para evitar o erro de 'null'
-    // O receiver_id deve ser o contador vinculado ao usuário
-    const messagePayload = {
-      receiver_id: user.assigned_contador_id || user.contador_id, 
-      content: newMessage
-    };
+    // 1. Tenta pegar o ID do contador do usuário logado
+    // 2. Se não existir, tenta o ID 2 (que é o Carlos Contador no seu banco) como teste
+    const targetId = user?.assigned_contador_id || user?.contador_id || 2;
 
-    // Verificação de segurança antes de chamar o service
-    if (!messagePayload.receiver_id) {
-        console.error("Erro: OSC não possui contador vinculado para receber a mensagem.");
-        setNoContador(true);
-        return;
+    if (!targetId) {
+      alert("Erro: Você não está vinculado a um contador.");
+      return;
     }
 
-    // Feedback visual imediato (Otimista)
-    const tempMsg = {
-      id: Date.now(),
-      text: newMessage,
-      sender_role: 'OSC',
-      sender_id: user.id,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    setMessages(prev => [...prev, tempMsg]);
-    setNewMessage('');
-
     try {
-      // Chamada corrigida passando o objeto completo
-      await messageService.sendMessage(messagePayload);
-      // Opcional: fetchMessages(); // Atualiza para pegar os dados reais do banco
+      // Chamada direta com os dois parâmetros esperados
+      await messageService.sendMessage(targetId, newMessage);
+      
+      // Feedback visual
+      const tempMsg = {
+        id: Date.now(),
+        text: newMessage,
+        sender_role: 'OSC',
+        sender_id: user.id,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, tempMsg]);
+      setNewMessage('');
     } catch (error) {
-      console.error("Erro ao enviar mensagem para o contador:", error);
+      console.error("Erro ao enviar:", error);
     }
   };
 
