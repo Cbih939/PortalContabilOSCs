@@ -97,14 +97,14 @@ export default function OSCDocumentsPage() {
         {/* Coluna 1: Info e Upload */}
         <div className={styles.uploadColumn}>
           <div className={`${styles.infoCard} mb-8`}>
-            <h2 className={styles.infoText}>
-  Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais. 
-  Baixe-os na aba{"DOCs | Modelos"}
-  <Link to="/osc/modelos" className={styles.inlineLink}>
-    "Docs | Modelos"
-  </Link>
-  , realize o registro em cartório (ou assine virtualmente) e os encaminhe para o nosso aplicativo abaixo:
-</h2>
+            <p className={styles.welcomeText}>
+              Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais. 
+              Baixe-os na aba{" "}
+                <Link to="/osc/modelos" className={styles.orangeLink}>
+                  "Docs | Modelos"
+                </Link>
+              , realize o registro em cartório (ou assine virtualmente) e os encaminhe para o nosso aplicativo abaixo:
+            </p>
             <p className={styles.infoText}><strong>Nome:</strong> {user.name}</p>
             <p className={styles.infoText}><strong>CNPJ:</strong> {user.cnpj || 'Não informado'}</p>
           </div>

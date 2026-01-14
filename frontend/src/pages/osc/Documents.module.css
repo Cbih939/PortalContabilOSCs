@@ -141,3 +141,27 @@
     min-height: 12rem; /* h-48 */
     color: #6b7280; /* text-gray-500 */
 }
+
+.welcomeText {
+  font-size: 0.95rem;
+  color: #4b5563; /* Cinza escuro */
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.orangeLink {
+  color: #ff6600; /* Laranja institucional */
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.orangeLink:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+.infoText {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
