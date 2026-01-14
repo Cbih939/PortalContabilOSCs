@@ -7,6 +7,7 @@ import styles from './Messages.module.css';
 const SendIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" /></svg>
 );
+
 const UnlinkIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
@@ -17,23 +18,23 @@ export default function OSCMessagesPage() {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  
-  // Estados de controle
   const [isLoading, setIsLoading] = useState(true);
   const [noContador, setNoContador] = useState(false); 
-  
   const messagesEndRef = useRef(null);
 
-  // Função de busca movida para fora para ser reutilizada
+  // Função de busca robusta
   const fetchMessages = async () => {
     try {
       const data = await messageService.getMyMessages();
-      // Mapeia os campos do banco (content) para o que o componente exibe (text)
+      
+      // Mapeamento crucial: garante que 'content' do banco vire 'text' no componente
       const formattedMessages = data.map(msg => ({
         ...msg,
-        text: msg.content || msg.text,
-        sender: msg.sender_id === user.id ? 'me' : 'other'
+        text: msg.content || msg.text || '',
+        // Define isMe baseado no ID do usuário logado ou role
+        isMe: msg.sender_id === user.id || msg.sender_role === 'OSC'
       }));
+
       setMessages(formattedMessages);
       setNoContador(false);
     } catch (error) {
@@ -46,49 +47,51 @@ export default function OSCMessagesPage() {
     }
   };
 
+  // Polling para manter o chat atualizado
   useEffect(() => {
-    fetchMessages();
-    
-    let interval;
-    if (!noContador) {
-      interval = setInterval(fetchMessages, 5000); // Polling a cada 5s
+    if (user?.id) {
+      fetchMessages();
+      const interval = setInterval(fetchMessages, 4000); // Atualiza a cada 4s
+      return () => clearInterval(interval);
     }
-    return () => clearInterval(interval);
-  }, [noContador]);
+  }, [user?.id, noContador]);
 
+  // Scroll automático para a última mensagem
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-const handleSendMessage = async (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    const textToSend = newMessage.trim();
+    if (!textToSend) return;
 
-    // 1. Tenta pegar o ID do contador do usuário logado
-    // 2. Se não existir, tenta o ID 2 (que é o Carlos Contador no seu banco) como teste
+    // Identifica o destinatário (Contador Carlos ID 2 como fallback seguro)
     const targetId = user?.assigned_contador_id || user?.contador_id || 2;
 
     if (!targetId) {
-      alert("Erro: Você não está vinculado a um contador.");
+      alert("Erro: Nenhum contador vinculado.");
       return;
     }
 
     try {
-      // Chamada direta com os dois parâmetros esperados
-      await messageService.sendMessage(targetId, newMessage);
-      
-      // Feedback visual
-      const tempMsg = {
-        id: Date.now(),
-        text: newMessage,
-        sender_role: 'OSC',
-        sender_id: user.id,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, tempMsg]);
+      // 1. Limpa o campo imediatamente para UX
       setNewMessage('');
+
+      // 2. Envia para o serviço (usando o formato que o backend espera)
+      await messageService.sendMessage({
+        receiver_id: targetId,
+        content: textToSend
+      });
+
+      // 3. Recarrega as mensagens do banco para confirmar o envio
+      await fetchMessages();
+      
     } catch (error) {
       console.error("Erro ao enviar:", error);
+      // Caso falhe, devolve o texto ao input para o usuário não perder a mensagem
+      setNewMessage(textToSend);
+      alert("Não foi possível enviar a mensagem. Tente novamente.");
     }
   };
 
@@ -127,24 +130,23 @@ const handleSendMessage = async (e) => {
           {isLoading ? (
             <div className={styles.loading}>Carregando conversas...</div>
           ) : messages.length === 0 ? (
-            <div className={styles.emptyState}> Mensagem direta com o contador </div>
+            <div className={styles.emptyState}>Inicie uma conversa com seu contador.</div>
           ) : (
-            messages.map((msg, index) => {
-              const isMe = msg.sender_role === 'OSC' || msg.sender_id === user.id;
-              
-              return (
-                <div key={msg.id || index} className={`${styles.messageRow} ${isMe ? styles.sent : styles.received}`}>
-                  <div className={styles.bubble}>
-                    <p className={styles.messageText}>{msg.text}</p>
-                    <span className={styles.timestamp}>
-                        {msg.created_at 
-                          ? new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
-                          : msg.timestamp}
-                    </span>
-                  </div>
+            messages.map((msg, index) => (
+              <div 
+                key={msg.id || index} 
+                className={`${styles.messageRow} ${msg.isMe ? styles.sent : styles.received}`}
+              >
+                <div className={styles.bubble}>
+                  <p className={styles.messageText}>{msg.text}</p>
+                  <span className={styles.timestamp}>
+                    {msg.created_at 
+                      ? new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+                      : 'Enviando...'}
+                  </span>
                 </div>
-              );
-            })
+              </div>
+            ))
           )}
           <div ref={messagesEndRef} />
         </div>
