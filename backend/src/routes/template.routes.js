@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { protect } from '../middlewares/auth.middleware.js';
-import { upload } from '../middlewares/upload.middleware.js'; // Importa o Multer
+import { upload } from '../middlewares/upload.middleware.js'; 
 import { 
     getTemplates, 
     uploadTemplate, 
@@ -10,18 +10,19 @@ import {
 
 const router = Router();
 
-router.use(protect); // Todas exigem login
+// Aplica proteção em todas as rotas deste router
+router.use(protect);
 
-// Listar
-router.get('/', protect, controller.getTemplates);
+// Listar (Corrigido: removido o "controller." pois importamos as funções diretamente)
+router.get('/', getTemplates);
 
-// Upload (Note o upload.single('file') -> 'file' é o nome do campo no formulário do React)
-router.post('/', protect, upload.any(), controller.uploadTemplate);
+// Upload
+router.post('/', upload.any(), uploadTemplate);
 
 // Download
 router.get('/:id/download', downloadTemplate);
 
 // Excluir
-router.delete('/:id', protect, controller.deleteTemplate);
+router.delete('/:id', deleteTemplate);
 
 export default router;

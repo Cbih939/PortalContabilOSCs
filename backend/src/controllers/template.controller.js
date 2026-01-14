@@ -1,8 +1,11 @@
 import pool from '../config/db.js';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Lista todos os modelos
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 export const getTemplates = async (req, res) => {
     try {
         const [rows] = await pool.execute('SELECT * FROM templates ORDER BY created_at DESC');
@@ -13,7 +16,6 @@ export const getTemplates = async (req, res) => {
     }
 };
 
-// Faz o upload de um novo modelo
 export const uploadTemplate = async (req, res) => {
   try {
     const file = req.files && req.files.length > 0 ? req.files[0] : (req.file || null);
@@ -37,7 +39,26 @@ export const uploadTemplate = async (req, res) => {
   }
 };
 
-// Remove um modelo (A função que estava em falta)
+// FUNÇÃO QUE ESTAVA EM FALTA
+export const downloadTemplate = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [rows] = await pool.execute('SELECT file_path, file_name FROM templates WHERE id = ?', [id]);
+
+        if (rows.length === 0) return res.status(404).json({ message: 'Modelo não encontrado.' });
+
+        // Caminho absoluto para a VPS
+        const filePath = path.join('/var/www/PortalContabilOSCs/backend/', rows[0].file_path);
+        
+        if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'Ficheiro não encontrado no servidor.' });
+
+        res.download(filePath, rows[0].file_name);
+    } catch (error) {
+        console.error('[Download Error]:', error);
+        res.status(500).json({ message: 'Erro ao descarregar ficheiro.' });
+    }
+};
+
 export const deleteTemplate = async (req, res) => {
   try {
     const { id } = req.params;
