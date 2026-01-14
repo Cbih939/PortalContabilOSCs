@@ -2,28 +2,38 @@ import pool from '../config/db.js';
 
 export const uploadFile = async (req, res) => {
   try {
-    // Captura o arquivo do array (usando .any() na rota)
-    const file = req.files && req.files.length > 0 ? req.files[0] : null;
+    // Captura os ficheiros (usando .any() ou .fields())
+    const files = req.files || [];
+    
+    // Filtramos para encontrar qual é o PDF e qual é a Capa
+    const pdfFile = files.find(f => f.fieldname === 'file');
+    const coverFile = files.find(f => f.fieldname === 'cover');
 
-    if (!file) {
-      return res.status(400).json({ message: 'Nenhum arquivo recebido pelo servidor.' });
+    if (!pdfFile) {
+      return res.status(400).json({ message: 'O arquivo PDF é obrigatório.' });
     }
 
     const { title, category } = req.body;
 
-    // SQL exato para as colunas: title, category, file_path
+    // Caminhos relativos para guardar na BD (removendo o prefixo absoluto do sistema)
+    const file_path = pdfFile.path.split('backend/')[1] || pdfFile.path;
+    const cover_path = coverFile ? (coverFile.path.split('backend/')[1] || coverFile.path) : null;
+
+    // SQL atualizado com a coluna cover_path
     const [result] = await pool.execute(
-      'INSERT INTO public_files (title, category, file_path) VALUES (?, ?, ?)',
+      'INSERT INTO public_files (title, category, file_path, cover_path) VALUES (?, ?, ?, ?)',
       [
-        title || file.originalname, 
+        title || pdfFile.originalname, 
         category || 'BIBLIOTECA', 
-        file.path // O Multer salva o caminho completo aqui
+        file_path,
+        cover_path
       ]
     );
 
     res.status(201).json({
       message: 'Upload realizado com sucesso!',
-      fileId: result.insertId
+      fileId: result.insertId,
+      cover_path
     });
 
   } catch (error) {
@@ -34,7 +44,6 @@ export const uploadFile = async (req, res) => {
 
 export const getFiles = async (req, res) => {
     try {
-        // created_at existe, então podemos ordenar por ela
         const [rows] = await pool.execute('SELECT * FROM public_files ORDER BY created_at DESC');
         res.json(rows);
     } catch (error) {
@@ -46,6 +55,7 @@ export const getFiles = async (req, res) => {
 export const deleteFile = async (req, res) => {
     try {
         const { id } = req.params;
+        // Opcional: Aqui poderia apagar os ficheiros físicos do disco também
         await pool.execute('DELETE FROM public_files WHERE id = ?', [id]);
         res.json({ message: 'Arquivo removido com sucesso.' });
     } catch (error) {

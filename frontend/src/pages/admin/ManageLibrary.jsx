@@ -4,7 +4,12 @@ import styles from './ManageLibrary.module.css';
 
 export default function ManageLibrary() {
   const [files, setFiles] = useState([]);
-  const [form, setForm] = useState({ title: '', category: 'BIBLIOTECA', file: null });
+  const [form, setForm] = useState({ 
+    title: '', 
+    category: 'BIBLIOTECA', 
+    file: null, 
+    cover: null // Novo campo
+  });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -21,46 +26,43 @@ export default function ManageLibrary() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  if (!form.file) {
-    return alert("Por favor, selecione um arquivo.");
-  }
-
-  // 1. Criar a instância do FormData
-  const formData = new FormData();
-  
-  // 2. Anexar os dados EXATAMENTE com esses nomes
-  formData.append('title', form.title);
-  formData.append('category', form.category);
-  formData.append('file', form.file); // O Multer no backend espera 'file' ou .any()
-
-  setLoading(true);
-  try {
-    // 3. Chamar o service passando o objeto formData puro
-    await fileService.uploadFile(formData);
+    e.preventDefault();
     
-    alert("Arquivo enviado com sucesso!");
-    setForm({ title: '', category: 'BIBLIOTECA', file: null });
-    document.getElementById('fileInput').value = ""; // Limpa o input
-    loadFiles();
-  } catch (error) {
-    console.error("Erro completo:", error.response?.data || error.message);
-    alert("Erro ao enviar. Verifique o console.");
-  } finally {
-    setLoading(false);
-  }
-};
+    if (!form.file) return alert("Por favor, selecione o arquivo PDF.");
+
+    const formData = new FormData();
+    formData.append('title', form.title);
+    formData.append('category', form.category);
+    formData.append('file', form.file); // O PDF
+    if (form.cover) {
+      formData.append('cover', form.cover); // A imagem da capa
+    }
+
+    setLoading(true);
+    try {
+      await fileService.uploadFile(formData);
+      alert("Publicado com sucesso!");
+      setForm({ title: '', category: 'BIBLIOTECA', file: null, cover: null });
+      document.getElementById('fileInput').value = "";
+      document.getElementById('coverInput').value = "";
+      loadFiles();
+    } catch (error) {
+      alert("Erro ao enviar. Verifique o console.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Gestão de Biblioteca e Modelos</h1>
       
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Adicionar Novo Arquivo</h3>
+        <h3 className={styles.cardTitle}>Adicionar Novo Conteúdo</h3>
         <form onSubmit={handleSubmit} className={styles.form}>
+          
           <div className={styles.inputGroup}>
-            <label className={styles.label}>Título do Arquivo</label>
+            <label className={styles.label}>Título</label>
             <input 
               type="text" 
               className={styles.input}
@@ -83,28 +85,43 @@ export default function ManageLibrary() {
             </select>
           </div>
 
+          {/* Campo do Ficheiro Principal (PDF) */}
           <div className={styles.inputGroup}>
-            <label className={styles.label}>Arquivo</label>
+            <label className={styles.label}>Arquivo PDF</label>
             <input 
               id="fileInput"
               type="file" 
+              accept=".pdf"
               className={styles.input}
               onChange={e => setForm({...form, file: e.target.files[0]})}
               required
             />
           </div>
 
+          {/* NOVO: Campo da Capa (Imagem) */}
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Imagem da Capa (Opcional)</label>
+            <input 
+              id="coverInput"
+              type="file" 
+              accept="image/*"
+              className={styles.input}
+              onChange={e => setForm({...form, cover: e.target.files[0]})}
+            />
+            {form.cover && <p className={styles.previewText}>Capa selecionada: {form.cover.name}</p>}
+          </div>
+
           <button type="submit" disabled={loading} className={styles.submitButton}>
-            {loading ? 'Enviando...' : 'Publicar Arquivo'}
+            {loading ? 'Processando...' : 'Publicar Agora'}
           </button>
         </form>
       </div>
 
-      {/* Tabela simplificada para brevidade */}
       <div className={styles.card}>
         <table className={styles.table}>
           <thead>
             <tr>
+              <th>Capa</th>
               <th>Título</th>
               <th>Ações</th>
             </tr>
@@ -112,9 +129,18 @@ export default function ManageLibrary() {
           <tbody>
             {files.map(f => (
               <tr key={f.id}>
+                <td>
+                  {f.cover_path ? (
+                    <img src={`https://contacomigo.org.br/${f.cover_path}`} alt="Capa" className={styles.miniCover} />
+                  ) : (
+                    <span className={styles.noCover}>Sem capa</span>
+                  )}
+                </td>
                 <td>{f.title}</td>
                 <td>
-                  <button onClick={() => fileService.deleteFile(f.id).then(loadFiles)}>Excluir</button>
+                  <button onClick={() => fileService.deleteFile(f.id).then(loadFiles)} className={styles.deleteBtn}>
+                    Excluir
+                  </button>
                 </td>
               </tr>
             ))}

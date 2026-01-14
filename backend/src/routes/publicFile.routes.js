@@ -26,8 +26,14 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 } 
 });
 
+// GET: Listagem
 router.get('/', protect, controller.getFiles);
+
+// POST: Upload de múltiplos campos (file e cover)
+// Usamos .any() para flexibilidade ou .fields() para maior rigor
 router.post('/', protect, upload.any(), controller.uploadFile);
+
+// DELETE: Remover
 router.delete('/:id', protect, controller.deleteFile);
 
 export default router;
