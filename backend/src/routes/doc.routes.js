@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import * as controller from '../controllers/doc.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 import { upload } from '../middlewares/upload.middleware.js'; 
 import { 
