@@ -38,16 +38,32 @@ export const getMyMessages = async () => {
  * @param {string} text - O conteúdo da mensagem.
  * @param {File|null} file - Arquivo anexo (Preparado para implementação futura).
  */
-export const sendMessage = async (receiverId, content) => {
-  // Se o ID for nulo, não tenta fazer a requisição e avisa o erro
-  if (!receiverId) {
-    throw new Error("Não foi possível identificar o destinatário (contador).");
+export const sendMessage = async (data) => {
+  // Se o componente passar dois argumentos separados, ou um objeto,
+  // nós normalizamos aqui para o formato que o banco exige.
+  
+  let payload = {};
+
+  if (typeof data === 'object' && data !== null) {
+    // Se recebeu um objeto (do novo componente corrigido)
+    payload = {
+      receiver_id: data.receiver_id,
+      content: data.content
+    };
+  } else {
+    // Fallback caso algum componente antigo envie argumentos separados
+    // Ex: sendMessage(targetId, text)
+    const [id, text] = arguments;
+    payload = {
+      receiver_id: id,
+      content: text
+    };
   }
 
-  const payload = {
-    receiver_id: Number(receiverId),
-    content: content
-  };
+  // Validação final antes do disparo
+  if (!payload.receiver_id || !payload.content) {
+    throw new Error("Dados inválidos para envio: ID do destinatário ou conteúdo ausente.");
+  }
 
   const response = await api.post('/messages', payload);
   return response.data;
