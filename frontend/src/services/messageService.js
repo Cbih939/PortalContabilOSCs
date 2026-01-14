@@ -38,21 +38,12 @@ export const getMyMessages = async () => {
  * @param {string} text - O conteúdo da mensagem.
  * @param {File|null} file - Arquivo anexo (Preparado para implementação futura).
  */
-export const sendMessage = async (toOscId, text, file) => {
-  // Prepara o corpo da requisição
-  const payload = {
-    text: text
-  };
-
-  // Se for o Contador enviando, ele precisa especificar para qual OSC é
-  if (toOscId) {
-    payload.toOscId = toOscId;
-  }
-
-  // Nota: Se o backend suportar upload de arquivos na mesma rota no futuro,
-  // esta lógica mudará para usar 'FormData'. Por enquanto, envia JSON.
-  
-  const response = await api.post('/messages', payload);
+export const sendMessage = async (receiver_id, content) => {
+  // Enviamos como um objeto simples. O Axios usará application/json automaticamente.
+  const response = await api.post('/messages', {
+    receiver_id: Number(receiver_id), // Garante que é um número
+    content: content
+  });
   return response.data;
 };
 

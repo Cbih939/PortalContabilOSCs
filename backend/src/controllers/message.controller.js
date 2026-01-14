@@ -106,19 +106,22 @@ export const getMessages = async (req, res) => {
 
 // 3. Enviar Mensagem
 export const sendMessage = async (req, res) => {
-    try {
-        const senderId = req.user.id;
-        const { receiverId, content } = req.body;
+  try {
+    const { receiver_id, content } = req.body;
+    const sender_id = req.user.id; // Garante que pega o ID do usuário autenticado
 
-        if (!content) return res.status(400).json({ message: 'Mensagem vazia.' });
-
-        await pool.execute(`
-            INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)
-        `, [senderId, receiverId, content]);
-
-        res.status(201).json({ message: 'Enviada', content, senderId, timestamp: new Date() });
-    } catch (error) {
-        console.error('[Chat] Erro ao enviar:', error);
-        res.status(500).json({ message: 'Erro ao enviar.' });
+    if (!receiver_id || !content) {
+      return res.status(400).json({ message: "Dados insuficientes (receiver_id e content são obrigatórios)." });
     }
+
+    const [result] = await pool.execute(
+      'INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)',
+      [sender_id, receiver_id, content]
+    );
+
+    res.status(201).json({ id: result.insertId, sender_id, receiver_id, content });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro ao enviar mensagem." });
+  }
 };
