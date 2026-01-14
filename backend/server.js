@@ -22,7 +22,11 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(cors({
+  origin: 'https://contacomigo.org.br', // ou '*' para testar
+  credentials: true
+}));
+
 app.use(express.json());
 
 const __filename = fileURLToPath(import.meta.url);
