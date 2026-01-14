@@ -6,8 +6,8 @@ export const getFilesByCategory = async (category) => {
 };
 
 export const uploadFile = async (formData) => {
-  // IMPORTANTE: Não defina 'Content-Type' manualmente aqui se estiver usando FormData.
-  // O Axios/Navegador fará isso automaticamente com o 'boundary' correto.
+  // O Axios identifica automaticamente o FormData e define o Content-Type correto
+  // NÃO adicione { headers: { 'Content-Type': 'application/json' } } aqui.
   const response = await api.post('/public-files', formData);
   return response.data;
 };

@@ -21,34 +21,36 @@ export default function ManageLibrary() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.file) return alert("Por favor, selecione um arquivo.");
-    
-    // Criando o FormData corretamente
-    const formData = new FormData();
-    formData.append('title', form.title);
-    formData.append('category', form.category);
-    formData.append('file', form.file); // O nome 'file' deve coincidir com o backend
+  e.preventDefault();
+  
+  if (!form.file) {
+    return alert("Por favor, selecione um arquivo.");
+  }
 
-    setLoading(true);
-    try {
-      await fileService.uploadFile(formData);
-      alert("Arquivo enviado com sucesso!");
-      
-      // Resetar form
-      setForm({ title: '', category: 'BIBLIOTECA', file: null });
-      if (document.getElementById('fileInput')) {
-        document.getElementById('fileInput').value = "";
-      }
-      
-      loadFiles();
-    } catch (error) {
-      console.error("Erro no envio:", error);
-      alert("Erro ao enviar arquivo. Verifique o console.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // 1. Criar a instância do FormData
+  const formData = new FormData();
+  
+  // 2. Anexar os dados EXATAMENTE com esses nomes
+  formData.append('title', form.title);
+  formData.append('category', form.category);
+  formData.append('file', form.file); // O Multer no backend espera 'file' ou .any()
+
+  setLoading(true);
+  try {
+    // 3. Chamar o service passando o objeto formData puro
+    await fileService.uploadFile(formData);
+    
+    alert("Arquivo enviado com sucesso!");
+    setForm({ title: '', category: 'BIBLIOTECA', file: null });
+    document.getElementById('fileInput').value = ""; // Limpa o input
+    loadFiles();
+  } catch (error) {
+    console.error("Erro completo:", error.response?.data || error.message);
+    alert("Erro ao enviar. Verifique o console.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className={styles.container}>

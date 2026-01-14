@@ -1,20 +1,15 @@
 // src/services/api.js
-
 import axios from 'axios';
 
-// 1. Define o URL base da sua API
-//    Use variáveis de ambiente (.env) para isto em produção
 const API_BASE_URL = "/api";
 
-// 2. Cria a instância do Axios
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // REMOVIDO: 'Content-Type': 'application/json'
+  // Deixe que o Axios defina o Content-Type automaticamente com base nos dados enviados.
 });
 
-// 3. Interceptor para Adicionar o Token JWT Automaticamente
+// Interceptor para Token JWT
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -28,7 +23,4 @@ api.interceptors.request.use(
   }
 );
 
-
-
-// 4. Exporta a instância configurada
 export default api;
