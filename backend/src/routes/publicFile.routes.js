@@ -7,7 +7,6 @@ import { protect } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-// 1. Configuração do Armazenamento
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadPath = '/var/www/PortalContabilOSCs/backend/uploads/public/';
@@ -22,19 +21,13 @@ const storage = multer.diskStorage({
   }
 });
 
-// 2. Definição da variável 'upload' com limite de 50MB para evitar o erro "File too large"
 const upload = multer({ 
   storage: storage,
-  limits: { fileSize: 50 * 1024 * 1024 } // 50MB
+  limits: { fileSize: 50 * 1024 * 1024 } 
 });
 
-// --- ROTAS ---
-
 router.get('/', protect, controller.getFiles);
-
-// A variável 'upload' agora está definida acima desta linha
 router.post('/', protect, upload.any(), controller.uploadFile);
-
 router.delete('/:id', protect, controller.deleteFile);
 
 export default router;
