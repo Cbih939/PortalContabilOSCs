@@ -90,12 +90,13 @@ export default function OSCDocumentsPage() {
   };
 
   return (
+    
     <div className={styles.pageContainer}>
       <div className={styles.grid}>
         {/* Coluna 1: Info e Upload */}
         <div className={styles.uploadColumn}>
           <div className={`${styles.infoCard} mb-8`}>
-            <h2 className={styles.cardTitle}>Minhas Informações</h2>
+            <h2 className={styles.cardTitle}>Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais. Baixe-os na aba <link to="/osc/modelos" className={styles.inlineLink}>"Docs | Modelos"</link>, realize o registro em cartório (ou assine virtualmente) e os encaminhe para o nosso aplicativo abaixo:</h2>
             <p className={styles.infoText}><strong>Nome:</strong> {user.name}</p>
             <p className={styles.infoText}><strong>CNPJ:</strong> {user.cnpj || 'Não informado'}</p>
           </div>
