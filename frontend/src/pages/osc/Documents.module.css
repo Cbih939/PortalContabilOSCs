@@ -1,167 +1,105 @@
-/* src/pages/osc/Documents.module.css */
+.pageContainer { padding: 2rem; }
+.grid { display: grid; gap: 2rem; }
 
-.pageContainer {
-  padding: 2rem; /* p-8 */
-}
-
-.grid {
-  display: grid;
-  gap: 2rem; /* gap-8 */
-}
-
-/* Define as colunas do grid em telas médias (md) e maiores */
 @media (min-width: 768px) {
-  .grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr)); /* grid-cols-3 */
-  }
-  .uploadColumn {
-    grid-column: span 1 / span 1; /* md:col-span-1 */
-  }
-  .listColumn {
-    grid-column: span 2 / span 2; /* md:col-span-2 */
-  }
+  .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .uploadColumn { grid-column: span 1; }
+  .listColumn { grid-column: span 2; }
 }
 
-.infoCard,
-.listCard {
+.infoCard, .listCard {
   background-color: white;
-  padding: 1.5rem; /* p-6 */
-  border-radius: 0.5rem; /* rounded-lg */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .cardTitle {
-  font-size: 1.25rem; /* text-xl */
-  font-weight: 600; /* font-semibold */
-  margin-bottom: 1rem; /* mb-4 */
-  color: #374151; /* text-gray-700 */
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #374151;
 }
 
-.infoText strong {
-  display: block; /* Opcional: para colocar o label numa linha separada */
-  color: #6b7280; /* text-gray-500 (aproximado) */
-  font-weight: 500;
+/* Grelha de Miniaturas (5 por linha) */
+.pdfGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.5rem;
+  max-height: 75vh;
+  overflow-y: auto;
+  padding: 0.5rem;
 }
 
-.infoCard .infoText + .infoText { /* Adiciona espaço entre os parágrafos */
-    margin-top: 0.5rem;
-}
-
-.fileListContainer {
+.pdfCard {
   display: flex;
   flex-direction: column;
-  gap: 1rem; /* space-y-4 */
-  max-height: 70vh; /* Limita altura */
-  overflow-y: auto; /* Adiciona scroll */
-  padding-right: 0.5rem; /* pr-2 (espaço para scrollbar) */
+  cursor: pointer;
+  transition: transform 0.2s;
 }
 
-.fileItem {
-  border: 1px solid #e5e7eb; /* border */
-  border-radius: 0.5rem; /* rounded-lg */
-  padding: 1rem; /* p-4 */
+.pdfCard:hover { transform: translateY(-4px); }
+
+.pdfThumbnail {
+  position: relative;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  aspect-ratio: 3/4;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  transition: background-color 0.2s ease;
-}
-
-.fileItem:hover {
-  background-color: #f9fafb; /* hover:bg-gray-50 */
-}
-
-.fileInfo {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem; /* Espaço entre ícone e texto */
-  /* Impede que o texto empurre o botão para fora em nomes longos */
-  overflow: hidden;
-  flex-grow: 1; /* Permite que esta secção cresça */
-  margin-right: 1rem; /* Espaço antes do botão download */
-}
-
-.fileIcon {
-  height: 1.25rem; /* h-5 */
-  width: 1.25rem; /* w-5 */
-  color: #6b7280; /* text-gray-500 */
-  flex-shrink: 0; /* Impede que o ícone encolha */
-}
-
-.fileText {
-   /* Impede quebra de texto em nomes longos e adiciona '...' */
-   overflow: hidden;
-   white-space: nowrap;
-   text-overflow: ellipsis;
-}
-
-.fileName {
-  font-weight: 600; /* font-semibold */
-  color: #1f2937; /* text-gray-800 */
-  display: block; /* Garante que ocupa a linha */
-   /* Re-aplica regras de overflow caso o nome seja muito longo */
-   overflow: hidden;
-   white-space: nowrap;
-   text-overflow: ellipsis;
-}
-
-.fileDate {
-  font-size: 0.875rem; /* text-sm */
-  color: #6b7280; /* text-gray-500 */
-}
-
-.downloadButton {
-  background-color: #e5e7eb; /* bg-gray-200 */
-  color: #374151; /* text-gray-700 */
-  font-weight: 700; /* font-bold */
-  padding: 0.5rem; /* p-2 */
-  border-radius: 9999px; /* rounded-full */
-  border: none;
-  display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0; /* Impede que o botão encolha */
-  transition: background-color 0.2s ease;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
 }
 
-.downloadButton:hover {
-  background-color: #d1d5db; /* hover:bg-gray-300 */
+.pdfIconLarge {
+  width: 3rem;
+  height: 3rem;
+  color: #ef4444; /* Cor de PDF */
 }
 
-.downloadButton svg {
-  height: 1.25rem; /* h-5 */
-  width: 1.25rem; /* w-5 */
-}
-
-.loadingContainer,
-.emptyContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 12rem; /* h-48 */
-    color: #6b7280; /* text-gray-500 */
-}
-
-.welcomeText {
-  font-size: 0.95rem;
-  color: #4b5563; /* Cinza escuro */
-  line-height: 1.5;
-  margin-bottom: 1rem;
-}
-
-.orangeLink {
-  color: #ff6600; /* Laranja institucional */
-  font-weight: 600;
-  text-decoration: none;
+.downloadOverlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 102, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
   transition: opacity 0.2s;
 }
 
-.orangeLink:hover {
-  text-decoration: underline;
-  opacity: 0.8;
+.pdfCard:hover .downloadOverlay { opacity: 1; }
+.downloadOverlay svg { width: 2rem; height: 2rem; color: white; }
+
+.pdfInfo {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
 }
 
-.infoText {
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
+.pdfName {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1f2937;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
+.pdfDate {
+  font-size: 0.65rem;
+  color: #6b7280;
+}
+
+/* Ajustes de Responsividade para a Grelha */
+@media (max-width: 1200px) { .pdfGrid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 1000px) { .pdfGrid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 600px) { .pdfGrid { grid-template-columns: repeat(2, 1fr); } }
+
+/* Estilos de Texto */
+.welcomeText { font-size: 0.95rem; color: #4b5563; line-height: 1.5; margin-bottom: 1rem; }
+.orangeLink { color: #ff6600; font-weight: 600; text-decoration: none; }
+.orangeLink:hover { text-decoration: underline; }
+.infoText { font-size: 0.9rem; margin-bottom: 0.5rem; }
