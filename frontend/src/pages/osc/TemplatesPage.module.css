@@ -1,43 +1,36 @@
+/* src/pages/osc/TemplatesPage.module.css */
+
+.pageContainer {
+  padding: 20px;
+  background-color: #f8fafc; /* Cinza muito claro de fundo */
+}
+
+.pageTitle {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  color: #1e293b;
+}
+
 .gridContainer {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: 1fr 1fr; /* Força as duas colunas */
+  gap: 24px;
+  align-items: start;
 }
 
 .card {
   background: white;
+  border-radius: 12px;
   padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
-.fileRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.fileMain {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.typeIcon { color: #64748b; width: 20px; }
-.fileName { font-size: 14px; color: #334155; }
-
-.fileActions {
-  display: flex;
-  gap: 15px;
-}
-
-.iconBtn {
-  color: #10b981; /* Verde conforme sua imagem */
-  transition: transform 0.2s;
-}
-
-.iconBtn:hover {
-  transform: scale(1.2);
+.cardHeader {
+  font-size: 18px;
+  color: #334155;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+  font-weight: 600;
 }
