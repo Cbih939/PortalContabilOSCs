@@ -13,15 +13,15 @@ const router = Router();
 router.use(protect); // Todas exigem login
 
 // Listar
-router.get('/', getTemplates);
+router.get('/', protect, controller.getTemplates);
 
 // Upload (Note o upload.single('file') -> 'file' é o nome do campo no formulário do React)
-router.post('/', upload.single('file'), uploadTemplate);
+router.post('/', protect, upload.any(), controller.uploadTemplate);
 
 // Download
 router.get('/:id/download', downloadTemplate);
 
 // Excluir
-router.delete('/:id', deleteTemplate);
+router.delete('/:id', protect, controller.deleteTemplate);
 
 export default router;

@@ -54,3 +54,27 @@ export const getTemplates = async (req, res) => {
         res.status(500).json({ message: 'Erro ao listar modelos.' });
     }
 };
+
+export const deleteTemplate = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Procurar o ficheiro para apagar do disco
+    const [rows] = await pool.execute('SELECT file_path FROM templates WHERE id = ?', [id]);
+    
+    if (rows.length > 0) {
+      const fullPath = path.join('/var/www/PortalContabilOSCs/backend/', rows[0].file_path);
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+      }
+    }
+
+    // 2. Apagar do banco de dados
+    await pool.execute('DELETE FROM templates WHERE id = ?', [id]);
+
+    res.json({ message: 'Modelo apagado com sucesso.' });
+  } catch (error) {
+    console.error('[Delete Template Error]:', error);
+    res.status(500).json({ message: 'Erro ao eliminar modelo.' });
+  }
+};
