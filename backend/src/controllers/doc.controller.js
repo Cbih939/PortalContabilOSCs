@@ -94,6 +94,29 @@ export const getDocuments = async (req, res) => {
   }
 };
 
+export const uploadDocument = async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) return res.status(400).json({ message: 'Nenhum ficheiro enviado.' });
+
+    const userId = req.user.id;
+    // Busca o osc_id associado ao utilizador logado
+    const [oscRows] = await pool.execute('SELECT id FROM oscs WHERE user_id = ? LIMIT 1', [userId]);
+    const osc_id = oscRows[0]?.id;
+
+    const [result] = await pool.execute(
+      `INSERT INTO documents (original_name, saved_filename, mime_type, file_size_bytes, osc_id, status) 
+       VALUES (?, ?, ?, ?, ?, 'Pendente')`,
+      [file.originalname, file.filename, file.mimetype, file.size, osc_id]
+    );
+
+    res.status(201).json({ id: result.insertId, name: file.originalname });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erro ao fazer upload.' });
+  }
+};
+
 // Download E Visualização (Mantém igual)
 export const downloadDocument = async (req, res) => {
   try {
