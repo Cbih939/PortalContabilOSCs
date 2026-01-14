@@ -108,10 +108,13 @@ export const getMessages = async (req, res) => {
 export const sendMessage = async (req, res) => {
   try {
     const { receiver_id, content } = req.body;
-    const sender_id = req.user.id; // Garante que pega o ID do usuário autenticado
+    const sender_id = req.user.id; // Vem do token de autenticação
 
+    // Se o receiver_id for nulo ou o content estiver vazio, o banco vai rejeitar
     if (!receiver_id || !content) {
-      return res.status(400).json({ message: "Dados insuficientes (receiver_id e content são obrigatórios)." });
+      return res.status(400).json({ 
+        message: "Dados inválidos: receiver_id e content são obrigatórios." 
+      });
     }
 
     const [result] = await pool.execute(
@@ -119,9 +122,15 @@ export const sendMessage = async (req, res) => {
       [sender_id, receiver_id, content]
     );
 
-    res.status(201).json({ id: result.insertId, sender_id, receiver_id, content });
+    res.status(201).json({ 
+      id: result.insertId, 
+      sender_id, 
+      receiver_id, 
+      content,
+      created_at: new Date() 
+    });
   } catch (error) {
-    console.error(error);
+    console.error('[Message Error]:', error);
     res.status(500).json({ message: "Erro ao enviar mensagem." });
   }
 };

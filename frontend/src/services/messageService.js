@@ -38,12 +38,14 @@ export const getMyMessages = async () => {
  * @param {string} text - O conteúdo da mensagem.
  * @param {File|null} file - Arquivo anexo (Preparado para implementação futura).
  */
-export const sendMessage = async (receiver_id, content) => {
-  // Enviamos como um objeto simples. O Axios usará application/json automaticamente.
-  const response = await api.post('/messages', {
-    receiver_id: Number(receiver_id), // Garante que é um número
-    content: content
-  });
+export const sendMessage = async (messageData) => {
+  // Garantimos que o payload enviado tem os nomes de campos exatos da tabela 'messages'
+  const payload = {
+    receiver_id: messageData.receiver_id || messageData.toOscId, 
+    content: messageData.content || messageData.text
+  };
+
+  const response = await api.post('/messages', payload);
   return response.data;
 };
 
