@@ -98,7 +98,7 @@ export default function OSCDocumentsPage() {
           <div className={`${styles.infoCard} mb-8`}>
             <h2 className={styles.infoText}>
   Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais. 
-  Baixe-os na aba{" "}
+  Baixe-os na aba{"DOCs | Modelos"}
   <Link to="/osc/modelos" className={styles.inlineLink}>
     "Docs | Modelos"
   </Link>
