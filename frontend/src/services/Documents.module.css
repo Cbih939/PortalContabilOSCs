@@ -103,7 +103,7 @@
   border: 2px dashed #e5e7eb;
 }
 
-/* Responsividade */
+/* Responsividade do documentos */
 @media (max-width: 1280px) { .pdfGrid { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 1024px) { .pdfGrid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 640px) { .pdfGrid { grid-template-columns: repeat(2, 1fr); } }
