@@ -33,7 +33,7 @@ export const getReceivedDocuments = () => {
  * Busca os documentos (enviados e recebidos) da OSC logada.
  * (Usado pela OSC - OSCDocumentsPage.jsx)
  */
-export const getMyDocuments = () => api.get('/documents/my-received');
+export const getMyDocuments = () => api.get('/documents/my');
 
 /**
  * Faz o upload de um novo documento.

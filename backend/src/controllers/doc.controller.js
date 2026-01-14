@@ -99,21 +99,42 @@ export const uploadDocument = async (req, res) => {
     const file = req.file;
     if (!file) return res.status(400).json({ message: 'Nenhum ficheiro enviado.' });
 
-    const userId = req.user.id;
-    // Busca o osc_id associado ao utilizador logado
-    const [oscRows] = await pool.execute('SELECT id FROM oscs WHERE user_id = ? LIMIT 1', [userId]);
-    const osc_id = oscRows[0]?.id;
+    const userId = req.user.id; // ID do usuário logado (uploaded_by_user_id)
+    const userName = req.user.name;
 
+    // Busca o osc_id associado ao utilizador OSC logado
+    const [oscRows] = await pool.execute('SELECT id, razao_social FROM oscs WHERE user_id = ? LIMIT 1', [userId]);
+    const osc_id = oscRows[0]?.id;
+    const osc_name = oscRows[0]?.razao_social || userName;
+
+    if (!osc_id) {
+      return res.status(403).json({ message: 'Apenas usuários vinculados a uma OSC podem fazer upload.' });
+    }
+
+    // Caminho relativo para o banco
+    const relativePath = file.path.split('backend/')[1] || file.path;
+
+    // INSERT exato para a estrutura da sua tabela
     const [result] = await pool.execute(
-      `INSERT INTO documents (original_name, saved_filename, mime_type, file_size_bytes, osc_id, status) 
-       VALUES (?, ?, ?, ?, ?, 'Pendente')`,
-      [file.originalname, file.filename, file.mimetype, file.size, osc_id]
+      `INSERT INTO documents 
+      (osc_id, uploaded_by_user_id, original_name, saved_filename, file_path, file_size_bytes, mime_type, from_name, status) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pendente')`,
+      [
+        osc_id,
+        userId,
+        file.originalname,
+        file.filename,
+        relativePath,
+        file.size,
+        file.mimetype,
+        osc_name
+      ]
     );
 
     res.status(201).json({ id: result.insertId, name: file.originalname });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Erro ao fazer upload.' });
+    console.error('[Upload Doc Error]:', error);
+    res.status(500).json({ message: 'Erro interno ao salvar documento.' });
   }
 };
 
