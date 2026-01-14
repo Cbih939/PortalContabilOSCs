@@ -9,6 +9,7 @@ import Spinner from '../../components/common/Spinner.jsx';
 import { FileIcon, DownloadIcon } from '../../components/common/Icons.jsx';
 import { formatDate } from '../../utils/formatDate.js';
 import styles from './Documents.module.css';
+import PdfThumbnail from './components/PdfThumbnail.jsx';
 
 export default function OSCDocumentsPage() {
   const { user } = useAuth();
@@ -106,11 +107,13 @@ export default function OSCDocumentsPage() {
                   onClick={() => handleDownload(file)}
                 >
                   <div className={styles.pdfThumbnail}>
-                    <FileIcon className={styles.pdfIconLarge} />
-                    <div className={styles.downloadOverlay}>
-                      <DownloadIcon />
-                    </div>
-                  </div>
+  {/* Aqui ele tenta gerar a capa real do PDF */}
+  <PdfThumbnail fileUrl={`${import.meta.env.VITE_API_URL}/uploads/${file.saved_filename}`} />
+  
+  <div className={styles.downloadOverlay}>
+    <DownloadIcon />
+  </div>
+</div>
                   <div className={styles.pdfInfo}>
                     <span className={styles.pdfName} title={file.name || file.original_name}>
                       {file.name || file.original_name}
