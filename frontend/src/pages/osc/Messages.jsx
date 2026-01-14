@@ -20,33 +20,38 @@ export default function OSCMessagesPage() {
   
   // Estados de controle
   const [isLoading, setIsLoading] = useState(true);
-  const [noContador, setNoContador] = useState(false); // <--- Estado para "Não Vinculado"
+  const [noContador, setNoContador] = useState(false); 
   
   const messagesEndRef = useRef(null);
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const data = await messageService.getMyMessages();
-        setMessages(data);
-        setNoContador(false);
-      } catch (error) {
-        console.error("Erro ao carregar mensagens:", error);
-        // Verifica se o erro é "Sem Contador" (404)
-        if (error.response && error.response.status === 404) {
-             setNoContador(true);
-        }
-      } finally {
-        setIsLoading(false);
+  // Função de busca movida para fora para ser reutilizada
+  const fetchMessages = async () => {
+    try {
+      const data = await messageService.getMyMessages();
+      // Mapeia os campos do banco (content) para o que o componente exibe (text)
+      const formattedMessages = data.map(msg => ({
+        ...msg,
+        text: msg.content || msg.text,
+        sender: msg.sender_id === user.id ? 'me' : 'other'
+      }));
+      setMessages(formattedMessages);
+      setNoContador(false);
+    } catch (error) {
+      console.error("Erro ao carregar mensagens:", error);
+      if (error.response && error.response.status === 404) {
+        setNoContador(true);
       }
-    };
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchMessages();
     
-    // Só faz polling se tiver contador
     let interval;
     if (!noContador) {
-        interval = setInterval(fetchMessages, 10000);
+      interval = setInterval(fetchMessages, 5000); // Polling a cada 5s
     }
     return () => clearInterval(interval);
   }, [noContador]);
@@ -59,25 +64,41 @@ export default function OSCMessagesPage() {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
+    // Criamos o objeto que o service espera para evitar o erro de 'null'
+    // O receiver_id deve ser o contador vinculado ao usuário
+    const messagePayload = {
+      receiver_id: user.assigned_contador_id || user.contador_id, 
+      content: newMessage
+    };
+
+    // Verificação de segurança antes de chamar o service
+    if (!messagePayload.receiver_id) {
+        console.error("Erro: OSC não possui contador vinculado para receber a mensagem.");
+        setNoContador(true);
+        return;
+    }
+
+    // Feedback visual imediato (Otimista)
     const tempMsg = {
       id: Date.now(),
       text: newMessage,
-      sender: 'me',
       sender_role: 'OSC',
+      sender_id: user.id,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     
-    setMessages([...messages, tempMsg]);
+    setMessages(prev => [...prev, tempMsg]);
     setNewMessage('');
 
     try {
-      await messageService.sendMessage(null, tempMsg.text, null);
+      // Chamada corrigida passando o objeto completo
+      await messageService.sendMessage(messagePayload);
+      // Opcional: fetchMessages(); // Atualiza para pegar os dados reais do banco
     } catch (error) {
-      console.error("Erro ao enviar:", error);
+      console.error("Erro ao enviar mensagem para o contador:", error);
     }
   };
 
-  // --- RENDERIZAÇÃO: CASO NÃO TENHA CONTADOR ---
   if (!isLoading && noContador) {
     return (
       <div className={styles.pageContainer}>
@@ -97,7 +118,6 @@ export default function OSCMessagesPage() {
     );
   }
 
-  // --- RENDERIZAÇÃO: CHAT NORMAL ---
   return (
     <div className={styles.pageContainer}>
       <h1 className={styles.pageTitle}>Mensagens</h1>
@@ -106,7 +126,7 @@ export default function OSCMessagesPage() {
         <div className={styles.chatHeader}>
           <div className={styles.headerInfo}>
             <h2 className={styles.contactName}>Meu Contador</h2>
-            <span className={styles.status}>Online</span>
+            <span className={styles.status}>Canal Direto</span>
           </div>
         </div>
 
@@ -114,19 +134,19 @@ export default function OSCMessagesPage() {
           {isLoading ? (
             <div className={styles.loading}>Carregando conversas...</div>
           ) : messages.length === 0 ? (
-            <div className={styles.emptyState}> Nenhuma mensagem ainda. Comece a conversa! </div>
+            <div className={styles.emptyState}> Mensagem direta com o contador </div>
           ) : (
             messages.map((msg, index) => {
-              // Verifica se fui eu que enviei
               const isMe = msg.sender_role === 'OSC' || msg.sender_id === user.id;
               
               return (
-                <div key={index} className={`${styles.messageRow} ${isMe ? styles.sent : styles.received}`}>
+                <div key={msg.id || index} className={`${styles.messageRow} ${isMe ? styles.sent : styles.received}`}>
                   <div className={styles.bubble}>
                     <p className={styles.messageText}>{msg.text}</p>
                     <span className={styles.timestamp}>
-                        {/* Tenta formatar se vier do banco, senão usa como está */}
-                        {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : msg.timestamp}
+                        {msg.created_at 
+                          ? new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+                          : msg.timestamp}
                     </span>
                   </div>
                 </div>
