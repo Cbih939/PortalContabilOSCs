@@ -7,12 +7,10 @@ import { protect } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-// Configuração do Multer com Caminho Absoluto
+// 1. Configuração do Armazenamento
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // Usando caminho absoluto para evitar erro de diretório não encontrado na VPS
     const uploadPath = '/var/www/PortalContabilOSCs/backend/uploads/public/';
-    
     if (!fs.existsSync(uploadPath)){
         fs.mkdirSync(uploadPath, { recursive: true });
     }
@@ -24,20 +22,19 @@ const storage = multer.diskStorage({
   }
 });
 
+// 2. Definição da variável 'upload' com limite de 50MB para evitar o erro "File too large"
 const upload = multer({ 
-    storage: storage,
-    limits: { fileSize: 10 * 1024 * 1024 } // Limite de 10MB
+  storage: storage,
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB
 });
 
 // --- ROTAS ---
 
-// Listar arquivos
 router.get('/', protect, controller.getFiles);
 
-// Upload de arquivos - Alterado para .any() para capturar o arquivo independente do nome da chave
+// A variável 'upload' agora está definida acima desta linha
 router.post('/', protect, upload.any(), controller.uploadFile);
 
-// Eliminar arquivo
 router.delete('/:id', protect, controller.deleteFile);
 
 export default router;
