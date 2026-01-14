@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import useApi from '../../hooks/useApi.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
+import { Link } from 'react-router-dom';
 // Serviços API
 import * as docService from '../../services/documentService.js'; // Importa serviço real
 // REMOVE import { mockFiles } from '../../utils/mockData.js';
