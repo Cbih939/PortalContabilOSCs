@@ -5,7 +5,7 @@ import * as controller from '../controllers/alert.controller.js'; // Importe o c
 const router = Router();
 router.use(protect);
 
-// Altera as rotas "falsas" pelas funções do controlador existente
+// Altera as rotas "falsas" pelas funções do controlador existente ok
 router.get('/', controller.getMyAlerts); 
 router.get('/history', controller.getSentNoticesHistory);
 router.post('/', controller.createAlert);
