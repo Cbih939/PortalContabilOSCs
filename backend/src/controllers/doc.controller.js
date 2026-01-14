@@ -94,6 +94,25 @@ export const getDocuments = async (req, res) => {
   }
 };
 
+export const getReceivedDocuments = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    // Busca documentos enviados pelas OSCs para este contador
+    const [rows] = await pool.execute(
+      `SELECT d.*, u.name as sender_name 
+       FROM documents d 
+       JOIN users u ON d.sender_id = u.id 
+       WHERE d.receiver_id = ? 
+       ORDER BY d.created_at DESC`,
+      [userId]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro ao buscar documentos recebidos." });
+  }
+};
+
 export const uploadDocument = async (req, res) => {
   try {
     const file = req.file;
@@ -180,3 +199,4 @@ export const updateDocumentStatus = async (req, res) => {
         res.status(500).json({ message: 'Erro ao atualizar status.' });
     }
 };
+

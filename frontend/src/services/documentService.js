@@ -25,8 +25,9 @@ const triggerDownload = (data, fileName) => {
  * Busca os documentos recebidos pelo Contador logado.
  * (Usado pelo Contador - DocumentsPage.jsx)
  */
-export const getReceivedDocuments = () => {
-  return api.get('/documents/received');
+export const getReceivedDocuments = async () => {
+  const response = await api.get('/documents/received');
+  return response.data;
 };
 
 /**

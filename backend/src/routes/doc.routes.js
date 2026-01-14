@@ -12,6 +12,7 @@ const router = Router();
 
 // Define /my para coincidir com o Frontend e evitar o erro 404
 router.get('/my', protect, getDocuments); 
+router.get('/received', protect, controller.getReceivedDocuments);
 
 // Define /upload para o endpoint de envio
 router.post('/upload', protect, upload.single('file'), uploadDocument); 
