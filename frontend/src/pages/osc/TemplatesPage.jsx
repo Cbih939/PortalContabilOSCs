@@ -1,70 +1,80 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as fileService from '../../services/publicFileService.js';
-import styles from './Downloads.module.css'; // Usaremos um CSS compartilhado
-
-const DocIcon = () => (
-  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-);
-
-const DownloadIcon = () => (
-  <svg width="20" height="20" fill="none" stroke="#22c55e" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-);
+import { FileIcon, DownloadIcon, EyeIcon } from '../../components/common/Icons.jsx';
+import Spinner from '../../components/common/Spinner.jsx';
+import styles from './TemplatesPage.module.css';
 
 export default function TemplatesPage() {
-  const [docs, setDocs] = useState([]);
-  const [inst, setInst] = useState([]);
+  const [modelos, setModelos] = useState([]);
+  const [comunicacao, setComunicacao] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Busca e separa os arquivos
-    fileService.getFilesByCategory('').then(allFiles => {
-      setDocs(allFiles.filter(f => f.category === 'MODELO_DOC'));
-      setInst(allFiles.filter(f => f.category === 'MODELO_INSTITUCIONAL'));
-    });
+    fetchData();
   }, []);
 
-  const handleDownload = (path) => {
-      // Ajuste a URL base conforme seu servidor
-      window.open(`https://contacomigo.org.br/${path}`, '_blank');
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const data = await fileService.getFilesByCategory('');
+      // Filtra por categoria conforme o banco de dados
+      setModelos(data.filter(f => f.category === 'MODELO_DOC'));
+      setComunicacao(data.filter(f => f.category === 'MODELO_INSTITUCIONAL'));
+    } catch (error) {
+      console.error("Erro ao carregar ficheiros:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const renderFileRow = (file) => {
+    // Formata a URL: Remove o caminho absoluto do sistema e deixa apenas o caminho web
+    const relativePath = file.file_path.includes('uploads') 
+      ? file.file_path.split('backend/')[1] || file.file_path 
+      : file.file_path;
+    
+    const fileUrl = `https://contacomigo.org.br/${relativePath}`;
+
+    return (
+      <div key={file.id} className={styles.fileRow}>
+        <div className={styles.fileMain}>
+          <FileIcon className={styles.typeIcon} />
+          <span className={styles.fileName}>{file.title}</span>
+        </div>
+        <div className={styles.fileActions}>
+          {/* Visualizar PDF em nova aba */}
+          <a href={fileUrl} target="_blank" rel="noopener noreferrer" className={styles.iconBtn} title="Ler online">
+            <EyeIcon />
+          </a>
+          {/* Download direto */}
+          <a href={fileUrl} download={file.title} className={styles.iconBtn} title="Descarregar">
+            <DownloadIcon />
+          </a>
+        </div>
+      </div>
+    );
+  };
+
+  if (loading) return <Spinner text="A carregar documentos..." />;
+
   return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>Docs Modelos | Downloads</h1>
-      
-      <div className={styles.grid}>
-        {/* Card Esquerda: Modelos de Documentos */}
+    <div className={styles.pageContainer}>
+      <h1 className={styles.pageTitle}>Docs Modelos | Downloads</h1>
+
+      <div className={styles.gridContainer}>
+        {/* Card Modelos de Documentos */}
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Modelos de Documentos</h3>
+          <h2 className={styles.cardHeader}>Modelos de Documentos</h2>
           <div className={styles.list}>
-            {docs.map(file => (
-              <div key={file.id} className={styles.item}>
-                <div className={styles.fileInfo}>
-                  <DocIcon />
-                  <span>{file.title}</span>
-                </div>
-                <button onClick={() => handleDownload(file.file_path)} className={styles.dlBtn}>
-                  <DownloadIcon />
-                </button>
-              </div>
-            ))}
+            {modelos.length > 0 ? modelos.map(renderFileRow) : <p className={styles.empty}>Sem documentos nesta categoria.</p>}
           </div>
         </div>
 
-        {/* Card Direita: Comunicação Institucional */}
+        {/* Card Comunicação Institucional */}
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Modelos de Comunicação Institucional</h3>
+          <h2 className={styles.cardHeader}>Modelos de Comunicação Institucional</h2>
           <div className={styles.list}>
-            {inst.map(file => (
-              <div key={file.id} className={styles.item}>
-                <div className={styles.fileInfo}>
-                  <DocIcon />
-                  <span>{file.title}</span>
-                </div>
-                <button onClick={() => handleDownload(file.file_path)} className={styles.dlBtn}>
-                  <DownloadIcon />
-                </button>
-              </div>
-            ))}
+            {comunicacao.length > 0 ? comunicacao.map(renderFileRow) : <p className={styles.empty}>Sem documentos nesta categoria.</p>}
           </div>
         </div>
       </div>
