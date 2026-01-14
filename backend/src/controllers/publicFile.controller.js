@@ -2,27 +2,22 @@ import pool from '../config/db.js';
 
 export const uploadFile = async (req, res) => {
   try {
-    console.log('[Upload] Files recebidos:', req.files);
-
+    // Captura o arquivo do array (usando .any() na rota)
     const file = req.files && req.files.length > 0 ? req.files[0] : null;
 
     if (!file) {
-      return res.status(400).json({ 
-        message: 'Nenhum arquivo recebido pelo servidor.' 
-      });
+      return res.status(400).json({ message: 'Nenhum arquivo recebido pelo servidor.' });
     }
 
     const { title, category } = req.body;
 
-    // Removida a coluna 'description' para evitar o erro ER_BAD_FIELD_ERROR
+    // SQL exato para as colunas: title, category, file_path
     const [result] = await pool.execute(
-      'INSERT INTO public_files (title, category, file_path, file_type, file_size) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO public_files (title, category, file_path) VALUES (?, ?, ?)',
       [
         title || file.originalname, 
-        category || 'Geral', 
-        file.path, 
-        file.mimetype, 
-        file.size
+        category || 'BIBLIOTECA', 
+        file.path // O Multer salva o caminho completo aqui
       ]
     );
 
@@ -39,9 +34,11 @@ export const uploadFile = async (req, res) => {
 
 export const getFiles = async (req, res) => {
     try {
+        // created_at existe, então podemos ordenar por ela
         const [rows] = await pool.execute('SELECT * FROM public_files ORDER BY created_at DESC');
         res.json(rows);
     } catch (error) {
+        console.error('[GetFiles Error]:', error);
         res.status(500).json({ message: 'Erro ao listar arquivos.' });
     }
 };
@@ -52,6 +49,7 @@ export const deleteFile = async (req, res) => {
         await pool.execute('DELETE FROM public_files WHERE id = ?', [id]);
         res.json({ message: 'Arquivo removido com sucesso.' });
     } catch (error) {
+        console.error('[Delete Error]:', error);
         res.status(500).json({ message: 'Erro ao eliminar arquivo.' });
     }
 };
