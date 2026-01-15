@@ -1,36 +1,149 @@
-/* src/pages/osc/TemplatesPage.module.css */
-
 .pageContainer {
-  padding: 20px;
-  background-color: #f8fafc; /* Cinza muito claro de fundo */
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .pageTitle {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 30px;
-  color: #1e293b;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 2rem;
+  border-left: 5px solid #ff6600;
+  padding-left: 1rem;
 }
 
 .gridContainer {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Força as duas colunas */
-  gap: 24px;
-  align-items: start;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 2rem;
 }
 
-.card {
+.listCard {
   background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
 }
 
 .cardHeader {
-  font-size: 18px;
-  color: #334155;
-  border-bottom: 2px solid #f1f5f9;
-  padding-bottom: 15px;
-  margin-bottom: 20px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #374151;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.fileListContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.fileItem:hover {
+  border-color: #ff6600;
+  background: #fff7ed;
+  transform: translateX(4px);
+}
+
+.fileInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  overflow: hidden;
+}
+
+.fileIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.fileText {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.fileName {
   font-weight: 600;
+  color: #111827;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.fileDate {
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+.actionGroup {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.viewButton, .downloadButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.viewButton {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.viewButton:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.downloadButton {
+  background: #ff6600;
+  color: white;
+}
+
+.downloadButton:hover {
+  background: #e65c00;
+  box-shadow: 0 2px 4px rgba(230, 92, 0, 0.3);
+}
+
+.icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.loadingFull {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
 }

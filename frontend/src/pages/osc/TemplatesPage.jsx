@@ -17,9 +17,14 @@ export default function TemplatesPage() {
     try {
       setLoading(true);
       const data = await fileService.getFilesByCategory('');
-      // Filtra por categoria conforme o banco de dados
-      setModelos(data.filter(f => f.category === 'MODELO_DOC'));
-      setComunicacao(data.filter(f => f.category === 'MODELO_INSTITUCIONAL'));
+      
+      // Ordenação Alfanumérica
+      const sortedData = data.sort((a, b) => 
+        a.title.toLowerCase().localeCompare(b.title.toLowerCase())
+      );
+
+      setModelos(sortedData.filter(f => f.category === 'MODELO_DOC'));
+      setComunicacao(sortedData.filter(f => f.category === 'MODELO_INSTITUCIONAL'));
     } catch (error) {
       console.error("Erro ao carregar ficheiros:", error);
     } finally {
@@ -28,7 +33,6 @@ export default function TemplatesPage() {
   };
 
   const renderFileRow = (file) => {
-    // Formata a URL: Remove o caminho absoluto do sistema e deixa apenas o caminho web
     const relativePath = file.file_path.includes('uploads') 
       ? file.file_path.split('backend/')[1] || file.file_path 
       : file.file_path;
@@ -36,26 +40,28 @@ export default function TemplatesPage() {
     const fileUrl = `https://contacomigo.org.br/${relativePath}`;
 
     return (
-      <div key={file.id} className={styles.fileRow}>
-        <div className={styles.fileMain}>
-          <FileIcon className={styles.typeIcon} />
-          <span className={styles.fileName}>{file.title}</span>
+      <div key={file.id} className={styles.fileItem}>
+        <div className={styles.fileInfo}>
+          <FileIcon className={styles.fileIcon} />
+          <div className={styles.fileText}>
+            <span className={styles.fileName}>{file.title}</span>
+            <span className={styles.fileDate}>Modelo Disponível</span>
+          </div>
         </div>
-        <div className={styles.fileActions}>
-          {/* Visualizar PDF em nova aba */}
-          <a href={fileUrl} target="_blank" rel="noopener noreferrer" className={styles.iconBtn} title="Ler online">
-            <EyeIcon />
+        
+        <div className={styles.actionGroup}>
+          <a href={fileUrl} target="_blank" rel="noopener noreferrer" className={styles.viewButton} title="Visualizar">
+            <EyeIcon className={styles.icon} />
           </a>
-          {/* Download direto */}
-          <a href={fileUrl} download={file.title} className={styles.iconBtn} title="Descarregar">
-            <DownloadIcon />
+          <a href={fileUrl} download={file.title} className={styles.downloadButton} title="Descarregar">
+            <DownloadIcon className={styles.icon} />
           </a>
         </div>
       </div>
     );
   };
 
-  if (loading) return <Spinner text="A carregar documentos..." />;
+  if (loading) return <div className={styles.loadingFull}><Spinner text="A carregar documentos..." /></div>;
 
   return (
     <div className={styles.pageContainer}>
@@ -63,18 +69,26 @@ export default function TemplatesPage() {
 
       <div className={styles.gridContainer}>
         {/* Card Modelos de Documentos */}
-        <div className={styles.card}>
+        <div className={styles.listCard}>
           <h2 className={styles.cardHeader}>Modelos de Documentos</h2>
-          <div className={styles.list}>
-            {modelos.length > 0 ? modelos.map(renderFileRow) : <p className={styles.empty}>Sem documentos nesta categoria.</p>}
+          <div className={styles.fileListContainer}>
+            {modelos.length > 0 ? (
+              modelos.map(renderFileRow)
+            ) : (
+              <p className={styles.empty}>Sem documentos nesta categoria.</p>
+            )}
           </div>
         </div>
 
         {/* Card Comunicação Institucional */}
-        <div className={styles.card}>
-          <h2 className={styles.cardHeader}>Modelos de Comunicação Institucional</h2>
-          <div className={styles.list}>
-            {comunicacao.length > 0 ? comunicacao.map(renderFileRow) : <p className={styles.empty}>Sem documentos nesta categoria.</p>}
+        <div className={styles.listCard}>
+          <h2 className={styles.cardHeader}>Comunicação Institucional</h2>
+          <div className={styles.fileListContainer}>
+            {comunicacao.length > 0 ? (
+              comunicacao.map(renderFileRow)
+            ) : (
+              <p className={styles.empty}>Sem documentos nesta categoria.</p>
+            )}
           </div>
         </div>
       </div>
