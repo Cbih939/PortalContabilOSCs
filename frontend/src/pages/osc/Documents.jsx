@@ -9,8 +9,10 @@ import Spinner from '../../components/common/Spinner.jsx';
 import { FileIcon, DownloadIcon } from '../../components/common/Icons.jsx';
 import { formatDate } from '../../utils/formatDate.js';
 import styles from './Documents.module.css';
-import PdfThumbnail from './components/PdfThumbnail.jsx';
 
+/**
+ * Página de Documentos da OSC - Versão em Lista
+ */
 export default function OSCDocumentsPage() {
   const { user } = useAuth();
   const addNotification = useNotification();
@@ -26,7 +28,6 @@ export default function OSCDocumentsPage() {
     setErrorLoading(null);
     try {
       const response = await docService.getMyDocuments();
-      // Ordenação Alfanumérica pelo nome do ficheiro
       const sortedData = response.data.sort((a, b) => {
         const nameA = (a.name || a.original_name).toLowerCase();
         const nameB = (b.name || b.original_name).toLowerCase();
@@ -50,9 +51,9 @@ export default function OSCDocumentsPage() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const newFile = await uploadFile(formData);
+      await uploadFile(formData);
       addNotification('Ficheiro enviado com sucesso!', 'success');
-      await fetchDocuments(); // Recarrega para manter a ordem alfanumérica
+      await fetchDocuments();
     } catch (err) {
       addNotification(`Falha no upload: ${err.response?.data?.message || err.message}`, 'error');
       throw err;
@@ -88,7 +89,7 @@ export default function OSCDocumentsPage() {
           <DocumentUpload onUpload={handleFileUpload} isLoading={isUploading} />
         </div>
 
-        {/* Coluna 2: Lista de Documentos em Grelha (Miniaturas) */}
+        {/* Coluna 2: Lista de Documentos (Layout de Linhas) */}
         <div className={`${styles.listCard} ${styles.listColumn}`}>
           <h2 className={styles.cardTitle}>Meus Documentos</h2>
 
@@ -99,27 +100,27 @@ export default function OSCDocumentsPage() {
           ) : myFiles.length === 0 ? (
             <div className={styles.emptyContainer}><p>Nenhum documento encontrado.</p></div>
           ) : (
-            <div className={styles.pdfGrid}>
+            <div className={styles.fileListContainer}>
               {myFiles.map((file) => (
-                <div 
-                  key={file.id} 
-                  className={styles.pdfCard} 
-                  onClick={() => handleDownload(file)}
-                >
-                  <div className={styles.pdfThumbnail}>
-  {/* Aqui ele tenta gerar a capa real do PDF */}
-  <PdfThumbnail fileUrl={`${import.meta.env.VITE_API_URL}/uploads/${file.saved_filename}`} />
-  
-  <div className={styles.downloadOverlay}>
-    <DownloadIcon />
-  </div>
-</div>
-                  <div className={styles.pdfInfo}>
-                    <span className={styles.pdfName} title={file.name || file.original_name}>
-                      {file.name || file.original_name}
-                    </span>
-                    <span className={styles.pdfDate}>{formatDate(file.date || file.created_at)}</span>
+                <div key={file.id} className={styles.fileItem}>
+                  <div className={styles.fileInfo}>
+                    <FileIcon className={styles.fileIcon} />
+                    <div className={styles.fileText}>
+                      <span className={styles.fileName} title={file.name || file.original_name}>
+                        {file.name || file.original_name}
+                      </span>
+                      <span className={styles.fileDate}>
+                        Postado em {formatDate(file.date || file.created_at)}
+                      </span>
+                    </div>
                   </div>
+                  <button
+                    onClick={() => handleDownload(file)}
+                    className={styles.downloadButton}
+                    title="Descarregar arquivo"
+                  >
+                    <DownloadIcon className={styles.icon} />
+                  </button>
                 </div>
               ))}
             </div>
