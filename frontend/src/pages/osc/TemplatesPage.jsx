@@ -18,6 +18,7 @@ export default function TemplatesPage() {
       setLoading(true);
       const data = await fileService.getFilesByCategory('');
       
+      // Ordenação Alfanumérica por título
       const sortedData = data.sort((a, b) => 
         a.title.toLowerCase().localeCompare(b.title.toLowerCase())
       );
@@ -32,13 +33,17 @@ export default function TemplatesPage() {
   };
 
   const renderFileRow = (file) => {
-    // CORREÇÃO DA URL: Remove caminhos absolutos e garante o caminho relativo correto
-    // Se o banco retorna algo como "C:\...\uploads\arquivo.pdf" ou "/var/www/.../uploads/arquivo.pdf"
-    const pathParts = file.file_path.split('uploads');
-    const fileName = pathParts[pathParts.length - 1].replace(/\\/g, '/'); // Troca \ por / para Windows
-    
-    // A URL final deve apontar para onde o Nginx/Backend serve os arquivos
-    const fileUrl = `${import.meta.env.VITE_API_URL}/uploads${fileName}`;
+    // CORREÇÃO DA URL: Garante que não apareça 'undefined'
+    const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
+
+    // Limpeza do path para garantir que aponte para /uploads/arquivo.pdf
+    let cleanPath = file.file_path.replace(/\\/g, '/');
+    if (cleanPath.includes('uploads/')) {
+      cleanPath = 'uploads/' + cleanPath.split('uploads/')[1];
+    }
+
+    // Monta a URL final removendo barras duplicadas
+    const fileUrl = `${baseUrl.replace(/\/$/, '')}/${cleanPath}`;
 
     return (
       <div key={file.id} className={styles.fileItem}>
@@ -51,10 +56,21 @@ export default function TemplatesPage() {
         </div>
         
         <div className={styles.actionGroup}>
-          <a href={fileUrl} target="_blank" rel="noopener noreferrer" className={styles.viewButton} title="Visualizar">
+          <a 
+            href={fileUrl} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className={styles.viewButton} 
+            title="Visualizar"
+          >
             <EyeIcon className={styles.icon} />
           </a>
-          <a href={fileUrl} download={file.title} className={styles.downloadButton} title="Descarregar">
+          <a 
+            href={fileUrl} 
+            download={file.title} 
+            className={styles.downloadButton} 
+            title="Descarregar"
+          >
             <DownloadIcon className={styles.icon} />
           </a>
         </div>
@@ -62,26 +78,40 @@ export default function TemplatesPage() {
     );
   };
 
-  if (loading) return <div className={styles.loadingFull}><Spinner text="A carregar documentos..." /></div>;
+  if (loading) {
+    return (
+      <div className={styles.loadingFull}>
+        <Spinner text="A carregar documentos..." />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.pageContainer}>
       <h1 className={styles.pageTitle}>Docs Modelos | Downloads</h1>
 
       <div className={styles.gridContainer}>
-        {/* Card à Esquerda */}
+        {/* Card à Esquerda: Modelos de Documentos */}
         <div className={styles.listCard}>
           <h2 className={styles.cardHeader}>Modelos de Documentos</h2>
           <div className={styles.fileListContainer}>
-            {modelos.length > 0 ? modelos.map(renderFileRow) : <p className={styles.empty}>Sem documentos.</p>}
+            {modelos.length > 0 ? (
+              modelos.map(renderFileRow)
+            ) : (
+              <p className={styles.empty}>Sem documentos nesta categoria.</p>
+            )}
           </div>
         </div>
 
-        {/* Card à Direita */}
+        {/* Card à Direita: Comunicação Institucional */}
         <div className={styles.listCard}>
           <h2 className={styles.cardHeader}>Comunicação Institucional</h2>
           <div className={styles.fileListContainer}>
-            {comunicacao.length > 0 ? comunicacao.map(renderFileRow) : <p className={styles.empty}>Sem documentos.</p>}
+            {comunicacao.length > 0 ? (
+              comunicacao.map(renderFileRow)
+            ) : (
+              <p className={styles.empty}>Sem documentos nesta categoria.</p>
+            )}
           </div>
         </div>
       </div>

@@ -2,6 +2,8 @@
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  background-color: #f9fafb;
+  min-height: 100vh;
 }
 
 .pageTitle {
@@ -13,16 +15,16 @@
   padding-left: 1rem;
 }
 
-/* Força 2 colunas lado a lado em telas grandes */
+/* Layout de Duas Colunas (Esquerda e Direita) */
 .gridContainer {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Aqui garante Esquerda e Direita */
+  grid-template-columns: 1fr 1fr;
   gap: 2rem;
   align-items: start;
 }
 
-/* Responsividade: em celulares vira uma coluna só */
-@media (max-width: 900px) {
+/* Responsividade para tablets e telemóveis */
+@media (max-width: 1024px) {
   .gridContainer {
     grid-template-columns: 1fr;
   }
@@ -34,7 +36,7 @@
   border-radius: 0.75rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e7eb;
-  height: fit-content; /* Ajusta ao conteúdo */
+  height: auto;
 }
 
 .cardHeader {
@@ -57,8 +59,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.85rem 1rem;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border: 1px solid #f3f4f6;
   border-radius: 0.5rem;
   transition: all 0.2s ease;
 }
@@ -74,23 +76,29 @@
   align-items: center;
   gap: 1rem;
   flex: 1;
+  overflow: hidden;
 }
 
 .fileIcon {
   width: 1.25rem;
   height: 1.25rem;
-  color: #6b7280;
+  color: #9ca3af;
+  flex-shrink: 0;
 }
 
 .fileText {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .fileName {
   font-weight: 600;
-  color: #111827;
+  color: #1f2937;
   font-size: 0.9rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .fileDate {
@@ -115,7 +123,7 @@
 
 .viewButton {
   background: #f3f4f6;
-  color: #4b5563;
+  color: #6b7280;
 }
 
 .viewButton:hover {
@@ -130,6 +138,7 @@
 
 .downloadButton:hover {
   background: #e65c00;
+  box-shadow: 0 4px 6px rgba(230, 92, 0, 0.2);
 }
 
 .icon {
@@ -139,7 +148,7 @@
 
 .empty {
   text-align: center;
-  padding: 1rem;
+  padding: 2rem;
   color: #9ca3af;
   font-size: 0.85rem;
 }
