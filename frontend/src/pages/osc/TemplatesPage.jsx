@@ -18,7 +18,6 @@ export default function TemplatesPage() {
       setLoading(true);
       const data = await fileService.getFilesByCategory('');
       
-      // Ordenação Alfanumérica
       const sortedData = data.sort((a, b) => 
         a.title.toLowerCase().localeCompare(b.title.toLowerCase())
       );
@@ -33,11 +32,13 @@ export default function TemplatesPage() {
   };
 
   const renderFileRow = (file) => {
-    const relativePath = file.file_path.includes('uploads') 
-      ? file.file_path.split('backend/')[1] || file.file_path 
-      : file.file_path;
+    // CORREÇÃO DA URL: Remove caminhos absolutos e garante o caminho relativo correto
+    // Se o banco retorna algo como "C:\...\uploads\arquivo.pdf" ou "/var/www/.../uploads/arquivo.pdf"
+    const pathParts = file.file_path.split('uploads');
+    const fileName = pathParts[pathParts.length - 1].replace(/\\/g, '/'); // Troca \ por / para Windows
     
-    const fileUrl = `https://contacomigo.org.br/${relativePath}`;
+    // A URL final deve apontar para onde o Nginx/Backend serve os arquivos
+    const fileUrl = `${import.meta.env.VITE_API_URL}/uploads${fileName}`;
 
     return (
       <div key={file.id} className={styles.fileItem}>
@@ -68,27 +69,19 @@ export default function TemplatesPage() {
       <h1 className={styles.pageTitle}>Docs Modelos | Downloads</h1>
 
       <div className={styles.gridContainer}>
-        {/* Card Modelos de Documentos */}
+        {/* Card à Esquerda */}
         <div className={styles.listCard}>
           <h2 className={styles.cardHeader}>Modelos de Documentos</h2>
           <div className={styles.fileListContainer}>
-            {modelos.length > 0 ? (
-              modelos.map(renderFileRow)
-            ) : (
-              <p className={styles.empty}>Sem documentos nesta categoria.</p>
-            )}
+            {modelos.length > 0 ? modelos.map(renderFileRow) : <p className={styles.empty}>Sem documentos.</p>}
           </div>
         </div>
 
-        {/* Card Comunicação Institucional */}
+        {/* Card à Direita */}
         <div className={styles.listCard}>
           <h2 className={styles.cardHeader}>Comunicação Institucional</h2>
           <div className={styles.fileListContainer}>
-            {comunicacao.length > 0 ? (
-              comunicacao.map(renderFileRow)
-            ) : (
-              <p className={styles.empty}>Sem documentos nesta categoria.</p>
-            )}
+            {comunicacao.length > 0 ? comunicacao.map(renderFileRow) : <p className={styles.empty}>Sem documentos.</p>}
           </div>
         </div>
       </div>

@@ -13,10 +13,19 @@
   padding-left: 1rem;
 }
 
+/* Força 2 colunas lado a lado em telas grandes */
 .gridContainer {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  grid-template-columns: 1fr 1fr; /* Aqui garante Esquerda e Direita */
   gap: 2rem;
+  align-items: start;
+}
+
+/* Responsividade: em celulares vira uma coluna só */
+@media (max-width: 900px) {
+  .gridContainer {
+    grid-template-columns: 1fr;
+  }
 }
 
 .listCard {
@@ -25,6 +34,7 @@
   border-radius: 0.75rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e7eb;
+  height: fit-content; /* Ajusta ao conteúdo */
 }
 
 .cardHeader {
@@ -64,29 +74,23 @@
   align-items: center;
   gap: 1rem;
   flex: 1;
-  overflow: hidden;
 }
 
 .fileIcon {
   width: 1.25rem;
   height: 1.25rem;
   color: #6b7280;
-  flex-shrink: 0;
 }
 
 .fileText {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .fileName {
   font-weight: 600;
   color: #111827;
   font-size: 0.9rem;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
 }
 
 .fileDate {
@@ -126,7 +130,6 @@
 
 .downloadButton:hover {
   background: #e65c00;
-  box-shadow: 0 2px 4px rgba(230, 92, 0, 0.3);
 }
 
 .icon {
@@ -136,9 +139,9 @@
 
 .empty {
   text-align: center;
-  padding: 2rem;
+  padding: 1rem;
   color: #9ca3af;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .loadingFull {
