@@ -1,9 +1,7 @@
 .pageContainer {
   padding: 2rem;
-  margin: 0 auto;
   background-color: #f8fafc;
   min-height: 100vh;
-  width: 100%;
 }
 
 .topActions {
@@ -14,11 +12,7 @@
   margin-bottom: 1.5rem;
 }
 
-.dashboardLogo {
-  width: 70px;
-  height: 70px;
-  object-fit: contain;
-}
+.dashboardLogo { width: 70px; height: 70px; }
 
 .downloadReportBtn {
   position: absolute;
@@ -33,20 +27,9 @@
   border-radius: 0.5rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
-.downloadReportBtn:hover {
-  background-color: #EC6D12;
-}
-
-.title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: #1e293b;
-  margin-bottom: 2rem;
-  text-align: center;
-}
+.title { font-size: 1.75rem; font-weight: 800; text-align: center; margin-bottom: 2rem; }
 
 .statsGrid {
   display: grid;
@@ -56,28 +39,16 @@
 }
 
 .statCard {
-  background-color: white;
+  background: white;
   padding: 1.5rem;
   border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
   gap: 1.25rem;
   border: 1px solid #f1f5f9;
 }
 
-.statIconContainer {
-  padding: 0.85rem;
-  border-radius: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.iconBlue { background-color: #eff6ff; color: #EC6D12; }
-.iconYellow { background-color: #fefce8; color: #eab308; }
-.iconGreen { background-color: #f0fdf4; color: #22c55e; }
-.statValue { font-size: 1.8rem; font-weight: 800; color: #1e293b; }
+.statValue { font-size: 1.8rem; font-weight: 800; }
 
 .chartsGrid {
   display: grid;
@@ -87,108 +58,41 @@
 }
 
 .sectionCard {
-  background-color: white;
+  background: white;
   padding: 1.5rem;
   border-radius: 1rem;
   border: 1px solid #f1f5f9;
 }
 
-.sectionTitle {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #334155;
-  margin-bottom: 1.25rem;
-  border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 0.5rem;
-}
+.sectionTitle { font-weight: 700; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem; margin-bottom: 1rem; }
 
-.missingTable {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.missingTable th {
-  text-align: left;
-  font-size: 0.75rem;
-  color: #64748b;
-  padding: 0.5rem;
-  background: #f8fafc;
-}
-
-.missingTable td {
-  padding: 0.75rem 0.5rem;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 0.85rem;
-}
-
-.oscNameCell { font-weight: 700; color: #1e293b; }
+.missingTable { width: 100%; border-collapse: collapse; }
+.missingTable td { padding: 0.75rem; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+.oscNameCell { font-weight: 700; }
 .missingCell { color: #dc2626; }
 
-.mainGrid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-}
-
-@media (min-width: 1024px) {
-  .mainGrid { grid-template-columns: 1fr 300px; }
-}
-
-.quickLink {
-  display: flex;
-  align-items: center;
-  padding: 0.85rem;
-  border-radius: 0.75rem;
-  color: #475569;
-  font-weight: 600;
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
-  text-decoration: none;
-  margin-bottom: 0.5rem;
-}
-
-.activityItem {
-  display: flex;
-  gap: 1rem;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.activityText { font-size: 0.9rem; }
 .mt2 { margin-top: 1.5rem; }
 
-/* Cabeçalho oculto na tela, visível apenas na impressão */
 .printOnlyHeader { display: none; }
 
-/* REGRAS DE IMPRESSÃO A4 */
+/* --- REGRAS DE IMPRESSÃO PROFISSIONAL --- */
 @media print {
   @page {
     size: A4;
-    margin: 1.5cm;
+    margin: 2cm 1.5cm; /* Margens generosas para impressão */
   }
 
-  /* ESCONDER A BARRA LATERAL E OUTROS ELEMENTOS DO SITE */
-  /* Isso resolve o problema de aparecer a interface do sistema no PDF */
-  :global(aside), 
-  :global(.sidebar),
-  :global(nav),
-  :global(header),
-  .noPrint {
+  /* Remove menus laterais e barras de navegação globais */
+  :global(aside), :global(.sidebar), :global(nav), :global(header), .noPrint {
     display: none !important;
   }
 
-  body {
-    background-color: white !important;
-  }
-
+  /* Reseta o container para ocupar a folha inteira */
   .pageContainer {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+    position: static !important;
     padding: 0 !important;
-    margin: 0 !important;
-    background-color: white !important;
+    background: white !important;
+    width: 100% !important;
   }
 
   .printOnlyHeader {
@@ -200,45 +104,23 @@
     padding-bottom: 1rem;
   }
 
-  .printLogo {
-    width: 60px;
-    height: 60px;
-  }
+  .printLogo { width: 60px; height: 60px; }
 
-  .printHeaderText h1 {
-    font-size: 1.6rem;
-    margin: 0;
-    color: #1e293b;
-  }
-
-  /* Forçar os Grids a ficarem em colunas no papel */
-  .statsGrid {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 10px !important;
-  }
-
-  .chartsGrid {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 10px !important;
-  }
-
-  .mainGrid {
-    display: block !important;
-  }
-
-  .sectionCard {
-    box-shadow: none !important;
-    border: 1px solid #cbd5e1 !important;
-    break-inside: avoid;
+  /* Impede que um gráfico ou card seja cortado ao meio entre duas páginas */
+  .sectionCard, .statCard, .activityItem {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
     margin-bottom: 1rem;
+    border: 1px solid #ddd !important;
   }
 
-  .title {
-    text-align: left;
-    font-size: 1.4rem;
-    margin-bottom: 0.5cm;
-    color: black !important;
-  }
+  /* Garante que os grids se comportem bem na folha */
+  .statsGrid { grid-template-columns: 1fr 1fr 1fr !important; }
+  .chartsGrid { grid-template-columns: 1fr 1fr !important; }
+  .mainGrid { display: block !important; }
+
+  .title { text-align: left; color: black !important; font-size: 1.4rem; }
+  
+  /* Melhora a legibilidade das tabelas impressas */
+  .missingTable th { background-color: #f1f5f9 !important; -webkit-print-color-adjust: exact; }
 }

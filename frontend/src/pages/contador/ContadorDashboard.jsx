@@ -37,35 +37,33 @@ export default function ContadorDashboard() {
         setStats(statsResponse.data);
         setRecentActivity(activityResponse.data);
 
+        // Simulando uma lista maior para testar quebra de página
         setOscsMissingDocs([
           { id: 1, name: 'Associação Vida Ativa', missing: 'Estatuto Social, Ata 2025' },
-          { id: 2, name: 'Instituto Esperança', missing: 'Certidões Negativas' },
-          { id: 3, name: 'Centro Comunitário Sol', missing: 'Relatório de Atividades' }
+          { id: 2, name: 'Instituto Esperança', missing: 'Certidões Negativas, Ata de Eleição' },
+          { id: 3, name: 'Centro Comunitário Sol', missing: 'Relatório de Atividades, Balancete' },
+          { id: 4, name: 'ONG Verde Mar', missing: 'Comprovante de Endereço' },
+          { id: 5, name: 'Fundação Cultural', missing: 'RG dos Diretores' }
         ]);
 
         setChartData([
-          { name: 'Seg', envios: 4 },
-          { name: 'Ter', envios: 7 },
-          { name: 'Qua', envios: 5 },
-          { name: 'Qui', envios: 12 },
+          { name: 'Seg', envios: 4 }, { name: 'Ter', envios: 7 },
+          { name: 'Qua', envios: 5 }, { name: 'Qui', envios: 12 },
           { name: 'Sex', envios: statsResponse.data.pendingDocs || 0 },
         ]);
 
       } catch (err) {
-        console.error("Erro ao buscar dados do dashboard:", err);
-        setError("Não foi possível carregar os dados do dashboard.");
-        addNotification("Erro ao carregar dados do dashboard.", "error"); 
+        console.error("Erro ao buscar dados:", err);
+        setError("Erro ao carregar dashboard.");
+        addNotification("Erro ao carregar dados.", "error"); 
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, [addNotification]);
 
-  const handleDownloadPDF = () => {
-    window.print();
-  };
+  const handleDownloadPDF = () => { window.print(); };
 
   const pieData = [
     { name: 'Documentos', value: stats.pendingDocs },
@@ -73,21 +71,12 @@ export default function ContadorDashboard() {
     { name: 'OSCs Ativas', value: stats.activeOSCs },
   ];
 
-  if (error) {
-    return <div className={styles.errorContainer}>{error}</div>;
-  }
-
-  if (isLoading) {
-    return (
-      <div className={styles.loaderFull}>
-        <Spinner text="A carregar dashboard..." color="#EC6D12" />
-      </div>
-    );
-  }
+  if (error) return <div className={styles.errorContainer}>{error}</div>;
+  if (isLoading) return <div className={styles.loaderFull}><Spinner text="A carregar..." color="#EC6D12" /></div>;
 
   return (
     <div className={styles.pageContainer}>
-      {/* Cabeçalho exclusivo para o Relatório PDF */}
+      {/* Cabeçalho do Relatório */}
       <div className={styles.printOnlyHeader}>
         <img src="/logo_portal.png" alt="Logo" className={styles.printLogo} />
         <div className={styles.printHeaderText}>
@@ -106,7 +95,7 @@ export default function ContadorDashboard() {
       
       <h2 className={styles.title}>Painel de Controle Analítico</h2>
 
-      {/* KPI Cards */}
+      {/* KPI Grid */}
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
           <div className={`${styles.statIconContainer} ${styles.iconBlue}`}>
@@ -117,7 +106,6 @@ export default function ContadorDashboard() {
             <p className={styles.statValue}>{stats.activeOSCs}</p>
           </div>
         </div>
-
         <div className={styles.statCard}>
           <div className={`${styles.statIconContainer} ${styles.iconYellow}`}>
             <FolderIcon className={styles.statIcon} />
@@ -127,7 +115,6 @@ export default function ContadorDashboard() {
             <p className={styles.statValue}>{stats.pendingDocs}</p>
           </div>
         </div>
-
         <div className={styles.statCard}>
           <div className={`${styles.statIconContainer} ${styles.iconGreen}`}>
             <MessageIcon className={styles.statIcon} />
@@ -142,14 +129,14 @@ export default function ContadorDashboard() {
       {/* Gráficos */}
       <div className={styles.chartsGrid}>
         <div className={styles.sectionCard}>
-          <h3 className={styles.sectionTitle}>Volume de Envios (Semanal)</h3>
+          <h3 className={styles.sectionTitle}>Volume de Envios</h3>
           <div className={styles.chartWrapper}>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" />
                 <YAxis />
-                <Tooltip cursor={{fill: '#fff7ed'}} />
+                <Tooltip />
                 <Bar dataKey="envios" fill="#EC6D12" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -157,11 +144,11 @@ export default function ContadorDashboard() {
         </div>
 
         <div className={styles.sectionCard}>
-          <h3 className={styles.sectionTitle}>Distribuição de Demandas</h3>
+          <h3 className={styles.sectionTitle}>Distribuição</h3>
           <div className={styles.chartWrapper}>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
-                <Pie data={pieData} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                <Pie data={pieData} innerRadius={60} outerRadius={80} dataKey="value">
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
@@ -174,10 +161,11 @@ export default function ContadorDashboard() {
         </div>
       </div>
 
+      {/* Tabelas e Atividades */}
       <div className={styles.mainGrid}>
         <div className={styles.activityColumn}>
-          {/* Pendências Críticas */}
-          <div className={`${styles.sectionCard} ${styles.missingDocsSection}`}>
+          {/* Pendências */}
+          <div className={styles.sectionCard}>
             <h3 className={styles.sectionTitle}>Documentos em Falta</h3>
             <div className={styles.missingTableContainer}>
               <table className={styles.missingTable}>
@@ -199,43 +187,35 @@ export default function ContadorDashboard() {
             </div>
           </div>
 
-          {/* Fluxo de Atividades */}
+          {/* Atividades */}
           <div className={`${styles.sectionCard} ${styles.mt2}`}>
-            <h3 className={styles.sectionTitle}>Fluxo de Atividades Recentes</h3>
+            <h3 className={styles.sectionTitle}>Fluxo de Atividades</h3>
             <div className={styles.activityFeedContainer}>
-              {recentActivity.length > 0 ? (
-                recentActivity.map((item) => (
-                  <div key={item.id} className={styles.activityItem}>
-                    <div className={`${styles.activityIconContainer} ${styles.noPrint}`}>
-                      {item.type === 'file' ? <FileIcon className={styles.activityIcon} /> : <MessageIcon className={styles.activityIcon} />}
-                    </div>
-                    <div className={styles.activityText}>
-                      <p>
-                        <strong>{item.oscName}</strong>
-                        {item.type === 'file' ? ' enviou um arquivo ' : ' enviou uma mensagem '}
-                        <br />
-                        <span className={styles.activityContent}>"{item.content}"</span>
-                      </p>
-                      <span className={styles.activityTimestamp}>{formatDateTime(item.timestamp)}</span>
-                    </div>
+              {recentActivity.map((item) => (
+                <div key={item.id} className={styles.activityItem}>
+                  <div className={styles.activityText}>
+                    <p>
+                      <strong>{item.oscName}</strong>
+                      {item.type === 'file' ? ' enviou arquivo ' : ' enviou mensagem '}
+                      <br />
+                      <span className={styles.activityContent}>"{item.content}"</span>
+                    </p>
+                    <span className={styles.activityTimestamp}>{formatDateTime(item.timestamp)}</span>
                   </div>
-                ))
-              ) : (
-                <p className={styles.emptyText}>Nenhuma atividade encontrada.</p>
-              )}
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Menu Lateral - Oculto na Impressão */}
+        {/* Menu Lateral Oculto */}
         <div className={`${styles.actionsColumn} ${styles.noPrint}`}>
           <div className={styles.sectionCard}>
             <h3 className={styles.sectionTitle}>Acesso Rápido</h3>
             <div className={styles.quickLinksContainer}>
-              <Link to="/contador/oscs" className={styles.quickLink}><BuildingIcon className={styles.quickLinkIcon} /> Gerenciar OSCs</Link>
-              <Link to="/contador/documentos" className={styles.quickLink}><FolderIcon className={styles.quickLinkIcon} /> Ver Documentos</Link>
-              <Link to="/contador/mensagens" className={styles.quickLink}><MessageIcon className={styles.quickLinkIcon} /> Mensagens</Link>
-              <Link to="/contador/avisos" className={styles.quickLink}><MegaphoneIcon className={styles.quickLinkIcon} /> Enviar Avisos</Link>
+              <Link to="/contador/oscs" className={styles.quickLink}>Gerenciar OSCs</Link>
+              <Link to="/contador/documentos" className={styles.quickLink}>Ver Documentos</Link>
+              <Link to="/contador/mensagens" className={styles.quickLink}>Mensagens</Link>
             </div>
           </div>
         </div>
