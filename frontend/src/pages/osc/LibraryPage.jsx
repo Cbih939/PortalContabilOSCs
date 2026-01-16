@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as fileService from '../../services/publicFileService.js';
-import PdfThumbnail from '../osc/components/PdfThumbnail.jsx'; // Reaproveitando o componente
+import PdfThumbnail from '../osc/components/PdfThumbnail.jsx'; 
 import styles from './Downloads.module.css';
 
 const BookIcon = ({ className }) => (
@@ -20,19 +20,26 @@ export default function LibraryPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Busca apenas arquivos da categoria BIBLIOTECA
     fileService.getFilesByCategory('BIBLIOTECA')
       .then(data => {
-        // Ordenação Alfanumérica pelo título
-        const sorted = data.sort((a, b) => 
-          a.title.toLowerCase().localeCompare(b.title.toLowerCase())
+        // Filtro de segurança adicional no frontend
+        const filtered = data.filter(f => f.category === 'BIBLIOTECA');
+        
+        // Ordenação Alfanumérica
+        const sorted = filtered.sort((a, b) => 
+          (a.title || "").toLowerCase().localeCompare((b.title || "").toLowerCase())
         );
         setEbooks(sorted);
       })
+      .catch(err => console.error("Erro ao carregar biblioteca:", err))
       .finally(() => setIsLoading(false));
   }, []);
 
   const handleDownload = (path) => {
-    window.open(`https://contacomigo.org.br/${path}`, '_blank');
+    // Limpa o path para garantir que a URL seja construída corretamente
+    const cleanPath = path.replace(/\\/g, '/');
+    window.open(`https://contacomigo.org.br/${cleanPath}`, '_blank');
   };
 
   return (
@@ -41,6 +48,8 @@ export default function LibraryPage() {
 
       {isLoading ? (
         <div className={styles.loading}>Carregando biblioteca...</div>
+      ) : ebooks.length === 0 ? (
+        <div className={styles.empty}>Nenhum e-book disponível no momento.</div>
       ) : (
         <div className={styles.libraryGrid}>
           {ebooks.map((file) => (
@@ -50,11 +59,22 @@ export default function LibraryPage() {
               onClick={() => handleDownload(file.file_path)}
             >
               <div className={styles.thumbnailWrapper}>
-                {/* Renderiza a capa real do PDF */}
-                <PdfThumbnail fileUrl={`https://contacomigo.org.br/${file.file_path}`} />
+                {/* LÓGICA DE CAPA: 
+                    1. Se existir cover_path, usa a imagem enviada.
+                    2. Se não existir, tenta gerar a miniatura do PDF. */}
+                {file.cover_path ? (
+                  <img 
+                    src={`https://contacomigo.org.br/${file.cover_path.replace(/\\/g, '/')}`} 
+                    alt={file.title} 
+                    className={styles.bookCoverImage}
+                  />
+                ) : (
+                  <PdfThumbnail fileUrl={`https://contacomigo.org.br/${file.file_path.replace(/\\/g, '/')}`} />
+                )}
                 
                 <div className={styles.overlay}>
                   <DownloadIcon className={styles.dlIconLarge} />
+                  <span className={styles.overlayText}>Baixar PDF</span>
                 </div>
               </div>
               
