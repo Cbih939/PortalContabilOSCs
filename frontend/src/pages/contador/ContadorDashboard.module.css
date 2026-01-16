@@ -12,7 +12,7 @@
   margin-bottom: 1.5rem;
 }
 
-.dashboardLogo { width: 70px; height: 70px; }
+.dashboardLogo { width: 70px; height: 70px; object-fit: contain; }
 
 .downloadReportBtn {
   position: absolute;
@@ -27,9 +27,12 @@
   border-radius: 0.5rem;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
-.title { font-size: 1.75rem; font-weight: 800; text-align: center; margin-bottom: 2rem; }
+.downloadReportBtn:hover { background-color: #EC6D12; }
+
+.title { font-size: 1.75rem; font-weight: 800; color: #1e293b; margin-bottom: 2rem; text-align: center; }
 
 .statsGrid {
   display: grid;
@@ -39,16 +42,17 @@
 }
 
 .statCard {
-  background: white;
+  background-color: white;
   padding: 1.5rem;
   border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
   gap: 1.25rem;
   border: 1px solid #f1f5f9;
 }
 
-.statValue { font-size: 1.8rem; font-weight: 800; }
+.statValue { font-size: 1.8rem; font-weight: 800; color: #1e293b; }
 
 .chartsGrid {
   display: grid;
@@ -58,19 +62,35 @@
 }
 
 .sectionCard {
-  background: white;
+  background-color: white;
   padding: 1.5rem;
   border-radius: 1rem;
   border: 1px solid #f1f5f9;
+  height: auto;
 }
 
-.sectionTitle { font-weight: 700; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.5rem;
+}
 
 .missingTable { width: 100%; border-collapse: collapse; }
 .missingTable td { padding: 0.75rem; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
-.oscNameCell { font-weight: 700; }
+.oscNameCell { font-weight: 700; color: #1e293b; }
 .missingCell { color: #dc2626; }
 
+.activityItem {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.activityText { font-size: 0.9rem; color: #334155; }
 .mt2 { margin-top: 1.5rem; }
 
 .printOnlyHeader { display: none; }
@@ -79,22 +99,26 @@
 @media print {
   @page {
     size: A4;
-    margin: 2cm 1.5cm; /* Margens generosas para impressão */
+    margin: 2cm 1.5cm; /* Margens para furos de pasta/grampo */
   }
 
-  /* Remove menus laterais e barras de navegação globais */
+  /* Remove barra lateral e elementos globais do site */
   :global(aside), :global(.sidebar), :global(nav), :global(header), .noPrint {
     display: none !important;
   }
 
-  /* Reseta o container para ocupar a folha inteira */
+  /* CORREÇÃO DO BUG: Impede o "print estático" e permite gerar novas páginas */
   .pageContainer {
     position: static !important;
     padding: 0 !important;
+    margin: 0 !important;
     background: white !important;
     width: 100% !important;
+    display: block !important;
+    overflow: visible !important;
   }
 
+  /* Cabeçalho do PDF */
   .printOnlyHeader {
     display: flex !important;
     align-items: center;
@@ -105,22 +129,24 @@
   }
 
   .printLogo { width: 60px; height: 60px; }
+  .printHeaderText h1 { font-size: 1.6rem; margin: 0; color: #1e293b; }
 
-  /* Impede que um gráfico ou card seja cortado ao meio entre duas páginas */
-  .sectionCard, .statCard, .activityItem {
+  /* Impede que cards sejam cortados ao meio entre uma folha e outra */
+  .sectionCard, .statCard, .activityItem, tr {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     margin-bottom: 1rem;
-    border: 1px solid #ddd !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
   }
 
-  /* Garante que os grids se comportem bem na folha */
+  /* Organiza Grids para caberem na largura do papel */
   .statsGrid { grid-template-columns: 1fr 1fr 1fr !important; }
   .chartsGrid { grid-template-columns: 1fr 1fr !important; }
   .mainGrid { display: block !important; }
 
-  .title { text-align: left; color: black !important; font-size: 1.4rem; }
+  .title { text-align: left; color: black !important; font-size: 1.4rem; margin-top: 10px; }
   
-  /* Melhora a legibilidade das tabelas impressas */
-  .missingTable th { background-color: #f1f5f9 !important; -webkit-print-color-adjust: exact; }
+  /* Ajuste para gráficos em segundo plano no Chrome */
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
