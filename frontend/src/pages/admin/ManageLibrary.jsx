@@ -8,7 +8,7 @@ export default function ManageLibrary() {
     title: '', 
     category: 'BIBLIOTECA', 
     file: null, 
-    cover: null // Novo campo
+    cover: null 
   });
   const [loading, setLoading] = useState(false);
 
@@ -27,24 +27,24 @@ export default function ManageLibrary() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!form.file) return alert("Por favor, selecione o arquivo PDF.");
 
     const formData = new FormData();
     formData.append('title', form.title);
     formData.append('category', form.category);
-    formData.append('file', form.file); // O PDF
-    if (form.cover) {
-      formData.append('cover', form.cover); // A imagem da capa
-    }
+    formData.append('file', form.file);
+    if (form.cover) formData.append('cover', form.cover);
 
     setLoading(true);
     try {
       await fileService.uploadFile(formData);
       alert("Publicado com sucesso!");
       setForm({ title: '', category: 'BIBLIOTECA', file: null, cover: null });
+      
+      // Limpar inputs de ficheiro manualmente
       document.getElementById('fileInput').value = "";
       document.getElementById('coverInput').value = "";
+      
       loadFiles();
     } catch (error) {
       alert("Erro ao enviar. Verifique o console.");
@@ -57,10 +57,10 @@ export default function ManageLibrary() {
     <div className={styles.container}>
       <h1 className={styles.title}>Gestão de Biblioteca e Modelos</h1>
       
+      {/* Formulário de Upload */}
       <div className={styles.card}>
         <h3 className={styles.cardTitle}>Adicionar Novo Conteúdo</h3>
         <form onSubmit={handleSubmit} className={styles.form}>
-          
           <div className={styles.inputGroup}>
             <label className={styles.label}>Título</label>
             <input 
@@ -85,7 +85,6 @@ export default function ManageLibrary() {
             </select>
           </div>
 
-          {/* Campo do Ficheiro Principal (PDF) */}
           <div className={styles.inputGroup}>
             <label className={styles.label}>Arquivo PDF</label>
             <input 
@@ -98,9 +97,8 @@ export default function ManageLibrary() {
             />
           </div>
 
-          {/* NOVO: Campo da Capa (Imagem) */}
           <div className={styles.inputGroup}>
-            <label className={styles.label}>Imagem da Capa (Opcional)</label>
+            <label className={styles.label}>Capa (Imagem)</label>
             <input 
               id="coverInput"
               type="file" 
@@ -108,7 +106,6 @@ export default function ManageLibrary() {
               className={styles.input}
               onChange={e => setForm({...form, cover: e.target.files[0]})}
             />
-            {form.cover && <p className={styles.previewText}>Capa selecionada: {form.cover.name}</p>}
           </div>
 
           <button type="submit" disabled={loading} className={styles.submitButton}>
@@ -117,35 +114,55 @@ export default function ManageLibrary() {
         </form>
       </div>
 
+      {/* Grelha de Conteúdos */}
       <div className={styles.card}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Capa</th>
-              <th>Título</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
+        <h3 className={styles.cardTitle}>Conteúdos Publicados</h3>
+        
+        {files.length === 0 ? (
+          <p style={{textAlign: 'center', padding: '2rem', color: '#6b7280'}}>
+            Nenhum conteúdo publicado.
+          </p>
+        ) : (
+          <div className={styles.fileGrid}>
             {files.map(f => (
-              <tr key={f.id}>
-                <td>
+              <div key={f.id} className={styles.fileCard}>
+                <div className={styles.coverWrapper}>
                   {f.cover_path ? (
-                    <img src={`https://contacomigo.org.br/${f.cover_path}`} alt="Capa" className={styles.miniCover} />
+                    <img 
+                      src={`https://contacomigo.org.br/${f.cover_path}`} 
+                      alt={f.title} 
+                      className={styles.gridCover} 
+                    />
                   ) : (
-                    <span className={styles.noCover}>Sem capa</span>
+                    <div className={styles.placeholderCover}>
+                      <span>{f.category === 'BIBLIOTECA' ? '📚' : '📄'}</span>
+                    </div>
                   )}
-                </td>
-                <td>{f.title}</td>
-                <td>
-                  <button onClick={() => fileService.deleteFile(f.id).then(loadFiles)} className={styles.deleteBtn}>
+                </div>
+                
+                <div className={styles.fileDetails}>
+                  <span className={styles.fileCategory}>
+                    {f.category.replace('_', ' ')}
+                  </span>
+                  <h4 className={styles.fileTitle} title={f.title}>
+                    {f.title}
+                  </h4>
+                  
+                  <button 
+                    onClick={() => {
+                      if(window.confirm("Deseja realmente excluir este item?")) {
+                        fileService.deleteFile(f.id).then(loadFiles);
+                      }
+                    }} 
+                    className={styles.deleteBtn}
+                  >
                     Excluir
                   </button>
-                </td>
-              </tr>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        )}
       </div>
     </div>
   );
