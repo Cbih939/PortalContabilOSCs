@@ -10,6 +10,9 @@ import { FileIcon, DownloadIcon } from '../../components/common/Icons.jsx';
 import { formatDate } from '../../utils/formatDate.js';
 import styles from './Documents.module.css';
 
+/**
+ * Página de Documentos da OSC - Versão em Lista
+ */
 export default function OSCDocumentsPage() {
   const { user } = useAuth();
   const addNotification = useNotification();
@@ -25,18 +28,16 @@ export default function OSCDocumentsPage() {
     setErrorLoading(null);
     try {
       const response = await docService.getMyDocuments();
-      // Verificação de segurança para garantir que response.data existe
-      const docs = Array.isArray(response.data) ? response.data : [];
-      
-      const sortedData = docs.sort((a, b) => {
-        const nameA = (a.name || a.original_name || "").toLowerCase();
-        const nameB = (b.name || b.original_name || "").toLowerCase();
+      const sortedData = response.data.sort((a, b) => {
+        const nameA = (a.name || a.original_name).toLowerCase();
+        const nameB = (b.name || b.original_name).toLowerCase();
         return nameA.localeCompare(nameB);
       });
       setMyFiles(sortedData);
     } catch (err) {
       console.error("Erro ao buscar documentos:", err);
       setErrorLoading("Não foi possível carregar os documentos.");
+      addNotification("Erro ao carregar documentos.", "error");
     } finally {
       setIsLoadingList(false);
     }
@@ -54,37 +55,42 @@ export default function OSCDocumentsPage() {
       addNotification('Ficheiro enviado com sucesso!', 'success');
       await fetchDocuments();
     } catch (err) {
-      addNotification(`Falha no upload: ${err.message}`, 'error');
+      addNotification(`Falha no upload: ${err.response?.data?.message || err.message}`, 'error');
+      throw err;
     }
   };
 
   const handleDownload = async (file) => {
+    addNotification(`A iniciar download: ${file.name || file.original_name}`, 'info');
     try {
-      // Usamos o service que já lida com o token e a URL correta
       await docService.downloadDocument(file.id, file.original_name || file.name);
     } catch (err) {
-      addNotification('Erro ao descarregar ficheiro.', 'error');
+      addNotification(err.message || 'Falha no download.', 'error');
     }
   };
 
   return (
     <div className={styles.pageContainer}>
       <div className={styles.grid}>
+        {/* Coluna 1: Info e Upload */}
         <div className={styles.uploadColumn}>
-          <div className={styles.infoCard}>
+          <div className={`${styles.infoCard} mb-8`}>
             <p className={styles.welcomeText}>
               Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais. 
-              Baixe-os na aba <Link to="/osc/modelos" className={styles.orangeLink}>"Docs | Modelos"</Link> e envie-os abaixo:
+              Baixe-os na aba{" "}
+              <Link to="/osc/modelos" className={styles.orangeLink}>
+                "Docs | Modelos"
+              </Link>
+              , realize o registro em cartório (ou assine virtualmente) e os encaminhe para o nosso aplicativo abaixo:
             </p>
-            <p className={styles.infoText}><strong>Nome:</strong> {user?.name}</p>
-            <p className={styles.infoText}><strong>CNPJ:</strong> {user?.cnpj || 'Não informado'}</p>
+            <p className={styles.infoText}><strong>Nome:</strong> {user.name}</p>
+            <p className={styles.infoText}><strong>CNPJ:</strong> {user.cnpj || 'Não informado'}</p>
           </div>
-          <div style={{ marginTop: '1.5rem' }}>
-            <DocumentUpload onUpload={handleFileUpload} isLoading={isUploading} />
-          </div>
+          <DocumentUpload onUpload={handleFileUpload} isLoading={isUploading} />
         </div>
 
-        <div className={styles.listCard}>
+        {/* Coluna 2: Lista de Documentos (Layout de Linhas) */}
+        <div className={`${styles.listCard} ${styles.listColumn}`}>
           <h2 className={styles.cardTitle}>Meus Documentos</h2>
 
           {isLoadingList ? (
@@ -100,7 +106,7 @@ export default function OSCDocumentsPage() {
                   <div className={styles.fileInfo}>
                     <FileIcon className={styles.fileIcon} />
                     <div className={styles.fileText}>
-                      <span className={styles.fileName}>
+                      <span className={styles.fileName} title={file.name || file.original_name}>
                         {file.name || file.original_name}
                       </span>
                       <span className={styles.fileDate}>
@@ -111,6 +117,7 @@ export default function OSCDocumentsPage() {
                   <button
                     onClick={() => handleDownload(file)}
                     className={styles.downloadButton}
+                    title="Descarregar arquivo"
                   >
                     <DownloadIcon className={styles.icon} />
                   </button>
