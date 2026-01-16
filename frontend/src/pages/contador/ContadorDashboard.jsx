@@ -18,6 +18,7 @@ const COLORS = ['#EC6D12', '#1f2937', '#6b7280', '#eab308'];
 export default function ContadorDashboard() {
   const [stats, setStats] = useState({ activeOSCs: 0, pendingDocs: 0, unreadMessages: 0 });
   const [recentActivity, setRecentActivity] = useState([]);
+  const [oscsMissingDocs, setOscsMissingDocs] = useState([]); // Nova lista de pendências
   const [chartData, setChartData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,6 +36,13 @@ export default function ContadorDashboard() {
         
         setStats(statsResponse.data);
         setRecentActivity(activityResponse.data);
+
+        // Simulando dados de OSCs com documentos em falta (pode ser substituído por um serviço real)
+        setOscsMissingDocs([
+          { id: 1, name: 'Associação Vida Ativa', missing: 'Estatuto Social, Ata 2025' },
+          { id: 2, name: 'Instituto Esperança', missing: 'Certidões Negativas' },
+          { id: 3, name: 'Centro Comunitário Sol', missing: 'Relatório de Atividades' }
+        ]);
 
         setChartData([
           { name: 'Seg', envios: 4 },
@@ -56,7 +64,6 @@ export default function ContadorDashboard() {
     fetchData();
   }, [addNotification]);
 
-  // Função para disparar a impressão/download PDF
   const handleDownloadPDF = () => {
     window.print();
   };
@@ -81,10 +88,20 @@ export default function ContadorDashboard() {
 
   return (
     <div className={styles.pageContainer}>
+      {/* Cabeçalho exclusivo para Impressão */}
+      <div className={styles.printOnlyHeader}>
+        <div className={styles.printHeaderContent}>
+          <img src="/logo_portal.png" alt="Logo" className={styles.printLogo} />
+          <div className={styles.printHeaderText}>
+            <h1>Relatório Analítico de Gestão</h1>
+            <p>Gerado em: {formatDateTime(new Date())}</p>
+          </div>
+        </div>
+      </div>
+
       <div className={styles.topActions}>
-        <img src="/logo_portal.png" alt="Logo" className={styles.dashboardLogo} />
-        {/* Botão de Download PDF */}
-        <button onClick={handleDownloadPDF} className={styles.downloadReportBtn}>
+        <img src="/logo_portal.png" alt="Logo" className={`${styles.dashboardLogo} ${styles.noPrint}`} />
+        <button onClick={handleDownloadPDF} className={`${styles.downloadReportBtn} ${styles.noPrint}`}>
           <DownloadIcon className={styles.btnIcon} />
           Baixar Relatório (A4)
         </button>
@@ -92,7 +109,6 @@ export default function ContadorDashboard() {
       
       <h2 className={styles.title}>Painel de Controle Analítico</h2>
 
-      {/* Grid de Estatísticas (KPIs) */}
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
           <div className={`${styles.statIconContainer} ${styles.iconBlue}`}>
@@ -125,7 +141,6 @@ export default function ContadorDashboard() {
         </div>
       </div>
 
-      {/* Área de Gráficos */}
       <div className={styles.chartsGrid}>
         <div className={styles.sectionCard}>
           <h3 className={styles.sectionTitle}>Volume de Envios (Semanal)</h3>
@@ -135,7 +150,7 @@ export default function ContadorDashboard() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" />
                 <YAxis />
-                <Tooltip cursor={{fill: '#fff7ed'}} />
+                <Tooltip />
                 <Bar dataKey="envios" fill="#EC6D12" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -161,54 +176,61 @@ export default function ContadorDashboard() {
       </div>
 
       <div className={styles.mainGrid}>
-        {/* Coluna de Ações Rápidas - Oculta na Impressão */}
-        <div className={`${styles.actionsColumn} ${styles.noPrint}`}>
-          <div className={styles.sectionCard}>
-            <h3 className={styles.sectionTitle}>Acesso Rápido</h3>
-            <div className={styles.quickLinksContainer}>
-              <Link to="/contador/oscs" className={styles.quickLink}>
-                <BuildingIcon className={styles.quickLinkIcon} /> Gerenciar OSCs
-              </Link>
-              <Link to="/contador/documentos" className={styles.quickLink}>
-                <FolderIcon className={styles.quickLinkIcon} /> Ver Documentos
-              </Link>
-              <Link to="/contador/mensagens" className={styles.quickLink}>
-                <MessageIcon className={styles.quickLinkIcon} /> Mensagens
-              </Link>
-              <Link to="/contador/avisos" className={styles.quickLink}>
-                <MegaphoneIcon className={styles.quickLinkIcon} /> Enviar Avisos
-              </Link>
+        <div className={styles.activityColumn}>
+          {/* Nova Secção: OSCs com Documentos em Falta */}
+          <div className={`${styles.sectionCard} ${styles.missingDocsSection}`}>
+            <h3 className={styles.sectionTitle}>Pendências Críticas: Documentos em Falta</h3>
+            <div className={styles.missingTableContainer}>
+              <table className={styles.missingTable}>
+                <thead>
+                  <tr>
+                    <th>OSC</th>
+                    <th>Documentação em Falta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {oscsMissingDocs.map(osc => (
+                    <tr key={osc.id}>
+                      <td className={styles.oscNameCell}>{osc.name}</td>
+                      <td className={styles.missingCell}>{osc.missing}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className={`${styles.sectionCard} ${styles.mt2}`}>
+            <h3 className={styles.sectionTitle}>Fluxo de Atividades Recentes</h3>
+            <div className={styles.activityFeedContainer}>
+              {recentActivity.map((item) => (
+                <div key={item.id} className={styles.activityItem}>
+                  <div className={`${styles.activityIconContainer} ${styles.noPrint}`}>
+                    {item.type === 'file' ? <FileIcon className={styles.activityIcon} /> : <MessageIcon className={styles.activityIcon} />}
+                  </div>
+                  <div className={styles.activityText}>
+                    <p>
+                      <strong>{item.oscName}</strong>
+                      {item.type === 'file' ? ' enviou um arquivo ' : ' enviou uma mensagem '}
+                      <br />
+                      <span className={styles.activityContent}>"{item.content}"</span>
+                    </p>
+                    <span className={styles.activityTimestamp}>{formatDateTime(item.timestamp)}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Coluna de Atividades Recentes */}
-        <div className={styles.activityColumn}>
+        <div className={`${styles.actionsColumn} ${styles.noPrint}`}>
           <div className={styles.sectionCard}>
-            <h3 className={styles.sectionTitle}>Fluxo de Atividades</h3>
-            <div className={styles.activityFeedContainer}>
-              {recentActivity.length > 0 ? (
-                recentActivity.map((item) => (
-                  <div key={item.id} className={styles.activityItem}>
-                    <div className={`${styles.activityIconContainer} ${styles.noPrint}`}>
-                      {item.type === 'file' ? <FileIcon className={styles.activityIcon} /> : <MessageIcon className={styles.activityIcon} />}
-                    </div>
-                    <div className={styles.activityText}>
-                      <p>
-                        <strong>{item.oscName}</strong>
-                        {item.type === 'file' ? ' enviou um arquivo ' : ' enviou uma mensagem '}
-                        <br />
-                        <span className={styles.activityContent}>"{item.content}"</span>
-                      </p>
-                      <span className={styles.activityTimestamp}>
-                        {formatDateTime(item.timestamp)}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className={styles.emptyText}>Nenhuma atividade encontrada.</p>
-              )}
+            <h3 className={styles.sectionTitle}>Acesso Rápido</h3>
+            <div className={styles.quickLinksContainer}>
+              <Link to="/contador/oscs" className={styles.quickLink}><BuildingIcon className={styles.quickLinkIcon} /> Gerenciar OSCs</Link>
+              <Link to="/contador/documentos" className={styles.quickLink}><FolderIcon className={styles.quickLinkIcon} /> Ver Documentos</Link>
+              <Link to="/contador/mensagens" className={styles.quickLink}><MessageIcon className={styles.quickLinkIcon} /> Mensagens</Link>
+              <Link to="/contador/avisos" className={styles.quickLink}><MegaphoneIcon className={styles.quickLinkIcon} /> Enviar Avisos</Link>
             </div>
           </div>
         </div>

@@ -34,17 +34,10 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 0.85rem;
 }
 
 .downloadReportBtn:hover {
   background-color: #EC6D12;
-  transform: translateY(-2px);
-}
-
-.btnIcon {
-  width: 1.1rem;
-  height: 1.1rem;
 }
 
 .title {
@@ -55,7 +48,6 @@
   text-align: center;
 }
 
-/* KPIs */
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -85,12 +77,8 @@
 .iconBlue { background-color: #eff6ff; color: #EC6D12; }
 .iconYellow { background-color: #fefce8; color: #eab308; }
 .iconGreen { background-color: #f0fdf4; color: #22c55e; }
-.statIcon { height: 1.5rem; width: 1.5rem; }
-
-.statLabel { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
 .statValue { font-size: 1.8rem; font-weight: 800; color: #1e293b; }
 
-/* Gráficos */
 .chartsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -98,28 +86,10 @@
   margin-bottom: 2rem;
 }
 
-.chartWrapper {
-  margin-top: 1rem;
-  padding-right: 1rem;
-}
-
-/* Estrutura Principal */
-.mainGrid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-}
-
-@media (min-width: 1024px) {
-  .mainGrid { grid-template-columns: 350px 1fr; }
-}
-
 .sectionCard {
   background-color: white;
   padding: 1.5rem;
   border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  height: 100%;
   border: 1px solid #f1f5f9;
 }
 
@@ -128,12 +98,42 @@
   font-weight: 700;
   color: #334155;
   margin-bottom: 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.5rem;
 }
 
-.quickLinksContainer { display: flex; flex-direction: column; gap: 0.75rem; }
+/* Tabela de Pendências */
+.missingTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.missingTable th {
+  text-align: left;
+  font-size: 0.75rem;
+  color: #64748b;
+  padding: 0.5rem;
+  background: #f8fafc;
+}
+
+.missingTable td {
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.85rem;
+}
+
+.oscNameCell { font-weight: 700; color: #1e293b; }
+.missingCell { color: #dc2626; }
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .mainGrid { grid-template-columns: 1fr 300px; }
+}
 
 .quickLink {
   display: flex;
@@ -145,87 +145,54 @@
   background-color: #f8fafc;
   border: 1px solid #e2e8f0;
   text-decoration: none;
-  transition: all 0.2s ease;
-  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
 }
-
-.quickLink:hover {
-  background-color: #fff7ed;
-  border-color: #EC6D12;
-  color: #EC6D12;
-  transform: translateX(4px);
-}
-
-.quickLinkIcon { height: 1.25rem; width: 1.25rem; margin-right: 0.75rem; color: #94a3b8; }
-.quickLink:hover .quickLinkIcon { color: #EC6D12; }
 
 .activityItem {
   display: flex;
   gap: 1rem;
-  padding: 1rem 0;
+  padding: 0.75rem 0;
   border-bottom: 1px solid #f1f5f9;
 }
 
-.activityIconContainer {
-  background-color: #f1f5f9;
-  min-width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+.activityText { font-size: 0.9rem; }
+.mt2 { margin-top: 1.5rem; }
 
-.activityIcon { height: 0.9rem; width: 0.9rem; color: #64748b; }
-.activityText { flex: 1; font-size: 0.9rem; color: #334155; }
-.activityText strong { color: #EC6D12; }
-.activityContent { color: #64748b; font-size: 0.85rem; font-style: italic; }
-.activityTimestamp { display: block; font-size: 0.7rem; color: #94a3b8; margin-top: 0.2rem; }
-
-.loaderFull { display: flex; justify-content: center; align-items: center; height: 80vh; }
-.errorContainer { text-align: center; color: #dc2626; padding: 3rem; }
-.emptyText { text-align: center; color: #94a3b8; padding: 2rem; font-size: 0.9rem; }
+.printOnlyHeader { display: none; }
 
 /* REGRAS DE IMPRESSÃO A4 */
 @media print {
-  @page {
-    size: A4;
-    margin: 1cm;
+  @page { size: A4; margin: 1cm; }
+  
+  body { background-color: white !important; }
+  .pageContainer { padding: 0; background-color: white !important; }
+
+  .noPrint { display: none !important; }
+
+  .printOnlyHeader {
+    display: block !important;
+    margin-bottom: 2rem;
+    border-bottom: 3px solid #EC6D12;
+    padding-bottom: 1rem;
   }
 
-  body {
-    background-color: white !important;
-  }
+  .printHeaderContent { display: flex; align-items: center; gap: 1.5rem; }
+  .printLogo { width: 60px; height: 60px; }
+  .printHeaderText h1 { font-size: 1.6rem; margin: 0; color: #1e293b; }
 
-  .pageContainer {
-    padding: 0;
-    background-color: white !important;
-  }
-
-  .downloadReportBtn, .noPrint, .quickLinksContainer {
-    display: none !important;
-  }
-
-  .statsGrid {
-    grid-template-columns: repeat(3, 1fr) !important;
-  }
-
-  .chartsGrid {
-    grid-template-columns: 1fr 1fr !important;
-  }
-
-  .mainGrid {
-    grid-template-columns: 1fr !important;
-  }
+  .statsGrid { grid-template-columns: repeat(3, 1fr) !important; }
+  .chartsGrid { grid-template-columns: 1fr 1fr !important; }
+  .mainGrid { grid-template-columns: 1fr !important; }
 
   .sectionCard {
     box-shadow: none !important;
-    border: 1px solid #e2e8f0 !important;
+    border: 1px solid #cbd5e1 !important;
     break-inside: avoid;
-  }
-
-  .title {
-    color: black !important;
     margin-bottom: 1rem;
   }
+
+  .title { text-align: left; font-size: 1.4rem; color: black !important; }
+  .statCard { border: 1px solid #cbd5e1 !important; }
+  
+  .missingTable th { background: #e2e8f0 !important; color: black !important; }
 }
