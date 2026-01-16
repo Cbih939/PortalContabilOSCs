@@ -32,17 +32,32 @@ export default function TemplatesPage() {
     }
   };
 
-  const renderFileRow = (file) => {
-    // CORREÇÃO DA URL: Garante que não apareça 'undefined'
+ const renderFileRow = (file) => {
+    // 1. Garantimos a URL base. Se o .env falhar, usamos a origem do site (ex: https://contacomigo.org.br)
     const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
 
-    // Limpeza do path para garantir que aponte para /uploads/arquivo.pdf
+    // 2. Limpeza rigorosa do caminho do ficheiro
+    // Remove barras invertidas de Windows e garante que o caminho comece após 'uploads'
     let cleanPath = file.file_path.replace(/\\/g, '/');
     if (cleanPath.includes('uploads/')) {
       cleanPath = 'uploads/' + cleanPath.split('uploads/')[1];
     }
 
-    // Monta a URL final removendo barras duplicadas
+    // 3. Construção da URL ABSOLUTA
+    // O prefixo '/' no início é vital para não herdar o '/osc/' da URL atual
+   const renderFileRow = (file) => {
+    // 1. Garantimos a URL base. Se o .env falhar, usamos a origem do site (ex: https://contacomigo.org.br)
+    const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
+
+    // 2. Limpeza rigorosa do caminho do ficheiro
+    // Remove barras invertidas de Windows e garante que o caminho comece após 'uploads'
+    let cleanPath = file.file_path.replace(/\\/g, '/');
+    if (cleanPath.includes('uploads/')) {
+      cleanPath = 'uploads/' + cleanPath.split('uploads/')[1];
+    }
+
+    // 3. Construção da URL ABSOLUTA
+    // O prefixo '/' no início é vital para não herdar o '/osc/' da URL atual
     const fileUrl = `${baseUrl.replace(/\/$/, '')}/${cleanPath}`;
 
     return (
@@ -56,20 +71,20 @@ export default function TemplatesPage() {
         </div>
         
         <div className={styles.actionGroup}>
+          {/* O target="_blank" abrirá o PDF original se o Nginx permitir */}
           <a 
             href={fileUrl} 
             target="_blank" 
             rel="noopener noreferrer" 
-            className={styles.viewButton} 
-            title="Visualizar"
+            className={styles.viewButton}
           >
             <EyeIcon className={styles.icon} />
           </a>
+          {/* O atributo download ajuda o browser a entender que é um ficheiro, não uma página */}
           <a 
             href={fileUrl} 
-            download={file.title} 
-            className={styles.downloadButton} 
-            title="Descarregar"
+            download 
+            className={styles.downloadButton}
           >
             <DownloadIcon className={styles.icon} />
           </a>
@@ -117,4 +132,5 @@ export default function TemplatesPage() {
       </div>
     </div>
   );
+ }
 }

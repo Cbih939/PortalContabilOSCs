@@ -105,7 +105,7 @@ export default function OSCProfilePage() {
             <InputField label="Instagram" name="instagram" value={formData.instagram} onChange={handleChange} disabled={!isEditing} />
             
             <InputField label="CEP*" name="cep" value={formData.cep} onChange={handleChange} disabled={!isEditing} />
-            <InputField label="Endereço*" name="address" value={formData.address} onChange={handleChange} disabled={!isEditing} />
+            <InputField label="Logradouro(rua, avenida, travessa...)*" name="address" value={formData.address} onChange={handleChange} disabled={!isEditing} />
             
             <InputField label="Número*" name="numero" value={formData.numero} onChange={handleChange} disabled={!isEditing} />
             <InputField label="Bairro*" name="bairro" value={formData.bairro} onChange={handleChange} disabled={!isEditing} />
