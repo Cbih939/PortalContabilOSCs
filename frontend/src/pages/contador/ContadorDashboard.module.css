@@ -44,19 +44,12 @@
   border: 1px solid #e5e7eb;
 }
 
-.chartsGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-top: 2rem;
-}
-
 .sectionCard {
   background: white;
   padding: 1.5rem;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
-  margin-top: 1.5rem;
+  margin-top: 2rem;
 }
 
 .missingTable {
@@ -78,7 +71,7 @@
   display: block;
 }
 
-/* ===== IMPRESSÃO / PDF ===== */
+/* ===== PDF / IMPRESSÃO ===== */
 @media print {
   @page {
     size: A4;

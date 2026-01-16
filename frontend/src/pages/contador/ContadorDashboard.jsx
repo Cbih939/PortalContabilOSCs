@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from 'recharts';
 import {
-  BuildingIcon, FolderIcon, MessageIcon, MegaphoneIcon, FileIcon, DownloadIcon
+  BuildingIcon, FolderIcon, MessageIcon, FileIcon, DownloadIcon
 } from '../../components/common/Icons.jsx';
 import * as contadorService from '../../services/contadorService.js';
 import { formatDateTime } from '../../utils/formatDate.js';
@@ -75,12 +74,12 @@ export default function ContadorDashboard() {
     });
 
     const imgData = canvas.toDataURL('image/png');
-
     const pdf = new jsPDF('p', 'mm', 'a4');
+
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-
     const imgHeight = (canvas.height * pageWidth) / canvas.width;
+
     let heightLeft = imgHeight;
     let position = 0;
 
@@ -108,6 +107,7 @@ export default function ContadorDashboard() {
 
   return (
     <div className={styles.pageContainer}>
+      {/* Cabeçalho exclusivo do PDF */}
       <div className={styles.printOnlyHeader}>
         <img src="/logo_portal.png" alt="Logo" className={styles.printLogo} />
         <div>
@@ -138,38 +138,36 @@ export default function ContadorDashboard() {
         </div>
       </div>
 
-      {/* Gráficos */}
-      <div className={styles.chartsGrid}>
-        <div className={styles.sectionCard}>
-          <h3>Volume de Envios (Semanal)</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="envios" fill="#EC6D12" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className={styles.sectionCard}>
-          <h3>Distribuição de Demandas</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie data={pieData} dataKey="value" outerRadius={90}>
-                {pieData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Pie>
-              <Legend />
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+      {/* GRÁFICOS – ORDEM CORRIGIDA */}
+      <div className={styles.sectionCard}>
+        <h3>Volume de Envios (Semanal)</h3>
+        <ResponsiveContainer width="100%" height={280}>
+          <BarChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="envios" fill="#EC6D12" />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
 
-      {/* Tabelas */}
+      <div className={styles.sectionCard}>
+        <h3>Distribuição de Demandas</h3>
+        <ResponsiveContainer width="100%" height={280}>
+          <PieChart>
+            <Pie data={pieData} dataKey="value" outerRadius={100}>
+              {pieData.map((_, i) => (
+                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+              ))}
+            </Pie>
+            <Legend />
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* TABELAS */}
       <div className={styles.sectionCard}>
         <h3>Documentos em Falta / OSCs com Pendências</h3>
         <table className={styles.missingTable}>
@@ -199,14 +197,6 @@ export default function ContadorDashboard() {
             <small>{formatDateTime(item.timestamp)}</small>
           </div>
         ))}
-      </div>
-
-      <div className={`${styles.noPrint} ${styles.sectionCard}`}>
-        <h3>Acesso Rápido</h3>
-        <Link to="/contador/oscs">OSCs</Link> |{' '}
-        <Link to="/contador/documentos">Documentos</Link> |{' '}
-        <Link to="/contador/mensagens">Mensagens</Link> |{' '}
-        <Link to="/contador/avisos">Avisos</Link>
       </div>
     </div>
   );
