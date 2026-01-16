@@ -1,39 +1,33 @@
-/* frontend/src/pages/contador/ContadorDashboard.module.css */
 .pageContainer {
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  background-color: #f8fafc;
+  min-height: 100vh;
 }
 
 .dashboardLogo {
-  width: 80px;
-  height: 80px;
+  width: 70px;
+  height: 70px;
   object-fit: contain;
-  border-radius: 50%;
-  background-color: white;
-  padding: 10px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   display: block;
-  margin: 0 auto 1.5rem auto;
+  margin: 0 auto 1rem auto;
 }
 
 .title {
   font-size: 1.75rem;
   font-weight: 800;
-  color: #1f2937;
+  color: #1e293b;
   margin-bottom: 2rem;
   text-align: center;
 }
 
+/* KPIs */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(1, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
-  margin-bottom: 2.5rem;
-}
-
-@media (min-width: 768px) {
-  .statsGrid { grid-template-columns: repeat(3, 1fr); }
+  margin-bottom: 2rem;
 }
 
 .statCard {
@@ -43,11 +37,12 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.25rem;
+  border: 1px solid #f1f5f9;
 }
 
 .statIconContainer {
-  padding: 1rem;
+  padding: 0.85rem;
   border-radius: 0.75rem;
   display: flex;
   align-items: center;
@@ -57,85 +52,103 @@
 .iconBlue { background-color: #eff6ff; color: #EC6D12; }
 .iconYellow { background-color: #fefce8; color: #eab308; }
 .iconGreen { background-color: #f0fdf4; color: #22c55e; }
+.statIcon { height: 1.5rem; width: 1.5rem; }
 
-.statIcon { height: 1.75rem; width: 1.75rem; }
+.statLabel { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+.statValue { font-size: 1.8rem; font-weight: 800; color: #1e293b; }
 
-.statLabel { font-size: 0.875rem; font-weight: 600; color: #6b7280; text-transform: uppercase; }
-.statValue { font-size: 2rem; font-weight: 800; color: #1f2937; }
+/* Gráficos */
+.chartsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
 
+.chartWrapper {
+  margin-top: 1rem;
+  padding-right: 1rem;
+}
+
+/* Estrutura Principal */
 .mainGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 @media (min-width: 1024px) {
-  .mainGrid { grid-template-columns: 1fr 2fr; }
+  .mainGrid { grid-template-columns: 350px 1fr; }
 }
 
 .sectionCard {
   background-color: white;
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 1rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   height: 100%;
+  border: 1px solid #f1f5f9;
 }
 
 .sectionTitle {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 1.5rem;
-  border-bottom: 2px solid #f3f4f6;
-  padding-bottom: 0.75rem;
+  color: #334155;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.quickLinksContainer { display: flex; flex-direction: column; gap: 1rem; }
+.quickLinksContainer { display: flex; flex-direction: column; gap: 0.75rem; }
 
 .quickLink {
   display: flex;
   align-items: center;
-  padding: 1rem;
+  padding: 0.85rem;
   border-radius: 0.75rem;
-  color: #4b5563;
+  color: #475569;
   font-weight: 600;
-  background-color: white;
-  border: 1px solid #e5e7eb;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
   text-decoration: none;
   transition: all 0.2s ease;
+  font-size: 0.9rem;
 }
 
 .quickLink:hover {
   background-color: #fff7ed;
   border-color: #EC6D12;
   color: #EC6D12;
-  transform: translateX(5px);
+  transform: translateX(4px);
 }
 
-.quickLinkIcon { height: 1.5rem; width: 1.5rem; margin-right: 1rem; color: #9ca3af; }
+.quickLinkIcon { height: 1.25rem; width: 1.25rem; margin-right: 0.75rem; color: #94a3b8; }
 .quickLink:hover .quickLinkIcon { color: #EC6D12; }
-
-.activityFeedContainer { display: flex; flex-direction: column; }
 
 .activityItem {
   display: flex;
   gap: 1rem;
   padding: 1rem 0;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .activityIconContainer {
-  background-color: #f3f4f6;
-  width: 40px;
-  height: 40px;
+  background-color: #f1f5f9;
+  min-width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.activityIcon { height: 1rem; width: 1rem; color: #6b7280; }
-.activityText { flex: 1; font-size: 0.95rem; color: #374151; }
-.activityText strong { color: #EC6D12; font-weight: 700; }
-.activityTimestamp { display: block; font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem; }
-.emptyText { text-align: center; color: #9ca3af; padding: 2rem; font-style: italic; }
+.activityIcon { height: 0.9rem; width: 0.9rem; color: #64748b; }
+.activityText { flex: 1; font-size: 0.9rem; color: #334155; }
+.activityText strong { color: #EC6D12; }
+.activityContent { color: #64748b; font-size: 0.85rem; font-style: italic; }
+.activityTimestamp { display: block; font-size: 0.7rem; color: #94a3b8; margin-top: 0.2rem; }
+
+.loaderFull { display: flex; justifyContent: center; alignItems: center; height: 80vh; }
+.errorContainer { text-align: center; color: #dc2626; padding: 3rem; }
+.emptyText { text-align: center; color: #94a3b8; padding: 2rem; font-size: 0.9rem; }
