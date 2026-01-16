@@ -5,7 +5,7 @@ import {
   PieChart, Pie, Cell, Legend
 } from 'recharts';
 import {
-  BuildingIcon, FolderIcon, MessageIcon, MegaphoneIcon, FileIcon
+  BuildingIcon, FolderIcon, MessageIcon, MegaphoneIcon, FileIcon, DownloadIcon
 } from '../../components/common/Icons.jsx';
 import * as contadorService from '../../services/contadorService.js';
 import { formatDateTime } from '../../utils/formatDate.js';
@@ -36,14 +36,12 @@ export default function ContadorDashboard() {
         setStats(statsResponse.data);
         setRecentActivity(activityResponse.data);
 
-        // Mock de dados para o gráfico baseado no volume de atividades
-        // Em produção, isso pode vir de um endpoint específico getChartData()
         setChartData([
           { name: 'Seg', envios: 4 },
           { name: 'Ter', envios: 7 },
           { name: 'Qua', envios: 5 },
           { name: 'Qui', envios: 12 },
-          { name: 'Sex', envios: statsResponse.data.pendingDocs },
+          { name: 'Sex', envios: statsResponse.data.pendingDocs || 0 },
         ]);
 
       } catch (err) {
@@ -57,6 +55,11 @@ export default function ContadorDashboard() {
 
     fetchData();
   }, [addNotification]);
+
+  // Função para disparar a impressão/download PDF
+  const handleDownloadPDF = () => {
+    window.print();
+  };
 
   const pieData = [
     { name: 'Documentos', value: stats.pendingDocs },
@@ -78,7 +81,14 @@ export default function ContadorDashboard() {
 
   return (
     <div className={styles.pageContainer}>
-      <img src="/logo_portal.png" alt="Logo" className={styles.dashboardLogo} />
+      <div className={styles.topActions}>
+        <img src="/logo_portal.png" alt="Logo" className={styles.dashboardLogo} />
+        {/* Botão de Download PDF */}
+        <button onClick={handleDownloadPDF} className={styles.downloadReportBtn}>
+          <DownloadIcon className={styles.btnIcon} />
+          Baixar Relatório (A4)
+        </button>
+      </div>
       
       <h2 className={styles.title}>Painel de Controle Analítico</h2>
 
@@ -151,8 +161,8 @@ export default function ContadorDashboard() {
       </div>
 
       <div className={styles.mainGrid}>
-        {/* Coluna de Ações Rápidas */}
-        <div className={styles.actionsColumn}>
+        {/* Coluna de Ações Rápidas - Oculta na Impressão */}
+        <div className={`${styles.actionsColumn} ${styles.noPrint}`}>
           <div className={styles.sectionCard}>
             <h3 className={styles.sectionTitle}>Acesso Rápido</h3>
             <div className={styles.quickLinksContainer}>
@@ -180,7 +190,7 @@ export default function ContadorDashboard() {
               {recentActivity.length > 0 ? (
                 recentActivity.map((item) => (
                   <div key={item.id} className={styles.activityItem}>
-                    <div className={styles.activityIconContainer}>
+                    <div className={`${styles.activityIconContainer} ${styles.noPrint}`}>
                       {item.type === 'file' ? <FileIcon className={styles.activityIcon} /> : <MessageIcon className={styles.activityIcon} />}
                     </div>
                     <div className={styles.activityText}>
