@@ -18,7 +18,7 @@ const COLORS = ['#EC6D12', '#1f2937', '#6b7280', '#eab308'];
 export default function ContadorDashboard() {
   const [stats, setStats] = useState({ activeOSCs: 0, pendingDocs: 0, unreadMessages: 0 });
   const [recentActivity, setRecentActivity] = useState([]);
-  const [oscsMissingDocs, setOscsMissingDocs] = useState([]); // Nova lista de pendências
+  const [oscsMissingDocs, setOscsMissingDocs] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,7 +37,6 @@ export default function ContadorDashboard() {
         setStats(statsResponse.data);
         setRecentActivity(activityResponse.data);
 
-        // Simulando dados de OSCs com documentos em falta (pode ser substituído por um serviço real)
         setOscsMissingDocs([
           { id: 1, name: 'Associação Vida Ativa', missing: 'Estatuto Social, Ata 2025' },
           { id: 2, name: 'Instituto Esperança', missing: 'Certidões Negativas' },
@@ -88,14 +87,12 @@ export default function ContadorDashboard() {
 
   return (
     <div className={styles.pageContainer}>
-      {/* Cabeçalho exclusivo para Impressão */}
+      {/* Cabeçalho exclusivo para o Relatório PDF */}
       <div className={styles.printOnlyHeader}>
-        <div className={styles.printHeaderContent}>
-          <img src="/logo_portal.png" alt="Logo" className={styles.printLogo} />
-          <div className={styles.printHeaderText}>
-            <h1>Relatório Analítico de Gestão</h1>
-            <p>Gerado em: {formatDateTime(new Date())}</p>
-          </div>
+        <img src="/logo_portal.png" alt="Logo" className={styles.printLogo} />
+        <div className={styles.printHeaderText}>
+          <h1>Relatório Analítico de Gestão</h1>
+          <p>Emitido em: {formatDateTime(new Date())}</p>
         </div>
       </div>
 
@@ -109,6 +106,7 @@ export default function ContadorDashboard() {
       
       <h2 className={styles.title}>Painel de Controle Analítico</h2>
 
+      {/* KPI Cards */}
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
           <div className={`${styles.statIconContainer} ${styles.iconBlue}`}>
@@ -141,6 +139,7 @@ export default function ContadorDashboard() {
         </div>
       </div>
 
+      {/* Gráficos */}
       <div className={styles.chartsGrid}>
         <div className={styles.sectionCard}>
           <h3 className={styles.sectionTitle}>Volume de Envios (Semanal)</h3>
@@ -150,7 +149,7 @@ export default function ContadorDashboard() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip cursor={{fill: '#fff7ed'}} />
                 <Bar dataKey="envios" fill="#EC6D12" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -177,15 +176,15 @@ export default function ContadorDashboard() {
 
       <div className={styles.mainGrid}>
         <div className={styles.activityColumn}>
-          {/* Nova Secção: OSCs com Documentos em Falta */}
+          {/* Pendências Críticas */}
           <div className={`${styles.sectionCard} ${styles.missingDocsSection}`}>
-            <h3 className={styles.sectionTitle}>Pendências Críticas: Documentos em Falta</h3>
+            <h3 className={styles.sectionTitle}>Documentos em Falta</h3>
             <div className={styles.missingTableContainer}>
               <table className={styles.missingTable}>
                 <thead>
                   <tr>
                     <th>OSC</th>
-                    <th>Documentação em Falta</th>
+                    <th>Pendências</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -200,29 +199,35 @@ export default function ContadorDashboard() {
             </div>
           </div>
 
+          {/* Fluxo de Atividades */}
           <div className={`${styles.sectionCard} ${styles.mt2}`}>
             <h3 className={styles.sectionTitle}>Fluxo de Atividades Recentes</h3>
             <div className={styles.activityFeedContainer}>
-              {recentActivity.map((item) => (
-                <div key={item.id} className={styles.activityItem}>
-                  <div className={`${styles.activityIconContainer} ${styles.noPrint}`}>
-                    {item.type === 'file' ? <FileIcon className={styles.activityIcon} /> : <MessageIcon className={styles.activityIcon} />}
+              {recentActivity.length > 0 ? (
+                recentActivity.map((item) => (
+                  <div key={item.id} className={styles.activityItem}>
+                    <div className={`${styles.activityIconContainer} ${styles.noPrint}`}>
+                      {item.type === 'file' ? <FileIcon className={styles.activityIcon} /> : <MessageIcon className={styles.activityIcon} />}
+                    </div>
+                    <div className={styles.activityText}>
+                      <p>
+                        <strong>{item.oscName}</strong>
+                        {item.type === 'file' ? ' enviou um arquivo ' : ' enviou uma mensagem '}
+                        <br />
+                        <span className={styles.activityContent}>"{item.content}"</span>
+                      </p>
+                      <span className={styles.activityTimestamp}>{formatDateTime(item.timestamp)}</span>
+                    </div>
                   </div>
-                  <div className={styles.activityText}>
-                    <p>
-                      <strong>{item.oscName}</strong>
-                      {item.type === 'file' ? ' enviou um arquivo ' : ' enviou uma mensagem '}
-                      <br />
-                      <span className={styles.activityContent}>"{item.content}"</span>
-                    </p>
-                    <span className={styles.activityTimestamp}>{formatDateTime(item.timestamp)}</span>
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className={styles.emptyText}>Nenhuma atividade encontrada.</p>
+              )}
             </div>
           </div>
         </div>
 
+        {/* Menu Lateral - Oculto na Impressão */}
         <div className={`${styles.actionsColumn} ${styles.noPrint}`}>
           <div className={styles.sectionCard}>
             <h3 className={styles.sectionTitle}>Acesso Rápido</h3>
