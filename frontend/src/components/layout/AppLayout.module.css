@@ -3,7 +3,7 @@
   height: 100vh;
   width: 100vw;
   background-color: #f3f4f6;
-  overflow: hidden; /* Apenas o .pageScrollArea rola na tela */
+  overflow: hidden;
 }
 
 /* Sidebar */
@@ -18,7 +18,6 @@
 .sidebarHidden {
   width: 0 !important;
   opacity: 0;
-  margin-left: 0;
 }
 
 /* Main Content */
@@ -41,17 +40,15 @@
   z-index: 19;
 }
 
-/* --- ÁREA DE ROLAGEM --- */
 .pageScrollArea {
   flex: 1;
-  overflow-y: auto; 
+  overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
 }
 
-/* Wrapper do conteúdo da página (Outlet) */
 .contentWrapper {
   flex: 1 0 auto;
   width: 100%;
@@ -59,14 +56,13 @@
   flex-direction: column;
 }
 
-/* Wrapper do Footer */
 .footerWrapper {
   flex-shrink: 0;
   width: 100%;
   padding-top: 2rem;
 }
 
-/* --- ESTILOS DO AVATAR INJETADO --- */
+/* --- ESTILOS DO AVATAR NO HEADER --- */
 .headerRight {
   display: flex;
   align-items: center;
@@ -77,7 +73,6 @@
   color: #64748b;
   cursor: pointer;
   display: flex;
-  align-items: center;
 }
 
 .avatarLink {
@@ -94,74 +89,51 @@
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  transition: transform 0.2s;
   cursor: pointer;
+  transition: transform 0.2s;
   border: 2px solid white;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .userAvatar:hover {
-  transform: scale(1.05);
+  transform: scale(1.1);
 }
 
 /* ==============================================
-  REGRAS DE IMPRESSÃO (A4 MULTIPÁGINAS)
-  Estas regras forçam o navegador a ignorar o scroll
-  e expandir o conteúdo por várias folhas.
+  REGRAS DE IMPRESSÃO (CORREÇÃO DE PÁGINAS CORTADAS)
   ==============================================
 */
 @media print {
   @page {
     size: A4;
-    margin: 1.5cm; /* Margem de segurança para o PDF */
+    margin: 1.5cm;
   }
 
-  /* 1. Esconde elementos que bloqueiam a impressão ou são desnecessários */
-  .sidebarWrapper,
-  .headerContainer,
-  .navigationContainer,
-  .footerWrapper,
-  :global(aside),
-  :global(nav),
-  :global(header) {
+  /* Esconde interface do sistema */
+  .sidebarWrapper, .headerContainer, .navigationContainer, .footerWrapper, .no-print,
+  :global(aside), :global(nav), :global(header) {
     display: none !important;
   }
 
-  /* 2. Destrava o container principal */
-  .layoutContainer {
+  /* Destrava o layout para permitir múltiplas páginas */
+  .layoutContainer, .mainContent, .pageScrollArea, .contentWrapper {
     display: block !important;
     height: auto !important;
     width: 100% !important;
+    overflow: visible !important;
+    position: static !important;
+    background-color: white !important;
+  }
+
+  :global(body), :global(html), :global(#root) {
+    height: auto !important;
     overflow: visible !important;
     background-color: white !important;
   }
 
-  /* 3. Destrava a área de conteúdo para permitir quebra de página */
-  .mainContent, 
-  .pageScrollArea {
-    display: block !important;
-    position: static !important;
-    height: auto !important;
-    width: 100% !important;
-    overflow: visible !important;
-  }
-
-  .contentWrapper {
-    display: block !important;
-    height: auto !important;
-    overflow: visible !important;
-    padding: 0 !important;
-  }
-
-  /* 4. Garante que as cores laranjas e fundos apareçam no PDF */
+  /* Força cores e gráficos no PDF */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-  }
-
-  /* 5. Impede que o conteúdo comece muito colado no topo */
-  body {
-    background-color: white !important;
-    height: auto !important;
   }
 }

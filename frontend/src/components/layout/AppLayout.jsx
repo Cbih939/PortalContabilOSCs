@@ -19,7 +19,7 @@ export default function AppLayout({
   // Define a rota de mensagens baseada no tipo de usuário logado
   const messageRoute = user?.role === 'contador' ? '/contador/mensagens' : '/osc/mensagens';
 
-  // Conteúdo fixo do lado direito do Header (Sino + Avatar com Link)
+  // Conteúdo injetado no lado direito do Header
   const headerRightContent = (
     <div className={styles.headerRight}>
       {/* Ícone de Notificação (Sino) */}
@@ -29,8 +29,8 @@ export default function AppLayout({
         </svg>
       </div>
 
-      {/* Avatar Laranja - Clicável para Mensagens */}
-      <Link to={messageRoute} className={styles.avatarLink} title="Ver minhas mensagens">
+      {/* Avatar Laranja - Link para Mensagens conforme solicitado */}
+      <Link to={messageRoute} className={styles.avatarLink} title="Minhas Mensagens">
         <div className={styles.userAvatar}>
           {user?.name?.charAt(0).toUpperCase() || 'U'}
         </div>
@@ -41,7 +41,7 @@ export default function AppLayout({
   return (
     <div className={styles.layoutContainer}>
       
-      {/* Sidebar Wrapper - Oculto na impressão via CSS */}
+      {/* Sidebar Wrapper */}
       <div 
         className={`${styles.sidebarWrapper} ${!isSidebarOpen ? styles.sidebarHidden : ''} no-print`}
       >
@@ -51,12 +51,12 @@ export default function AppLayout({
       {/* Main Area */}
       <main className={styles.mainContent}>
 
-        {/* Header Container */}
+        {/* Header - Injetando o conteúdo da direita */}
         <div className={`${styles.headerContainer} no-print`}>
           {React.isValidElement(headerComponent) 
             ? React.cloneElement(headerComponent, { 
                 onToggleSidebar: toggleSidebar,
-                rightContent: headerRightContent // Injeta o avatar clicável
+                rightContent: headerRightContent 
               })
             : headerComponent
           }
@@ -70,8 +70,6 @@ export default function AppLayout({
         )}
 
         {/* Scrollable Page Content */}
-        {/* A classe pageScrollArea é a que costuma bugar o PDF. 
-            O CSS que te passei anteriormente vai "destravar" esta div na impressão */}
         <div className={styles.pageScrollArea}>
           
           <div className={styles.contentWrapper}>
