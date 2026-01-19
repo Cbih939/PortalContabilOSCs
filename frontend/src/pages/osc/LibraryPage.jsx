@@ -20,10 +20,10 @@ export default function LibraryPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Busca apenas arquivos da categoria BIBLIOTECA
+    // Busca arquivos da categoria BIBLIOTECA
     fileService.getFilesByCategory('BIBLIOTECA')
       .then(data => {
-        // Filtro de segurança adicional no frontend
+        // Filtro de segurança
         const filtered = data.filter(f => f.category === 'BIBLIOTECA');
         
         // Ordenação Alfanumérica
@@ -37,7 +37,6 @@ export default function LibraryPage() {
   }, []);
 
   const handleDownload = (path) => {
-    // Limpa o path para garantir que a URL seja construída corretamente
     const cleanPath = path.replace(/\\/g, '/');
     window.open(`https://contacomigo.org.br/${cleanPath}`, '_blank');
   };
@@ -59,7 +58,7 @@ export default function LibraryPage() {
               onClick={() => handleDownload(file.file_path)}
             >
               <div className={styles.thumbnailWrapper}>
-                {/* LÓGICA DE CAPA */}
+                {/* Lógica da Capa */}
                 {file.cover_path ? (
                   <img 
                     src={`https://contacomigo.org.br/${file.cover_path.replace(/\\/g, '/')}`} 
@@ -81,16 +80,16 @@ export default function LibraryPage() {
                   {file.title}
                 </h3>
                 
-                {/* ALTERAÇÃO AQUI: Exibindo a categoria do banco */}
+                {/* --- AQUI ESTÁ A ALTERAÇÃO --- */}
                 <div className={styles.bookMeta}>
                    <BookIcon className={styles.metaIcon} />
                    <span>
-                     {/* Substitua 'ebook_category' pelo nome exato da coluna 
-                        que você criou no banco de dados. 
-                     */}
-                     {file.ebook_category || "E-book"}
+                     {/* Se existir 'ebook_category' no banco, usa ela. 
+                         Se não, usa o padrão 'E-book / PDF' */}
+                     {file.ebook_category || "E-book / PDF"}
                    </span>
                 </div>
+                {/* ----------------------------- */}
 
               </div>
             </div>
