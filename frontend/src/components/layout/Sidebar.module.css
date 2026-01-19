@@ -1,48 +1,87 @@
-/* src/components/layout/Sidebar.module.css */
-
 .sidebar {
+  width: 260px;
+  height: 100vh;
+  background-color: #EC6D12; /* Laranja da imagem {582D8745} */
   display: flex;
   flex-direction: column;
-  height: 100vh; /* <-- ADICIONE ESTA LINHA */
-  transition-property: width;
-  transition-duration: 300ms;
-  transition-timing-function: ease-in-out;
-  flex-shrink: 0;
-  overflow: hidden;
-}
-
-.sidebarOpen {
-  width: 16rem; /* w-64 */
-}
-
-.sidebarClosed {
-  width: 0;
-}
-
-.innerContainer {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  /* overflow: hidden; */ /* Removido daqui, colocado no container principal */
+  color: white;
 }
 
 .logoContainer {
-  padding: 1.5rem; /* p-6 */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* border-gray-700 (aproximado) */
-  white-space: nowrap; /* Impede quebra */
+  padding: 2rem 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 1rem;
 }
 
-.navContainer {
-  flex: 1 1 0%; /* flex-1 */
-  padding: 1rem; /* p-4 */
+.logoImage {
+  width: 100%;
+  max-width: 160px; /* Ajuste conforme o formato da sua logo */
+  height: auto;
+  object-fit: contain;
+  /* Se sua logo tiver fundo branco, você pode usar um filtro para inverter ou deixá-la branca */
+  /* filter: brightness(0) invert(1); */
+}
+
+.nav {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem; /* space-y-2 */
-  overflow-y: auto; /* Permite scroll se os links não couberem */
+  gap: 0.5rem;
+  padding: 0 1rem;
 }
 
-.footerContainer {
-  padding: 1rem; /* p-4 */
-  border-top: 1px solid rgba(255, 255, 255, 0.1); /* border-gray-700 */
-  white-space: nowrap; /* Impede quebra */
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem 1.2rem;
+  color: white;
+  text-decoration: none;
+  border-radius: 99px; /* Formato de pílula da imagem {582D8745} */
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.navLink:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.active {
+  background-color: white !important;
+  color: #EC6D12 !important;
+}
+
+.footer {
+  padding: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logoutButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem 1.5rem;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 99px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.logoutButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
 }
