@@ -1,6 +1,5 @@
-// src/components/layout/Header.jsx
 import React from 'react';
-import styles from './Header.module.css'; // Importa CSS Module
+import styles from './Header.module.css';
 
 export default function Header({ leftContent, rightContent }) {
   return (
