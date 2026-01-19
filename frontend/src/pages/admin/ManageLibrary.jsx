@@ -9,7 +9,7 @@ export default function ManageLibrary() {
   const [form, setForm] = useState({ 
     title: '', 
     category: 'BIBLIOTECA', 
-    ebookCategory: 'E-book / PDF', 
+    ebookCategory: 'Governança', 
     file: null, 
     cover: null 
   });
@@ -53,7 +53,7 @@ export default function ManageLibrary() {
       setForm({ 
         title: '', 
         category: 'BIBLIOTECA', 
-        ebookCategory: 'E-book / PDF', 
+        ebookCategory: 'Governança', 
         file: null, 
         cover: null 
       });
@@ -113,12 +113,9 @@ export default function ManageLibrary() {
                 onChange={e => setForm({...form, ebookCategory: e.target.value})}
                 style={{borderColor: '#2563eb', backgroundColor: '#eff6ff'}}
               >
-                <option value="E-book / PDF">E-book / PDF</option>
-                <option value="Cartilha">Cartilha</option>
+                <option value="Governanca">Governança</option>
+                <option value="Contabil">Contábil</option>
                 <option value="Manual">Manual</option>
-                <option value="Relatório">Relatório</option>
-                <option value="Infográfico">Infográfico</option>
-                <option value="Legislação">Legislação</option>
               </select>
             </div>
           )}
