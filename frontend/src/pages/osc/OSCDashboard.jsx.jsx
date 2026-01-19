@@ -30,9 +30,6 @@ export default function OSCDashboard() {
       
       {/* 1. Área de Boas Vindas com Logo */}
       <div className={styles.welcomeSection}>
-        <div className={styles.logoCircle}>
-          <img src="/logo_portal.png" alt="Logo" className={styles.logoImg} />
-        </div>
         <div>
           <h1 className={styles.welcomeTitle}>Bem vindo(a) ao aplicativo CONTA COMIGO, {user?.name || 'OSC'}!</h1>
           <p className={styles.welcomeSubtitle}>Aqui você encontra os 3 pilares que tornarão possível o sucesso da sua Organização Social: Governança, Contabilidade e Comunicação Institucional. Conta comigo para manter a documentação em dia e tornar a captação dos recursos um verdadeiro sucesso, ampliando o seu impacto social.</p>
