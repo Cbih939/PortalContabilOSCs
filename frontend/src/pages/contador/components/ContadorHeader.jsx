@@ -1,9 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 import { useNotification } from '../../../contexts/NotificationContext.jsx';
 import styles from './ContadorHeader.module.css';
 
-// --- ÍCONES SVG EMBUTIDOS (Solução Definitiva) ---
 const MenuIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -22,42 +22,32 @@ export default function ContadorHeader({ onToggleSidebar }) {
 
   return (
     <header className={styles.headerContainer}>
-      
-      {/* Botão Menu (Mobile) */}
-      <button 
-        type="button" 
-        className={styles.menuButton} 
-        onClick={onToggleSidebar}
-        aria-label="Abrir menu"
-      >
+      <button type="button" className={styles.menuButton} onClick={onToggleSidebar} aria-label="Abrir menu">
         <MenuIcon className={styles.icon} />
       </button>
 
-      {/* Espaço Flexível */}
       <div style={{ flex: 1 }}></div>
 
-      {/* Ações */}
       <div className={styles.actionsContainer}>
-        
-        {/* Botão de Notificação */}
         <button type="button" className={styles.iconButton} aria-label="Notificações">
           <BellIcon className={styles.icon} />
-          {unreadCount > 0 && (
-            <span className={styles.badge}>{unreadCount}</span>
-          )}
+          {unreadCount > 0 && <span className={styles.badge}>{unreadCount}</span>}
         </button>
 
-        {/* Perfil */}
         <div className={styles.profileContainer}>
           <div className={styles.userInfo}>
             <span className={styles.userName}>{user?.name || 'Contador'}</span>
             <span className={styles.userRole}>Painel</span>
           </div>
-          <div className={styles.avatarCircle}>
-             <span className={styles.avatarInitial}>
-                {user?.name ? user.name.charAt(0).toUpperCase() : 'C'}
-             </span>
-          </div>
+          
+          {/* ATUALIZAÇÃO: Link adicionado ao avatar */}
+          <Link to="/contador/mensagens" className={styles.avatarLink}>
+            <div className={styles.avatarCircle}>
+               <span className={styles.avatarInitial}>
+                  {user?.name ? user.name.charAt(0).toUpperCase() : 'C'}
+               </span>
+            </div>
+          </Link>
         </div>
       </div>
     </header>

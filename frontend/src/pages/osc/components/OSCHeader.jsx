@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 import * as alertService from '../../../services/alertService.js';
 import AlertsModal from './AlertsModal.jsx';
 import styles from './OSCHeader.module.css';
 
-// --- Ícones SVG Inline (Para garantir o visual exato) ---
 const MenuIcon = () => (
   <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -17,32 +17,19 @@ const BellIcon = () => (
   </svg>
 );
 
-/**
- * Header da OSC
- * - Inclui botão Hambúrguer para Mobile.
- * - Exibe Nome do Usuário.
- * - Gerencia e Exibe Alertas/Notificações.
- */
 export default function OSCHeader({ onToggleSidebar }) {
   const { user } = useAuth();
-
-  // --- Estados para Alertas ---
   const [alerts, setAlerts] = useState([]);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   const [isLoadingAlerts, setIsLoadingAlerts] = useState(false);
-  
-  // Estado de loading local para a ação de marcar como lido
   const [isMarkingRead, setIsMarkingRead] = useState(false);
 
-  // --- Busca Alertas ao Iniciar ---
   useEffect(() => {
     const fetchAlerts = async () => {
       if (!user?.id) return;
-
       setIsLoadingAlerts(true);
       try {
-        const response = await alertService.getAlerts(); // Assume que retorna { data: [] } ou []
-        // Ajuste conforme o retorno real do seu back-end (response.data ou response direto)
+        const response = await alertService.getAlerts();
         const alertsData = response.data || response || [];
         setAlerts(Array.isArray(alertsData) ? alertsData : []);
       } catch (error) {
@@ -51,20 +38,13 @@ export default function OSCHeader({ onToggleSidebar }) {
         setIsLoadingAlerts(false);
       }
     };
-
     fetchAlerts();
-    // Opcional: setInterval para polling de alertas
   }, [user?.id]);
-
-  // --- Handlers ---
-  const handleOpenAlertModal = () => setIsAlertModalOpen(true);
-  const handleCloseAlertModal = () => setIsAlertModalOpen(false);
 
   const handleMarkAsRead = async (alertId) => {
     setIsMarkingRead(true);
     try {
       await alertService.markAlertAsRead(alertId);
-      // Atualiza lista localmente
       setAlerts(prev => prev.map(a => a.id === alertId ? { ...a, read: true } : a));
     } catch (err) {
       console.error("Erro ao marcar como lido:", err);
@@ -73,56 +53,39 @@ export default function OSCHeader({ onToggleSidebar }) {
     }
   };
 
-  // Contagem de não lidos (supondo que o objeto tenha propriedade 'read' ou 'is_read')
-  // Ajuste 'a.read' conforme seu banco de dados (pode ser a.lido, a.status, etc)
   const unreadCount = alerts.filter(a => !a.read && !a.is_read).length;
 
   return (
     <>
       <header className={styles.header}>
-        
-        {/* Lado Esquerdo: Menu + Saudação */}
         <div className={styles.leftSection}>
-          <button 
-            onClick={onToggleSidebar} 
-            className={styles.menuButton} 
-            title="Alternar Menu"
-          >
+          <button onClick={onToggleSidebar} className={styles.menuButton} title="Menu">
             <MenuIcon />
           </button>
-
           <div className={styles.userInfo}>
             <h2 className={styles.greeting}>Olá, {user?.name || 'OSC'}</h2>
             <span className={styles.role}>Painel da Organização</span>
           </div>
         </div>
 
-        {/* Lado Direito: Notificações + Avatar */}
         <div className={styles.rightSection}>
-          
-          {/* Botão de Sino com Badge */}
-          <button 
-            className={styles.iconButton} 
-            onClick={handleOpenAlertModal}
-            title="Ver Notificações"
-          >
+          <button className={styles.iconButton} onClick={() => setIsAlertModalOpen(true)} title="Notificações">
             <BellIcon />
-            {unreadCount > 0 && (
-              <span className={styles.notificationBadge}></span>
-            )}
+            {unreadCount > 0 && <span className={styles.notificationBadge}></span>}
           </button>
 
-          {/* Avatar (Iniciais) */}
-          <div className={styles.avatar}>
-            {user?.name ? user.name.charAt(0).toUpperCase() : 'O'}
-          </div>
+          {/* ATUALIZAÇÃO: Link adicionado ao Avatar da OSC */}
+          <Link to="/osc/mensagens" style={{ textDecoration: 'none' }}>
+            <div className={styles.avatar}>
+              {user?.name ? user.name.charAt(0).toUpperCase() : 'O'}
+            </div>
+          </Link>
         </div>
       </header>
 
-      {/* Modal de Alertas */}
       <AlertsModal
         isOpen={isAlertModalOpen}
-        onClose={handleCloseAlertModal}
+        onClose={() => setIsAlertModalOpen(false)}
         alerts={alerts}
         onMarkAsRead={handleMarkAsRead}
         isLoading={isMarkingRead}
