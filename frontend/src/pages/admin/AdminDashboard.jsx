@@ -28,7 +28,7 @@ export default function AdminDashboard() {
 
   return (
     <div className={styles.pageContainer}>
-      <h1 className={styles.pageTitle}>Dashboard do Administrador</h1>
+      <h1 className={styles.pageTitle}>Painel do Administrador</h1>
 
       {/* Grid de Estatísticas */}
       <div className={styles.statsGrid}>

@@ -34,7 +34,7 @@ export default function OSCDashboard() {
           <img src="/logo_portal.png" alt="Logo" className={styles.logoImg} />
         </div>
         <div>
-          <h1 className={styles.welcomeTitle}>Bem-vindo (a) ao Portal do cliente, {user?.name || 'OSC'}!</h1>
+          <h1 className={styles.welcomeTitle}>{user?.name || 'OSC'}!</h1>
           <p className={styles.welcomeSubtitle}>Este é seu canal direto com a nossa equipe de contabilidade. Use o menu ao lado para enviar documentos e trocar mensagens.</p>
         </div>
       </div>
