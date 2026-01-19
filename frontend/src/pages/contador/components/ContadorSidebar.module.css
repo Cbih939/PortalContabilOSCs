@@ -28,7 +28,7 @@
 }
 
 .sidebarLogo {
-  width: 100%;
+  width: 70%;
   max-width: 100px; /* Reduzi levemente para garantir espaço */
   height: auto;
   object-fit: contain;
