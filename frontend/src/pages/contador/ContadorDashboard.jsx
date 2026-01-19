@@ -117,8 +117,7 @@ export default function ContadorDashboard() {
       </div>
 
       <div className={styles.topActions}>
-        <img src="/logo_portal.png" alt="Logo" className={`${styles.dashboardLogo} ${styles.noPrint}`} />
-        <button onClick={handleDownloadPDF} className={`${styles.downloadReportBtn} ${styles.noPrint}`}>
+          <button onClick={handleDownloadPDF} className={`${styles.downloadReportBtn} ${styles.noPrint}`}>
           <DownloadIcon /> Baixar Relatório (PDF)
         </button>
       </div>
