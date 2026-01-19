@@ -25,7 +25,7 @@ export default function ContadorSidebar({ isOpen }) {
   };
 
   const navItems = [
-    { path: '/contador/dashboard', label: 'Dashboard', icon: DashboardIcon },
+    { path: '/contador/dashboard', label: 'Painel Principal', icon: DashboardIcon },
     { path: '/contador/oscs', label: 'Minhas OSCs', icon: OSCIcon },
     { path: '/contador/documentos', label: 'Meus Documentos', icon: DocsIcon },
     { path: '/contador/modelos', label: 'Docs | Modelos', icon: LibraryIcon },

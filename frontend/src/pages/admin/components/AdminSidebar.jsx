@@ -21,7 +21,7 @@ export default function AdminSidebar({ isOpen }) {
   };
 
   const navItems = [
-    { path: '/admin/dashboard', label: 'Dashboard', icon: DashboardIcon },
+    { path: '/admin/dashboard', label: 'Painel Principal', icon: DashboardIcon },
     { path: '/admin/usuarios', label: 'Gerenciar Usuários', icon: UsersIcon },
     { path: '/admin/oscs', label: 'Gerenciar OSCs', icon: BuildingIcon },
     { path: '/admin/biblioteca', label: 'Biblioteca e Modelos', icon: LibraryIcon },
