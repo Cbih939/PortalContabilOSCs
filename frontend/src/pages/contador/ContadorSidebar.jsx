@@ -1,92 +1,59 @@
-/* Pode copiar exatamente o CSS do Admin acima, pois o design é o mesmo */
-.sidebar {
-  background-color: #EC6D12;
-  color: white;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  width: 17rem;
-  transition: width 0.3s ease;
-  flex-shrink: 0;
-  box-shadow: 4px 0 10px rgba(0,0,0,0.1);
-}
+import React from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../hooks/useAuth.jsx'; 
+import styles from './ContadorSidebar.module.css';
 
-.logoContainer {
-  height: 5rem;
-  display: flex;
-  align-items: center;
-  padding: 0 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
+// Ícones (Mantidos conforme seu original)
+// ...
 
-.logoText {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #ffffff;
-}
+export default function ContadorSidebar({ isOpen }) {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
-.nav {
-  flex: 1;
-  padding: 1.5rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  overflow-y: auto;
-}
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
-.navItem {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 1.25rem;
-  text-decoration: none;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 50px;
-  transition: all 0.2s ease-in-out;
-  font-weight: 500;
-  font-size: 0.95rem;
-}
+  const navItems = [
+    { path: '/contador/dashboard', label: 'Painel', icon: DashboardIcon },
+    { path: '/contador/oscs', label: 'Minhas OSCs', icon: OSCIcon },
+    { path: '/contador/documentos', label: 'Meus Documentos', icon: DocsIcon },
+    { path: '/contador/modelos', label: 'Documentos e Modelos', icon: LibraryIcon },
+    { path: '/contador/avisos', label: 'Avisos', icon: MegaphoneIcon },
+    { path: '/contador/mensagens', label: 'Mensagens', icon: ChatIcon },
+    { path: '/contador/perfil', label: 'Meu Perfil', icon: ProfileIcon },
+  ];
 
-.navItem:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-color: #ffffff;
-}
+  if (!isOpen) return null;
 
-.active {
-  background-color: #ffffff;
-  color: #EC6D12 !important;
-  border-color: #ffffff;
-  font-weight: 700;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
+  return (
+    <aside className={styles.sidebar}>
+      <div className={styles.logoContainer}>
+        <img src="/logo_portal.png" alt="Portal Contábil" className={styles.sidebarLogo} />
+      </div>
 
-.icon {
-  width: 1.4rem;
-  height: 1.4rem;
-  margin-right: 0.75rem;
-}
+      <nav className={styles.nav}>
+        {navItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) => 
+              `${styles.navItem} ${isActive ? styles.active : ''}`
+            }
+          >
+            <item.icon />
+            <span className={styles.label}>{item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
 
-.footer {
-  padding: 1.5rem 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.logoutButton {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 0.75rem 1.25rem;
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  color: #ffffff;
-  cursor: pointer;
-  border-radius: 50px;
-  transition: all 0.2s;
-  font-weight: 500;
-  font-size: 0.95rem;
-}
-
-.logoutButton:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-color: #ffffff;
+      <div className={styles.footer}>
+        <button onClick={handleLogout} className={styles.logoutButton}>
+          <LogoutIcon />
+          <span>Sair</span>
+        </button>
+      </div>
+    </aside>
+  );
 }
