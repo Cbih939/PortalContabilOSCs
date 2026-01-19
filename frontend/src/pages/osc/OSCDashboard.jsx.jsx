@@ -34,8 +34,8 @@ export default function OSCDashboard() {
           <img src="/logo_portal.png" alt="Logo" className={styles.logoImg} />
         </div>
         <div>
-          <h1 className={styles.welcomeTitle}>{user?.name || 'OSC'}!</h1>
-          <p className={styles.welcomeSubtitle}>Este é seu canal direto com a nossa equipe de contabilidade. Use o menu ao lado para enviar documentos e trocar mensagens.</p>
+          <h1 className={styles.welcomeTitle}>Bem vindo(a) ao aplicativo CONTA COMIGO, {user?.name || 'OSC'}!</h1>
+          <p className={styles.welcomeSubtitle}>Aqui você encontra os 3 pilares que tornarão possível o sucesso da sua Organização Social: Governança, Contabilidade e Comunicação Institucional. Conta comigo para manter a documentação em dia e tornar a captação dos recursos um verdadeiro sucesso, ampliando o seu impacto social.</p>
         </div>
       </div>
 
@@ -46,7 +46,7 @@ export default function OSCDashboard() {
         <div className={styles.card}>
           <div className={styles.iconCircleBlue}><FileIcon /></div>
           <div className={styles.cardContent}>
-            <span className={styles.cardLabel}>Docs | Modelos</span>
+            <span className={styles.cardLabel}>Documentos e Modelos</span>
             <strong className={styles.cardValueText}>Planilha Formato Base</strong>
             <span className={styles.cardSubtext}>planilha-formato-base.xlsx</span>
           </div>
@@ -57,7 +57,7 @@ export default function OSCDashboard() {
         <div className={styles.card}>
           <div className={styles.iconCircleYellow}><FolderWarningIcon /></div>
           <div className={styles.cardContent}>
-            <span className={styles.cardLabel}>Docs. Pendentes</span>
+            <span className={styles.cardLabel}>Documentos Pendentes</span>
             <strong className={styles.cardValue}>4</strong>
           </div>
         </div>
@@ -66,7 +66,7 @@ export default function OSCDashboard() {
         <div className={styles.card}>
           <div className={styles.iconCircleGreen}><MsgIcon /></div>
           <div className={styles.cardContent}>
-            <span className={styles.cardLabel}>Mensagens Não Lidas</span>
+            <span className={styles.cardLabel}>Alerta de mensagens não lidas</span>
             <strong className={styles.cardValue}>3</strong>
           </div>
         </div>
@@ -75,40 +75,7 @@ export default function OSCDashboard() {
       {/* 3. Área Inferior: Ações e Histórico */}
       <div className={styles.bottomGrid}>
         
-        {/* Coluna Esquerda: Ações Rápidas */}
-        <div className={styles.panel}>
-          <h3 className={styles.panelTitle}>Ações Rápidas</h3>
-          <div className={styles.actionsList}>
-             <Link to="/osc" className={styles.actionItem}>
-               <span className={styles.actionIcon}>📊</span> Dashboard
-             </Link>
-             <Link to="/osc/documentos" className={styles.actionItem}>
-               <span className={styles.actionIcon}>📂</span> Ver Documentos
-             </Link>
-             <Link to="/osc/mensagens" className={styles.actionItem}>
-               <span className={styles.actionIcon}>💬</span> Abrir Mensagens
-             </Link>
-             <Link to="/osc/perfil" className={styles.actionItem}>
-               <span className={styles.actionIcon}>👤</span> Perfil
-             </Link>
-          </div>
-        </div>
-
-        {/* Coluna Direita: Documentos Enviados */}
-        <div className={styles.panel}>
-          <h3 className={styles.panelTitle}>Documentos Enviados</h3>
-          <div className={styles.activityList}>
-            {recentActivities.map((act) => (
-              <div key={act.id} className={styles.activityItem}>
-                <div className={styles.fileIconSmall}>📄</div>
-                <div>
-                  <p className={styles.activityText}>{act.text}</p>
-                  <span className={styles.activityDate}>{act.date}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        
 
       </div>
     </div>
