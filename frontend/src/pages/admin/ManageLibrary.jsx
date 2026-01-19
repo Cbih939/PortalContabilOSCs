@@ -4,13 +4,16 @@ import styles from './ManageLibrary.module.css';
 
 export default function ManageLibrary() {
   const [files, setFiles] = useState([]);
+  
+  // Estado inicial
   const [form, setForm] = useState({ 
     title: '', 
     category: 'BIBLIOTECA', 
-    ebookCategory: 'E-book / PDF', // Novo estado para a subcategoria
+    ebookCategory: 'E-book / PDF', 
     file: null, 
     cover: null 
   });
+  
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -34,7 +37,7 @@ export default function ManageLibrary() {
     formData.append('title', form.title);
     formData.append('category', form.category);
     
-    // Adiciona a subcategoria apenas se for BIBLIOTECA
+    // IMPORTANTE: Envia a subcategoria se for biblioteca
     if (form.category === 'BIBLIOTECA') {
        formData.append('ebook_category', form.ebookCategory);
     }
@@ -47,7 +50,6 @@ export default function ManageLibrary() {
       await fileService.uploadFile(formData);
       alert("Publicado com sucesso!");
       
-      // Resetar form
       setForm({ 
         title: '', 
         category: 'BIBLIOTECA', 
@@ -56,13 +58,12 @@ export default function ManageLibrary() {
         cover: null 
       });
       
-      // Limpar inputs de ficheiro manualmente
       document.getElementById('fileInput').value = "";
       document.getElementById('coverInput').value = "";
       
       loadFiles();
     } catch (error) {
-      alert("Erro ao enviar. Verifique o console.");
+      alert("Erro ao enviar.");
     } finally {
       setLoading(false);
     }
@@ -72,10 +73,11 @@ export default function ManageLibrary() {
     <div className={styles.container}>
       <h1 className={styles.title}>Gestão de Biblioteca e Modelos</h1>
       
-      {/* Formulário de Upload */}
       <div className={styles.card}>
         <h3 className={styles.cardTitle}>Adicionar Novo Conteúdo</h3>
         <form onSubmit={handleSubmit} className={styles.form}>
+          
+          {/* TÍTULO */}
           <div className={styles.inputGroup}>
             <label className={styles.label}>Título</label>
             <input 
@@ -87,8 +89,9 @@ export default function ManageLibrary() {
             />
           </div>
 
+          {/* CATEGORIA PRINCIPAL */}
           <div className={styles.inputGroup}>
-            <label className={styles.label}>Categoria Principal</label>
+            <label className={styles.label}>Categoria</label>
             <select 
               className={styles.select}
               value={form.category} 
@@ -100,16 +103,17 @@ export default function ManageLibrary() {
             </select>
           </div>
 
-          {/* NOVO CAMPO: Subcategoria (Aparece apenas se for Biblioteca) */}
+          {/* SUBCATEGORIA (Visível apenas se BIBLIOTECA for selecionado) */}
           {form.category === 'BIBLIOTECA' && (
-            <div className={styles.inputGroup}>
-              <label className={styles.label}>Tipo de Publicação</label>
+            <div className={styles.inputGroup} style={{animation: 'fadeIn 0.3s ease'}}>
+              <label className={styles.label} style={{color: '#2563eb'}}>Tipo de Publicação</label>
               <select 
                 className={styles.select}
                 value={form.ebookCategory}
                 onChange={e => setForm({...form, ebookCategory: e.target.value})}
+                style={{borderColor: '#2563eb', backgroundColor: '#eff6ff'}}
               >
-                <option value="E-book / PDF">E-book / PDF (Padrão)</option>
+                <option value="E-book / PDF">E-book / PDF</option>
                 <option value="Cartilha">Cartilha</option>
                 <option value="Manual">Manual</option>
                 <option value="Relatório">Relatório</option>
@@ -119,6 +123,7 @@ export default function ManageLibrary() {
             </div>
           )}
 
+          {/* ARQUIVO PDF */}
           <div className={styles.inputGroup}>
             <label className={styles.label}>Arquivo PDF</label>
             <input 
@@ -131,6 +136,7 @@ export default function ManageLibrary() {
             />
           </div>
 
+          {/* CAPA */}
           <div className={styles.inputGroup}>
             <label className={styles.label}>Capa (Imagem)</label>
             <input 
@@ -148,47 +154,30 @@ export default function ManageLibrary() {
         </form>
       </div>
 
-      {/* Grelha de Conteúdos */}
+      {/* LISTA DE ARQUIVOS */}
       <div className={styles.card}>
         <h3 className={styles.cardTitle}>Conteúdos Publicados</h3>
-        
         {files.length === 0 ? (
-          <p style={{textAlign: 'center', padding: '2rem', color: '#6b7280'}}>
-            Nenhum conteúdo publicado.
-          </p>
+          <p className={styles.emptyText}>Nenhum conteúdo publicado.</p>
         ) : (
           <div className={styles.fileGrid}>
             {files.map(f => (
               <div key={f.id} className={styles.fileCard}>
                 <div className={styles.coverWrapper}>
                   {f.cover_path ? (
-                    <img 
-                      src={`https://contacomigo.org.br/${f.cover_path}`} 
-                      alt={f.title} 
-                      className={styles.gridCover} 
-                    />
+                    <img src={`https://contacomigo.org.br/${f.cover_path}`} alt={f.title} className={styles.gridCover} />
                   ) : (
-                    <div className={styles.placeholderCover}>
-                      <span>{f.category === 'BIBLIOTECA' ? '📚' : '📄'}</span>
-                    </div>
+                    <div className={styles.placeholderCover}><span>📄</span></div>
                   )}
                 </div>
-                
                 <div className={styles.fileDetails}>
+                  {/* Exibe a subcategoria se existir, senão a categoria principal */}
                   <span className={styles.fileCategory}>
-                    {/* Mostra a subcategoria se existir, senão a principal */}
-                    {f.ebook_category ? f.ebook_category : f.category.replace('_', ' ')}
+                    {f.ebook_category ? f.ebook_category : f.category}
                   </span>
-                  <h4 className={styles.fileTitle} title={f.title}>
-                    {f.title}
-                  </h4>
-                  
+                  <h4 className={styles.fileTitle}>{f.title}</h4>
                   <button 
-                    onClick={() => {
-                      if(window.confirm("Deseja realmente excluir este item?")) {
-                        fileService.deleteFile(f.id).then(loadFiles);
-                      }
-                    }} 
+                    onClick={() => { if(window.confirm("Excluir?")) fileService.deleteFile(f.id).then(loadFiles); }} 
                     className={styles.deleteBtn}
                   >
                     Excluir
