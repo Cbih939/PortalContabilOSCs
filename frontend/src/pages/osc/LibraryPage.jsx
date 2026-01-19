@@ -59,9 +59,7 @@ export default function LibraryPage() {
               onClick={() => handleDownload(file.file_path)}
             >
               <div className={styles.thumbnailWrapper}>
-                {/* LÓGICA DE CAPA: 
-                    1. Se existir cover_path, usa a imagem enviada.
-                    2. Se não existir, tenta gerar a miniatura do PDF. */}
+                {/* LÓGICA DE CAPA */}
                 {file.cover_path ? (
                   <img 
                     src={`https://contacomigo.org.br/${file.cover_path.replace(/\\/g, '/')}`} 
@@ -82,10 +80,18 @@ export default function LibraryPage() {
                 <h3 className={styles.bookTitle} title={file.title}>
                   {file.title}
                 </h3>
+                
+                {/* ALTERAÇÃO AQUI: Exibindo a categoria do banco */}
                 <div className={styles.bookMeta}>
                    <BookIcon className={styles.metaIcon} />
-                   <span>E-book / PDF</span>
+                   <span>
+                     {/* Substitua 'ebook_category' pelo nome exato da coluna 
+                        que você criou no banco de dados. 
+                     */}
+                     {file.ebook_category || "E-book"}
+                   </span>
                 </div>
+
               </div>
             </div>
           ))}
