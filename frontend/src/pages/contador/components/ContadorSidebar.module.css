@@ -1,6 +1,6 @@
-/* Pode copiar exatamente o CSS do Admin acima, pois o design é o mesmo */
+/* Sidebar Laranja Principal */
 .sidebar {
-  background-color: #EC6D12;
+  background-color: #EC6D12; 
   color: white;
   height: 100vh;
   display: flex;
@@ -9,81 +9,91 @@
   transition: width 0.3s ease;
   flex-shrink: 0;
   box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+  /* REMOVIDO OVERFLOW PARA ELIMINAR SCROLL */
+  overflow: hidden; 
 }
 
-/* Container que gera o fundo branco para a logo */
+/* --- CONTAINER DA LOGO COM FUNDO BRANCO --- */
 .logoContainer {
-  padding: 1rem;
+  background-color: #ffffff; 
+  /* Ajustado para não criar scroll */
+  padding: 1.25rem;
+  margin: 1rem; 
   display: flex;
   justify-content: center;
   align-items: center;
+  border-radius: 12px; 
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
   position: relative;
-  background-color: #ffffff; /* Fundo Branco Sólido */
-  margin: 1rem; /* Margem para não encostar nas bordas da sidebar */
-  border-radius: 150px; /* Bordas arredondadas para um visual moderno */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra leve para profundidade */
 }
 
 .sidebarLogo {
   width: 100%;
-  max-width: 120px; /* Tamanho ajustado para a logo interna */
+  max-width: 130px; /* Reduzi levemente para garantir espaço */
   height: auto;
   object-fit: contain;
   display: block;
 }
 
-
+/* Navegação */
 .nav {
   flex: 1;
-  padding: 1.5rem 1rem;
+  padding: 0.5rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  overflow-y: auto;
+  gap: 0.6rem; 
+  /* REMOVIDO OVERFLOW-Y: AUTO PARA ELIMINAR SCROLL */
+  overflow: hidden; 
 }
 
+/* Botões em formato de Pílula (Outline) */
 .navItem {
   display: flex;
   align-items: center;
-  padding: 0.75rem 1.25rem;
+  padding: 0.7rem 1.25rem;
   text-decoration: none;
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.4); 
+  border-radius: 50px; 
   transition: all 0.2s ease-in-out;
   font-weight: 500;
   font-size: 0.95rem;
+  white-space: nowrap; /* Impede que o texto quebre e force altura */
 }
 
+/* Hover */
 .navItem:hover {
   background-color: rgba(255, 255, 255, 0.15);
   border-color: #ffffff;
 }
 
+/* Item Ativo */
 .active {
-  background-color: #ffffff;
-  color: #EC6D12 !important;
+  background-color: #ffffff !important; 
+  color: #EC6D12 !important; 
   border-color: #ffffff;
   font-weight: 700;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .icon {
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 1.3rem;
+  height: 1.3rem;
   margin-right: 0.75rem;
+  flex-shrink: 0;
 }
 
+/* Rodapé (Sair) */
 .footer {
-  padding: 1.5rem 1rem;
+  padding: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .logoutButton {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   width: 100%;
-  padding: 0.75rem 1.25rem;
+  padding: 0.7rem 1.25rem;
   background: none;
   border: 1px solid rgba(255, 255, 255, 0.4);
   color: #ffffff;
@@ -95,6 +105,25 @@
 }
 
 .logoutButton:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.1);
   border-color: #ffffff;
+}
+
+/* Responsividade Mobile */
+.closeButton {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    z-index: 1000;
+  }
+  .closeButton {
+    display: block;
+  }
 }
