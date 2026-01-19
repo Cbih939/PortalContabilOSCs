@@ -24,7 +24,7 @@ export default function AdminHeader({ onToggleSidebar }) {
         Bem-vindo(a), {user?.name || 'Admin'}
       </span>
       {/* Link no Avatar do Admin */}
-      <Link to="/admin/mensagens" style={{ textDecoration: 'none' }}>
+      <Link to="#" style={{ textDecoration: 'none' }}>
         <div className={styles.avatarCircle} style={{ 
           width: '35px', height: '35px', backgroundColor: '#EC6D12', 
           borderRadius: '50%', display: 'flex', alignItems: 'center', 
