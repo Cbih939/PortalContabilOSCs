@@ -12,18 +12,24 @@
 }
 
 .logoContainer {
-  height: 5rem;
+  padding: 1.5rem;
   display: flex;
+  justify-content: center;
   align-items: center;
-  padding: 0 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  /* Se desejar que a logo fique centralizada no mobile com o botão fechar */
+  position: relative; 
 }
 
-.logoText {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #ffffff;
+.sidebarLogo {
+  width: 100%;
+  max-width: 150px; /* Ajuste este valor conforme o formato da sua logo */
+  height: auto;
+  object-fit: contain;
+  /* Caso a logo seja colorida e o fundo da sidebar seja escuro, 
+     você pode usar filter: brightness(0) invert(1) se quiser deixá-la branca */
 }
+
+/* Remova ou comente a antiga .logoText se não for mais usar */
 
 .nav {
   flex: 1;

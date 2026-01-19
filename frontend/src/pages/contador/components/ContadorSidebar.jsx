@@ -13,6 +13,8 @@ const ProfileIcon = () => <svg className={styles.icon} fill="none" viewBox="0 0 
 const LogoutIcon = () => <svg className={styles.icon} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>;
 const LibraryIcon = () => <svg className={styles.icon} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" /></svg>;
 
+// ... (mantenha os imports e ícones iguais)
+
 export default function ContadorSidebar({ isOpen }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -37,7 +39,8 @@ export default function ContadorSidebar({ isOpen }) {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.logoContainer}>
-        <h2 className={styles.logoText}>Contábil OSC</h2>
+        {/* SUBSTITUIÇÃO: Imagem da Logo */}
+        <img src="/logo_portal.png" alt="Portal Contábil" className={styles.sidebarLogo} />
       </div>
 
       <nav className={styles.nav}>

@@ -21,15 +21,14 @@ export default function OSCSidebar({ isOpen, onClose }) {
     navigate('/login');
   };
 
-  // Se isOpen for false, não renderiza nada (Sidebar fechada)
   if (!isOpen) return null;
 
   return (
     <aside className={styles.sidebar}>
       <div className={styles.logoContainer}>
-        <h2 className={styles.logoText}>Contábil OSC</h2>
+        {/* SUBSTITUIÇÃO: Imagem da Logo */}
+        <img src="/logo_portal.png" alt="Portal Contábil" className={styles.sidebarLogo} />
         
-        {/* Botão X para fechar no Mobile */}
         {onClose && (
           <button onClick={onClose} className={styles.closeButton}>
             <CloseIcon />
