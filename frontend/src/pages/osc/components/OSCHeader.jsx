@@ -63,7 +63,7 @@ export default function OSCHeader({ onToggleSidebar }) {
             <MenuIcon />
           </button>
           <div className={styles.userInfo}>
-            <h2 className={styles.greeting}>Olá, {user?.name || 'OSC'}</h2>
+            <h2 className={styles.greeting}> {user?.name || 'OSC'}</h2>
             <span className={styles.role}>Painel da Organização</span>
           </div>
         </div>

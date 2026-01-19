@@ -21,7 +21,7 @@ export default function AdminHeader({ onToggleSidebar }) {
   const rightContent = (
     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
       <span className={styles.welcomeText}>
-        Bem-vindo(a), {user?.name || 'Admin'}
+         {user?.name || 'Admin'}
       </span>
       {/* Link no Avatar do Admin */}
       <Link to="#" style={{ textDecoration: 'none' }}>
