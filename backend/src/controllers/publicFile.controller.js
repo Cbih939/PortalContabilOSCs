@@ -2,7 +2,7 @@ import pool from '../config/db.js';
 
 export const uploadFile = async (req, res) => {
   try {
-    // Captura os ficheiros (usando .any() ou .fields())
+    // Captura os ficheiros
     const files = req.files || [];
     
     // Filtramos para encontrar qual é o PDF e qual é a Capa
@@ -13,18 +13,22 @@ export const uploadFile = async (req, res) => {
       return res.status(400).json({ message: 'O arquivo PDF é obrigatório.' });
     }
 
-    const { title, category } = req.body;
+    // 1. ADICIONE 'ebook_category' NA DESESTRUTURAÇÃO
+    const { title, category, ebook_category } = req.body;
 
-    // Caminhos relativos para guardar na BD (removendo o prefixo absoluto do sistema)
+    // Caminhos relativos
     const file_path = pdfFile.path.split('backend/')[1] || pdfFile.path;
     const cover_path = coverFile ? (coverFile.path.split('backend/')[1] || coverFile.path) : null;
 
-    // SQL atualizado com a coluna cover_path
+    // 2. ATUALIZE O SQL E OS PARÂMETROS
+    // Adicionamos a coluna ebook_category e o valor correspondente (?)
     const [result] = await pool.execute(
-      'INSERT INTO public_files (title, category, file_path, cover_path) VALUES (?, ?, ?, ?)',
+      'INSERT INTO public_files (title, category, ebook_category, file_path, cover_path) VALUES (?, ?, ?, ?, ?)',
       [
         title || pdfFile.originalname, 
         category || 'BIBLIOTECA', 
+        // Se vier vazio (undefined), salva o padrão 'E-book / PDF' ou null
+        ebook_category || 'E-book / PDF', 
         file_path,
         cover_path
       ]
@@ -44,6 +48,7 @@ export const uploadFile = async (req, res) => {
 
 export const getFiles = async (req, res) => {
     try {
+        // Como você está usando SELECT *, a nova coluna virá automaticamente
         const [rows] = await pool.execute('SELECT * FROM public_files ORDER BY created_at DESC');
         res.json(rows);
     } catch (error) {
@@ -55,7 +60,6 @@ export const getFiles = async (req, res) => {
 export const deleteFile = async (req, res) => {
     try {
         const { id } = req.params;
-        // Opcional: Aqui poderia apagar os ficheiros físicos do disco também
         await pool.execute('DELETE FROM public_files WHERE id = ?', [id]);
         res.json({ message: 'Arquivo removido com sucesso.' });
     } catch (error) {

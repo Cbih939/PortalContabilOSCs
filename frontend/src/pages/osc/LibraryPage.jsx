@@ -23,6 +23,7 @@ export default function LibraryPage() {
     // Busca arquivos da categoria BIBLIOTECA
     fileService.getFilesByCategory('BIBLIOTECA')
       .then(data => {
+        console.log("Dados recebidos da API:", data);
         // Filtro de segurança
         const filtered = data.filter(f => f.category === 'BIBLIOTECA');
         
