@@ -33,7 +33,6 @@ export default function AdminSidebar({ isOpen }) {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.logoContainer}>
-        {/* SUBSTITUIÇÃO: Imagem da Logo */}
         <img src="/logo_portal.png" alt="Portal Contábil" className={styles.sidebarLogo} />
       </div>
 

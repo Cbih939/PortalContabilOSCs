@@ -14,22 +14,25 @@
 }
 
 /* Área do Logo */
+/* Container que gera o fundo branco para a logo */
 .logoContainer {
   padding: 1.5rem;
   display: flex;
   justify-content: center;
   align-items: center;
-  /* Se desejar que a logo fique centralizada no mobile com o botão fechar */
-  position: relative; 
+  position: relative;
+  background-color: #ffffff; /* Fundo Branco Sólido */
+  margin: 1.5rem; /* Margem para não encostar nas bordas da sidebar */
+  border-radius: 15px; /* Bordas arredondadas para um visual moderno */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra leve para profundidade */
 }
 
 .sidebarLogo {
   width: 100%;
-  max-width: 150px; /* Ajuste este valor conforme o formato da sua logo */
+  max-width: 160px; /* Tamanho ajustado para a logo interna */
   height: auto;
   object-fit: contain;
-  /* Caso a logo seja colorida e o fundo da sidebar seja escuro, 
-     você pode usar filter: brightness(0) invert(1) se quiser deixá-la branca */
+  display: block;
 }
 
 /* Navegação */
