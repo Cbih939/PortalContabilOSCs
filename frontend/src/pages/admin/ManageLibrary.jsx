@@ -7,6 +7,7 @@ export default function ManageLibrary() {
   const [form, setForm] = useState({ 
     title: '', 
     category: 'BIBLIOTECA', 
+    ebookCategory: 'E-book / PDF', // Novo estado para a subcategoria
     file: null, 
     cover: null 
   });
@@ -32,6 +33,12 @@ export default function ManageLibrary() {
     const formData = new FormData();
     formData.append('title', form.title);
     formData.append('category', form.category);
+    
+    // Adiciona a subcategoria apenas se for BIBLIOTECA
+    if (form.category === 'BIBLIOTECA') {
+       formData.append('ebook_category', form.ebookCategory);
+    }
+
     formData.append('file', form.file);
     if (form.cover) formData.append('cover', form.cover);
 
@@ -39,7 +46,15 @@ export default function ManageLibrary() {
     try {
       await fileService.uploadFile(formData);
       alert("Publicado com sucesso!");
-      setForm({ title: '', category: 'BIBLIOTECA', file: null, cover: null });
+      
+      // Resetar form
+      setForm({ 
+        title: '', 
+        category: 'BIBLIOTECA', 
+        ebookCategory: 'E-book / PDF', 
+        file: null, 
+        cover: null 
+      });
       
       // Limpar inputs de ficheiro manualmente
       document.getElementById('fileInput').value = "";
@@ -73,7 +88,7 @@ export default function ManageLibrary() {
           </div>
 
           <div className={styles.inputGroup}>
-            <label className={styles.label}>Categoria</label>
+            <label className={styles.label}>Categoria Principal</label>
             <select 
               className={styles.select}
               value={form.category} 
@@ -84,6 +99,25 @@ export default function ManageLibrary() {
               <option value="MODELO_INSTITUCIONAL">Comunicação Institucional</option>
             </select>
           </div>
+
+          {/* NOVO CAMPO: Subcategoria (Aparece apenas se for Biblioteca) */}
+          {form.category === 'BIBLIOTECA' && (
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Tipo de Publicação</label>
+              <select 
+                className={styles.select}
+                value={form.ebookCategory}
+                onChange={e => setForm({...form, ebookCategory: e.target.value})}
+              >
+                <option value="E-book / PDF">E-book / PDF (Padrão)</option>
+                <option value="Cartilha">Cartilha</option>
+                <option value="Manual">Manual</option>
+                <option value="Relatório">Relatório</option>
+                <option value="Infográfico">Infográfico</option>
+                <option value="Legislação">Legislação</option>
+              </select>
+            </div>
+          )}
 
           <div className={styles.inputGroup}>
             <label className={styles.label}>Arquivo PDF</label>
@@ -142,7 +176,8 @@ export default function ManageLibrary() {
                 
                 <div className={styles.fileDetails}>
                   <span className={styles.fileCategory}>
-                    {f.category.replace('_', ' ')}
+                    {/* Mostra a subcategoria se existir, senão a principal */}
+                    {f.ebook_category ? f.ebook_category : f.category.replace('_', ' ')}
                   </span>
                   <h4 className={styles.fileTitle} title={f.title}>
                     {f.title}
