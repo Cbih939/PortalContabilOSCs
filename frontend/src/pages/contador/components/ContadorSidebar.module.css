@@ -22,14 +22,14 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  border-radius: 12px; 
+  border-radius: 300px; 
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
   position: relative;
 }
 
 .sidebarLogo {
   width: 100%;
-  max-width: 130px; /* Reduzi levemente para garantir espaço */
+  max-width: 100px; /* Reduzi levemente para garantir espaço */
   height: auto;
   object-fit: contain;
   display: block;
