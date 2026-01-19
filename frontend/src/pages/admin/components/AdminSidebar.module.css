@@ -14,24 +14,25 @@
 /* Título / Logo */
 /* Container que gera o fundo branco para a logo */
 .logoContainer {
-  padding: 1.5rem;
+  padding: 1rem;
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
   background-color: #ffffff; /* Fundo Branco Sólido */
-  margin: 1.5rem; /* Margem para não encostar nas bordas da sidebar */
-  border-radius: 15px; /* Bordas arredondadas para um visual moderno */
+  margin: 1rem; /* Margem para não encostar nas bordas da sidebar */
+  border-radius: 50px; /* Bordas arredondadas para um visual moderno */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra leve para profundidade */
 }
 
 .sidebarLogo {
   width: 100%;
-  max-width: 160px; /* Tamanho ajustado para a logo interna */
+  max-width: 120px; /* Tamanho ajustado para a logo interna */
   height: auto;
   object-fit: contain;
   display: block;
 }
+
 
 /* Navegação */
 .nav {
