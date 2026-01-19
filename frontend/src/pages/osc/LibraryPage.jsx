@@ -86,7 +86,7 @@ export default function LibraryPage() {
                    <span>
                      {/* Se existir 'ebook_category' no banco, usa ela. 
                          Se não, usa o padrão 'E-book / PDF' */}
-                     {file.ebook_category || "E-book / PDF"}
+                     {file.ebook_category}
                    </span>
                 </div>
                 {/* ----------------------------- */}
