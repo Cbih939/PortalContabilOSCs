@@ -10,7 +10,7 @@ import { FileIcon, DownloadIcon } from '../../components/common/Icons.jsx';
 import { formatDate } from '../../utils/formatDate.js';
 import styles from './Documents.module.css';
 
-// --- ESTILOS INLINE PARA O CALENDÁRIO (Para garantir visual imediato) ---
+// --- ESTILOS INLINE PARA O CALENDÁRIO (Objeto separado do CSS Module) ---
 const calStyles = {
   legend: {
     display: 'flex',
@@ -46,7 +46,7 @@ const calStyles = {
   },
   calendarGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))', // Um pouco menor para caber na coluna
+    gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))',
     gap: '8px',
     marginBottom: '24px'
   },
@@ -97,7 +97,6 @@ export default function OSCDocumentsPage() {
 
     // 2. Mês Atual
     if (monthIndex === currentMonthIndex) {
-        // Verifica se enviou algo neste mês
         const hasDocCurrentMonth = myFiles.some(d => {
             const dateStr = d.date || d.created_at;
             if (!dateStr) return false;
@@ -114,7 +113,6 @@ export default function OSCDocumentsPage() {
     });
 
     const hasDoc = docsInMonth.length > 0;
-    // Verifica status de aprovação (ajuste conforme seu backend, ex: d.verified, d.status === 'APPROVED')
     const isVerified = hasDoc && docsInMonth.some(d => d.verified === true || d.status === 'APPROVED');
 
     if (isVerified) return 'concluded';
@@ -149,7 +147,6 @@ export default function OSCDocumentsPage() {
     setErrorLoading(null);
     try {
       const response = await docService.getMyDocuments();
-      // Garante que é um array, mesmo se vier dentro de .data
       const docs = Array.isArray(response) ? response : (response.data || []);
       
       const sortedData = docs.sort((a, b) => {
@@ -197,7 +194,7 @@ export default function OSCDocumentsPage() {
     <div className={styles.pageContainer}>
       <div className={styles.grid}>
         
-        {/* Coluna 1: Info e Upload (MANTIDA IGUAL) */}
+        {/* Coluna 1: Info e Upload */}
         <div className={styles.uploadColumn}>
           <div className={`${styles.infoCard} mb-8`}>
             <p className={styles.welcomeText}>
@@ -218,27 +215,35 @@ export default function OSCDocumentsPage() {
         <div className={`${styles.listCard} ${styles.listColumn}`}>
           <h2 className={styles.cardTitle}>Meus Documentos</h2>
 
-          {/* === NOVO CALENDÁRIO DE SITUAÇÃO === */}
+          {/* === CALENDÁRIO (Usando calStyles) === */}
           <div style={{marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '20px'}}>
-            <h4 style={styles.sectionTitle}>Sua Situação em {new Date().getFullYear()}</h4>
+            <h4 style={calStyles.sectionTitle}>Sua Situação em {new Date().getFullYear()}</h4>
             
             {/* Legenda */}
-            <div style={styles.legend}>
-                <div style={styles.legendItem}><div style={styles.colorBox('#fee2e2', '#fecaca')}></div> Atraso</div>
-                <div style={styles.legendItem}><div style={styles.colorBox('#fef9c3', '#fde047')}></div> Aberto</div>
-                <div style={styles.legendItem}><div style={styles.colorBox('#dbeafe', '#bfdbfe')}></div> Enviado</div>
-                <div style={styles.legendItem}><div style={styles.colorBox('#dcfce7', '#86efac')}></div> Concluso</div>
+            <div style={calStyles.legend}>
+                <div style={calStyles.legendItem}>
+                    <div style={calStyles.colorBox('#fee2e2', '#fecaca')}></div> Atraso
+                </div>
+                <div style={calStyles.legendItem}>
+                    <div style={calStyles.colorBox('#fef9c3', '#fde047')}></div> Aberto
+                </div>
+                <div style={calStyles.legendItem}>
+                    <div style={calStyles.colorBox('#dbeafe', '#bfdbfe')}></div> Enviado
+                </div>
+                <div style={calStyles.legendItem}>
+                    <div style={calStyles.colorBox('#dcfce7', '#86efac')}></div> Concluso
+                </div>
             </div>
 
             {/* Grid dos Meses */}
-            <div style={styles.calendarGrid}>
+            <div style={calStyles.calendarGrid}>
                 {months.map((m, idx) => {
                     const status = getMonthStatus(idx);
                     const [bg, color, border] = getStatusStyle(status);
                     return (
-                        <div key={m} style={styles.monthBox(bg, color, border)}>
-                            <span style={styles.monthText}>{m}</span>
-                            <span style={styles.statusText}>{getStatusLabel(status)}</span>
+                        <div key={m} style={calStyles.monthBox(bg, color, border)}>
+                            <span style={calStyles.monthText}>{m}</span>
+                            <span style={calStyles.statusText}>{getStatusLabel(status)}</span>
                         </div>
                     )
                 })}
