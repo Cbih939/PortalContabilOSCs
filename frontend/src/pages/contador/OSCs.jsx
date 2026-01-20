@@ -43,8 +43,8 @@ const IconPlus = () => (
 const styles = {
   container: {
     padding: '20px',
-    //maxWidth: '1200px',
-    margin: '0 auto',
+    width: '90%', // CORREÇÃO: Define a largura para 90% da tela
+    margin: '0 auto', // Centraliza o container
     fontFamily: 'Arial, sans-serif'
   },
   // Header com Botão
