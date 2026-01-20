@@ -1,5 +1,4 @@
-// src/pages/contador/OSCs.jsx (ou onde ficar sua página de mensagens)
-// Certifique-se de salvar este código no arquivo correto: src/pages/osc/Messages.jsx
+// src/pages/contador/OSCs.jsx (ou src/pages/osc/Messages.jsx)
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth.jsx';
@@ -24,9 +23,7 @@ export default function OSCMessagesPage() {
 
     try {
       const response = await messageService.getMyMessages();
-      
-      // LOG DE DEBUG: Abra o console (F12) para ver o que chega do backend
-      console.log('📦 Mensagens recebidas do Backend:', response);
+      console.log('🔄 Polling Mensagens:', response); // Debug no console
 
       let rawData = [];
       if (Array.isArray(response)) {
@@ -37,44 +34,44 @@ export default function OSCMessagesPage() {
          rawData = response.data.data;
       }
 
-      // Mapeamento
       const formattedMessages = rawData.map(msg => {
         const senderIdStr = String(msg.sender_id || msg.senderId);
         const myUserIdStr = String(user.id);
         
-        // Verifica se a mensagem é minha
+        // Verifica se fui eu quem mandei
         const isMe = senderIdStr === myUserIdStr || (msg.sender_role === 'OSC');
 
         return {
           ...msg,
-          // Tenta ler o texto de várias propriedades possíveis
-          text: msg.content || msg.message || msg.text || msg.body || '',
+          text: msg.content || msg.message || msg.text || '',
           isMe: isMe,
-          created_at: msg.created_at || msg.createdAt || new Date().toISOString()
+          created_at: msg.created_at || new Date().toISOString()
         };
       });
 
-      // Ordena por data
       const sortedMessages = formattedMessages.sort((a, b) => 
         new Date(a.created_at) - new Date(b.created_at)
       );
 
-      setMessages(sortedMessages);
+      // Só atualiza se houver mudança ou se for a primeira carga
+      // Isso evita que a mensagem suma enquanto o backend não processa
+      if (JSON.stringify(sortedMessages) !== JSON.stringify(messages) || isLoading) {
+          setMessages(sortedMessages);
+      }
+      
     } catch (error) {
-      console.error("Erro ao carregar mensagens:", error);
+      console.error("Erro ao buscar mensagens:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Polling
   useEffect(() => {
     fetchMessages();
     const interval = setInterval(fetchMessages, 5000); 
     return () => clearInterval(interval);
   }, [user?.id]); 
 
-  // Scroll automático
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -84,34 +81,45 @@ export default function OSCMessagesPage() {
     const textToSend = newMessage.trim();
     if (!textToSend) return;
 
-    // ID do Contador (Fallback para 2 se não existir)
+    // ID de fallback (2) se não houver vínculo
     const targetId = user?.assigned_contador_id || user?.contador_id || 2;
 
-    // 1. ATUALIZAÇÃO OTIMISTA (Mostra na tela antes de enviar)
+    // 1. ATUALIZAÇÃO OTIMISTA (Adiciona na tela na hora)
     const optimisticMsg = {
         id: 'temp-' + Date.now(),
         text: textToSend,
         isMe: true,
         created_at: new Date().toISOString()
     };
+    
     setMessages(prev => [...prev, optimisticMsg]);
-    setNewMessage(''); // Limpa o input
+    setNewMessage('');
 
     try {
-      // 2. Envia para o backend (Enviando múltiplos formatos para garantir compatibilidade)
-      await messageService.sendMessage({
-        receiver_id: targetId,  // Padrão snake_case
-        receiverId: targetId,   // Padrão camelCase
-        content: textToSend,    // Padrão comum
-        message: textToSend     // Outro padrão comum
-      });
+      console.log(`📤 Enviando para ID: ${targetId} | Msg: ${textToSend}`);
 
-      // 3. Recarrega as mensagens reais do banco
-      await fetchMessages(); 
+      // 2. Envia com payload completo para garantir que o backend aceite
+      const payload = {
+        receiver_id: targetId,
+        content: textToSend,
+        receiver_role: 'contador' // Adicionado para garantir roteamento no backend
+      };
+
+      await messageService.sendMessage(payload);
+      
+      // 3. Força atualização imediata
+      await fetchMessages();
+
     } catch (error) {
-      console.error("Erro ao enviar:", error);
-      alert("Falha técnica ao enviar mensagem. Verifique o console.");
-      // (Opcional) Poderíamos remover a mensagem otimista aqui se falhar
+      console.error("❌ Erro fatal ao enviar:", error);
+      
+      // Mostra o erro exato na tela para sabermos o que o backend respondeu
+      const errorMsg = error.response?.data?.message || error.message;
+      alert(`Falha ao enviar: ${errorMsg}. \nVerifique se o ID ${targetId} existe no banco.`);
+      
+      // Remove a mensagem otimista se falhou
+      setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
+      setNewMessage(textToSend);
     }
   };
 
@@ -125,7 +133,7 @@ export default function OSCMessagesPage() {
             <h2 className={styles.contactName}>Meu Contador</h2>
             <div style={{display:'flex', alignItems:'center', gap:'6px'}}>
                 <span className={styles.statusIndicator}></span>
-                <span className={styles.status}>Online</span>
+                <span className={styles.status}>Online (Suporte)</span>
             </div>
           </div>
         </div>
@@ -137,8 +145,8 @@ export default function OSCMessagesPage() {
             </div>
           ) : messages.length === 0 ? (
             <div className={styles.emptyState}>
-                <p>Nenhuma mensagem ainda.</p>
-                <p style={{fontSize:'0.85rem', marginTop:'5px'}}>Envie uma mensagem para iniciar o atendimento.</p>
+                <p>Nenhuma mensagem no histórico.</p>
+                <p style={{fontSize:'0.85rem', marginTop:'5px'}}>Envie um "Olá" para testar a conexão.</p>
             </div>
           ) : (
             messages.map((msg, index) => (
