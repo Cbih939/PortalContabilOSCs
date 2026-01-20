@@ -43,7 +43,7 @@ const IconPlus = () => (
 const styles = {
   container: {
     padding: '20px',
-    maxWidth: '1200px',
+    //maxWidth: '1200px',
     margin: '0 auto',
     fontFamily: 'Arial, sans-serif'
   },
