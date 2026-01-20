@@ -58,13 +58,19 @@ export default function LibraryPage() {
               className={styles.bookCard} 
               onClick={() => handleDownload(file.file_path)}
             >
-              <div className={styles.thumbnailWrapper}>
+              <div className={styles.thumbnailWrapper} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f0f0f0' }}>
                 {/* Lógica da Capa */}
                 {file.cover_path ? (
                   <img 
                     src={`https://contacomigo.org.br/${file.cover_path.replace(/\\/g, '/')}`} 
                     alt={file.title} 
                     className={styles.bookCoverImage}
+                    // Estilo inline para garantir proporção e evitar cortes
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'contain' // Garante que a imagem inteira apareça
+                    }}
                   />
                 ) : (
                   <PdfThumbnail fileUrl={`https://contacomigo.org.br/${file.file_path.replace(/\\/g, '/')}`} />
@@ -81,16 +87,13 @@ export default function LibraryPage() {
                   {file.title}
                 </h3>
                 
-                {/* --- AQUI ESTÁ A ALTERAÇÃO --- */}
                 <div className={styles.bookMeta}>
                    <BookIcon className={styles.metaIcon} />
                    <span>
-                     {/* Se existir 'ebook_category' no banco, usa ela. 
-                         Se não, usa o padrão 'E-book / PDF' */}
-                     {file.ebook_category}
+                     {/* Exibe o nome cadastrado na subcategoria. Se vazio, exibe 'Publicação' como fallback seguro */}
+                     {file.ebook_category || "Publicação"}
                    </span>
                 </div>
-                {/* ----------------------------- */}
 
               </div>
             </div>
