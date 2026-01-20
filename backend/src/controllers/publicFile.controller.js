@@ -1,59 +1,70 @@
 import pool from '../config/db.js';
 
-// 1. Listar arquivos públicos (Com a correção do ebook_category)
+// Listar arquivos públicos
 export const getFiles = async (req, res) => {
   try {
     const { category } = req.query;
-    
     let query = '';
     let params = [];
 
     if (category) {
-      // Busca filtrada (trazendo a coluna ebook_category)
-      query = `
-        SELECT id, title, file_path, cover_path, category, created_at, ebook_category 
-        FROM public_files 
-        WHERE category = ? 
-        ORDER BY created_at DESC
-      `;
+      query = `SELECT id, title, file_path, cover_path, category, created_at, ebook_category FROM public_files WHERE category = ? ORDER BY created_at DESC`;
       params = [category];
     } else {
-      // Busca completa
-      query = `
-        SELECT id, title, file_path, cover_path, category, created_at, ebook_category 
-        FROM public_files 
-        ORDER BY created_at DESC
-      `;
+      query = `SELECT id, title, file_path, cover_path, category, created_at, ebook_category FROM public_files ORDER BY created_at DESC`;
     }
 
     const [rows] = await pool.execute(query, params);
     res.json(rows);
-
   } catch (error) {
-    console.error('Erro ao buscar arquivos públicos:', error);
+    console.error('Erro ao buscar arquivos:', error);
     res.status(500).json({ message: 'Erro ao buscar arquivos.' });
   }
 };
 
-// 2. Upload de Arquivo (ESTA ERA A FUNÇÃO QUE FALTAVA)
+// --- AQUI ESTÁ A CORREÇÃO COM LOGS DE DEBUG ---
 export const uploadFile = async (req, res) => {
   try {
-    // Pega os dados do formulário
-    const { title, category, ebook_category } = req.body;
-    
-    // Verifica se o arquivo principal (PDF) veio
-    // Nota: Dependendo do seu Multer, pode vir em req.file ou req.files['file'][0]
-    const file = req.files ? (req.files.file ? req.files.file[0] : req.file) : req.file;
-    const cover = req.files && req.files.cover ? req.files.cover[0] : null;
+    console.log('------------------------------------------------');
+    console.log('[DEBUG Upload] Iniciando upload...');
+    console.log('[DEBUG Upload] Body (Texto):', req.body);
+    console.log('[DEBUG Upload] req.file (Single):', req.file ? 'Sim' : 'Não');
+    console.log('[DEBUG Upload] req.files (Multiple):', req.files ? Object.keys(req.files) : 'Não');
 
-    if (!file) {
-      return res.status(400).json({ message: 'Nenhum arquivo PDF enviado.' });
+    // Tenta encontrar o arquivo PDF em vários lugares possíveis
+    let file = null;
+    if (req.file) {
+        file = req.file;
+    } else if (req.files) {
+        // Tenta achar campo com nome 'file', 'pdf', 'arquivo', 'document'
+        file = req.files.file ? req.files.file[0] : 
+               (req.files.pdf ? req.files.pdf[0] : 
+               (req.files.arquivo ? req.files.arquivo[0] : null));
     }
 
-    const filePath = file.path; // Caminho salvo pelo Multer
-    const coverPath = cover ? cover.path : null; // Caminho da capa, se houver
+    // Tenta encontrar a capa
+    let cover = null;
+    if (req.files) {
+        cover = req.files.cover ? req.files.cover[0] : 
+                (req.files.capa ? req.files.capa[0] : 
+                (req.files.image ? req.files.image[0] : null));
+    }
 
-    // Insere no banco de dados incluindo a nova coluna ebook_category
+    if (!file) {
+      console.error('[DEBUG Upload] ERRO: Nenhum arquivo PDF encontrado no request.');
+      // Importante: Retorna qual campo o backend esperava vs o que recebeu
+      return res.status(400).json({ 
+          message: 'Nenhum arquivo PDF enviado ou nome do campo incorreto.',
+          received_fields: req.files ? Object.keys(req.files) : 'Nenhum'
+      });
+    }
+
+    const { title, category, ebook_category } = req.body;
+    const filePath = file.path; 
+    const coverPath = cover ? cover.path : null; 
+
+    console.log(`[DEBUG Upload] Salvando no banco: ${title} | Sub: ${ebook_category}`);
+
     const [result] = await pool.execute(
       `INSERT INTO public_files (title, file_path, cover_path, category, ebook_category, created_at) 
        VALUES (?, ?, ?, ?, ?, NOW())`,
@@ -62,9 +73,11 @@ export const uploadFile = async (req, res) => {
         filePath, 
         coverPath, 
         category, 
-        ebook_category || null // Salva a subcategoria (Governança, Contábil, etc)
+        ebook_category || null 
       ]
     );
+
+    console.log('[DEBUG Upload] Sucesso! ID:', result.insertId);
 
     res.status(201).json({ 
       message: 'Upload realizado com sucesso!', 
@@ -72,12 +85,11 @@ export const uploadFile = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erro no upload de arquivo público:', error);
-    res.status(500).json({ message: 'Erro ao salvar arquivo no banco.' });
+    console.error('[DEBUG Upload] Erro CRÍTICO:', error);
+    res.status(500).json({ message: 'Erro interno ao salvar arquivo.' });
   }
 };
 
-// 3. Deletar arquivo
 export const deleteFile = async (req, res) => {
   try {
     const { id } = req.params;
@@ -88,3 +100,4 @@ export const deleteFile = async (req, res) => {
     res.status(500).json({ message: 'Erro ao deletar arquivo.' });
   }
 };
+
