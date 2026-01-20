@@ -1,11 +1,10 @@
 // src/pages/contador/OSCs.jsx
 
 import React, { useState, useEffect } from 'react';
-// import { Link } from 'react-router-dom'; // Link não é mais usado diretamente na lista
 import * as oscService from '../../services/oscService.js';
 import * as alertService from '../../services/alertService.js';
 
-// Componentes modais (Mantidos)
+// Componentes modais
 import ViewOSCModal from './components/ViewOSCModal.jsx';
 import EditOSCModal from './components/EditOSCModal.jsx';
 import SendAlertModal from './components/SendAlertModal.jsx';
@@ -14,61 +13,225 @@ import Spinner from '../../components/common/Spinner.jsx';
 import useApi from '../../hooks/useApi.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 
-// Ícones para o visual (Instale lucide-react se não tiver: npm install lucide-react)
-import { ChevronDown, ChevronUp, Edit, Eye, Bell, FileText } from 'lucide-react';
+// --- ÍCONES SVG NATIVOS (Sem dependências externas) ---
+const IconChevronDown = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+);
+const IconChevronUp = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+);
+const IconEdit = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+);
+const IconEye = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+);
+const IconBell = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+);
+const IconFileText = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
+);
+
+// --- ESTILOS EM OBJETO (Para garantir o visual sem CSS externo) ---
+const styles = {
+  container: {
+    padding: '20px',
+    maxWidth: '1200px',
+    margin: '0 auto',
+    fontFamily: 'Arial, sans-serif'
+  },
+  title: {
+    fontSize: '24px',
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: '24px'
+  },
+  accordionItem: {
+    border: '1px solid #e0e0e0',
+    borderRadius: '8px',
+    marginBottom: '12px',
+    backgroundColor: '#fff',
+    overflow: 'hidden',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+  },
+  accordionHeader: {
+    padding: '16px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    cursor: 'pointer',
+    backgroundColor: '#fff',
+    transition: 'background-color 0.2s'
+  },
+  accordionHeaderHover: {
+    backgroundColor: '#f9fafb'
+  },
+  oscInfo: {
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  oscName: {
+    fontSize: '16px',
+    fontWeight: 'bold',
+    color: '#1f2937',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  oscCnpj: {
+    fontSize: '13px',
+    color: '#6b7280',
+    marginTop: '4px'
+  },
+  actions: {
+    display: 'flex',
+    gap: '8px'
+  },
+  actionBtn: (color, bg) => ({
+    padding: '8px',
+    borderRadius: '50%',
+    border: 'none',
+    cursor: 'pointer',
+    color: color,
+    backgroundColor: bg,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'opacity 0.2s'
+  }),
+  accordionBody: {
+    padding: '20px',
+    backgroundColor: '#f9fafb',
+    borderTop: '1px solid #eee'
+  },
+  legend: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '16px',
+    marginBottom: '20px',
+    fontSize: '12px',
+    color: '#555'
+  },
+  legendItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
+  },
+  colorBox: (bg, border) => ({
+    width: '12px',
+    height: '12px',
+    backgroundColor: bg,
+    border: `1px solid ${border}`,
+    borderRadius: '2px'
+  }),
+  sectionTitle: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: '12px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em'
+  },
+  calendarGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
+    gap: '10px',
+    marginBottom: '24px'
+  },
+  monthBox: (bg, color, border) => ({
+    backgroundColor: bg,
+    color: color,
+    border: `1px solid ${border}`,
+    borderRadius: '6px',
+    padding: '10px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '60px'
+  }),
+  monthText: {
+    fontSize: '14px',
+    fontWeight: 'bold'
+  },
+  statusText: {
+    fontSize: '10px',
+    fontWeight: '600',
+    marginTop: '4px',
+    textTransform: 'uppercase'
+  },
+  docList: {
+    backgroundColor: '#fff',
+    border: '1px solid #e5e7eb',
+    borderRadius: '6px',
+    maxHeight: '200px',
+    overflowY: 'auto'
+  },
+  docItem: {
+    padding: '12px',
+    borderBottom: '1px solid #f3f4f6',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: '14px'
+  },
+  emptyState: {
+    textAlign: 'center',
+    padding: '40px',
+    color: '#9ca3af',
+    backgroundColor: '#f9fafb',
+    borderRadius: '8px',
+    border: '2px dashed #e5e7eb'
+  }
+};
 
 // --- COMPONENTE LOCAL: Item do Acordeon ---
 const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAlert }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
   const months = [
     'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
     'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
   ];
 
-  const currentMonthIndex = new Date().getMonth(); // 0 = Jan, 11 = Dez
+  const currentMonthIndex = new Date().getMonth(); 
 
-  // Função para determinar o status do mês
   const getMonthStatus = (monthIndex) => {
     // 1. Futuro
     if (monthIndex > currentMonthIndex) return 'future';
 
-    // 2. Mês Atual (Pendente de envio ou verificação)
-    // Se quiser que o mês atual seja sempre amarelo até enviar, use esta lógica.
-    // Se quiser verificar se já enviou no mês atual, mova para baixo.
+    // 2. Mês Atual
     if (monthIndex === currentMonthIndex) {
-        // Verifica se já enviou algo neste mês, mesmo sendo o mês corrente
         const hasDocCurrentMonth = osc.documents && osc.documents.some(d => {
             if (!d.createdAt) return false;
             return new Date(d.createdAt).getMonth() === monthIndex;
         });
-        if (!hasDocCurrentMonth) return 'pending'; // Aberto para envio
+        if (!hasDocCurrentMonth) return 'pending';
     }
 
-    // 3. Meses Passados (ou atual se já tiver doc)
+    // 3. Meses Passados
     const docsInMonth = osc.documents ? osc.documents.filter(d => {
         if (!d.createdAt) return false;
         return new Date(d.createdAt).getMonth() === monthIndex;
     }) : [];
 
     const hasDoc = docsInMonth.length > 0;
-    
-    // Verifica se algum documento do mês foi verificado/aprovado
-    // (Supondo que exista um campo 'verified' ou 'status' no documento. Ajuste conforme seu backend)
     const isVerified = hasDoc && docsInMonth.some(d => d.verified === true || d.status === 'APPROVED');
 
-    if (isVerified) return 'concluded'; // Situação regular
-    if (hasDoc) return 'sent';          // Enviado, aguardando contador
-    
-    return 'late'; // Em atraso (sem documento)
+    if (isVerified) return 'concluded'; 
+    if (hasDoc) return 'sent';          
+    return 'late';
   };
 
-  // Cores baseadas no status
-  const getStatusColor = (status) => {
+  // Cores (Background, Texto, Borda)
+  const getStatusStyle = (status) => {
     switch (status) {
-      case 'late': return 'bg-red-100 text-red-700 border-red-200';      // Atraso
-      case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200'; // Pendente (Mês atual)
-      case 'sent': return 'bg-blue-100 text-blue-700 border-blue-200';    // Enviado
-      case 'concluded': return 'bg-green-100 text-green-700 border-green-200'; // Concluso
-      default: return 'bg-gray-50 text-gray-400 border-gray-100';         // Futuro
+      case 'late': return ['#fee2e2', '#b91c1c', '#fecaca']; // Vermelho (Atraso)
+      case 'pending': return ['#fef9c3', '#a16207', '#fde047']; // Amarelo (Pendente)
+      case 'sent': return ['#dbeafe', '#1d4ed8', '#bfdbfe']; // Azul (Enviado)
+      case 'concluded': return ['#dcfce7', '#15803d', '#86efac']; // Verde (Concluso)
+      default: return ['#f3f4f6', '#9ca3af', '#e5e7eb']; // Cinza (Futuro)
     }
   };
 
@@ -83,82 +246,87 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
   };
 
   return (
-    <div className={`border rounded-lg mb-3 bg-white shadow-sm transition-all ${isExpanded ? 'border-blue-300 ring-1 ring-blue-100' : 'border-gray-200'}`}>
-      {/* Cabeçalho do Acordeon (Clicável) */}
+    <div style={{
+      ...styles.accordionItem, 
+      border: isExpanded ? '1px solid #93c5fd' : '1px solid #e0e0e0',
+      boxShadow: isExpanded ? '0 0 0 1px #bfdbfe' : 'none'
+    }}>
+      {/* Cabeçalho */}
       <div 
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 rounded-lg"
+        style={{...styles.accordionHeader, ...(isHovered ? styles.accordionHeaderHover : {})}}
         onClick={() => onToggle(osc.id)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        <div className="flex flex-col">
-          <span className="font-bold text-gray-800 flex items-center gap-2 text-lg">
+        <div style={styles.oscInfo}>
+          <span style={styles.oscName}>
             {osc.name}
-            {isExpanded ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
+            {isExpanded ? <IconChevronUp /> : <IconChevronDown />}
           </span>
-          <span className="text-sm text-gray-500 font-mono mt-1">CNPJ: {osc.cnpj || 'Não informado'}</span>
+          <span style={styles.oscCnpj}>CNPJ: {osc.cnpj || 'Não informado'}</span>
         </div>
 
-        {/* Ações Rápidas (stopPropagation para não abrir/fechar o acordeon ao clicar nos botões) */}
-        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-          <button onClick={() => onView(osc)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors" title="Ver Detalhes">
-            <Eye size={18} />
+        <div style={styles.actions} onClick={(e) => e.stopPropagation()}>
+          <button style={styles.actionBtn('#2563eb', '#eff6ff')} onClick={() => onView(osc)} title="Ver">
+            <IconEye />
           </button>
-          <button onClick={() => onEdit(osc)} className="p-2 text-amber-600 hover:bg-amber-50 rounded-full transition-colors" title="Editar">
-            <Edit size={18} />
+          <button style={styles.actionBtn('#d97706', '#fffbeb')} onClick={() => onEdit(osc)} title="Editar">
+            <IconEdit />
           </button>
-          <button onClick={() => onSendAlert(osc)} className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors" title="Enviar Alerta">
-            <Bell size={18} />
+          <button style={styles.actionBtn('#dc2626', '#fef2f2')} onClick={() => onSendAlert(osc)} title="Alertar">
+            <IconBell />
           </button>
         </div>
       </div>
 
-      {/* Corpo do Acordeon */}
+      {/* Corpo Expandido */}
       {isExpanded && (
-        <div className="p-4 border-t border-gray-100 bg-gray-50/50 rounded-b-lg animate-fadeIn">
+        <div style={styles.accordionBody}>
           
           {/* Legenda */}
-          <div className="flex flex-wrap gap-4 mb-5 text-xs text-gray-600 border-b border-gray-200 pb-3">
-            <span className="flex items-center gap-1"><div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div> Em Atraso</span>
-            <span className="flex items-center gap-1"><div className="w-3 h-3 bg-yellow-100 border border-yellow-200 rounded"></div> Pendente (Mês Atual)</span>
-            <span className="flex items-center gap-1"><div className="w-3 h-3 bg-blue-100 border border-blue-200 rounded"></div> Enviado</span>
-            <span className="flex items-center gap-1"><div className="w-3 h-3 bg-green-100 border border-green-200 rounded"></div> Concluso</span>
+          <div style={styles.legend}>
+            <div style={styles.legendItem}><div style={styles.colorBox('#fee2e2', '#fecaca')}></div> Em Atraso</div>
+            <div style={styles.legendItem}><div style={styles.colorBox('#fef9c3', '#fde047')}></div> Pendente (Mês Atual)</div>
+            <div style={styles.legendItem}><div style={styles.colorBox('#dbeafe', '#bfdbfe')}></div> Enviado</div>
+            <div style={styles.legendItem}><div style={styles.colorBox('#dcfce7', '#86efac')}></div> Concluso</div>
           </div>
 
-          {/* Grid do Calendário */}
-          <h4 className="font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">Situação Anual ({new Date().getFullYear()})</h4>
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
+          {/* Calendário */}
+          <h4 style={styles.sectionTitle}>Situação Anual ({new Date().getFullYear()})</h4>
+          <div style={styles.calendarGrid}>
             {months.map((m, idx) => {
               const status = getMonthStatus(idx);
+              const [bg, color, border] = getStatusStyle(status);
               return (
-                <div key={m} className={`flex flex-col items-center justify-center p-2 rounded border ${getStatusColor(status)}`}>
-                  <span className="font-bold text-sm">{m}</span>
-                  <span className="text-[10px] mt-1 font-medium uppercase">{getStatusLabel(status)}</span>
+                <div key={m} style={styles.monthBox(bg, color, border)}>
+                  <span style={styles.monthText}>{m}</span>
+                  <span style={styles.statusText}>{getStatusLabel(status)}</span>
                 </div>
               )
             })}
           </div>
 
-          {/* Lista de Documentações */}
-          <div>
-            <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2 text-sm uppercase tracking-wide">
-                <FileText size={16}/> Documentações Recentes
-            </h4>
-            {osc.documents && osc.documents.length > 0 ? (
-                <div className="bg-white rounded border border-gray-200 divide-y divide-gray-100 max-h-40 overflow-y-auto">
-                    {osc.documents.map((doc, i) => (
-                        <div key={i} className="flex justify-between items-center p-3 text-sm hover:bg-gray-50">
-                            <span className="text-gray-700 font-medium">{doc.title || `Documento sem título`}</span>
-                            <span className="text-xs text-gray-500">
-                                {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString() : '-'}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <p className="text-sm text-gray-500 italic p-2 border border-dashed border-gray-300 rounded text-center">
-                    Nenhuma documentação registrada para esta OSC.
-                </p>
-            )}
-          </div>
+          {/* Lista de Documentos */}
+          <h4 style={{...styles.sectionTitle, display: 'flex', alignItems: 'center', gap: '8px'}}>
+            <IconFileText /> Documentações Recentes
+          </h4>
+          
+          {osc.documents && osc.documents.length > 0 ? (
+            <div style={styles.docList}>
+                {osc.documents.map((doc, i) => (
+                    <div key={i} style={styles.docItem}>
+                        <span style={{color: '#374151', fontWeight: '500'}}>{doc.title || `Documento sem título`}</span>
+                        <span style={{fontSize: '12px', color: '#6b7280'}}>
+                            {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString() : '-'}
+                        </span>
+                    </div>
+                ))}
+            </div>
+          ) : (
+            <div style={{padding: '15px', color: '#888', fontStyle: 'italic', border: '1px dashed #ccc', borderRadius: '4px', textAlign: 'center', fontSize: '13px'}}>
+                Nenhuma documentação registrada.
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -170,9 +338,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
 export default function OSCsPage() {
   const [oscs, setOscs] = useState([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
-  const [errorLoading, setErrorLoading] = useState(null);
-
-  // Estado para controlar qual OSC está expandida (apenas uma por vez ou null)
   const [expandedOscId, setExpandedOscId] = useState(null);
 
   const [oscToView, setOscToView] = useState(null);
@@ -183,35 +348,21 @@ export default function OSCsPage() {
   const { request: updateOSC, isLoading: isUpdating } = useApi(oscService.updateOSC);
   const { request: sendAlert, isLoading: isSendingAlert } = useApi(alertService.sendAlertToOSC);
 
-  // --- CORREÇÃO (Data Fetching) ---
   useEffect(() => {
     const fetchOSCs = async () => {
       setIsLoadingData(true);
-      setErrorLoading(null);
       try {
         const response = await oscService.getMyOSCs();
-
-        console.log("📦 Resposta CRUA do Serviço:", response);
-
-        // LÓGICA HÍBRIDA
+        
+        // Normalização dos dados (Híbrida)
         let data = [];
         if (Array.isArray(response)) {
-            // Caso 1: Array direto
-            console.log("✅ Detectado array direto.");
             data = response;
         } else if (response && Array.isArray(response.data)) {
-            // Caso 2: Objeto Axios
-            console.log("✅ Detectado objeto Axios (usando .data).");
             data = response.data;
         } else if (response && response.data && Array.isArray(response.data.data)) {
-             // Caso 3: Estrutura aninhada
-             console.log("✅ Detectado objeto aninhado.");
              data = response.data.data;
-        } else {
-             console.warn("⚠️ Formato de resposta desconhecido ou vazio:", response);
         }
-
-        console.log(`📊 Processando ${data.length} registros...`);
 
         const sortedData = data.sort((a, b) => {
             const nameA = a.name || '';
@@ -221,7 +372,7 @@ export default function OSCsPage() {
 
         setOscs(sortedData);
       } catch (err) {
-        console.error("❌ Erro no fetchOSCs:", err);
+        console.error("Erro:", err);
         addNotification("Erro ao carregar OSCs.", "error");
       } finally {
         setIsLoadingData(false);
@@ -229,16 +380,10 @@ export default function OSCsPage() {
     };
     fetchOSCs();
   }, [addNotification]);
-  // --- FIM DA CORREÇÃO ---
 
   const handleToggleAccordion = (id) => {
-    // Se clicar no que já está aberto, fecha. Se não, abre o novo e fecha o anterior.
     setExpandedOscId(prevId => (prevId === id ? null : id));
   };
-
-  const handleView = (osc) => setOscToView(osc);
-  const handleEdit = (osc) => setOscToEdit(osc);
-  const handleSendAlert = (osc) => setOscToSendAlert(osc);
 
   const handleCloseModals = () => {
     setOscToView(null);
@@ -257,38 +402,35 @@ export default function OSCsPage() {
       addNotification('OSC salva com sucesso!', 'success');
       handleCloseModals();
     } catch (err) {
-      console.error('Falha ao salvar OSC:', err);
-      addNotification('Erro ao salvar as alterações.', 'error');
+      addNotification('Erro ao salvar.', 'error');
     }
   };
 
   const handleSendAlertSubmit = async (formData) => {
     try {
       await sendAlert(formData);
-      addNotification('Alerta enviado com sucesso!', 'success');
+      addNotification('Alerta enviado!', 'success');
       handleCloseModals();
     } catch (err) {
-      console.error('Falha ao enviar alerta:', err);
-      addNotification('Erro ao enviar alerta.', 'error');
+      addNotification('Erro ao enviar.', 'error');
     }
   };
 
   if (isLoadingData) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 100px)' }}>
-         <Spinner text="Carregando OSCs..." />
+         <Spinner text="Carregando..." />
       </div>
      );
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Painel de Monitoramento OSCs</h1>
+    <div style={styles.container}>
+      <h1 style={styles.title}>Painel de Monitoramento OSCs</h1>
       
-      {/* Lista de Acordeons */}
-      <div className="flex flex-col gap-2">
+      <div>
         {oscs.length === 0 ? (
-            <div className="text-center p-12 bg-gray-50 rounded-xl border border-dashed border-gray-300 text-gray-500">
+            <div style={styles.emptyState}>
                 Nenhuma OSC encontrada na base de dados.
             </div>
         ) : (
@@ -298,15 +440,14 @@ export default function OSCsPage() {
                     osc={osc} 
                     isExpanded={expandedOscId === osc.id}
                     onToggle={handleToggleAccordion}
-                    onView={handleView}
-                    onEdit={handleEdit}
-                    onSendAlert={handleSendAlert}
+                    onView={(o) => setOscToView(o)}
+                    onEdit={(o) => setOscToEdit(o)}
+                    onSendAlert={(o) => setOscToSendAlert(o)}
                 />
             ))
         )}
       </div>
 
-      {/* MODAIS */}
       {oscToView && (
         <ViewOSCModal isOpen={!!oscToView} onClose={handleCloseModals} osc={oscToView} />
       )}
