@@ -31,7 +31,7 @@ router.get('/', protect, controller.getFiles);
 
 // POST: Upload de múltiplos campos (file e cover)
 // Usamos .any() para flexibilidade ou .fields() para maior rigor
-router.post('/', protect, upload.any(), controller.uploadFile);
+router.post('/', upload.any(), uploadFile);
 
 // DELETE: Remover
 router.delete('/:id', protect, controller.deleteFile);
