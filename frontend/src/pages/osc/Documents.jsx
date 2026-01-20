@@ -10,8 +10,72 @@ import { FileIcon, DownloadIcon } from '../../components/common/Icons.jsx';
 import { formatDate } from '../../utils/formatDate.js';
 import styles from './Documents.module.css';
 
+// --- ESTILOS INLINE PARA O CALENDÁRIO (Para garantir visual imediato) ---
+const calStyles = {
+  legend: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '12px',
+    marginBottom: '16px',
+    fontSize: '11px',
+    color: '#555',
+    padding: '10px',
+    backgroundColor: '#f9fafb',
+    borderRadius: '6px',
+    border: '1px solid #eee'
+  },
+  legendItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
+  },
+  colorBox: (bg, border) => ({
+    width: '10px',
+    height: '10px',
+    backgroundColor: bg,
+    border: `1px solid ${border}`,
+    borderRadius: '2px'
+  }),
+  sectionTitle: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: '12px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em'
+  },
+  calendarGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))', // Um pouco menor para caber na coluna
+    gap: '8px',
+    marginBottom: '24px'
+  },
+  monthBox: (bg, color, border) => ({
+    backgroundColor: bg,
+    color: color,
+    border: `1px solid ${border}`,
+    borderRadius: '6px',
+    padding: '8px 4px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '50px'
+  }),
+  monthText: {
+    fontSize: '12px',
+    fontWeight: 'bold'
+  },
+  statusText: {
+    fontSize: '9px',
+    fontWeight: '600',
+    marginTop: '2px',
+    textTransform: 'uppercase'
+  }
+};
+
 /**
- * Página de Documentos da OSC - Versão em Lista
+ * Página de Documentos da OSC - Versão em Lista com Calendário
  */
 export default function OSCDocumentsPage() {
   const { user } = useAuth();
@@ -23,14 +87,74 @@ export default function OSCDocumentsPage() {
 
   const { request: uploadFile, isLoading: isUploading } = useApi(docService.uploadDocument);
 
+  // --- LÓGICA DO CALENDÁRIO ---
+  const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const currentMonthIndex = new Date().getMonth();
+
+  const getMonthStatus = (monthIndex) => {
+    // 1. Futuro
+    if (monthIndex > currentMonthIndex) return 'future';
+
+    // 2. Mês Atual
+    if (monthIndex === currentMonthIndex) {
+        // Verifica se enviou algo neste mês
+        const hasDocCurrentMonth = myFiles.some(d => {
+            const dateStr = d.date || d.created_at;
+            if (!dateStr) return false;
+            return new Date(dateStr).getMonth() === monthIndex;
+        });
+        if (!hasDocCurrentMonth) return 'pending';
+    }
+
+    // 3. Passado (ou atual com doc)
+    const docsInMonth = myFiles.filter(d => {
+        const dateStr = d.date || d.created_at;
+        if (!dateStr) return false;
+        return new Date(dateStr).getMonth() === monthIndex;
+    });
+
+    const hasDoc = docsInMonth.length > 0;
+    // Verifica status de aprovação (ajuste conforme seu backend, ex: d.verified, d.status === 'APPROVED')
+    const isVerified = hasDoc && docsInMonth.some(d => d.verified === true || d.status === 'APPROVED');
+
+    if (isVerified) return 'concluded';
+    if (hasDoc) return 'sent';
+    
+    return 'late';
+  };
+
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case 'late': return ['#fee2e2', '#b91c1c', '#fecaca'];      // Vermelho
+      case 'pending': return ['#fef9c3', '#a16207', '#fde047'];   // Amarelo
+      case 'sent': return ['#dbeafe', '#1d4ed8', '#bfdbfe'];      // Azul
+      case 'concluded': return ['#dcfce7', '#15803d', '#86efac']; // Verde
+      default: return ['#f3f4f6', '#9ca3af', '#e5e7eb'];          // Cinza
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'late': return 'Atraso';
+      case 'pending': return 'Aberto';
+      case 'sent': return 'Enviado';
+      case 'concluded': return 'OK';
+      default: return '-';
+    }
+  };
+  // -----------------------------
+
   const fetchDocuments = async () => {
     setIsLoadingList(true);
     setErrorLoading(null);
     try {
       const response = await docService.getMyDocuments();
-      const sortedData = response.data.sort((a, b) => {
-        const nameA = (a.name || a.original_name).toLowerCase();
-        const nameB = (b.name || b.original_name).toLowerCase();
+      // Garante que é um array, mesmo se vier dentro de .data
+      const docs = Array.isArray(response) ? response : (response.data || []);
+      
+      const sortedData = docs.sort((a, b) => {
+        const nameA = (a.name || a.original_name || '').toLowerCase();
+        const nameB = (b.name || b.original_name || '').toLowerCase();
         return nameA.localeCompare(nameB);
       });
       setMyFiles(sortedData);
@@ -72,7 +196,8 @@ export default function OSCDocumentsPage() {
   return (
     <div className={styles.pageContainer}>
       <div className={styles.grid}>
-        {/* Coluna 1: Info e Upload */}
+        
+        {/* Coluna 1: Info e Upload (MANTIDA IGUAL) */}
         <div className={styles.uploadColumn}>
           <div className={`${styles.infoCard} mb-8`}>
             <p className={styles.welcomeText}>
@@ -89,9 +214,37 @@ export default function OSCDocumentsPage() {
           <DocumentUpload onUpload={handleFileUpload} isLoading={isUploading} />
         </div>
 
-        {/* Coluna 2: Lista de Documentos (Layout de Linhas) */}
+        {/* Coluna 2: Calendário + Lista de Documentos */}
         <div className={`${styles.listCard} ${styles.listColumn}`}>
           <h2 className={styles.cardTitle}>Meus Documentos</h2>
+
+          {/* === NOVO CALENDÁRIO DE SITUAÇÃO === */}
+          <div style={{marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '20px'}}>
+            <h4 style={styles.sectionTitle}>Sua Situação em {new Date().getFullYear()}</h4>
+            
+            {/* Legenda */}
+            <div style={styles.legend}>
+                <div style={styles.legendItem}><div style={styles.colorBox('#fee2e2', '#fecaca')}></div> Atraso</div>
+                <div style={styles.legendItem}><div style={styles.colorBox('#fef9c3', '#fde047')}></div> Aberto</div>
+                <div style={styles.legendItem}><div style={styles.colorBox('#dbeafe', '#bfdbfe')}></div> Enviado</div>
+                <div style={styles.legendItem}><div style={styles.colorBox('#dcfce7', '#86efac')}></div> Concluso</div>
+            </div>
+
+            {/* Grid dos Meses */}
+            <div style={styles.calendarGrid}>
+                {months.map((m, idx) => {
+                    const status = getMonthStatus(idx);
+                    const [bg, color, border] = getStatusStyle(status);
+                    return (
+                        <div key={m} style={styles.monthBox(bg, color, border)}>
+                            <span style={styles.monthText}>{m}</span>
+                            <span style={styles.statusText}>{getStatusLabel(status)}</span>
+                        </div>
+                    )
+                })}
+            </div>
+          </div>
+          {/* =================================== */}
 
           {isLoadingList ? (
             <div className={styles.loadingContainer}><Spinner text="A carregar..." /></div>
