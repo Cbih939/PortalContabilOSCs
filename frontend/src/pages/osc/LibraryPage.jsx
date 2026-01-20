@@ -58,7 +58,10 @@ export default function LibraryPage() {
               className={styles.bookCard} 
               onClick={() => handleDownload(file.file_path)}
             >
-              <div className={styles.thumbnailWrapper} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f0f0f0' }}>
+              {/* Alteração: Removido backgroundColor '#f0f0f0' e adicionado 'transparent' 
+                  para limpar o fundo e bordas indesejadas da imagem.
+              */}
+              <div className={styles.thumbnailWrapper} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent', border: 'none' }}>
                 {/* Lógica da Capa */}
                 {file.cover_path ? (
                   <img 
@@ -69,7 +72,7 @@ export default function LibraryPage() {
                     style={{ 
                       width: '100%', 
                       height: '100%', 
-                      objectFit: 'contain' // Garante que a imagem inteira apareça
+                      objectFit: 'contain' // Garante que a imagem inteira apareça sem cortes
                     }}
                   />
                 ) : (
@@ -90,7 +93,7 @@ export default function LibraryPage() {
                 <div className={styles.bookMeta}>
                    <BookIcon className={styles.metaIcon} />
                    <span>
-                     {/* Exibe o nome cadastrado na subcategoria. Se vazio, exibe 'Publicação' como fallback seguro */}
+                     {/* Exibe o nome cadastrado na subcategoria. Se o campo existir no banco, ele aparecerá aqui. */}
                      {file.ebook_category || "Publicação"}
                    </span>
                 </div>
