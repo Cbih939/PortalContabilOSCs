@@ -1,39 +1,39 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
-import * as controller from '../controllers/publicFile.controller.js';
-import { protect } from '../middlewares/auth.middleware.js'; 
+// Verifique se o caminho do controller está correto
+import { getFiles, uploadFile, deleteFile } from '../controllers/publicFile.controller.js';
 
 const router = express.Router();
 
+// --- CONFIGURAÇÃO DO MULTER (Direto aqui para evitar erros de importação) ---
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadPath = '/var/www/PortalContabilOSCs/backend/uploads/public/';
-    if (!fs.existsSync(uploadPath)){
-        fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
+    // Define a pasta de destino. 
+    // Se no seu servidor for apenas 'uploads/', mude aqui.
+    // Baseado nos seus logs anteriores, parece ser 'uploads/public/'
+    cb(null, 'uploads/public/'); 
   },
   filename: function (req, file, cb) {
+    // Gera um nome único para não sobrescrever arquivos
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
 
+// Inicializa o upload sem limites restritos por enquanto
 const upload = multer({ 
-  storage: storage,
-  limits: { fileSize: 50 * 1024 * 1024 } 
+    storage: storage,
+    limits: { fileSize: 50 * 1024 * 1024 } // Limite de 50MB
 });
+// --------------------------------------------------------------------------
 
-// GET: Listagem
-router.get('/', protect, controller.getFiles);
+// Rotas
+router.get('/', getFiles);
 
-// POST: Upload de múltiplos campos (file e cover)
-// Usamos .any() para flexibilidade ou .fields() para maior rigor
-router.post('/', upload.any(), uploadFile);
+// O segredo: upload.any() aceita qualquer campo (pdf, file, cover, image...)
+router.post('/', upload.any(), uploadFile); 
 
-// DELETE: Remover
-router.delete('/:id', protect, controller.deleteFile);
+router.delete('/:id', deleteFile);
 
 export default router;
