@@ -3,7 +3,7 @@ import { useAuth } from '../../hooks/useAuth.jsx';
 import * as messageService from '../../services/messageService.js';
 import styles from './Messages.module.css';
 
-// Ícones
+// Ícones SVG
 const SendIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" /></svg>
 );
@@ -22,23 +22,51 @@ export default function OSCMessagesPage() {
   const [noContador, setNoContador] = useState(false); 
   const messagesEndRef = useRef(null);
 
-  // Função de busca robusta
+  // Busca e processa as mensagens
   const fetchMessages = async () => {
-    try {
-      const data = await messageService.getMyMessages();
-      
-      // Mapeamento crucial: garante que 'content' do banco vire 'text' no componente
-      const formattedMessages = data.map(msg => ({
-        ...msg,
-        text: msg.content || msg.text || '',
-        // Define isMe baseado no ID do usuário logado ou role
-        isMe: msg.sender_id === user.id || msg.sender_role === 'OSC'
-      }));
+    // Se o usuário ainda não carregou, aguarda
+    if (!user || !user.id) return;
 
-      setMessages(formattedMessages);
+    try {
+      const response = await messageService.getMyMessages();
+      
+      // Normalização: Garante que 'data' seja um array, independente da estrutura da API
+      let rawData = [];
+      if (Array.isArray(response)) {
+        rawData = response;
+      } else if (response && Array.isArray(response.data)) {
+        rawData = response.data;
+      } else if (response && response.data && Array.isArray(response.data.data)) {
+         rawData = response.data.data;
+      }
+
+      // Mapeamento e Identificação do Remetente
+      const formattedMessages = rawData.map(msg => {
+        // Converte IDs para String para comparação segura (evita erro '1' !== 1)
+        const senderIdStr = String(msg.sender_id);
+        const myUserIdStr = String(user.id);
+        
+        // Verifica se fui eu quem mandei
+        // Lógica: Se o ID bater OU se a role for OSC (assumindo que esta é a tela da OSC)
+        const isMe = senderIdStr === myUserIdStr || (msg.sender_role === 'OSC');
+
+        return {
+          ...msg,
+          text: msg.content || msg.message || msg.text || '', // Suporta diferentes nomes de campo
+          isMe: isMe
+        };
+      });
+
+      // Ordena por data (Antigas primeiro -> Novas por último)
+      const sortedMessages = formattedMessages.sort((a, b) => 
+        new Date(a.created_at) - new Date(b.created_at)
+      );
+
+      setMessages(sortedMessages);
       setNoContador(false);
     } catch (error) {
       console.error("Erro ao carregar mensagens:", error);
+      // Se for 404, pode significar que não tem chat vinculado ainda
       if (error.response && error.response.status === 404) {
         setNoContador(true);
       }
@@ -47,16 +75,14 @@ export default function OSCMessagesPage() {
     }
   };
 
-  // Polling para manter o chat atualizado
+  // Polling: Busca inicial e atualização periódica
   useEffect(() => {
-    if (user?.id) {
-      fetchMessages();
-      const interval = setInterval(fetchMessages, 4000); // Atualiza a cada 4s
-      return () => clearInterval(interval);
-    }
-  }, [user?.id, noContador]);
+    fetchMessages(); // Busca imediata
+    const interval = setInterval(fetchMessages, 5000); // Polling a cada 5s
+    return () => clearInterval(interval);
+  }, [user?.id]); // Reexecuta se o ID do usuário mudar (ex: login)
 
-  // Scroll automático para a última mensagem
+  // Scroll automático para o fim
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -66,32 +92,31 @@ export default function OSCMessagesPage() {
     const textToSend = newMessage.trim();
     if (!textToSend) return;
 
-    // Identifica o destinatário (Contador Carlos ID 2 como fallback seguro)
-    const targetId = user?.assigned_contador_id || user?.contador_id || 2;
+    // Tenta pegar o ID do contador de várias formas possíveis
+    const targetId = user?.assigned_contador_id || user?.contador_id || user?.accountant_id;
 
+    // Se não tiver contador vinculado, usa um ID de fallback ou avisa
     if (!targetId) {
-      alert("Erro: Nenhum contador vinculado.");
-      return;
+        // FALLBACK: Se for ambiente de teste, pode descomentar a linha abaixo com um ID fixo
+        // const fallbackId = 2; 
+        console.warn("Nenhum contador vinculado encontrado no objeto user:", user);
+        alert("Erro: Sua conta não está vinculada a um contador. Contate o suporte.");
+        return;
     }
 
     try {
-      // 1. Limpa o campo imediatamente para UX
-      setNewMessage('');
+      setNewMessage(''); // Limpa UI
 
-      // 2. Envia para o serviço (usando o formato que o backend espera)
       await messageService.sendMessage({
         receiver_id: targetId,
         content: textToSend
       });
 
-      // 3. Recarrega as mensagens do banco para confirmar o envio
-      await fetchMessages();
-      
+      await fetchMessages(); // Atualiza lista
     } catch (error) {
       console.error("Erro ao enviar:", error);
-      // Caso falhe, devolve o texto ao input para o usuário não perder a mensagem
-      setNewMessage(textToSend);
-      alert("Não foi possível enviar a mensagem. Tente novamente.");
+      setNewMessage(textToSend); // Devolve o texto em caso de erro
+      alert("Falha ao enviar mensagem.");
     }
   };
 
@@ -102,11 +127,9 @@ export default function OSCMessagesPage() {
         <div className={styles.errorCard}>
           <div className={styles.errorContent}>
             <UnlinkIcon className={styles.errorIcon} />
-            <h2 className={styles.errorTitle}>Usuário não vinculado</h2>
+            <h2 className={styles.errorTitle}>Sem Vínculo</h2>
             <p className={styles.errorText}>
-              O seu perfil ainda não foi vinculado a um escritório de contabilidade.
-              <br />
-              Entre em contato com o suporte ou aguarde a vinculação para enviar mensagens.
+              Você ainda não possui um contador vinculado para trocar mensagens.
             </p>
           </div>
         </div>
@@ -122,15 +145,23 @@ export default function OSCMessagesPage() {
         <div className={styles.chatHeader}>
           <div className={styles.headerInfo}>
             <h2 className={styles.contactName}>Meu Contador</h2>
-            <span className={styles.status}>Canal Direto</span>
+            <div style={{display:'flex', alignItems:'center', gap:'6px'}}>
+                <span className={styles.statusIndicator}></span>
+                <span className={styles.status}>Online</span>
+            </div>
           </div>
         </div>
 
         <div className={styles.messagesArea}>
           {isLoading ? (
-            <div className={styles.loading}>Carregando conversas...</div>
+            <div className={styles.loading}>
+                <div className={styles.spinner}></div> Carregando...
+            </div>
           ) : messages.length === 0 ? (
-            <div className={styles.emptyState}>Inicie uma conversa com seu contador.</div>
+            <div className={styles.emptyState}>
+                <p>Nenhuma mensagem ainda.</p>
+                <p style={{fontSize:'0.85rem', marginTop:'5px'}}>Envie uma mensagem para iniciar o atendimento.</p>
+            </div>
           ) : (
             messages.map((msg, index) => (
               <div 
@@ -142,7 +173,7 @@ export default function OSCMessagesPage() {
                   <span className={styles.timestamp}>
                     {msg.created_at 
                       ? new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
-                      : 'Enviando...'}
+                      : '...'}
                   </span>
                 </div>
               </div>
@@ -155,7 +186,7 @@ export default function OSCMessagesPage() {
           <input
             type="text"
             className={styles.inputField}
-            placeholder="Digite uma mensagem..."
+            placeholder="Digite sua mensagem..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
           />
