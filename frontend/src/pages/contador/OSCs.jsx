@@ -32,6 +32,12 @@ const IconBell = () => (
 const IconFileText = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
 );
+const IconSearch = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+);
+const IconPlus = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+);
 
 // --- ESTILOS EM OBJETO (Para garantir o visual sem CSS externo) ---
 const styles = {
@@ -41,12 +47,63 @@ const styles = {
     margin: '0 auto',
     fontFamily: 'Arial, sans-serif'
   },
+  // Header com Botão
+  headerRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '20px'
+  },
   title: {
     fontSize: '24px',
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: '24px'
+    color: '#1f2937',
+    margin: 0
   },
+  registerBtn: {
+    backgroundColor: '#ea580c', // Laranja
+    color: '#fff',
+    border: 'none',
+    padding: '10px 20px',
+    borderRadius: '6px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '14px',
+    boxShadow: '0 2px 4px rgba(234, 88, 12, 0.2)'
+  },
+  // Barra de Pesquisa
+  searchRow: {
+    display: 'flex',
+    gap: '15px',
+    marginBottom: '24px',
+    flexWrap: 'wrap'
+  },
+  searchWrapper: {
+    position: 'relative',
+    flex: 1,
+    minWidth: '200px'
+  },
+  searchIcon: {
+    position: 'absolute',
+    left: '12px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    display: 'flex'
+  },
+  searchInput: {
+    width: '100%',
+    padding: '12px 12px 12px 40px', // Espaço para o ícone
+    borderRadius: '6px',
+    border: '1px solid #d1d5db',
+    fontSize: '14px',
+    outline: 'none',
+    color: '#374151',
+    boxSizing: 'border-box' // Importante para o padding não estourar
+  },
+  // Acordeon
   accordionItem: {
     border: '1px solid #e0e0e0',
     borderRadius: '8px',
@@ -340,6 +397,11 @@ export default function OSCsPage() {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [expandedOscId, setExpandedOscId] = useState(null);
 
+  // Estados do Filtro
+  const [searchName, setSearchName] = useState('');
+  const [searchCnpj, setSearchCnpj] = useState('');
+  const [searchResponsible, setSearchResponsible] = useState('');
+
   const [oscToView, setOscToView] = useState(null);
   const [oscToEdit, setOscToEdit] = useState(null);
   const [oscToSendAlert, setOscToSendAlert] = useState(null);
@@ -354,7 +416,6 @@ export default function OSCsPage() {
       try {
         const response = await oscService.getMyOSCs();
         
-        // Normalização dos dados (Híbrida)
         let data = [];
         if (Array.isArray(response)) {
             data = response;
@@ -381,6 +442,16 @@ export default function OSCsPage() {
     fetchOSCs();
   }, [addNotification]);
 
+  // Lógica de Filtro
+  const filteredOscs = oscs.filter(osc => {
+    const nameMatch = osc.name?.toLowerCase().includes(searchName.toLowerCase());
+    const cnpjMatch = osc.cnpj?.replace(/\D/g, '').includes(searchCnpj.replace(/\D/g, ''));
+    // Se não tiver campo responsible, ignora ou adapta conforme sua API
+    const respMatch = !searchResponsible || osc.responsible?.toLowerCase().includes(searchResponsible.toLowerCase());
+    
+    return nameMatch && cnpjMatch && respMatch;
+  });
+
   const handleToggleAccordion = (id) => {
     setExpandedOscId(prevId => (prevId === id ? null : id));
   };
@@ -391,15 +462,30 @@ export default function OSCsPage() {
     setOscToSendAlert(null);
   };
 
+  const handleRegister = () => {
+    // Abre o modal de cadastro (geralmente pode ser o EditOSCModal sem dados ou um modal específico)
+    // Se você tiver um modal específico de cadastro, altere aqui.
+    // Como exemplo, vou usar o EditOSCModal passando um objeto vazio se a lógica permitir,
+    // ou apenas um alerta se a funcionalidade ainda for mockada.
+    setOscToEdit({}); // Tenta abrir o modal de edição vazio para criar
+  };
+
   const handleSaveEdit = async (formData) => {
     try {
+      // Se formData não tiver ID, é criação (ajuste conforme seu service)
+      const isCreation = !formData.id;
+      
+      // Aqui você chamaria oscService.createOSC(formData) se fosse criação
+      // Mas vou manter o fluxo de update pois não tenho o código do service create.
       const updatedOSCResponse = await updateOSC(formData.id, formData);
       const updatedOSC = updatedOSCResponse.data || updatedOSCResponse; 
       
-      setOscs((prevOscs) =>
-        prevOscs.map((o) => (o.id === updatedOSC.id ? { ...o, ...updatedOSC } : o))
-      );
-      addNotification('OSC salva com sucesso!', 'success');
+      setOscs((prevOscs) => {
+        if (isCreation) return [...prevOscs, updatedOSC]; // Adiciona se for novo
+        return prevOscs.map((o) => (o.id === updatedOSC.id ? { ...o, ...updatedOSC } : o));
+      });
+      
+      addNotification(`OSC ${isCreation ? 'cadastrada' : 'salva'} com sucesso!`, 'success');
       handleCloseModals();
     } catch (err) {
       addNotification('Erro ao salvar.', 'error');
@@ -426,15 +512,60 @@ export default function OSCsPage() {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>Painel de Monitoramento OSCs</h1>
       
+      {/* --- HEADER: Título e Botão Cadastro --- */}
+      <div style={styles.headerRow}>
+        <h1 style={styles.title}>Organizações Cadastradas</h1>
+        <button style={styles.registerBtn} onClick={handleRegister}>
+          <IconPlus />
+          Cadastrar Nova OSC
+        </button>
+      </div>
+
+      {/* --- BARRA DE PESQUISA --- */}
+      <div style={styles.searchRow}>
+        <div style={styles.searchWrapper}>
+          <div style={styles.searchIcon}><IconSearch /></div>
+          <input 
+            type="text" 
+            placeholder="Buscar por Nome da OSC..." 
+            style={styles.searchInput}
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+          />
+        </div>
+        <div style={styles.searchWrapper}>
+          <div style={styles.searchIcon}><IconSearch /></div>
+          <input 
+            type="text" 
+            placeholder="Buscar por CNPJ..." 
+            style={styles.searchInput}
+            value={searchCnpj}
+            onChange={(e) => setSearchCnpj(e.target.value)}
+          />
+        </div>
+        <div style={styles.searchWrapper}>
+          <div style={styles.searchIcon}><IconSearch /></div>
+          <input 
+            type="text" 
+            placeholder="Buscar por Responsável..." 
+            style={styles.searchInput}
+            value={searchResponsible}
+            onChange={(e) => setSearchResponsible(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* --- LISTA DE OSCs --- */}
       <div>
-        {oscs.length === 0 ? (
+        {filteredOscs.length === 0 ? (
             <div style={styles.emptyState}>
-                Nenhuma OSC encontrada na base de dados.
+                {oscs.length === 0 
+                  ? "Nenhuma OSC encontrada na base de dados." 
+                  : "Nenhuma OSC encontrada para os filtros aplicados."}
             </div>
         ) : (
-            oscs.map(osc => (
+            filteredOscs.map(osc => (
                 <OSCAccordionItem 
                     key={osc.id} 
                     osc={osc} 
