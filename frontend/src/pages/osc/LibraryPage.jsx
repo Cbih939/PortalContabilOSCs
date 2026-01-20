@@ -23,11 +23,10 @@ export default function LibraryPage() {
     // Busca arquivos da categoria BIBLIOTECA
     fileService.getFilesByCategory('BIBLIOTECA')
       .then(data => {
-        console.log("Dados recebidos da API:", data);
-        // Filtro de segurança
+        console.log("📦 Dados da Biblioteca:", data); // Verifique no Console se 'ebook_category' aparece aqui
+        
         const filtered = data.filter(f => f.category === 'BIBLIOTECA');
         
-        // Ordenação Alfanumérica
         const sorted = filtered.sort((a, b) => 
           (a.title || "").toLowerCase().localeCompare((b.title || "").toLowerCase())
         );
@@ -49,7 +48,7 @@ export default function LibraryPage() {
       {isLoading ? (
         <div className={styles.loading}>Carregando biblioteca...</div>
       ) : ebooks.length === 0 ? (
-        <div className={styles.empty}>Nenhum e-book disponível no momento.</div>
+        <div className={styles.empty}>Nenhum documento disponível no momento.</div>
       ) : (
         <div className={styles.libraryGrid}>
           {ebooks.map((file) => (
@@ -58,21 +57,31 @@ export default function LibraryPage() {
               className={styles.bookCard} 
               onClick={() => handleDownload(file.file_path)}
             >
-              {/* Alteração: Removido backgroundColor '#f0f0f0' e adicionado 'transparent' 
-                  para limpar o fundo e bordas indesejadas da imagem.
+              {/* CORREÇÃO VISUAL:
+                  backgroundColor: 'transparent' -> Remove o fundo cinza
+                  border: 'none' -> Remove bordas extras 
               */}
-              <div className={styles.thumbnailWrapper} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent', border: 'none' }}>
-                {/* Lógica da Capa */}
+              <div 
+                className={styles.thumbnailWrapper} 
+                style={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    backgroundColor: 'transparent', 
+                    border: 'none',
+                    overflow: 'hidden'
+                }}
+              >
                 {file.cover_path ? (
                   <img 
                     src={`https://contacomigo.org.br/${file.cover_path.replace(/\\/g, '/')}`} 
                     alt={file.title} 
                     className={styles.bookCoverImage}
-                    // Estilo inline para garantir proporção e evitar cortes
+                    // objectFit: 'contain' garante que a imagem não seja cortada
                     style={{ 
                       width: '100%', 
                       height: '100%', 
-                      objectFit: 'contain' // Garante que a imagem inteira apareça sem cortes
+                      objectFit: 'contain' 
                     }}
                   />
                 ) : (
@@ -93,8 +102,11 @@ export default function LibraryPage() {
                 <div className={styles.bookMeta}>
                    <BookIcon className={styles.metaIcon} />
                    <span>
-                     {/* Exibe o nome cadastrado na subcategoria. Se o campo existir no banco, ele aparecerá aqui. */}
-                     {file.ebook_category || "Publicação"}
+                     {/* LÓGICA DO NOME:
+                        Exibe o que está no banco (Governança, Contábil, etc).
+                        Se o banco retornar vazio (arquivos antigos), exibe "Documento" genérico.
+                     */}
+                     {file.ebook_category ? file.ebook_category : "Documento"}
                    </span>
                 </div>
 
