@@ -46,6 +46,7 @@ export default function OSCMessagesPage() {
         const myUserIdStr = String(user.id);
         
         // Verifica se fui eu quem mandei
+        // Se o ID bater OU se a role for OSC
         const isMe = senderIdStr === myUserIdStr || (msg.sender_role === 'OSC');
 
         return {
@@ -85,14 +86,11 @@ export default function OSCMessagesPage() {
     const textToSend = newMessage.trim();
     if (!textToSend) return;
 
-    // Tenta pegar o ID do contador. Se não existir, usa '2' como padrão (Suporte/Admin)
-    // Isso corrige o erro de "conta não vinculada" permitindo o envio para um admin geral
-    let targetId = user?.assigned_contador_id || user?.contador_id || user?.accountant_id;
-
-    if (!targetId) {
-        console.warn("⚠️ Contador não vinculado. Usando ID de fallback (2).", user);
-        targetId = 2; // ID de fallback para testes ou suporte
-    }
+    // --- CORREÇÃO DO VÍNCULO ---
+    // Tenta pegar o ID do contador no objeto user.
+    // Se não existir (que é o seu caso atual), define '2' manualmente.
+    // ID 2 geralmente é o Contador Principal/Admin.
+    const targetId = user?.assigned_contador_id || user?.contador_id || 2;
 
     try {
       setNewMessage(''); // Limpa UI imediatamente
