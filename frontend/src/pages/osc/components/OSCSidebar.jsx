@@ -45,7 +45,7 @@ export default function OSCSidebar({ isOpen, onClose }) {
         </NavLink>
         
         <NavLink to="/osc/modelos" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
-          <DocsIcon /> <span className={styles.label}>Documentos | Modelos</span>
+          <DocsIcon /> <span className={styles.label}>Modelos</span>
         </NavLink>
         
         <NavLink to="/osc/biblioteca" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
