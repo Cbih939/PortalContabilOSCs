@@ -92,7 +92,7 @@ export default function TemplatesPage() {
       className={styles.pageContainer} 
       style={{ width: '90%', maxWidth: 'none', margin: '0 auto', padding: '20px 0' }}
     >
-      <h1 className={styles.pageTitle}>Docs Modelos | Downloads</h1>
+      <h1 className={styles.pageTitle}>Documentos Modelos | Downloads</h1>
 
       <div className={styles.gridContainer}>
         {/* Card à Esquerda: Modelos de Documentos */}
