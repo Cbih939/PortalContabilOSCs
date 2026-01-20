@@ -81,92 +81,53 @@ export const getContacts = async (req, res) => {
 export const getMessages = async (req, res) => {
     try {
         const userId = req.user.id;
-        // Pega o contactId da URL, mas se não vier, assume undefined
-        const contactId = req.params.contactId; 
+        console.log(`[DEBUG] Buscando mensagens para User ID: ${userId}`);
 
-        let query = '';
-        let params = [];
+        // Busca TODAS as mensagens onde o usuário é remetente OU destinatário
+        const query = `
+            SELECT * FROM messages 
+            WHERE sender_id = ? OR receiver_id = ?
+            ORDER BY created_at ASC
+        `;
+        
+        const [rows] = await pool.execute(query, [userId, userId]);
+        
+        console.log(`[DEBUG] Mensagens encontradas no banco: ${rows.length}`);
 
-        if (contactId && contactId !== 'undefined') {
-            // Se tem um ID específico, busca conversa par-a-par
-            query = `
-                SELECT * FROM messages 
-                WHERE (sender_id = ? AND receiver_id = ?) 
-                   OR (sender_id = ? AND receiver_id = ?)
-                ORDER BY created_at ASC
-            `;
-            params = [userId, contactId, contactId, userId];
-        } else {
-            // CORREÇÃO: Se não passar ID (ex: tela geral de mensagens da OSC),
-            // busca TODAS as mensagens onde o usuário participa (envia ou recebe).
-            // Isso resolve o problema de "Array Vazio" na tela inicial.
-            query = `
-                SELECT * FROM messages 
-                WHERE sender_id = ? OR receiver_id = ?
-                ORDER BY created_at ASC
-            `;
-            params = [userId, userId];
-        }
-
-        const [rows] = await pool.execute(query, params);
-
-        // Mapeamento seguro
         const safeMsgs = rows.map(m => ({
             id: m.id,
-            text: m.content,       // Frontend espera 'text'
-            content: m.content,    // Frontend as vezes espera 'content'
-            sender_id: m.sender_id, // Importante para identificar quem mandou
-            senderId: m.sender_id,
-            receiver_id: m.receiver_id,
+            text: m.content,       
             isMe: m.sender_id === userId,
-            created_at: m.created_at,
-            is_read: m.is_read
+            created_at: m.created_at
         }));
 
         res.json(safeMsgs);
     } catch (error) {
-        console.error('[Chat] Erro ao buscar mensagens:', error);
-        res.status(500).json({ message: 'Erro ao buscar mensagens.' });
+        console.error('[DEBUG] ERRO SQL:', error);
+        res.status(500).json([]);
     }
 };
 
-// 3. Enviar Mensagem
+// Enviar Mensagem
 export const sendMessage = async (req, res) => {
   try {
-    // Aceita variações no payload para evitar erros
     const content = req.body.content || req.body.message || req.body.text;
     let receiver_id = req.body.receiver_id || req.body.receiverId;
-    
     const sender_id = req.user.id;
 
-    // Se não tiver receiver_id (caso de OSC sem vínculo), força envio para o Suporte (ID 2)
-    if (!receiver_id) {
-        console.log('[Chat] Sem receiver_id. Redirecionando para Suporte (ID 2).');
-        receiver_id = 2;
-    }
+    // Se não tiver destinatário, manda para o Admin/Suporte (ID 2)
+    if (!receiver_id) receiver_id = 2;
 
-    if (!content) {
-      return res.status(400).json({ message: "Conteúdo da mensagem é obrigatório." });
-    }
-
-    console.log(`[Chat] Enviando de ${sender_id} para ${receiver_id}: ${content}`);
+    if (!content) return res.status(400).json({ message: "Vazio" });
 
     const [result] = await pool.execute(
       'INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)',
       [sender_id, receiver_id, content]
     );
 
-    res.status(201).json({ 
-        message: "Enviado com sucesso", 
-        id: result.insertId,
-        content: content,
-        sender_id: sender_id,
-        receiver_id: receiver_id,
-        created_at: new Date()
-    });
-
+    res.status(201).json({ message: "Salvo", id: result.insertId });
   } catch (error) {
-    console.error('[Chat] Erro ao enviar mensagem:', error);
-    res.status(500).json({ message: "Erro interno ao enviar mensagem." });
+    console.error('[DEBUG] Erro no INSERT:', error);
+    res.status(500).json({ message: "Erro ao salvar" });
   }
 };
