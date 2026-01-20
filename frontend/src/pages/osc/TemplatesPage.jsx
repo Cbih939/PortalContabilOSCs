@@ -87,7 +87,11 @@ export default function TemplatesPage() {
   }
 
   return (
-    <div className={styles.pageContainer}>
+    // ALTERAÇÃO AQUI: Adicionei o style inline para forçar 90% de largura
+    <div 
+      className={styles.pageContainer} 
+      style={{ width: '90%', maxWidth: 'none', margin: '0 auto', padding: '20px 0' }}
+    >
       <h1 className={styles.pageTitle}>Docs Modelos | Downloads</h1>
 
       <div className={styles.gridContainer}>
