@@ -1,3 +1,6 @@
+// src/pages/contador/OSCs.jsx (ou onde ficar sua página de mensagens)
+// Certifique-se de salvar este código no arquivo correto: src/pages/osc/Messages.jsx
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import * as messageService from '../../services/messageService.js';
@@ -6,12 +9,6 @@ import styles from './Messages.module.css';
 // Ícones SVG
 const SendIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" /></svg>
-);
-
-const UnlinkIcon = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-  </svg>
 );
 
 export default function OSCMessagesPage() {
@@ -23,13 +20,14 @@ export default function OSCMessagesPage() {
 
   // Busca e processa as mensagens
   const fetchMessages = async () => {
-    // Se o usuário ainda não carregou, aguarda
     if (!user || !user.id) return;
 
     try {
       const response = await messageService.getMyMessages();
       
-      // Normalização: Garante que 'data' seja um array, independente da estrutura da API
+      // LOG DE DEBUG: Abra o console (F12) para ver o que chega do backend
+      console.log('📦 Mensagens recebidas do Backend:', response);
+
       let rawData = [];
       if (Array.isArray(response)) {
         rawData = response;
@@ -39,24 +37,24 @@ export default function OSCMessagesPage() {
          rawData = response.data.data;
       }
 
-      // Mapeamento e Identificação do Remetente
+      // Mapeamento
       const formattedMessages = rawData.map(msg => {
-        // Converte IDs para String para comparação segura
-        const senderIdStr = String(msg.sender_id);
+        const senderIdStr = String(msg.sender_id || msg.senderId);
         const myUserIdStr = String(user.id);
         
-        // Verifica se fui eu quem mandei
-        // Se o ID bater OU se a role for OSC
+        // Verifica se a mensagem é minha
         const isMe = senderIdStr === myUserIdStr || (msg.sender_role === 'OSC');
 
         return {
           ...msg,
-          text: msg.content || msg.message || msg.text || '', // Suporta diferentes nomes de campo
-          isMe: isMe
+          // Tenta ler o texto de várias propriedades possíveis
+          text: msg.content || msg.message || msg.text || msg.body || '',
+          isMe: isMe,
+          created_at: msg.created_at || msg.createdAt || new Date().toISOString()
         };
       });
 
-      // Ordena por data (Antigas primeiro -> Novas por último)
+      // Ordena por data
       const sortedMessages = formattedMessages.sort((a, b) => 
         new Date(a.created_at) - new Date(b.created_at)
       );
@@ -69,14 +67,14 @@ export default function OSCMessagesPage() {
     }
   };
 
-  // Polling: Busca inicial e atualização periódica
+  // Polling
   useEffect(() => {
-    fetchMessages(); // Busca imediata
-    const interval = setInterval(fetchMessages, 5000); // Polling a cada 5s
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 5000); 
     return () => clearInterval(interval);
   }, [user?.id]); 
 
-  // Scroll automático para o fim
+  // Scroll automático
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -86,25 +84,34 @@ export default function OSCMessagesPage() {
     const textToSend = newMessage.trim();
     if (!textToSend) return;
 
-    // --- CORREÇÃO DO VÍNCULO ---
-    // Tenta pegar o ID do contador no objeto user.
-    // Se não existir (que é o seu caso atual), define '2' manualmente.
-    // ID 2 geralmente é o Contador Principal/Admin.
+    // ID do Contador (Fallback para 2 se não existir)
     const targetId = user?.assigned_contador_id || user?.contador_id || 2;
 
-    try {
-      setNewMessage(''); // Limpa UI imediatamente
+    // 1. ATUALIZAÇÃO OTIMISTA (Mostra na tela antes de enviar)
+    const optimisticMsg = {
+        id: 'temp-' + Date.now(),
+        text: textToSend,
+        isMe: true,
+        created_at: new Date().toISOString()
+    };
+    setMessages(prev => [...prev, optimisticMsg]);
+    setNewMessage(''); // Limpa o input
 
+    try {
+      // 2. Envia para o backend (Enviando múltiplos formatos para garantir compatibilidade)
       await messageService.sendMessage({
-        receiver_id: targetId,
-        content: textToSend
+        receiver_id: targetId,  // Padrão snake_case
+        receiverId: targetId,   // Padrão camelCase
+        content: textToSend,    // Padrão comum
+        message: textToSend     // Outro padrão comum
       });
 
-      await fetchMessages(); // Atualiza lista
+      // 3. Recarrega as mensagens reais do banco
+      await fetchMessages(); 
     } catch (error) {
       console.error("Erro ao enviar:", error);
-      setNewMessage(textToSend); // Devolve o texto em caso de erro
-      alert("Falha ao enviar mensagem.");
+      alert("Falha técnica ao enviar mensagem. Verifique o console.");
+      // (Opcional) Poderíamos remover a mensagem otimista aqui se falhar
     }
   };
 
@@ -124,7 +131,7 @@ export default function OSCMessagesPage() {
         </div>
 
         <div className={styles.messagesArea}>
-          {isLoading ? (
+          {isLoading && messages.length === 0 ? (
             <div className={styles.loading}>
                 <div className={styles.spinner}></div> Carregando...
             </div>
