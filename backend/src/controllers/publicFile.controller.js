@@ -1,9 +1,6 @@
-// --- VERIFIQUE ESTA LINHA ABAIXO ---
-// Tenha certeza que o caminho para o seu db.js está correto.
-// Se o seu arquivo de banco for 'database.js', mude aqui.
-import pool from '../config/db.js'; 
+import pool from '../config/db.js';
 
-// Listar arquivos públicos
+// 1. Listar arquivos públicos (Com a correção do ebook_category)
 export const getFiles = async (req, res) => {
   try {
     const { category } = req.query;
@@ -30,18 +27,57 @@ export const getFiles = async (req, res) => {
     }
 
     const [rows] = await pool.execute(query, params);
-
-    // console.log(`[PublicFiles] Arquivos encontrados: ${rows.length}`);
     res.json(rows);
 
   } catch (error) {
     console.error('Erro ao buscar arquivos públicos:', error);
-    // Se o erro for de SQL (tabela ou coluna não existe), o servidor não cai, mas avisa aqui
     res.status(500).json({ message: 'Erro ao buscar arquivos.' });
   }
 };
 
-// Deletar arquivo
+// 2. Upload de Arquivo (ESTA ERA A FUNÇÃO QUE FALTAVA)
+export const uploadFile = async (req, res) => {
+  try {
+    // Pega os dados do formulário
+    const { title, category, ebook_category } = req.body;
+    
+    // Verifica se o arquivo principal (PDF) veio
+    // Nota: Dependendo do seu Multer, pode vir em req.file ou req.files['file'][0]
+    const file = req.files ? (req.files.file ? req.files.file[0] : req.file) : req.file;
+    const cover = req.files && req.files.cover ? req.files.cover[0] : null;
+
+    if (!file) {
+      return res.status(400).json({ message: 'Nenhum arquivo PDF enviado.' });
+    }
+
+    const filePath = file.path; // Caminho salvo pelo Multer
+    const coverPath = cover ? cover.path : null; // Caminho da capa, se houver
+
+    // Insere no banco de dados incluindo a nova coluna ebook_category
+    const [result] = await pool.execute(
+      `INSERT INTO public_files (title, file_path, cover_path, category, ebook_category, created_at) 
+       VALUES (?, ?, ?, ?, ?, NOW())`,
+      [
+        title || file.originalname, 
+        filePath, 
+        coverPath, 
+        category, 
+        ebook_category || null // Salva a subcategoria (Governança, Contábil, etc)
+      ]
+    );
+
+    res.status(201).json({ 
+      message: 'Upload realizado com sucesso!', 
+      id: result.insertId 
+    });
+
+  } catch (error) {
+    console.error('Erro no upload de arquivo público:', error);
+    res.status(500).json({ message: 'Erro ao salvar arquivo no banco.' });
+  }
+};
+
+// 3. Deletar arquivo
 export const deleteFile = async (req, res) => {
   try {
     const { id } = req.params;
