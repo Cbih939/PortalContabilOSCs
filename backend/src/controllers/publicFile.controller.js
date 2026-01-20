@@ -1,6 +1,9 @@
-import pool from '../config/db.js';
+// --- VERIFIQUE ESTA LINHA ABAIXO ---
+// Tenha certeza que o caminho para o seu db.js está correto.
+// Se o seu arquivo de banco for 'database.js', mude aqui.
+import pool from '../config/db.js'; 
 
-// Listar arquivos públicos (Com filtro opcional por categoria)
+// Listar arquivos públicos
 export const getFiles = async (req, res) => {
   try {
     const { category } = req.query;
@@ -8,9 +11,8 @@ export const getFiles = async (req, res) => {
     let query = '';
     let params = [];
 
-    // Se tiver categoria na URL (ex: ?category=BIBLIOTECA)
     if (category) {
-      // ATENÇÃO: Usamos SELECT * para garantir que 'ebook_category' venha junto
+      // Busca filtrada (trazendo a coluna ebook_category)
       query = `
         SELECT id, title, file_path, cover_path, category, created_at, ebook_category 
         FROM public_files 
@@ -19,7 +21,7 @@ export const getFiles = async (req, res) => {
       `;
       params = [category];
     } else {
-      // Se não tiver categoria, traz tudo
+      // Busca completa
       query = `
         SELECT id, title, file_path, cover_path, category, created_at, ebook_category 
         FROM public_files 
@@ -29,31 +31,21 @@ export const getFiles = async (req, res) => {
 
     const [rows] = await pool.execute(query, params);
 
-    console.log(`[PublicFiles] Buscando categoria: ${category || 'Todas'}. Encontrados: ${rows.length}`);
-    
-    // Log para depuração: verifique se o primeiro item tem ebook_category
-    if (rows.length > 0) {
-        console.log('[DEBUG] Exemplo do arquivo:', rows[0]);
-    }
-
+    // console.log(`[PublicFiles] Arquivos encontrados: ${rows.length}`);
     res.json(rows);
+
   } catch (error) {
     console.error('Erro ao buscar arquivos públicos:', error);
+    // Se o erro for de SQL (tabela ou coluna não existe), o servidor não cai, mas avisa aqui
     res.status(500).json({ message: 'Erro ao buscar arquivos.' });
   }
 };
 
-// Deletar arquivo (Apenas Admin)
+// Deletar arquivo
 export const deleteFile = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // 1. Buscar o arquivo para deletar do disco (opcional, se quiser limpar a pasta uploads)
-    // const [files] = await pool.execute('SELECT file_path, cover_path FROM public_files WHERE id = ?', [id]);
-    
-    // 2. Deletar do banco
     await pool.execute('DELETE FROM public_files WHERE id = ?', [id]);
-
     res.json({ message: 'Arquivo removido com sucesso.' });
   } catch (error) {
     console.error('Erro ao deletar arquivo:', error);
