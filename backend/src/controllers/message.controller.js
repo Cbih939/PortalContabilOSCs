@@ -77,6 +77,26 @@ export const getContacts = async (req, res) => {
     }
 };
 
+export const createMessage = async (req, res) => {
+  const { receiver_id, content } = req.body;
+  const sender_id = req.user.id; // O ID de quem está logado (Contador ou OSC)
+
+  if (!receiver_id || !content) {
+    return res.status(400).json({ error: "Dados incompletos" });
+  }
+
+  try {
+    const [result] = await pool.execute(
+      'INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)',
+      [sender_id, receiver_id, content]
+    );
+    res.status(201).json({ id: result.insertId, sender_id, receiver_id, content });
+  } catch (error) {
+    console.error("Erro ao salvar mensagem:", error);
+    res.status(500).json({ error: "Erro interno no servidor" });
+  }
+};
+
 // 2. Obter Histórico de Conversas
 export const getMessages = async (req, res) => {
     try {
@@ -131,3 +151,4 @@ export const sendMessage = async (req, res) => {
     res.status(500).json({ message: "Erro ao salvar" });
   }
 };
+
