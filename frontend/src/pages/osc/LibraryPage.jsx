@@ -20,16 +20,23 @@ export default function LibraryPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Busca arquivos da categoria BIBLIOTECA
     fileService.getFilesByCategory('BIBLIOTECA')
       .then(data => {
-        console.log("📦 Dados da Biblioteca:", data); // Verifique no Console se 'ebook_category' aparece aqui
-        
+        // 1. Filtramos apenas os arquivos da categoria correta
         const filtered = data.filter(f => f.category === 'BIBLIOTECA');
         
-        const sorted = filtered.sort((a, b) => 
-          (a.title || "").toLowerCase().localeCompare((b.title || "").toLowerCase())
-        );
+        // 2. ORDENAÇÃO ALFANUMÉRICA (A-Z)
+        // Usamos localeCompare com 'numeric: true' para que "Ebook 2" venha antes de "Ebook 10"
+        // e 'sensitivity: base' para ignorar acentos na ordenação primária.
+        const sorted = filtered.sort((a, b) => {
+          const titleA = a.title || "";
+          const titleB = b.title || "";
+          return titleA.localeCompare(titleB, undefined, { 
+            numeric: true, 
+            sensitivity: 'base' 
+          });
+        });
+
         setEbooks(sorted);
       })
       .catch(err => console.error("Erro ao carregar biblioteca:", err))
@@ -57,10 +64,6 @@ export default function LibraryPage() {
               className={styles.bookCard} 
               onClick={() => handleDownload(file.file_path)}
             >
-              {/* CORREÇÃO VISUAL:
-                  backgroundColor: 'transparent' -> Remove o fundo cinza
-                  border: 'none' -> Remove bordas extras 
-              */}
               <div 
                 className={styles.thumbnailWrapper} 
                 style={{ 
@@ -77,7 +80,6 @@ export default function LibraryPage() {
                     src={`https://contacomigo.org.br/${file.cover_path.replace(/\\/g, '/')}`} 
                     alt={file.title} 
                     className={styles.bookCoverImage}
-                    // objectFit: 'contain' garante que a imagem não seja cortada
                     style={{ 
                       width: '100%', 
                       height: '100%', 
@@ -102,14 +104,9 @@ export default function LibraryPage() {
                 <div className={styles.bookMeta}>
                    <BookIcon className={styles.metaIcon} />
                    <span>
-                     {/* LÓGICA DO NOME:
-                        Exibe o que está no banco (Governança, Contábil, etc).
-                        Se o banco retornar vazio (arquivos antigos), exibe "Documento" genérico.
-                     */}
                      {file.ebook_category ? file.ebook_category : "Documento"}
                    </span>
                 </div>
-
               </div>
             </div>
           ))}
