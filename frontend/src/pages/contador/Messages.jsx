@@ -38,30 +38,30 @@ export default function Messages() {
   };
 
   /**
-   * Lógica de envio que garante a persistência no banco.
-   * O receiver_id é extraído do selectedContact.id.
+   * FUNÇÃO DE ENVIO CORRIGIDA PARA O CONTADOR
+   * Salva a mensagem no banco vinculando-a ao receiver_id da OSC.
    */
   const handleSendMessage = async (text) => {
     if (!selectedContact || !text.trim()) return;
 
     try {
-      // Chamada ao service com objeto estruturado
-      const response = await messageService.sendMessage({
+      // Força o envio com os dados mapeados do contato selecionado
+      const result = await messageService.sendMessage({
         receiver_id: selectedContact.id,
         content: text
       });
 
-      // Atualiza a interface local (lista de contatos)
+      // Atualiza a prévia da última mensagem na lista lateral (opcional)
       setContacts(prev => prev.map(c => 
         c.id === selectedContact.id 
           ? { ...c, lastMessage: text, updatedAt: new Date().toISOString() } 
           : c
       ));
 
-      return response;
-    } catch (error) {
-      console.error("Erro ao salvar mensagem no banco:", error);
-      throw error;
+      return result;
+    } catch (err) {
+      console.error("Erro ao salvar mensagem do contador:", err);
+      throw err;
     }
   };
 
@@ -81,7 +81,7 @@ export default function Messages() {
         <div className={styles.chatArea}>
           {selectedContact ? (
             <ChatWindow 
-              key={`${user?.id}-${selectedContact.id}`} 
+              key={`${user?.id}-${selectedContact.id}`} // Reseta ao trocar de contato
               contact={selectedContact} 
               onSendMessage={handleSendMessage}
             />
@@ -89,7 +89,7 @@ export default function Messages() {
             <div className={styles.emptyState}>
               <EmptyChatIcon className={styles.emptyIcon} />
               <h3>Selecione uma conversa</h3>
-              <p>Escolha um contato à esquerda para começar a trocar mensagens.</p>
+              <p>Escolha uma das OSCs vinculadas para iniciar o atendimento.</p>
             </div>
           )}
         </div>

@@ -16,22 +16,34 @@ export const getMyMessages = async () => {
 };
 
 /**
- * Envia uma nova mensagem.
- * Esta função foi blindada para aceitar o formato de objeto enviado pelo Messages.jsx.
+ * ENVIO DE MENSAGEM CORRIGIDO
+ * Garante que o Contador consiga salvar no banco identificando a OSC selecionada.
  */
-export const sendMessage = async (payload) => {
-  // Validação preventiva no frontend
-  if (!payload || !payload.receiver_id || !payload.content) {
-    console.error("Payload de mensagem inválido:", payload);
-    throw new Error("Dados de mensagem incompletos.");
+export const sendMessage = async (arg1, arg2) => {
+  let payload = {};
+
+  // Se receber um objeto (Padrão novo)
+  if (typeof arg1 === 'object' && arg1 !== null) {
+    payload = {
+      receiver_id: arg1.receiver_id || arg1.id,
+      content: arg1.content || arg1.text
+    };
+  } else {
+    // Se receber parâmetros soltos (Padrão antigo/fallback)
+    payload = {
+      receiver_id: arg1,
+      content: arg2
+    };
   }
 
-  // Envia explicitamente os dados para a rota POST /api/messages
-  const response = await api.post('/messages', {
-    receiver_id: payload.receiver_id,
-    content: payload.content
-  });
-  
+  // Validação Crítica: Impede envio sem destinatário
+  if (!payload.receiver_id || !payload.content) {
+    console.error("Falha no payload:", payload);
+    throw new Error("Dados insuficientes: receiver_id ou content ausente.");
+  }
+
+  // Dispara o POST para o banco de dados
+  const response = await api.post('/messages', payload);
   return response.data;
 };
 
