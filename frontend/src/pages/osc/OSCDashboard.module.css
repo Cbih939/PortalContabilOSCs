@@ -138,3 +138,103 @@
 .fileIconSmall { background-color: #f3f4f6; padding: 0.5rem; border-radius: 0.25rem; font-size: 1rem; }
 .activityText { margin: 0; font-size: 0.875rem; color: #374151; font-weight: 500; }
 .activityDate { font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem; display: block; }
+
+
+.calendarSection {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  margin-top: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.calendarTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+
+.legendGrid {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.legendItem i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+/* Cores da Legenda */
+.bgRed { background-color: #fee2e2; border: 1px solid #fca5a5; }
+.bgYellow { background-color: #fef9c3; border: 1px solid #fde047; }
+.bgBlue { background-color: #dbeafe; border: 1px solid #93c5fd; }
+.bgGreen { background-color: #dcfce7; border: 1px solid #86efac; }
+
+.monthsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 1rem;
+}
+
+.monthCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0.5rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  min-height: 70px;
+}
+
+.monthName {
+  font-weight: 700;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.monthStatus {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
+}
+
+/* Estado Ativo/Enviado conforme imagem {63C5BA0F} */
+.statusEnviado {
+  background-color: #dbeafe !important;
+  border-color: #3b82f6 !important;
+}
+
+.statusEnviado .monthName, 
+.statusEnviado .monthStatus {
+  color: #2563eb;
+}
+
+.welcomeHeader {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.welcomeLogo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}

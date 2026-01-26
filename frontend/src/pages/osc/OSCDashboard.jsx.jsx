@@ -17,63 +17,83 @@ const MsgIcon = () => (
 export default function OSCDashboard() {
   const { user } = useAuth();
 
-  // Dados Mockados para o visual
-  const recentActivities = [
-    { id: 1, text: 'OSC Esperança enviou um arquivo "Liderança_Nexialista.pdf"', date: '17/12/2025, 09:09' },
-    { id: 2, text: 'OSC Esperança enviou o arquivo "Ebook 10 Receitas.pdf"', date: '24/10/2025, 19:06' },
-    { id: 3, text: 'OSC Esperança enviou o arquivo "download.jpg"', date: '24/10/2025, 19:05' },
-    { id: 4, text: 'OSC Esperança enviou o arquivo "Relatório Anual.pdf"', date: '24/10/2025, 15:48' },
+  const months = [
+    { name: 'Jan', status: 'ENVIADO', class: styles.statusEnviado },
+    { name: 'Fev', status: '-', class: '' },
+    { name: 'Mar', status: '-', class: '' },
+    { name: 'Abr', status: '-', class: '' },
+    { name: 'Mai', status: '-', class: '' },
+    { name: 'Jun', status: '-', class: '' },
+    { name: 'Jul', status: '-', class: '' },
+    { name: 'Ago', status: '-', class: '' },
+    { name: 'Set', status: '-', class: '' },
+    { name: 'Out', status: '-', class: '' },
+    { name: 'Nov', status: '-', class: '' },
+    { name: 'Dez', status: '-', class: '' },
   ];
 
   return (
     <div className={styles.container}>
       
-      {/* 1. Área de Boas Vindas com Logo */}
+      {/* 1. Área de Boas Vindas */}
       <div className={styles.welcomeSection}>
-        <div>
-          <h1 className={styles.welcomeTitle}>Bem vindo(a) ao aplicativo CONTA COMIGO, {user?.name || 'OSC'}!</h1>
-          <p className={styles.welcomeSubtitle}>Aqui você encontra os 3 pilares que tornarão possível o sucesso da sua Organização Social: Governança, Contabilidade e Comunicação Institucional. Conta comigo para manter a documentação em dia e tornar a captação dos recursos um verdadeiro sucesso, ampliando o seu impacto social.</p>
+        <div className={styles.welcomeHeader}>
+          <img src="/logo_portal.png" alt="Logo" className={styles.welcomeLogo} />
+          <div>
+            <h1 className={styles.welcomeTitle}>Bem vindo(a), {user?.name || 'OSC'}!</h1>
+            <p className={styles.welcomeSubtitle}>Aqui você encontra os pilares para o sucesso da sua Organização Social.</p>
+          </div>
         </div>
       </div>
 
-      {/* 2. Cards de Resumo (Stats) */}
+      {/* 2. Cards de Resumo */}
       <div className={styles.statsGrid}>
-        
-        {/* Card 1: Modelo Download */}
         <div className={styles.card}>
           <div className={styles.iconCircleBlue}><FileIcon /></div>
           <div className={styles.cardContent}>
-            <span className={styles.cardLabel}>Documentos e Modelos</span>
+            <span className={styles.cardLabel}>Docs | Modelos</span>
             <strong className={styles.cardValueText}>Planilha Formato Base</strong>
-            <span className={styles.cardSubtext}>planilha-formato-base.xlsx</span>
           </div>
           <button className={styles.downloadBtn}>↓</button>
         </div>
 
-        {/* Card 2: Docs Pendentes */}
         <div className={styles.card}>
           <div className={styles.iconCircleYellow}><FolderWarningIcon /></div>
           <div className={styles.cardContent}>
-            <span className={styles.cardLabel}>Documentos Pendentes</span>
+            <span className={styles.cardLabel}>Docs. Pendentes</span>
             <strong className={styles.cardValue}>4</strong>
           </div>
         </div>
 
-        {/* Card 3: Mensagens */}
         <div className={styles.card}>
           <div className={styles.iconCircleGreen}><MsgIcon /></div>
           <div className={styles.cardContent}>
-            <span className={styles.cardLabel}>Alerta de mensagens não lidas</span>
+            <span className={styles.cardLabel}>Mensagens</span>
             <strong className={styles.cardValue}>3</strong>
           </div>
         </div>
       </div>
 
-      {/* 3. Área Inferior: Ações e Histórico */}
-      <div className={styles.bottomGrid}>
-        
-        
+      {/* 3. CALENDÁRIO DE SITUAÇÃO (NOVO) */}
+      <div className={styles.calendarSection}>
+        <div className={styles.calendarHeader}>
+          <h2 className={styles.calendarTitle}>Sua Situação em 2026</h2>
+          <div className={styles.legendGrid}>
+            <span className={styles.legendItem}><i className={styles.bgRed}></i> Atraso</span>
+            <span className={styles.legendItem}><i className={styles.bgYellow}></i> Aberto</span>
+            <span className={styles.legendItem}><i className={styles.bgBlue}></i> Enviado</span>
+            <span className={styles.legendItem}><i className={styles.bgGreen}></i> Concluso</span>
+          </div>
+        </div>
 
+        <div className={styles.monthsGrid}>
+          {months.map((m, index) => (
+            <div key={index} className={`${styles.monthCard} ${m.class}`}>
+              <span className={styles.monthName}>{m.name}</span>
+              <span className={styles.monthStatus}>{m.status}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
