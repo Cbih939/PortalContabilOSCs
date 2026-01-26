@@ -38,30 +38,30 @@ export default function Messages() {
   };
 
   /**
-   * FUNÇÃO DE ENVIO CORRIGIDA PARA O CONTADOR
-   * Salva a mensagem no banco vinculando-a ao receiver_id da OSC.
+   * Lógica de Envio para o Contador
+   * Salva a mensagem no banco de dados vinculando-a à OSC selecionada.
    */
   const handleSendMessage = async (text) => {
     if (!selectedContact || !text.trim()) return;
 
     try {
-      // Força o envio com os dados mapeados do contato selecionado
-      const result = await messageService.sendMessage({
+      // Força o envio com o ID da OSC selecionada na lista lateral
+      const response = await messageService.sendMessage({
         receiver_id: selectedContact.id,
         content: text
       });
 
-      // Atualiza a prévia da última mensagem na lista lateral (opcional)
+      // Atualiza a visualização da última mensagem na barra lateral (UI)
       setContacts(prev => prev.map(c => 
         c.id === selectedContact.id 
           ? { ...c, lastMessage: text, updatedAt: new Date().toISOString() } 
           : c
       ));
 
-      return result;
-    } catch (err) {
-      console.error("Erro ao salvar mensagem do contador:", err);
-      throw err;
+      return response;
+    } catch (error) {
+      console.error("Erro ao persistir mensagem no banco:", error);
+      throw error;
     }
   };
 
@@ -81,7 +81,7 @@ export default function Messages() {
         <div className={styles.chatArea}>
           {selectedContact ? (
             <ChatWindow 
-              key={`${user?.id}-${selectedContact.id}`} // Reseta ao trocar de contato
+              key={`${user?.id}-${selectedContact.id}`} // Reseta o chat ao trocar de contato
               contact={selectedContact} 
               onSendMessage={handleSendMessage}
             />
@@ -89,7 +89,7 @@ export default function Messages() {
             <div className={styles.emptyState}>
               <EmptyChatIcon className={styles.emptyIcon} />
               <h3>Selecione uma conversa</h3>
-              <p>Escolha uma das OSCs vinculadas para iniciar o atendimento.</p>
+              <p>Olá {user?.name}, escolha um contato à esquerda para começar a conversar.</p>
             </div>
           )}
         </div>

@@ -5,8 +5,8 @@ export const getContacts = async () => {
   return response.data;
 };
 
-export const getMessages = async (oscId) => {
-  const response = await api.get(`/messages/${oscId}`);
+export const getMessages = async (contactId) => {
+  const response = await api.get(`/messages/${contactId}`);
   return response.data;
 };
 
@@ -17,32 +17,32 @@ export const getMyMessages = async () => {
 
 /**
  * ENVIO DE MENSAGEM CORRIGIDO
- * Garante que o Contador consiga salvar no banco identificando a OSC selecionada.
+ * Garante que o ID do destinatário (receiver_id) seja capturado corretamente.
  */
 export const sendMessage = async (arg1, arg2) => {
   let payload = {};
 
-  // Se receber um objeto (Padrão novo)
+  // Verifica se o componente enviou um objeto estruturado
   if (typeof arg1 === 'object' && arg1 !== null) {
     payload = {
       receiver_id: arg1.receiver_id || arg1.id,
       content: arg1.content || arg1.text
     };
   } else {
-    // Se receber parâmetros soltos (Padrão antigo/fallback)
+    // Fallback para parâmetros soltos (ID, Texto)
     payload = {
       receiver_id: arg1,
       content: arg2
     };
   }
 
-  // Validação Crítica: Impede envio sem destinatário
+  // VALIDAÇÃO PRÉVIA: Impede requisições vazias que geram erros de banco
   if (!payload.receiver_id || !payload.content) {
-    console.error("Falha no payload:", payload);
-    throw new Error("Dados insuficientes: receiver_id ou content ausente.");
+    console.error("Dados incompletos para envio:", payload);
+    throw new Error("Erro: Destinatário ou conteúdo ausente.");
   }
 
-  // Dispara o POST para o banco de dados
+  // O uso de POST garante que os dados sejam salvos e não lidos do cache (Erro 304)
   const response = await api.post('/messages', payload);
   return response.data;
 };
