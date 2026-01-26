@@ -1,31 +1,15 @@
 import api from './api.js';
 
-/**
- * Busca a lista de contatos (OSCs vinculadas) para a barra lateral do Contador.
- * Rota: GET /api/messages/contacts
- * Retorna: Array de objetos com { id, name, lastMessage, unreadCount, ... }
- */
 export const getContacts = async () => {
   const response = await api.get('/messages/contacts');
   return response.data;
 };
 
-/**
- * Busca o histórico de mensagens de uma OSC específica.
- * Usado pelo CONTADOR ao clicar em um contato na barra lateral.
- * Rota: GET /api/messages/:oscId
- */
 export const getMessages = async (oscId) => {
   const response = await api.get(`/messages/${oscId}`);
   return response.data;
 };
 
-/**
- * Busca o histórico de mensagens da própria OSC logada.
- * Usado pela OSC na tela de Mensagens.
- * Rota: GET /api/messages/my
- * Nota: Retorna 404 se a OSC não tiver contador vinculado.
- */
 export const getMyMessages = async () => {
   const response = await api.get('/messages/my');
   return response.data;
@@ -33,41 +17,33 @@ export const getMyMessages = async () => {
 
 /**
  * Envia uma nova mensagem.
- * Rota: POST /api/messages
- * * @param {number|null} toOscId - ID da OSC destinatária (Obrigatório se for Contador enviando). Null se for OSC.
- * @param {string} text - O conteúdo da mensagem.
- * @param {File|null} file - Arquivo anexo (Preparado para implementação futura).
+ * Corrigido para aceitar tanto um objeto quanto parâmetros separados.
  */
-export const sendMessage = async (data) => {
-  // Se o componente passar dois argumentos separados, ou um objeto,
-  // nós normalizamos aqui para o formato que o banco exige.
-  
+export const sendMessage = async (arg1, arg2) => {
   let payload = {};
 
-  if (typeof data === 'object' && data !== null) {
-    // Se recebeu um objeto (do novo componente corrigido)
+  // Lógica Robusta: Verifica se o primeiro argumento é um objeto com as propriedades
+  if (typeof arg1 === 'object' && arg1 !== null && arg1.receiver_id) {
     payload = {
-      receiver_id: data.receiver_id,
-      content: data.content
+      receiver_id: arg1.receiver_id,
+      content: arg1.content
     };
   } else {
-    // Fallback caso algum componente antigo envie argumentos separados
-    // Ex: sendMessage(targetId, text)
-    const [id, text] = arguments;
+    // Se não for objeto, assume que arg1 é o ID e arg2 é o texto
     payload = {
-      receiver_id: id,
-      content: text
+      receiver_id: arg1,
+      content: arg2
     };
   }
 
-  // Validação final antes do disparo
+  // Validação Crítica
   if (!payload.receiver_id || !payload.content) {
-    throw new Error("Dados inválidos para envio: ID do destinatário ou conteúdo ausente.");
+    console.error("Erro de validação no Service:", payload);
+    throw new Error("ID do destinatário ou conteúdo ausente.");
   }
 
   const response = await api.post('/messages', payload);
   return response.data;
 };
 
-// Funções auxiliares para compatibilidade (caso algum componente antigo as chame)
 export const getMessagesHistory = (oscId) => getMessages(oscId);
