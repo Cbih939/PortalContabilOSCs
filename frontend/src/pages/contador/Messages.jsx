@@ -38,20 +38,20 @@ export default function Messages() {
   };
 
   /**
-   * Lógica de Envio Unificada
-   * Resolve o erro de não salvamento para o Contador.
+   * Lógica de envio que garante a persistência no banco.
+   * O receiver_id é extraído do selectedContact.id.
    */
   const handleSendMessage = async (text) => {
     if (!selectedContact || !text.trim()) return;
 
     try {
-      // Forçamos o envio com receiver_id explícito
+      // Chamada ao service com objeto estruturado
       const response = await messageService.sendMessage({
         receiver_id: selectedContact.id,
         content: text
       });
 
-      // Atualiza a última mensagem na lista lateral (UI)
+      // Atualiza a interface local (lista de contatos)
       setContacts(prev => prev.map(c => 
         c.id === selectedContact.id 
           ? { ...c, lastMessage: text, updatedAt: new Date().toISOString() } 
@@ -60,8 +60,7 @@ export default function Messages() {
 
       return response;
     } catch (error) {
-      console.error("Falha ao salvar no banco de dados:", error);
-      alert("Não foi possível enviar a mensagem. Tente novamente.");
+      console.error("Erro ao salvar mensagem no banco:", error);
       throw error;
     }
   };
@@ -82,7 +81,7 @@ export default function Messages() {
         <div className={styles.chatArea}>
           {selectedContact ? (
             <ChatWindow 
-              key={`${user?.id}-${selectedContact.id}`} // Reseta o chat ao trocar contato
+              key={`${user?.id}-${selectedContact.id}`} 
               contact={selectedContact} 
               onSendMessage={handleSendMessage}
             />
@@ -90,7 +89,7 @@ export default function Messages() {
             <div className={styles.emptyState}>
               <EmptyChatIcon className={styles.emptyIcon} />
               <h3>Selecione uma conversa</h3>
-              <p>Olá, {user?.name}. Escolha uma OSC para iniciar o atendimento.</p>
+              <p>Escolha um contato à esquerda para começar a trocar mensagens.</p>
             </div>
           )}
         </div>
