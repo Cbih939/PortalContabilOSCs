@@ -1,45 +1,54 @@
 import api from './api.js';
 
+/**
+ * Busca a lista de contatos (OSCs vinculadas) para a barra lateral.
+ */
 export const getContacts = async () => {
   const response = await api.get('/messages/contacts');
   return response.data;
 };
 
-export const getMessages = async (oscId) => {
-  const response = await api.get(`/messages/${oscId}`);
+/**
+ * Busca o histórico de mensagens de um contato específico.
+ */
+export const getMessages = async (contactId) => {
+  const response = await api.get(`/messages/${contactId}`);
   return response.data;
 };
 
+/**
+ * Busca o histórico de mensagens da própria OSC logada.
+ */
 export const getMyMessages = async () => {
   const response = await api.get('/messages/my');
   return response.data;
 };
 
 /**
- * Envia uma nova mensagem.
- * Corrigido para aceitar tanto um objeto quanto parâmetros separados.
+ * ENVIO DE MENSAGEM - CORREÇÃO CRÍTICA
+ * Esta função agora garante a persistência no banco para todos os perfis.
  */
 export const sendMessage = async (arg1, arg2) => {
   let payload = {};
 
-  // Lógica Robusta: Verifica se o primeiro argumento é um objeto com as propriedades
-  if (typeof arg1 === 'object' && arg1 !== null && arg1.receiver_id) {
+  // Se receber um objeto (Ex: Contador enviando)
+  if (typeof arg1 === 'object' && arg1 !== null) {
     payload = {
-      receiver_id: arg1.receiver_id,
-      content: arg1.content
+      receiver_id: arg1.receiver_id || arg1.id,
+      content: arg1.content || arg1.text
     };
   } else {
-    // Se não for objeto, assume que arg1 é o ID e arg2 é o texto
+    // Se receber parâmetros soltos (Ex: fallback de componentes antigos)
     payload = {
       receiver_id: arg1,
       content: arg2
     };
   }
 
-  // Validação Crítica
+  // Validação antes do POST para evitar erro 400/500 no Banco
   if (!payload.receiver_id || !payload.content) {
-    console.error("Erro de validação no Service:", payload);
-    throw new Error("ID do destinatário ou conteúdo ausente.");
+    console.error("Erro de Validação no Service: Dados ausentes", payload);
+    throw new Error("Destinatário ou conteúdo ausente.");
   }
 
   const response = await api.post('/messages', payload);

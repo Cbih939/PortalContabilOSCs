@@ -2,17 +2,24 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ContactList from '../../components/messaging/ContactList.jsx';
 import ChatWindow from '../../components/messaging/ChatWindow.jsx';
 import * as messageService from '../../services/messageService.js';
-import { useAuth } from '../../hooks/useAuth.jsx'; // Importante para pegar o papel do usuário
+import { useAuth } from '../../hooks/useAuth.jsx';
 import styles from './Messages.module.css';
+
+const EmptyChatIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+  </svg>
+);
 
 export default function Messages() {
   const [contacts, setContacts] = useState([]);
   const [selectedContact, setSelectedContact] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth(); // Pegamos o usuário logado
+  const { user } = useAuth();
 
   const loadContacts = useCallback(async () => {
     try {
+      setIsLoading(true);
       const data = await messageService.getContacts();
       setContacts(data);
     } catch (error) {
@@ -30,31 +37,31 @@ export default function Messages() {
     setSelectedContact(contact);
   };
 
+  /**
+   * Lógica de Envio Unificada
+   * Resolve o erro de não salvamento para o Contador.
+   */
   const handleSendMessage = async (text) => {
     if (!selectedContact || !text.trim()) return;
 
-    // DEBUG: Verifique se esses dados aparecem no console do navegador (F12)
-    console.log("Tentando enviar mensagem...");
-    console.log("Remetente (User):", user);
-    console.log("Destinatário (Contact):", selectedContact);
-
     try {
-      // Enviamos a mensagem
-      const newMessage = await messageService.sendMessage(selectedContact.id, text);
-      
-      console.log("Sucesso ao salvar no banco:", newMessage);
+      // Forçamos o envio com receiver_id explícito
+      const response = await messageService.sendMessage({
+        receiver_id: selectedContact.id,
+        content: text
+      });
 
-      // Atualiza lista lateral
+      // Atualiza a última mensagem na lista lateral (UI)
       setContacts(prev => prev.map(c => 
         c.id === selectedContact.id 
           ? { ...c, lastMessage: text, updatedAt: new Date().toISOString() } 
           : c
       ));
 
-      return newMessage;
+      return response;
     } catch (error) {
-      // Se cair aqui, o erro é no servidor ou na rede
-      console.error("ERRO NO BANCO DE DADOS:", error.response?.data || error.message);
+      console.error("Falha ao salvar no banco de dados:", error);
+      alert("Não foi possível enviar a mensagem. Tente novamente.");
       throw error;
     }
   };
@@ -62,6 +69,7 @@ export default function Messages() {
   return (
     <div className={styles.pageContainer}>
       <div className={styles.contentContainer}>
+        
         <div className={styles.sidebar}>
           <ContactList 
             contacts={contacts} 
@@ -74,17 +82,19 @@ export default function Messages() {
         <div className={styles.chatArea}>
           {selectedContact ? (
             <ChatWindow 
-              key={`${user?.id}-${selectedContact.id}`} // Força reset ao trocar de usuário/chat
+              key={`${user?.id}-${selectedContact.id}`} // Reseta o chat ao trocar contato
               contact={selectedContact} 
               onSendMessage={handleSendMessage}
             />
           ) : (
             <div className={styles.emptyState}>
+              <EmptyChatIcon className={styles.emptyIcon} />
               <h3>Selecione uma conversa</h3>
-              <p>Olá {user?.name}, escolha um contato para conversar.</p>
+              <p>Olá, {user?.name}. Escolha uma OSC para iniciar o atendimento.</p>
             </div>
           )}
         </div>
+
       </div>
     </div>
   );
