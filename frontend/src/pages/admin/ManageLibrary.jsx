@@ -4,7 +4,8 @@ import styles from './ManageLibrary.module.css';
 
 export default function ManageLibrary() {
   const [files, setFiles] = useState([]);
-  
+  const [loading, setLoading] = useState(false);
+
   const [form, setForm] = useState({ 
     title: '', 
     category: 'BIBLIOTECA', 
@@ -12,10 +13,7 @@ export default function ManageLibrary() {
     file: null, 
     cover: null 
   });
-  
-  const [loading, setLoading] = useState(false);
 
-  // Lista de títulos exatos para os modelos (Essencial para o Tooltip do frontend)
   const standardTitles = [
     "Estatuto Social", "Ata de Fundação", "Regimento Interno", 
     "Declarações Usuais", "Estatuto MROSC", "Regimento MROSC", 
@@ -38,7 +36,7 @@ export default function ManageLibrary() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.file) return alert("Por favor, selecione o arquivo PDF.");
+    if (!form.file) return alert("Por favor, selecione o arquivo.");
 
     const formData = new FormData();
     formData.append('title', form.title);
@@ -75,6 +73,48 @@ export default function ManageLibrary() {
     }
   };
 
+  // Função para renderizar uma seção específica de arquivos
+  const renderFileSection = (title, categoryKey) => {
+    const filteredFiles = files.filter(f => f.category === categoryKey);
+    if (filteredFiles.length === 0) return null;
+
+    return (
+      <div className={styles.categorySection}>
+        <h3 className={styles.categoryTitle}>{title}</h3>
+        <div className={styles.fileGrid}>
+          {filteredFiles.map(f => (
+            <div key={f.id} className={styles.fileCard}>
+              <div className={styles.coverWrapper}>
+                {f.cover_path ? (
+                  // Correção da visualização da imagem com URL absoluta
+                  <img 
+                    src={`https://contacomigo.org.br/${f.cover_path.replace(/\\/g, '/')}`} 
+                    alt={f.title} 
+                    className={styles.gridCover} 
+                  />
+                ) : (
+                  <div className={styles.placeholderCover}><span>📄</span></div>
+                )}
+              </div>
+              <div className={styles.fileDetails}>
+                <span className={styles.fileCategory}>
+                  {f.ebook_category || f.category}
+                </span>
+                <h4 className={styles.fileTitle}>{f.title}</h4>
+                <button 
+                  onClick={() => { if(window.confirm("Excluir?")) fileService.deleteFile(f.id).then(loadFiles); }} 
+                  className={styles.deleteBtn}
+                >
+                  Excluir
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Gestão de Biblioteca e Modelos</h1>
@@ -83,7 +123,6 @@ export default function ManageLibrary() {
         <h3 className={styles.cardTitle}>Adicionar Novo Conteúdo</h3>
         <form onSubmit={handleSubmit} className={styles.form}>
           
-          {/* CATEGORIA PRINCIPAL - Movida para cima para definir o comportamento do título */}
           <div className={styles.inputGroup}>
             <label className={styles.label}>Onde este arquivo aparecerá?</label>
             <select 
@@ -97,7 +136,6 @@ export default function ManageLibrary() {
             </select>
           </div>
 
-          {/* TÍTULO DINÂMICO */}
           <div className={styles.inputGroup}>
             <label className={styles.label}>Título do Documento</label>
             {form.category === 'MODELO_DOC' ? (
@@ -120,10 +158,8 @@ export default function ManageLibrary() {
                 required
               />
             )}
-            {form.category === 'MODELO_DOC' && <small style={{color: '#666'}}>Selecione o nome exato para que a OSC veja a explicação correta.</small>}
           </div>
 
-          {/* TIPO DE PUBLICAÇÃO (Para E-books) */}
           {form.category === 'BIBLIOTECA' && (
             <div className={styles.inputGroup}>
               <label className={styles.label} style={{color: '#EC6D12'}}>Subcategoria (E-book)</label>
@@ -142,8 +178,16 @@ export default function ManageLibrary() {
           )}
 
           <div className={styles.inputGroup}>
-            <label className={styles.label}>Arquivo PDF</label>
-            <input id="fileInput" type="file" accept=".pdf" className={styles.input} onChange={e => setForm({...form, file: e.target.files[0]})} required />
+            <label className={styles.label}>Arquivo (PDF ou Word)</label>
+            <input 
+              id="fileInput" 
+              type="file" 
+              // Atualizado para aceitar PDF e formatos Word
+              accept=".pdf,.doc,.docx" 
+              className={styles.input} 
+              onChange={e => setForm({...form, file: e.target.files[0]})} 
+              required 
+            />
           </div>
 
           {form.category === 'BIBLIOTECA' && (
@@ -160,18 +204,16 @@ export default function ManageLibrary() {
       </div>
 
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Conteúdos Publicados</h3>
-        <div className={styles.fileGrid}>
-          {files.map(f => (
-            <div key={f.id} className={styles.fileCard}>
-              <div className={styles.fileDetails}>
-                <span className={styles.fileCategory}>{f.ebook_category || f.category}</span>
-                <h4 className={styles.fileTitle}>{f.title}</h4>
-                <button onClick={() => { if(window.confirm("Excluir?")) fileService.deleteFile(f.id).then(loadFiles); }} className={styles.deleteBtn}>Excluir</button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <h2 className={styles.cardTitle}>Conteúdos Publicados</h2>
+        
+        {/* Renderização por Categorias Separadas */}
+        {renderFileSection("📚 Biblioteca Digital (E-books)", "BIBLIOTECA")}
+        {renderFileSection("📄 Modelos de Documentos", "MODELO_DOC")}
+        {renderFileSection("📢 Comunicação Institucional", "MODELO_INSTITUCIONAL")}
+
+        {files.length === 0 && (
+          <p className={styles.emptyText}>Nenhum conteúdo publicado.</p>
+        )}
       </div>
     </div>
   );
