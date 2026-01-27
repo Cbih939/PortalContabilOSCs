@@ -89,47 +89,93 @@ export default function TemplatesPage() {
   }
 
   return (
-    <div className={styles.pageContainer} style={{ width: '90%', maxWidth: 'none', margin: '0 auto', padding: '20px 0' }}>
+    <div className={styles.pageContainer} style={{ width: '90%', maxWidth: '1200px', margin: '0 auto', padding: '40px 0' }}>
       
-      {/* SEÇÃO DE TEXTOS INSTITUCIONAIS - EXATAMENTE CONFORME SOLICITADO */}
+      {/* SEÇÃO DE TEXTOS INSTITUCIONAIS */}
       <section className={styles.libraryHeader}>
-        <div className={styles.textSection}>
-          <h1>BEM-VINDO(A) AO CONTA COMIGO</h1>
+        <div className={styles.welcomeSection}>
+          <h1 className={styles.mainTitle}>BEM-VINDO(A) AO CONTA COMIGO</h1>
           <p>O Conta Comigo é um aplicativo criado para apoiar, organizar e fortalecer organizações da sociedade civil, coletivos e iniciativas sociais em todo o Brasil, especialmente aquelas que não possuem acesso facilitado a assessoria jurídica, contábil, administrativa, marketing e mobilização de recursos.</p>
-          <p>A Biblioteca Digital é um dos principais recursos do app. Ela reúne modelos padronizados, claros e acessíveis, pensados para ajudar você a:
-            <br/>• Criar sua organização | • Regularizar documentos | • Estruturar a governança | • Participar de editais e parcerias | • Crescer com segurança jurídica
-          </p>
+          <p>A Biblioteca Digital é um dos principais recursos do app. Ela reúne modelos padronizados, claros e acessíveis, pensados para ajudar você a:</p>
+          <ul className={styles.styledList}>
+            <li>Criar sua organização</li>
+            <li>Regularizar documentos</li>
+            <li>Estruturar a governança</li>
+            <li>Participar de editais e parcerias</li>
+            <li>Crescer com segurança jurídica</li>
+          </ul>
         </div>
 
-        <div className={styles.textSection}>
-          <h2>O QUE É A BIBLIOTECA DIGITAL</h2>
-          <p>A Biblioteca Digital do Conta Comigo é um acervo organizado de documentos orientativos, desenvolvidos a partir da prática real do terceiro setor. Aqui você encontra modelos de: Estatutos Sociais, Atas institucionais, Regimentos internos, Declarações usuais, Checklists de organização e regularidade.</p>
-          <p><strong>Importante:</strong> Os documentos são modelos de referência, que podem e devem ser adaptados à realidade da sua organização.</p>
-        </div>
-
-        <div className={styles.stepByStepGrid}>
-          <div className={styles.stepItem}>
-            <h3>COMO UTILIZAR A BIBLIOTECA (PASSO A PASSO)</h3>
-            <p><strong>Identifique o estágio da sua organização:</strong> Antes de baixar, reflita: 1. Início? 2. Atuamos em políticas públicas? 3. Recursos públicos? 4. Conselhos? 5. CEBAS? O app sempre indicará o modelo mais adequado.</p>
-            <p><strong>Escolha o modelo correto:</strong> Na Biblioteca, você encontrará variações (Base, Assistência Social, MROSC, CEBAS, etc). Regra de ouro: Use o modelo que atende sua necessidade atual.</p>
+        <div className={styles.contentGrid}>
+          <div className={styles.contentCard}>
+            <h2 className={styles.subTitle}>O QUE É A BIBLIOTECA DIGITAL</h2>
+            <p>A Biblioteca Digital do Conta Comigo é um acervo organizado de documentos orientativos, desenvolvidos a partir da prática real do terceiro setor. Aqui você encontra modelos de:</p>
+            <ul className={styles.styledList}>
+              <li>Estatutos Sociais</li>
+              <li>Atas institucionais</li>
+              <li>Regimentos internos</li>
+              <li>Declarações usuais</li>
+              <li>Checklists de organização e regularidade</li>
+            </ul>
+            <p className={styles.highlightText}><strong>Importante:</strong> Os documentos são modelos de referência, que podem e devem ser adaptados à realidade da sua organização.</p>
           </div>
-          <div className={styles.stepItem}>
-            <p><strong>Preencha com atenção:</strong> Todos os modelos possuem campos editáveis e linguagem clara. Preencha sempre: Nome completo da organização, Município e Estado, Datas corretas, Mandatos e cargos.</p>
-            <p><strong>Registre e arquive:</strong> Estatutos e atas devem ser registrados em cartório. Guarde sempre: Versão final assinada, Cópia digital, Ata de aprovação. O app ajuda você a organizar esses arquivos.</p>
-            <p><strong>Atualize conforme sua organização evolui:</strong> É normal começar com Estatuto Base, depois MROSC e mais adiante CEBAS. A Biblioteca acompanha esse crescimento.</p>
+
+          <div className={styles.contentCard}>
+            <h2 className={styles.subTitle}>COMO UTILIZAR A BIBLIOTECA</h2>
+            <h3 className={styles.stepTitle}>Identifique o estágio da sua organização</h3>
+            <p>Antes de baixar um documento, reflita:</p>
+            <ol className={styles.styledList}>
+              <li>Minha organização está começando agora?</li>
+              <li>Já atuamos em alguma política pública?</li>
+              <li>Queremos acessar recursos públicos?</li>
+              <li>Precisamos nos cadastrar em conselhos?</li>
+              <li>Temos ou pretendemos ter CEBAS?</li>
+            </ol>
+            <p>O app sempre indicará o modelo mais adequado para o seu momento.</p>
           </div>
         </div>
 
-        <div className={styles.legalNotice}>
-          <strong>AVISO LEGAL (TRANSPARÊNCIA):</strong> Os modelos disponibilizados no Conta Comigo são orientativos e não substituem a análise jurídica ou contábil especializada, quando exigida por lei, edital ou órgão público. A Rede Papel Solidário possui um corpo de profissionais técnicos e que praticam bons descontos para serviços extras, para membros do CONTA COMIGO.
+        <div className={styles.instructionCard}>
+          <h2 className={styles.subTitle}>INSTRUÇÕES DE PREENCHIMENTO</h2>
+          <div className={styles.instructionFlex}>
+            <div>
+              <p><strong>Escolha o modelo correto:</strong> Use o modelo que atende sua necessidade atual. Modelos mais complexos são para fases avançadas.</p>
+              <ul className={styles.miniList}>
+                <li>Modelo Base (simples)</li>
+                <li>Assistência Social</li>
+                <li>MROSC / CEBAS</li>
+              </ul>
+            </div>
+            <div>
+              <p><strong>Preencha com atenção:</strong> Nome completo, Município, Estado e Datas corretas são essenciais.</p>
+              <p><strong>Registre e arquive:</strong> Estatutos e atas devem ser registrados em cartório. Guarde sempre a versão final assinada e a ata de aprovação.</p>
+            </div>
+          </div>
         </div>
 
-        <div className={styles.purposeBox}>
-          <strong>PROPÓSITO DA REDE PAPEL SOLIDÁRIO:</strong> A Biblioteca Digital do Conta Comigo foi criada pela Rede Papel Solidário com o compromisso de: Democratizar o acesso à informação, Reduzir barreiras burocráticas, Fortalecer pequenas organizações e Promover transparência e boa governança.
+        <div className={styles.legalSection}>
+          <div className={styles.legalNotice}>
+            <h2 className={styles.subTitle}>AVISO LEGAL (TRANSPARÊNCIA)</h2>
+            <p>Os modelos disponibilizados no Conta Comigo são orientativos e não substituem a análise jurídica ou contábil especializada, quando exigida por lei, edital ou órgão público.</p>
+            <p>A Rede Papel Solidário possui um corpo de profissionais técnicos e que praticam bons descontos para serviços extras, para membros do CONTA COMIGO.</p>
+          </div>
+          
+          <div className={styles.purposeBox}>
+            <h2 className={styles.subTitle}>PROPÓSITO DA REDE PAPEL SOLIDÁRIO</h2>
+            <p>A Biblioteca Digital do Conta Comigo foi criada pela Rede Papel Solidário com o compromisso de:</p>
+            <ul className={styles.styledList}>
+              <li>Democratizar o acesso à informação</li>
+              <li>Reduzir barreiras burocráticas</li>
+              <li>Fortalecer pequenas organizações</li>
+              <li>Promover transparência e boa governança</li>
+            </ul>
+          </div>
         </div>
       </section>
 
-      <h1 className={styles.pageTitle}>Documentos Modelos | Downloads</h1>
+      <div className={styles.downloadHeader}>
+        <h1 className={styles.pageTitle}>DOCUMENTOS MODELOS | DOWNLOADS</h1>
+      </div>
 
       <div className={styles.gridContainer}>
         <div className={styles.listCard}>
