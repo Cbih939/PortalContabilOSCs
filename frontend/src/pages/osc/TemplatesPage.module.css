@@ -1,161 +1,90 @@
-.pageContainer {
-  padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  background-color: #f9fafb;
-  min-height: 100vh;
+.introSection {
+    margin-bottom: 2rem;
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    border-left: 5px solid #EC6D12;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-.pageTitle {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 2rem;
-  border-left: 5px solid #ff6600;
-  padding-left: 1rem;
+.introCard h1 {
+    color: #EC6D12;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
 }
 
-/* Layout de Duas Colunas (Esquerda e Direita) */
-.gridContainer {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  align-items: start;
+.infoAccordion details {
+    background: #f8fafc;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+    cursor: pointer;
 }
 
-/* Responsividade para tablets e telemóveis */
-@media (max-width: 1024px) {
-  .gridContainer {
-    grid-template-columns: 1fr;
-  }
+.infoAccordion summary {
+    font-weight: bold;
+    color: #475569;
 }
 
-.listCard {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
-  height: auto;
+.detailsContent {
+    padding: 15px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #334155;
 }
 
-.cardHeader {
-  font-size: 1.15rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  color: #374151;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #f3f4f6;
+/* Tooltip Logic */
+.classificationWrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    margin-top: 4px;
+    cursor: help;
 }
 
-.fileListContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+.infoIconSmall {
+    width: 14px;
+    height: 14px;
+    color: #EC6D12;
 }
 
-.fileItem {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.85rem 1rem;
-  background: #ffffff;
-  border: 1px solid #f3f4f6;
-  border-radius: 0.5rem;
-  transition: all 0.2s ease;
+.tooltipText {
+    visibility: hidden;
+    width: 250px;
+    background-color: #334155;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 10px;
+    position: absolute;
+    z-index: 100;
+    bottom: 125%; 
+    left: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 11px;
+    white-space: pre-line; /* Mantém as quebras de linha */
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
 }
 
-.fileItem:hover {
-  border-color: #ff6600;
-  background: #fff7ed;
-  transform: translateX(4px);
+.classificationWrapper:hover .tooltipText {
+    visibility: visible;
+    opacity: 1;
 }
 
-.fileInfo {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex: 1;
-  overflow: hidden;
+.legalNotice {
+    background: #fffbe6;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ffe58f;
+    margin-top: 1rem;
+    font-size: 0.85rem;
 }
 
-.fileIcon {
-  width: 1.25rem;
-  height: 1.25rem;
-  color: #9ca3af;
-  flex-shrink: 0;
-}
-
-.fileText {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.fileName {
-  font-weight: 600;
-  color: #1f2937;
-  font-size: 0.9rem;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
-.fileDate {
-  font-size: 0.7rem;
-  color: #9ca3af;
-}
-
-.actionGroup {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.viewButton, .downloadButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  transition: all 0.2s;
-  text-decoration: none;
-}
-
-.viewButton {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-.viewButton:hover {
-  background: #e5e7eb;
-  color: #111827;
-}
-
-.downloadButton {
-  background: #ff6600;
-  color: white;
-}
-
-.downloadButton:hover {
-  background: #e65c00;
-  box-shadow: 0 4px 6px rgba(230, 92, 0, 0.2);
-}
-
-.icon {
-  width: 1.1rem;
-  height: 1.1rem;
-}
-
-.empty {
-  text-align: center;
-  padding: 2rem;
-  color: #9ca3af;
-  font-size: 0.85rem;
-}
-
-.loadingFull {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 400px;
+.purposeFooter {
+    margin-top: 3rem;
+    text-align: center;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 2rem;
+    color: #64748b;
 }
