@@ -5,7 +5,6 @@ import styles from './ManageLibrary.module.css';
 export default function ManageLibrary() {
   const [files, setFiles] = useState([]);
   
-  // Estado inicial
   const [form, setForm] = useState({ 
     title: '', 
     category: 'BIBLIOTECA', 
@@ -15,6 +14,14 @@ export default function ManageLibrary() {
   });
   
   const [loading, setLoading] = useState(false);
+
+  // Lista de títulos exatos para os modelos (Essencial para o Tooltip do frontend)
+  const standardTitles = [
+    "Estatuto Social", "Ata de Fundação", "Regimento Interno", 
+    "Declarações Usuais", "Estatuto MROSC", "Regimento MROSC", 
+    "Estatuto CEBAS", "Regimento CEBAS", "Declarações CEBAS", 
+    "Estatuto Profissional"
+  ];
 
   useEffect(() => {
     loadFiles();
@@ -37,7 +44,6 @@ export default function ManageLibrary() {
     formData.append('title', form.title);
     formData.append('category', form.category);
     
-    // IMPORTANTE: Envia a subcategoria se for biblioteca
     if (form.category === 'BIBLIOTECA') {
        formData.append('ebook_category', form.ebookCategory);
     }
@@ -59,7 +65,7 @@ export default function ManageLibrary() {
       });
       
       document.getElementById('fileInput').value = "";
-      document.getElementById('coverInput').value = "";
+      if(document.getElementById('coverInput')) document.getElementById('coverInput').value = "";
       
       loadFiles();
     } catch (error) {
@@ -77,113 +83,95 @@ export default function ManageLibrary() {
         <h3 className={styles.cardTitle}>Adicionar Novo Conteúdo</h3>
         <form onSubmit={handleSubmit} className={styles.form}>
           
-          {/* TÍTULO */}
+          {/* CATEGORIA PRINCIPAL - Movida para cima para definir o comportamento do título */}
           <div className={styles.inputGroup}>
-            <label className={styles.label}>Título</label>
-            <input 
-              type="text" 
-              className={styles.input}
-              value={form.title}
-              onChange={e => setForm({...form, title: e.target.value})}
-              required
-            />
-          </div>
-
-          {/* CATEGORIA PRINCIPAL */}
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Categoria</label>
+            <label className={styles.label}>Onde este arquivo aparecerá?</label>
             <select 
               className={styles.select}
               value={form.category} 
-              onChange={e => setForm({...form, category: e.target.value})}
+              onChange={e => setForm({...form, category: e.target.value, title: ''})}
             >
-              <option value="BIBLIOTECA">Biblioteca (E-books)</option>
-              <option value="MODELO_DOC">Modelos de Documentos</option>
-              <option value="MODELO_INSTITUCIONAL">Comunicação Institucional</option>
+              <option value="BIBLIOTECA">Biblioteca Digital (E-books)</option>
+              <option value="MODELO_DOC">Modelos de Documentos (Lado Esquerdo)</option>
+              <option value="MODELO_INSTITUCIONAL">Comunicação Institucional (Lado Direito)</option>
             </select>
           </div>
 
-          {/* SUBCATEGORIA (Visível apenas se BIBLIOTECA for selecionado) */}
+          {/* TÍTULO DINÂMICO */}
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Título do Documento</label>
+            {form.category === 'MODELO_DOC' ? (
+              <select 
+                className={styles.select}
+                value={form.title}
+                onChange={e => setForm({...form, title: e.target.value})}
+                required
+              >
+                <option value="">Selecione o título padrão (Ativa Tooltip)...</option>
+                {standardTitles.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            ) : (
+              <input 
+                type="text" 
+                className={styles.input}
+                value={form.title}
+                placeholder="Ex: Guia de Comunicação 2026"
+                onChange={e => setForm({...form, title: e.target.value})}
+                required
+              />
+            )}
+            {form.category === 'MODELO_DOC' && <small style={{color: '#666'}}>Selecione o nome exato para que a OSC veja a explicação correta.</small>}
+          </div>
+
+          {/* TIPO DE PUBLICAÇÃO (Para E-books) */}
           {form.category === 'BIBLIOTECA' && (
-            <div className={styles.inputGroup} style={{animation: 'fadeIn 0.3s ease'}}>
-              <label className={styles.label} style={{color: '#2563eb'}}>Tipo de Publicação</label>
+            <div className={styles.inputGroup}>
+              <label className={styles.label} style={{color: '#EC6D12'}}>Subcategoria (E-book)</label>
               <select 
                 className={styles.select}
                 value={form.ebookCategory}
                 onChange={e => setForm({...form, ebookCategory: e.target.value})}
-                style={{borderColor: '#2563eb', backgroundColor: '#eff6ff'}}
+                style={{borderColor: '#EC6D12'}}
               >
-                <option value="Governanca">Governança</option>
-                <option value="Contabil">Contábil</option>
+                <option value="Governança">Governança</option>
+                <option value="Contábil">Contábil</option>
                 <option value="Manual">Manual</option>
+                <option value="E-book">E-book Geral</option>
               </select>
             </div>
           )}
 
-          {/* ARQUIVO PDF */}
           <div className={styles.inputGroup}>
             <label className={styles.label}>Arquivo PDF</label>
-            <input 
-              id="fileInput"
-              type="file" 
-              accept=".pdf"
-              className={styles.input}
-              onChange={e => setForm({...form, file: e.target.files[0]})}
-              required
-            />
+            <input id="fileInput" type="file" accept=".pdf" className={styles.input} onChange={e => setForm({...form, file: e.target.files[0]})} required />
           </div>
 
-          {/* CAPA */}
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Capa (Imagem)</label>
-            <input 
-              id="coverInput"
-              type="file" 
-              accept="image/*"
-              className={styles.input}
-              onChange={e => setForm({...form, cover: e.target.files[0]})}
-            />
-          </div>
+          {form.category === 'BIBLIOTECA' && (
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Capa do E-book (Obrigatório para Biblioteca)</label>
+              <input id="coverInput" type="file" accept="image/*" className={styles.input} onChange={e => setForm({...form, cover: e.target.files[0]})} />
+            </div>
+          )}
 
           <button type="submit" disabled={loading} className={styles.submitButton}>
-            {loading ? 'Processando...' : 'Publicar Agora'}
+            {loading ? 'A processar...' : 'Publicar Agora'}
           </button>
         </form>
       </div>
 
-      {/* LISTA DE ARQUIVOS */}
       <div className={styles.card}>
         <h3 className={styles.cardTitle}>Conteúdos Publicados</h3>
-        {files.length === 0 ? (
-          <p className={styles.emptyText}>Nenhum conteúdo publicado.</p>
-        ) : (
-          <div className={styles.fileGrid}>
-            {files.map(f => (
-              <div key={f.id} className={styles.fileCard}>
-                <div className={styles.coverWrapper}>
-                  {f.cover_path ? (
-                    <img src={`https://contacomigo.org.br/${f.cover_path}`} alt={f.title} className={styles.gridCover} />
-                  ) : (
-                    <div className={styles.placeholderCover}><span>📄</span></div>
-                  )}
-                </div>
-                <div className={styles.fileDetails}>
-                  {/* Exibe a subcategoria se existir, senão a categoria principal */}
-                  <span className={styles.fileCategory}>
-                    {f.ebook_category ? f.ebook_category : f.category}
-                  </span>
-                  <h4 className={styles.fileTitle}>{f.title}</h4>
-                  <button 
-                    onClick={() => { if(window.confirm("Excluir?")) fileService.deleteFile(f.id).then(loadFiles); }} 
-                    className={styles.deleteBtn}
-                  >
-                    Excluir
-                  </button>
-                </div>
+        <div className={styles.fileGrid}>
+          {files.map(f => (
+            <div key={f.id} className={styles.fileCard}>
+              <div className={styles.fileDetails}>
+                <span className={styles.fileCategory}>{f.ebook_category || f.category}</span>
+                <h4 className={styles.fileTitle}>{f.title}</h4>
+                <button onClick={() => { if(window.confirm("Excluir?")) fileService.deleteFile(f.id).then(loadFiles); }} className={styles.deleteBtn}>Excluir</button>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
