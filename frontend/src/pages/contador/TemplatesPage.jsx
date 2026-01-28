@@ -13,11 +13,23 @@ import styles from './TemplatesPage.module.css';
 import Input from '../../components/common/Input.jsx';
 import Button from '../../components/common/Button.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
-import FileUpload from '../../components/common/FileUpload.jsx'; // Reutiliza componente
+import FileUpload from '../../components/common/FileUpload.jsx'; 
 import { FileIcon, XIcon, UploadIcon } from '../../components/common/Icons.jsx';
 import { formatDate } from '../../utils/formatDate.js';
 
-// Schema para o formulário de upload
+// Ícone de Informação (Tooltip) declarado localmente
+const InfoIcon = () => (
+  <svg 
+    style={{ width: '16px', height: '16px', color: '#EC6D12', cursor: 'help', marginLeft: '8px' }} 
+    xmlns="http://www.w3.org/2000/svg" 
+    fill="none" 
+    viewBox="0 0 24 24" 
+    stroke="currentColor"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
 const uploadSchema = yup.object().shape({
   file_name: yup.string().required('O nome de exibição é obrigatório.'),
   templateFile: yup
@@ -26,29 +38,22 @@ const uploadSchema = yup.object().shape({
     .test('fileSize', 'O ficheiro é muito grande (máx. 5MB)', value => value && value.size <= 5 * 1024 * 1024),
 });
 
-/**
- * Página para o Contador gerir os Ficheiros-Base (Modelos).
- */
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState([]);
   const [isLoadingList, setIsLoadingList] = useState(true);
   const [errorLoading, setErrorLoading] = useState(null);
   const addNotification = useNotification();
   
-  // Hook RHF para o formulário de upload
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm({
     resolver: yupResolver(uploadSchema)
   });
 
-  // Hook API para APAGAR
   const { request: deleteTemplateRequest, isLoading: isDeleting } = useApi(
       templateService.deleteTemplate, { showErrorNotification: false }
   );
   
-  // Estado de loading para o UPLOAD (feito manualmente)
   const [isUploading, setIsUploading] = useState(false);
 
-  // Função para buscar a lista de modelos
   const fetchTemplates = async () => {
     setIsLoadingList(true);
     setErrorLoading(null);
@@ -63,56 +68,63 @@ export default function TemplatesPage() {
     }
   };
 
-  // Busca inicial
   useEffect(() => {
     fetchTemplates();
-  }, []); // Dependência vazia, mas addNotification é estável
+  }, []);
 
-  // Handler para submeter (fazer upload)
   const onSubmitUpload = async (data) => {
     setIsUploading(true);
-    
     const formData = new FormData();
     formData.append('file_name', data.file_name);
-    formData.append('templateFile', data.templateFile); // 'templateFile' é o nome esperado pelo backend
+    formData.append('templateFile', data.templateFile);
 
     try {
       const newTemplate = await templateService.uploadTemplate(formData);
       setTemplates(prev => [newTemplate.data, ...prev].sort((a,b) => a.file_name.localeCompare(b.file_name)));
       addNotification(`Modelo "${newTemplate.data.file_name}" enviado com sucesso!`, 'success');
-      reset(); // Limpa o formulário
+      reset(); 
     } catch (err) {
-      console.error('Falha no upload do modelo:', err);
       addNotification(`Falha no upload: ${err.response?.data?.message || err.message}`, 'error');
     } finally {
       setIsUploading(false);
     }
   };
 
-  // Handler para apagar
   const handleDelete = async (template) => {
-    if (!window.confirm(`Tem a certeza que quer apagar o modelo "${template.file_name}"?`)) {
-      return;
-    }
+    if (!window.confirm(`Tem a certeza que quer apagar o modelo "${template.file_name}"?`)) return;
     try {
       await deleteTemplateRequest(template.id);
       setTemplates(prev => prev.filter(t => t.id !== template.id));
       addNotification(`Modelo "${template.file_name}" apagado.`, 'success');
     } catch (err) {
-      console.error('Falha ao apagar modelo:', err);
       addNotification(`Falha ao apagar: ${err.response?.data?.message || err.message}`, 'error');
     }
   };
 
   return (
     <div className={styles.pageContainer}>
-      <h2 className={styles.title}>Gerenciar Modelos (Downloads Úteis)</h2>
+      <div className={styles.headerWithInfo}>
+        <h2 className={styles.title}>Gerenciar Modelos (Downloads Úteis)</h2>
+        <div className={styles.tooltipContainer}>
+          <InfoIcon />
+          <span className={styles.tooltipText}>
+            Nesta área você define as planilhas de controle e documentos-base que suas OSCs poderão baixar. Estes arquivos servem como guia para a organização documental delas.
+          </span>
+        </div>
+      </div>
       
       <div className={styles.grid}>
-        {/* Coluna 1: Upload */}
         <div className={styles.uploadColumn}>
           <div className={styles.formCard}>
-            <h3 className={styles.formTitle}>Enviar Novo Modelo</h3>
+            <div className={styles.headerWithInfo}>
+              <h3 className={styles.formTitle}>Enviar Novo Modelo</h3>
+              <div className={styles.tooltipContainer}>
+                <InfoIcon />
+                <span className={styles.tooltipText}>
+                  Escolha um nome claro (ex: Controle de Caixa) e anexe o arquivo (Excel, PDF ou Word). O arquivo ficará disponível na aba "Docs | Modelos" da OSC.
+                </span>
+              </div>
+            </div>
             <form onSubmit={handleSubmit(onSubmitUpload)} className={styles.form}>
               <Input
                 label="Nome de Exibição *"
@@ -128,8 +140,8 @@ export default function TemplatesPage() {
                 render={({ field: { onChange } }) => (
                   <FileUpload
                     label="Ficheiro *"
-                    onFileSelect={(file) => onChange(file)} // Passa ficheiro para RHF
-                    acceptedTypes={{}} // Aceita todos os tipos por agora
+                    onFileSelect={(file) => onChange(file)} 
+                    acceptedTypes={{}} 
                     hint="Qualquer tipo (XLSX, PDF, DOCX, etc. Máx. 5MB)"
                   />
                 )}
@@ -144,7 +156,6 @@ export default function TemplatesPage() {
           </div>
         </div>
 
-        {/* Coluna 2: Lista de Modelos */}
         <div className={styles.listColumn}>
           <div className={styles.listCard}>
             <h3 className={styles.listTitle}>Modelos Enviados</h3>
@@ -163,7 +174,7 @@ export default function TemplatesPage() {
                       <div className={styles.fileText}>
                         <span className={styles.fileName}>{template.file_name}</span>
                         <span className={styles.fileDescription}>
-                          {template.description} (Enviado em: {formatDate(template.created_at)})
+                          Enviado em: {formatDate(template.created_at)}
                         </span>
                       </div>
                     </div>
@@ -171,7 +182,7 @@ export default function TemplatesPage() {
                       onClick={() => handleDelete(template)}
                       className={styles.deleteButton}
                       title="Apagar modelo"
-                      disabled={isDeleting} // Desabilita se estiver a apagar
+                      disabled={isDeleting}
                     >
                       <XIcon />
                     </button>
