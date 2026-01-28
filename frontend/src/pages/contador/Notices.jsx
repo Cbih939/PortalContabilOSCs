@@ -9,6 +9,19 @@ import { useNotification } from '../../contexts/NotificationContext.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
 import { formatDate } from '../../utils/formatDate.js';
 
+// Ícone de Informação (Tooltip) declarado localmente
+const InfoIcon = () => (
+  <svg 
+    style={{ width: '18px', height: '18px', color: '#EC6D12', cursor: 'help', marginLeft: '10px' }} 
+    xmlns="http://www.w3.org/2000/svg" 
+    fill="none" 
+    viewBox="0 0 24 24" 
+    stroke="currentColor"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
 /**
  * Página Canal de Avisos do Contador (Conectada à API).
  */
@@ -19,15 +32,11 @@ export default function NoticesPage() {
   const [errorLoading, setErrorLoading] = useState(null);
   const addNotification = useNotification();
 
-  // Hook para a API de *envio* de aviso
-  // Dizemos ao useApi para NÃO mostrar o seu próprio erro,
-  // pois trataremos o erro manualmente no handleSendNotice
   const { request: sendNoticeRequest, isLoading: isSending } = useApi(
       alertService.sendNotice,
       { showErrorNotification: false } 
   );
 
-  // Efeito para Buscar Dados Iniciais
   useEffect(() => {
     const fetchData = async () => {
       setIsLoadingData(true);
@@ -68,25 +77,15 @@ export default function NoticesPage() {
     fetchData();
   }, [addNotification]);
 
-  // --- Handler para Enviar Aviso (CORRIGIDO) ---
   const handleSendNotice = async (formData) => {
-    // formData já vem de NoticesView como:
-    // { oscId: (number|null), type: string, title: string, message: string }
-    
     try {
-      // --- CORREÇÃO AQUI ---
-      // O backend espera 'oscId' (camelCase), não 'osc_id'.
-      // O 'formData' já está no formato correto.
-      const newNoticeResponse = await sendNoticeRequest(formData); // Envia formData diretamente
-      // --- FIM DA CORREÇÃO ---
-      
+      const newNoticeResponse = await sendNoticeRequest(formData);
       const newNotice = newNoticeResponse;
 
       const oscName = formData.oscId === null
                       ? 'Todas as OSCs'
                       : oscs.find(o => o.id === formData.oscId)?.name || 'Desconhecida';
 
-      // Adiciona ao topo do histórico local
       setSentNotices((prev) => [{
           ...newNotice,
           id: newNotice.id || Date.now(),
@@ -96,15 +95,12 @@ export default function NoticesPage() {
       }, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date)));
 
       addNotification(`Aviso "${formData.title}" enviado com sucesso para ${oscName}!`, 'success');
-    
     } catch (err) {
       console.error('Falha ao enviar aviso:', err);
-      // Mostra a notificação de erro manualmente
       addNotification(`Falha ao enviar aviso: ${err.response?.data?.message || err.message}`, 'error');
     }
   };
 
-  // --- Renderização ---
   if (isLoadingData) {
      return (
        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 100px)' }}>
@@ -117,11 +113,56 @@ export default function NoticesPage() {
   }
 
   return (
-    <NoticesView
-      oscs={oscs}
-      sentNotices={sentNotices}
-      onSendNotice={handleSendNotice}
-      isLoading={isSending}
-    />
+    <div style={{ position: 'relative' }}>
+      {/* Tooltip de cabeçalho para explicar a função da página */}
+      <div style={{ 
+        position: 'absolute', 
+        top: '25px', 
+        left: '320px', 
+        zIndex: 10,
+        display: 'flex',
+        alignItems: 'center'
+      }}>
+        <div className="tooltip-container" style={{ position: 'relative', display: 'flex' }}>
+          <InfoIcon />
+          <span className="tooltip-text" style={{
+            visibility: 'hidden',
+            width: '280px',
+            backgroundColor: '#1e293b',
+            color: '#fff',
+            textAlign: 'left',
+            borderRadius: '6px',
+            padding: '12px',
+            position: 'absolute',
+            zIndex: 100,
+            top: '125%',
+            left: '0',
+            opacity: 0,
+            transition: 'opacity 0.3s',
+            fontSize: '0.8rem',
+            lineHeight: '1.4',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.2)',
+            pointerEvents: 'none'
+          }}>
+            O <strong>Canal de Avisos</strong> permite enviar comunicados oficiais para uma OSC específica ou para todas as suas organizações simultaneamente. Ideal para lembretes de prazos, alterações na legislação ou avisos urgentes.
+          </span>
+        </div>
+      </div>
+
+      <NoticesView
+        oscs={oscs}
+        sentNotices={sentNotices}
+        onSendNotice={handleSendNotice}
+        isLoading={isSending}
+      />
+
+      {/* Injeção de estilo para o hover do Tooltip */}
+      <style>{`
+        .tooltip-container:hover .tooltip-text {
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+      `}</style>
+    </div>
   );
 }
