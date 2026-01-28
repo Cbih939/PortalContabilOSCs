@@ -123,50 +123,49 @@
   color: #6b7280;
 }
 
-.headerWithInfo {
-  display: flex;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
+/* Container do Tooltip */
 .tooltipContainer {
   position: relative;
-  display: flex;
+  display: inline-flex;
   align-items: center;
 }
 
+/* Texto do Tooltip */
 .tooltipText {
   visibility: hidden;
-  width: 280px;
-  background-color: #1e293b;
-  color: #ffffff;
+  width: 200px;
+  background-color: #1e293b; /* Azul escuro profissional */
+  color: #fff;
   text-align: left;
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: 6px;
+  padding: 10px;
   position: absolute;
   z-index: 100;
-  top: 125%; /* Aparece abaixo do título para não cortar no topo da página */
-  left: 0;
+  bottom: 125%; /* Posiciona acima do ícone */
+  left: 50%;
+  transform: translateX(-50%);
   opacity: 0;
   transition: opacity 0.3s;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   line-height: 1.4;
   font-weight: normal;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
   pointer-events: none;
 }
 
-/* Seta da Tooltip */
+/* Triângulo indicador do Tooltip */
 .tooltipText::after {
   content: "";
   position: absolute;
-  bottom: 100%;
-  left: 20px;
-  border-width: 6px;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
   border-style: solid;
-  border-color: transparent transparent #1e293b transparent;
+  border-color: #1e293b transparent transparent transparent;
 }
 
+/* Exibir ao passar o mouse */
 .tooltipContainer:hover .tooltipText {
   visibility: visible;
   opacity: 1;
