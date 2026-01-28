@@ -23,102 +23,36 @@ const InfoIcon = () => (
   </svg>
 );
 
-// --- ESTILOS INLINE PARA O CALENDÁRIO ---
 const calStyles = {
-  legend: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '12px',
-    marginBottom: '16px',
-    fontSize: '11px',
-    color: '#555',
-    padding: '10px',
-    backgroundColor: '#f9fafb',
-    borderRadius: '6px',
-    border: '1px solid #eee'
-  },
-  legendItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px'
-  },
-  colorBox: (bg, border) => ({
-    width: '10px',
-    height: '10px',
-    backgroundColor: bg,
-    border: `1px solid ${border}`,
-    borderRadius: '2px'
-  }),
-  sectionTitle: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: '12px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px'
-  },
-  calendarGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))',
-    gap: '8px',
-    marginBottom: '24px'
-  },
-  monthBox: (bg, color, border) => ({
-    backgroundColor: bg,
-    color: color,
-    border: `1px solid ${border}`,
-    borderRadius: '6px',
-    padding: '8px 4px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: '50px'
-  }),
-  monthText: {
-    fontSize: '12px',
-    fontWeight: 'bold'
-  },
-  statusText: {
-    fontSize: '9px',
-    fontWeight: '600',
-    marginTop: '2px',
-    textTransform: 'uppercase'
-  }
+  legend: { display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px', fontSize: '11px', color: '#555', padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #eee' },
+  legendItem: { display: 'flex', alignItems: 'center', gap: '6px' },
+  colorBox: (bg, border) => ({ width: '10px', height: '10px', backgroundColor: bg, border: `1px solid ${border}`, borderRadius: '2px' }),
+  sectionTitle: { fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' },
+  calendarGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))', gap: '8px', marginBottom: '24px' },
+  monthBox: (bg, color, border) => ({ backgroundColor: bg, color: color, border: `1px solid ${border}`, borderRadius: '6px', padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50px' }),
+  monthText: { fontSize: '12px', fontWeight: 'bold' },
+  statusText: { fontSize: '9px', fontWeight: '600', marginTop: '2px', textTransform: 'uppercase' }
 };
 
 export default function OSCDocumentsPage() {
   const { user } = useAuth();
   const addNotification = useNotification();
-
   const [myFiles, setMyFiles] = useState([]);
   const [isLoadingList, setIsLoadingList] = useState(true);
   const [errorLoading, setErrorLoading] = useState(null);
 
   const { request: uploadFile, isLoading: isUploading } = useApi(docService.uploadDocument);
 
-  // --- LÓGICA DO CALENDÁRIO ---
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const currentMonthIndex = new Date().getMonth();
 
   const getMonthStatus = (monthIndex) => {
     if (monthIndex > currentMonthIndex) return 'future';
-    if (monthIndex === currentMonthIndex) {
-        const hasDocCurrentMonth = myFiles.some(d => {
-            const dateStr = d.date || d.created_at;
-            if (!dateStr) return false;
-            return new Date(dateStr).getMonth() === monthIndex;
-        });
-        if (!hasDocCurrentMonth) return 'pending';
-    }
     const docsInMonth = myFiles.filter(d => {
         const dateStr = d.date || d.created_at;
-        if (!dateStr) return false;
-        return new Date(dateStr).getMonth() === monthIndex;
+        return dateStr && new Date(dateStr).getMonth() === monthIndex;
     });
+    if (monthIndex === currentMonthIndex && docsInMonth.length === 0) return 'pending';
     const hasDoc = docsInMonth.length > 0;
     const isVerified = hasDoc && docsInMonth.some(d => d.verified === true || d.status === 'APPROVED');
     if (isVerified) return 'concluded';
@@ -148,27 +82,18 @@ export default function OSCDocumentsPage() {
 
   const fetchDocuments = async () => {
     setIsLoadingList(true);
-    setErrorLoading(null);
     try {
       const response = await docService.getMyDocuments();
       const docs = Array.isArray(response) ? response : (response.data || []);
-      const sortedData = docs.sort((a, b) => {
-        const nameA = (a.name || a.original_name || '').toLowerCase();
-        const nameB = (b.name || b.original_name || '').toLowerCase();
-        return nameA.localeCompare(nameB);
-      });
-      setMyFiles(sortedData);
+      setMyFiles(docs.sort((a, b) => (a.name || a.original_name || '').localeCompare(b.name || b.original_name || '')));
     } catch (err) {
-      setErrorLoading("Não foi possível carregar os documentos.");
-      addNotification("Erro ao carregar documentos.", "error");
+      setErrorLoading("Erro ao carregar documentos.");
     } finally {
       setIsLoadingList(false);
     }
   };
 
-  useEffect(() => {
-    if(user?.id) fetchDocuments();
-  }, [user?.id]);
+  useEffect(() => { if(user?.id) fetchDocuments(); }, [user?.id]);
 
   const handleFileUpload = async (file) => {
     try {
@@ -176,44 +101,25 @@ export default function OSCDocumentsPage() {
       formData.append('file', file);
       await uploadFile(formData);
       addNotification('Ficheiro enviado com sucesso!', 'success');
-      await fetchDocuments();
+      fetchDocuments();
     } catch (err) {
-      addNotification(`Falha no upload: ${err.response?.data?.message || err.message}`, 'error');
-      throw err;
-    }
-  };
-
-  const handleDownload = async (file) => {
-    addNotification(`A iniciar download: ${file.name || file.original_name}`, 'info');
-    try {
-      await docService.downloadDocument(file.id, file.original_name || file.name);
-    } catch (err) {
-      addNotification(err.message || 'Falha no download.', 'error');
+      addNotification('Falha no upload', 'error');
     }
   };
 
   return (
     <div className={styles.pageContainer}>
       <div className={styles.grid}>
-        
-        {/* Coluna 1: Info e Upload */}
         <div className={styles.uploadColumn}>
           <div className={`${styles.infoCard} mb-8`}>
-            {/* CORREÇÃO AQUI: Wrapper para o título/ícone com posicionamento relativo */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
               <p className={styles.welcomeText} style={{ margin: 0, paddingRight: '20px' }}>
-                Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais. 
-                Baixe-os na aba{" "}
-                <Link to="/osc/modelos" className={styles.orangeLink}>
-                  "Docs | Modelos"
-                </Link>
-                ...
+                Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais...
               </p>
-              {/* Tooltip ajustada para abrir para baixo e não cortar */}
               <div className={styles.tooltipContainer}>
                 <InfoIcon />
                 <span className={styles.tooltipText} style={{ top: '150%', bottom: 'auto', transform: 'translateX(-90%)' }}>
-                  Utilize esta área para enviar os documentos preenchidos. O seu contador receberá uma notificação automática para validação.
+                  Utilize esta área para enviar os documentos preenchidos.
                 </span>
               </div>
             </div>
@@ -223,37 +129,25 @@ export default function OSCDocumentsPage() {
           <DocumentUpload onUpload={handleFileUpload} isLoading={isUploading} />
         </div>
 
-        {/* Coluna 2: Calendário + Lista de Documentos */}
         <div className={`${styles.listCard} ${styles.listColumn}`}>
           <h2 className={styles.cardTitle}>Meus Documentos</h2>
-
-          {/* === CALENDÁRIO === */}
           <div style={{marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '20px'}}>
             <h4 style={calStyles.sectionTitle}>
               Sua Situação em {new Date().getFullYear()}
               <div className={styles.tooltipContainer}>
                 <InfoIcon />
                 <span className={styles.tooltipText} style={{ top: '150%', bottom: 'auto' }}>
-                  Este calendário mostra a pontualidade dos seus envios mensais. O status "OK" (Verde) significa que o contador já validou o seu arquivo.
+                  Acompanhe a pontualidade dos seus envios mensais.
                 </span>
               </div>
             </h4>
-            
             <div style={calStyles.legend}>
-                <div style={calStyles.legendItem}>
-                    <div style={calStyles.colorBox('#fee2e2', '#fecaca')}></div> Atraso
-                </div>
-                <div style={calStyles.legendItem}>
-                    <div style={calStyles.colorBox('#fef9c3', '#fde047')}></div> Aberto
-                </div>
-                <div style={calStyles.legendItem}>
-                    <div style={calStyles.colorBox('#dbeafe', '#bfdbfe')}></div> Enviado
-                </div>
-                <div style={calStyles.legendItem}>
-                    <div style={calStyles.colorBox('#dcfce7', '#86efac')}></div> Concluso
-                </div>
+                {['late', 'pending', 'sent', 'concluded'].map(s => (
+                  <div key={s} style={calStyles.legendItem}>
+                    <div style={calStyles.colorBox(getStatusStyle(s)[0], getStatusStyle(s)[2])}></div> {getStatusLabel(s)}
+                  </div>
+                ))}
             </div>
-
             <div style={calStyles.calendarGrid}>
                 {months.map((m, idx) => {
                     const status = getMonthStatus(idx);
@@ -267,35 +161,18 @@ export default function OSCDocumentsPage() {
                 })}
             </div>
           </div>
-
-          {isLoadingList ? (
-            <div className={styles.loadingContainer}><Spinner text="A carregar..." /></div>
-          ) : errorLoading ? (
-            <div className={styles.emptyContainer} style={{color: 'red'}}>{errorLoading}</div>
-          ) : myFiles.length === 0 ? (
-            <div className={styles.emptyContainer}><p>Nenhum documento encontrado.</p></div>
-          ) : (
+          {isLoadingList ? <Spinner /> : (
             <div className={styles.fileListContainer}>
-              {myFiles.map((file) => (
+              {myFiles.map(file => (
                 <div key={file.id} className={styles.fileItem}>
                   <div className={styles.fileInfo}>
                     <FileIcon className={styles.fileIcon} />
                     <div className={styles.fileText}>
-                      <span className={styles.fileName} title={file.name || file.original_name}>
-                        {file.name || file.original_name}
-                      </span>
-                      <span className={styles.fileDate}>
-                        Postado em {formatDate(file.date || file.created_at)}
-                      </span>
+                      <span className={styles.fileName}>{file.name || file.original_name}</span>
+                      <span className={styles.fileDate}>Postado em {formatDate(file.date || file.created_at)}</span>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDownload(file)}
-                    className={styles.downloadButton}
-                    title="Descarregar arquivo"
-                  >
-                    <DownloadIcon className={styles.icon} />
-                  </button>
+                  <button onClick={() => docService.downloadDocument(file.id)} className={styles.downloadButton}><DownloadIcon /></button>
                 </div>
               ))}
             </div>
