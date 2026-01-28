@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth.jsx';
-import useApi from '@/hooks/useApi.jsx';
-import { useNotification } from '@/contexts/NotificationContext.jsx';
+import { useAuth } from '../../hooks/useAuth.jsx';
+import useApi from '../../hooks/useApi.jsx';
+import { useNotification } from '../../contexts/NotificationContext.jsx';
 import { Link } from 'react-router-dom';
-import * as docService from '@/services/documentService.js';
-import Spinner from '@/components/common/Spinner.jsx';
-import { FileIcon, DownloadIcon } from '@/components/common/Icons.jsx';
-import { formatDate } from '@/utils/formatDate.js';
-import styles from '../Documents.module.css';
+import * as docService from '../../services/documentService.js';
+import DocumentUpload from './components/DocumentUpload.jsx'; // Certifique-se que este arquivo existe nesta pasta
+import Spinner from '../../components/common/Spinner.jsx';
+import { FileIcon, DownloadIcon } from '../../components/common/Icons.jsx';
+import { formatDate } from '../../utils/formatDate.js';
+import styles from './Documents.module.css';
 
 // Ícone de Informação Local
 const InfoIcon = () => (
@@ -45,7 +46,6 @@ export default function OSCDocumentsPage() {
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const currentMonthIndex = new Date().getMonth();
 
-  // --- LÓGICA DE STATUS ---
   const getMonthStatus = (monthIndex) => {
     if (monthIndex > currentMonthIndex) return 'future';
     const docsInMonth = myFiles.filter(d => {
@@ -80,7 +80,6 @@ export default function OSCDocumentsPage() {
     }
   };
 
-  // --- BUSCA DE DADOS ---
   const fetchDocuments = async () => {
     setIsLoadingList(true);
     try {
@@ -98,7 +97,6 @@ export default function OSCDocumentsPage() {
     if(user?.id) fetchDocuments(); 
   }, [user?.id]);
 
-  // --- HANDLERS ---
   const handleFileUpload = async (file) => {
     try {
       const formData = new FormData();
@@ -138,6 +136,7 @@ export default function OSCDocumentsPage() {
             <p className={styles.infoText}><strong>Nome:</strong> {user?.name}</p>
             <p className={styles.infoText}><strong>CNPJ:</strong> {user?.cnpj || 'Não informado'}</p>
           </div>
+          {/* Componente que estava faltando a importação ou falhando */}
           <DocumentUpload onUpload={handleFileUpload} isLoading={isUploading} />
         </div>
 
