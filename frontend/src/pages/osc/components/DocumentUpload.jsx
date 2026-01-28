@@ -7,7 +7,7 @@ import * as docService from '@/services/documentService.js';
 import Spinner from '@/components/common/Spinner.jsx';
 import { FileIcon, DownloadIcon } from '@/components/common/Icons.jsx';
 import { formatDate } from '@/utils/formatDate.js';
-import styles from './Documents.module.css';
+import styles from '../Documents.module.css';
 
 // Ícone de Informação Local
 const InfoIcon = () => (
