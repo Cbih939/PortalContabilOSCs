@@ -13,7 +13,7 @@ import Spinner from '../../components/common/Spinner.jsx';
 import useApi from '../../hooks/useApi.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 
-// --- ÍCONES SVG NATIVOS (Sem dependências externas) ---
+// --- ÍCONES SVG NATIVOS ---
 const IconChevronDown = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
 );
@@ -39,226 +39,84 @@ const IconPlus = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
 );
 
-// --- ESTILOS EM OBJETO (Para garantir o visual sem CSS externo) ---
+// Ícone de Informação (Tooltip)
+const IconInfo = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EC6D12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{cursor: 'help'}}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+);
+
+// --- ESTILOS ---
 const styles = {
-  container: {
-    padding: '20px',
-    width: '90%', // CORREÇÃO: Define a largura para 90% da tela
-    margin: '0 auto', // Centraliza o container
-    fontFamily: 'Arial, sans-serif'
-  },
-  // Header com Botão
-  headerRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px'
-  },
-  title: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    margin: 0
-  },
-  registerBtn: {
-    backgroundColor: '#ea580c', // Laranja
+  container: { padding: '20px', width: '90%', margin: '0 auto', fontFamily: 'Arial, sans-serif' },
+  headerRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
+  title: { fontSize: '24px', fontWeight: 'bold', color: '#1f2937', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' },
+  registerBtn: { backgroundColor: '#ea580c', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', boxShadow: '0 2px 4px rgba(234, 88, 12, 0.2)' },
+  searchRow: { display: 'flex', gap: '15px', marginBottom: '24px', flexWrap: 'wrap' },
+  searchWrapper: { position: 'relative', flex: 1, minWidth: '200px' },
+  searchIcon: { position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', display: 'flex' },
+  searchInput: { width: '100%', padding: '12px 12px 12px 40px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', color: '#374151', boxSizing: 'border-box' },
+  accordionItem: { border: '1px solid #e0e0e0', borderRadius: '8px', marginBottom: '12px', backgroundColor: '#fff', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
+  accordionHeader: { padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', backgroundColor: '#fff', transition: 'background-color 0.2s' },
+  oscInfo: { display: 'flex', flexDirection: 'column' },
+  oscName: { fontSize: '16px', fontWeight: 'bold', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '8px' },
+  oscCnpj: { fontSize: '13px', color: '#6b7280', marginTop: '4px' },
+  actions: { display: 'flex', gap: '8px' },
+  actionBtn: (color, bg) => ({ padding: '8px', borderRadius: '50%', border: 'none', cursor: 'pointer', color: color, backgroundColor: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.2s' }),
+  accordionBody: { padding: '20px', backgroundColor: '#f9fafb', borderTop: '1px solid #eee' },
+  legend: { display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '20px', fontSize: '12px', color: '#555' },
+  legendItem: { display: 'flex', alignItems: 'center', gap: '6px' },
+  colorBox: (bg, border) => ({ width: '12px', height: '12px', backgroundColor: bg, border: `1px solid ${border}`, borderRadius: '2px' }),
+  sectionTitle: { fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' },
+  calendarGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '10px', marginBottom: '24px' },
+  monthBox: (bg, color, border) => ({ backgroundColor: bg, color: color, border: `1px solid ${border}`, borderRadius: '6px', padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60px' }),
+  monthText: { fontSize: '14px', fontWeight: 'bold' },
+  statusText: { fontSize: '10px', fontWeight: '600', marginTop: '4px', textTransform: 'uppercase' },
+  docList: { backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '6px', maxHeight: '200px', overflowY: 'auto' },
+  docItem: { padding: '12px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px' },
+  emptyState: { textAlign: 'center', padding: '40px', color: '#9ca3af', backgroundColor: '#f9fafb', borderRadius: '8px', border: '2px dashed #e5e7eb' },
+  
+  // TOOLTIP STYLES (Inline simulation)
+  tooltipWrapper: { position: 'relative', display: 'inline-flex', alignItems: 'center' },
+  tooltipBox: {
+    visibility: 'hidden',
+    width: '240px',
+    backgroundColor: '#1e2937',
     color: '#fff',
-    border: 'none',
-    padding: '10px 20px',
-    borderRadius: '6px',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    fontSize: '14px',
-    boxShadow: '0 2px 4px rgba(234, 88, 12, 0.2)'
-  },
-  // Barra de Pesquisa
-  searchRow: {
-    display: 'flex',
-    gap: '15px',
-    marginBottom: '24px',
-    flexWrap: 'wrap'
-  },
-  searchWrapper: {
-    position: 'relative',
-    flex: 1,
-    minWidth: '200px'
-  },
-  searchIcon: {
-    position: 'absolute',
-    left: '12px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    display: 'flex'
-  },
-  searchInput: {
-    width: '100%',
-    padding: '12px 12px 12px 40px', // Espaço para o ícone
-    borderRadius: '6px',
-    border: '1px solid #d1d5db',
-    fontSize: '14px',
-    outline: 'none',
-    color: '#374151',
-    boxSizing: 'border-box' // Importante para o padding não estourar
-  },
-  // Acordeon
-  accordionItem: {
-    border: '1px solid #e0e0e0',
-    borderRadius: '8px',
-    marginBottom: '12px',
-    backgroundColor: '#fff',
-    overflow: 'hidden',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-  },
-  accordionHeader: {
-    padding: '16px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    cursor: 'pointer',
-    backgroundColor: '#fff',
-    transition: 'background-color 0.2s'
-  },
-  accordionHeaderHover: {
-    backgroundColor: '#f9fafb'
-  },
-  oscInfo: {
-    display: 'flex',
-    flexDirection: 'column'
-  },
-  oscName: {
-    fontSize: '16px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px'
-  },
-  oscCnpj: {
-    fontSize: '13px',
-    color: '#6b7280',
-    marginTop: '4px'
-  },
-  actions: {
-    display: 'flex',
-    gap: '8px'
-  },
-  actionBtn: (color, bg) => ({
-    padding: '8px',
-    borderRadius: '50%',
-    border: 'none',
-    cursor: 'pointer',
-    color: color,
-    backgroundColor: bg,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'opacity 0.2s'
-  }),
-  accordionBody: {
-    padding: '20px',
-    backgroundColor: '#f9fafb',
-    borderTop: '1px solid #eee'
-  },
-  legend: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '16px',
-    marginBottom: '20px',
-    fontSize: '12px',
-    color: '#555'
-  },
-  legendItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px'
-  },
-  colorBox: (bg, border) => ({
-    width: '12px',
-    height: '12px',
-    backgroundColor: bg,
-    border: `1px solid ${border}`,
-    borderRadius: '2px'
-  }),
-  sectionTitle: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: '12px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em'
-  },
-  calendarGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
-    gap: '10px',
-    marginBottom: '24px'
-  },
-  monthBox: (bg, color, border) => ({
-    backgroundColor: bg,
-    color: color,
-    border: `1px solid ${border}`,
+    textAlign: 'left',
     borderRadius: '6px',
     padding: '10px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: '60px'
-  }),
-  monthText: {
-    fontSize: '14px',
-    fontWeight: 'bold'
-  },
-  statusText: {
-    fontSize: '10px',
-    fontWeight: '600',
-    marginTop: '4px',
-    textTransform: 'uppercase'
-  },
-  docList: {
-    backgroundColor: '#fff',
-    border: '1px solid #e5e7eb',
-    borderRadius: '6px',
-    maxHeight: '200px',
-    overflowY: 'auto'
-  },
-  docItem: {
-    padding: '12px',
-    borderBottom: '1px solid #f3f4f6',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    fontSize: '14px'
-  },
-  emptyState: {
-    textAlign: 'center',
-    padding: '40px',
-    color: '#9ca3af',
-    backgroundColor: '#f9fafb',
-    borderRadius: '8px',
-    border: '2px dashed #e5e7eb'
+    position: 'absolute',
+    zIndex: 10,
+    bottom: '125%',
+    left: '50%',
+    marginLeft: '-120px',
+    opacity: 0,
+    transition: 'opacity 0.3s',
+    fontSize: '12px',
+    lineHeight: '1.4',
+    fontWeight: 'normal',
+    pointerEvents: 'none',
+    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
   }
 };
 
+// Inserção de CSS Global dinâmico para os estados de Hover do Tooltip
+const injectStyles = () => {
+  const styleTag = document.createElement('style');
+  styleTag.innerHTML = `
+    .tooltip-container:hover .tooltip-box { visibility: visible !important; opacity: 1 !important; }
+    .accordion-header:hover { background-color: #f9fafb !important; }
+  `;
+  document.head.appendChild(styleTag);
+};
+injectStyles();
+
 // --- COMPONENTE LOCAL: Item do Acordeon ---
 const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAlert }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  const months = [
-    'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-    'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
-  ];
-
+  const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const currentMonthIndex = new Date().getMonth(); 
 
   const getMonthStatus = (monthIndex) => {
-    // 1. Futuro
     if (monthIndex > currentMonthIndex) return 'future';
-
-    // 2. Mês Atual
     if (monthIndex === currentMonthIndex) {
         const hasDocCurrentMonth = osc.documents && osc.documents.some(d => {
             if (!d.createdAt) return false;
@@ -266,29 +124,24 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
         });
         if (!hasDocCurrentMonth) return 'pending';
     }
-
-    // 3. Meses Passados
     const docsInMonth = osc.documents ? osc.documents.filter(d => {
         if (!d.createdAt) return false;
         return new Date(d.createdAt).getMonth() === monthIndex;
     }) : [];
-
     const hasDoc = docsInMonth.length > 0;
     const isVerified = hasDoc && docsInMonth.some(d => d.verified === true || d.status === 'APPROVED');
-
     if (isVerified) return 'concluded'; 
     if (hasDoc) return 'sent';          
     return 'late';
   };
 
-  // Cores (Background, Texto, Borda)
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'late': return ['#fee2e2', '#b91c1c', '#fecaca']; // Vermelho (Atraso)
-      case 'pending': return ['#fef9c3', '#a16207', '#fde047']; // Amarelo (Pendente)
-      case 'sent': return ['#dbeafe', '#1d4ed8', '#bfdbfe']; // Azul (Enviado)
-      case 'concluded': return ['#dcfce7', '#15803d', '#86efac']; // Verde (Concluso)
-      default: return ['#f3f4f6', '#9ca3af', '#e5e7eb']; // Cinza (Futuro)
+      case 'late': return ['#fee2e2', '#b91c1c', '#fecaca'];
+      case 'pending': return ['#fef9c3', '#a16207', '#fde047'];
+      case 'sent': return ['#dbeafe', '#1d4ed8', '#bfdbfe'];
+      case 'concluded': return ['#dcfce7', '#15803d', '#86efac'];
+      default: return ['#f3f4f6', '#9ca3af', '#e5e7eb'];
     }
   };
 
@@ -308,12 +161,10 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
       border: isExpanded ? '1px solid #93c5fd' : '1px solid #e0e0e0',
       boxShadow: isExpanded ? '0 0 0 1px #bfdbfe' : 'none'
     }}>
-      {/* Cabeçalho */}
       <div 
-        style={{...styles.accordionHeader, ...(isHovered ? styles.accordionHeaderHover : {})}}
+        className="accordion-header"
+        style={styles.accordionHeader}
         onClick={() => onToggle(osc.id)}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         <div style={styles.oscInfo}>
           <span style={styles.oscName}>
@@ -336,20 +187,25 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
         </div>
       </div>
 
-      {/* Corpo Expandido */}
       {isExpanded && (
         <div style={styles.accordionBody}>
-          
-          {/* Legenda */}
           <div style={styles.legend}>
             <div style={styles.legendItem}><div style={styles.colorBox('#fee2e2', '#fecaca')}></div> Em Atraso</div>
-            <div style={styles.legendItem}><div style={styles.colorBox('#fef9c3', '#fde047')}></div> Pendente (Mês Atual)</div>
+            <div style={styles.legendItem}><div style={styles.colorBox('#fef9c3', '#fde047')}></div> Pendente</div>
             <div style={styles.legendItem}><div style={styles.colorBox('#dbeafe', '#bfdbfe')}></div> Enviado</div>
             <div style={styles.legendItem}><div style={styles.colorBox('#dcfce7', '#86efac')}></div> Concluso</div>
           </div>
 
-          {/* Calendário */}
-          <h4 style={styles.sectionTitle}>Situação Anual ({new Date().getFullYear()})</h4>
+          <h4 style={styles.sectionTitle}>
+            Situação Anual ({new Date().getFullYear()})
+            <div className="tooltip-container" style={styles.tooltipWrapper}>
+              <IconInfo />
+              <div className="tooltip-box" style={styles.tooltipBox}>
+                Este calendário monitora a conformidade mensal da OSC. O status "OK" indica que os documentos foram revisados e aprovados por você.
+              </div>
+            </div>
+          </h4>
+          
           <div style={styles.calendarGrid}>
             {months.map((m, idx) => {
               const status = getMonthStatus(idx);
@@ -363,9 +219,14 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             })}
           </div>
 
-          {/* Lista de Documentos */}
-          <h4 style={{...styles.sectionTitle, display: 'flex', alignItems: 'center', gap: '8px'}}>
+          <h4 style={{...styles.sectionTitle, gap: '8px'}}>
             <IconFileText /> Documentações Recentes
+            <div className="tooltip-container" style={styles.tooltipWrapper}>
+              <IconInfo />
+              <div className="tooltip-box" style={styles.tooltipBox}>
+                Lista dos últimos arquivos submetidos pela organização para conferência.
+              </div>
+            </div>
           </h4>
           
           {osc.documents && osc.documents.length > 0 ? (
@@ -397,7 +258,6 @@ export default function OSCsPage() {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [expandedOscId, setExpandedOscId] = useState(null);
 
-  // Estados do Filtro
   const [searchName, setSearchName] = useState('');
   const [searchCnpj, setSearchCnpj] = useState('');
   const [searchResponsible, setSearchResponsible] = useState('');
@@ -415,25 +275,12 @@ export default function OSCsPage() {
       setIsLoadingData(true);
       try {
         const response = await oscService.getMyOSCs();
-        
         let data = [];
-        if (Array.isArray(response)) {
-            data = response;
-        } else if (response && Array.isArray(response.data)) {
-            data = response.data;
-        } else if (response && response.data && Array.isArray(response.data.data)) {
-             data = response.data.data;
-        }
+        if (Array.isArray(response)) data = response;
+        else if (response?.data) data = Array.isArray(response.data) ? response.data : response.data.data || [];
 
-        const sortedData = data.sort((a, b) => {
-            const nameA = a.name || '';
-            const nameB = b.name || '';
-            return nameA.localeCompare(nameB);
-        });
-
-        setOscs(sortedData);
+        setOscs(data.sort((a, b) => (a.name || '').localeCompare(b.name || '')));
       } catch (err) {
-        console.error("Erro:", err);
         addNotification("Erro ao carregar OSCs.", "error");
       } finally {
         setIsLoadingData(false);
@@ -442,54 +289,26 @@ export default function OSCsPage() {
     fetchOSCs();
   }, [addNotification]);
 
-  // Lógica de Filtro
   const filteredOscs = oscs.filter(osc => {
     const nameMatch = osc.name?.toLowerCase().includes(searchName.toLowerCase());
     const cnpjMatch = osc.cnpj?.replace(/\D/g, '').includes(searchCnpj.replace(/\D/g, ''));
-    // Se não tiver campo responsible, ignora ou adapta conforme sua API
     const respMatch = !searchResponsible || osc.responsible?.toLowerCase().includes(searchResponsible.toLowerCase());
-    
     return nameMatch && cnpjMatch && respMatch;
   });
 
-  const handleToggleAccordion = (id) => {
-    setExpandedOscId(prevId => (prevId === id ? null : id));
-  };
-
-  const handleCloseModals = () => {
-    setOscToView(null);
-    setOscToEdit(null);
-    setOscToSendAlert(null);
-  };
-
-  const handleRegister = () => {
-    // Abre o modal de cadastro (geralmente pode ser o EditOSCModal sem dados ou um modal específico)
-    // Se você tiver um modal específico de cadastro, altere aqui.
-    // Como exemplo, vou usar o EditOSCModal passando um objeto vazio se a lógica permitir,
-    // ou apenas um alerta se a funcionalidade ainda for mockada.
-    setOscToEdit({}); // Tenta abrir o modal de edição vazio para criar
-  };
+  const handleToggleAccordion = (id) => setExpandedOscId(prevId => (prevId === id ? null : id));
+  const handleCloseModals = () => { setOscToView(null); setOscToEdit(null); setOscToSendAlert(null); };
+  const handleRegister = () => setOscToEdit({});
 
   const handleSaveEdit = async (formData) => {
     try {
-      // Se formData não tiver ID, é criação (ajuste conforme seu service)
       const isCreation = !formData.id;
-      
-      // Aqui você chamaria oscService.createOSC(formData) se fosse criação
-      // Mas vou manter o fluxo de update pois não tenho o código do service create.
-      const updatedOSCResponse = await updateOSC(formData.id, formData);
-      const updatedOSC = updatedOSCResponse.data || updatedOSCResponse; 
-      
-      setOscs((prevOscs) => {
-        if (isCreation) return [...prevOscs, updatedOSC]; // Adiciona se for novo
-        return prevOscs.map((o) => (o.id === updatedOSC.id ? { ...o, ...updatedOSC } : o));
-      });
-      
-      addNotification(`OSC ${isCreation ? 'cadastrada' : 'salva'} com sucesso!`, 'success');
+      const response = await updateOSC(formData.id, formData);
+      const updatedOSC = response.data || response; 
+      setOscs(prev => isCreation ? [...prev, updatedOSC] : prev.map(o => o.id === updatedOSC.id ? updatedOSC : o));
+      addNotification(`OSC salva com sucesso!`, 'success');
       handleCloseModals();
-    } catch (err) {
-      addNotification('Erro ao salvar.', 'error');
-    }
+    } catch (err) { addNotification('Erro ao salvar.', 'error'); }
   };
 
   const handleSendAlertSubmit = async (formData) => {
@@ -497,73 +316,46 @@ export default function OSCsPage() {
       await sendAlert(formData);
       addNotification('Alerta enviado!', 'success');
       handleCloseModals();
-    } catch (err) {
-      addNotification('Erro ao enviar.', 'error');
-    }
+    } catch (err) { addNotification('Erro ao enviar.', 'error'); }
   };
 
-  if (isLoadingData) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 100px)' }}>
-         <Spinner text="Carregando..." />
-      </div>
-     );
-  }
+  if (isLoadingData) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}><Spinner text="Carregando..." /></div>;
 
   return (
     <div style={styles.container}>
-      
-      {/* --- HEADER: Título e Botão Cadastro --- */}
       <div style={styles.headerRow}>
-        <h1 style={styles.title}>Organizações Cadastradas</h1>
+        <h1 style={styles.title}>
+          Organizações Cadastradas
+          <div className="tooltip-container" style={styles.tooltipWrapper}>
+            <IconInfo />
+            <div className="tooltip-box" style={styles.tooltipBox}>
+              Gerencie aqui todas as OSCs vinculadas à sua carteira. Você pode monitorar documentos, editar dados e enviar alertas de pendências.
+            </div>
+          </div>
+        </h1>
         <button style={styles.registerBtn} onClick={handleRegister}>
-          <IconPlus />
-          Cadastrar Nova OSC
+          <IconPlus /> Cadastrar Nova OSC
         </button>
       </div>
 
-      {/* --- BARRA DE PESQUISA --- */}
       <div style={styles.searchRow}>
         <div style={styles.searchWrapper}>
           <div style={styles.searchIcon}><IconSearch /></div>
-          <input 
-            type="text" 
-            placeholder="Buscar por Nome da OSC..." 
-            style={styles.searchInput}
-            value={searchName}
-            onChange={(e) => setSearchName(e.target.value)}
-          />
+          <input type="text" placeholder="Nome da OSC..." style={styles.searchInput} value={searchName} onChange={(e) => setSearchName(e.target.value)} />
         </div>
         <div style={styles.searchWrapper}>
           <div style={styles.searchIcon}><IconSearch /></div>
-          <input 
-            type="text" 
-            placeholder="Buscar por CNPJ..." 
-            style={styles.searchInput}
-            value={searchCnpj}
-            onChange={(e) => setSearchCnpj(e.target.value)}
-          />
+          <input type="text" placeholder="CNPJ..." style={styles.searchInput} value={searchCnpj} onChange={(e) => setSearchCnpj(e.target.value)} />
         </div>
         <div style={styles.searchWrapper}>
           <div style={styles.searchIcon}><IconSearch /></div>
-          <input 
-            type="text" 
-            placeholder="Buscar por Responsável..." 
-            style={styles.searchInput}
-            value={searchResponsible}
-            onChange={(e) => setSearchResponsible(e.target.value)}
-          />
+          <input type="text" placeholder="Responsável..." style={styles.searchInput} value={searchResponsible} onChange={(e) => setSearchResponsible(e.target.value)} />
         </div>
       </div>
 
-      {/* --- LISTA DE OSCs --- */}
       <div>
         {filteredOscs.length === 0 ? (
-            <div style={styles.emptyState}>
-                {oscs.length === 0 
-                  ? "Nenhuma OSC encontrada na base de dados." 
-                  : "Nenhuma OSC encontrada para os filtros aplicados."}
-            </div>
+            <div style={styles.emptyState}>Nenhuma OSC encontrada.</div>
         ) : (
             filteredOscs.map(osc => (
                 <OSCAccordionItem 
@@ -579,23 +371,9 @@ export default function OSCsPage() {
         )}
       </div>
 
-      {oscToView && (
-        <ViewOSCModal isOpen={!!oscToView} onClose={handleCloseModals} osc={oscToView} />
-      )}
-      
-      {oscToEdit && (
-        <EditOSCModal
-          isOpen={!!oscToEdit} onClose={handleCloseModals}
-          oscData={oscToEdit} onSave={handleSaveEdit} isLoading={isUpdating}
-        />
-      )}
-      
-      {oscToSendAlert && (
-        <SendAlertModal
-          isOpen={!!oscToSendAlert} onClose={handleCloseModals}
-          osc={oscToSendAlert} onSend={handleSendAlertSubmit} isLoading={isSendingAlert}
-        />
-      )}
+      {oscToView && <ViewOSCModal isOpen={!!oscToView} onClose={handleCloseModals} osc={oscToView} />}
+      {oscToEdit && <EditOSCModal isOpen={!!oscToEdit} onClose={handleCloseModals} oscData={oscToEdit} onSave={handleSaveEdit} isLoading={isUpdating} />}
+      {oscToSendAlert && <SendAlertModal isOpen={!!oscToSendAlert} onClose={handleCloseModals} osc={oscToSendAlert} onSend={handleSendAlertSubmit} isLoading={isSendingAlert} />}
     </div>
   );
 }
