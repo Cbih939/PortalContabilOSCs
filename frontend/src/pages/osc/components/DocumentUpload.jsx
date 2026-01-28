@@ -1,19 +1,15 @@
+// src/pages/osc/components/DocumentUpload.jsx
+
 import React, { useState, useRef } from 'react';
+// import { clsx } from 'clsx'; // Não mais necessário
 import { UploadIcon } from '../../../components/common/Icons.jsx';
 import Button from '../../../components/common/Button.jsx';
 import Spinner from '../../../components/common/Spinner.jsx';
-import styles from './DocumentUpload.module.css';
+import styles from './DocumentUpload.module.css'; // Importa CSS Module
 
-// Ícone de Informação Local
-const InfoIcon = () => (
-  <svg 
-    style={{ width: '14px', height: '14px', color: '#9ca3af', cursor: 'help', marginLeft: '6px' }} 
-    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
+/**
+ * Componente "card" de upload de documento (CSS Modules).
+ */
 export default function DocumentUpload({ onUpload, isLoading, className = '' }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState(null);
@@ -34,6 +30,7 @@ export default function DocumentUpload({ onUpload, isLoading, className = '' }) 
       return;
     }
     if (isLoading) return;
+
     setError(null);
 
     try {
@@ -43,25 +40,22 @@ export default function DocumentUpload({ onUpload, isLoading, className = '' }) 
         fileInputRef.current.value = null;
       }
     } catch (err) {
-      console.error('Falha no upload:', err);
+      console.error('Falha no upload (visto pelo DocumentUpload):', err);
+      // O erro da API já foi mostrado pelo hook no pai
+      // Não limpamos o selectedFile para permitir nova tentativa
     }
   };
 
+  // Determina se a dropzone deve ter estilo de erro
   const dropzoneClasses = `${styles.dropzone} ${error ? styles.dropzoneError : ''}`;
 
   return (
     <div className={`${styles.card} ${className}`}>
       <h2 className={styles.title}>
         Enviar Documento
-        {/* Adicionado Tooltip Explicativo aqui */}
-        <div className={styles.tooltipContainer}>
-          <InfoIcon />
-          <span className={styles.tooltipText}>
-            Selecione o arquivo oficial (Estatuto, Ata, etc) já assinado e registrado. O sistema aceita formatos PDF, Word, Excel e Imagens.
-          </span>
-        </div>
       </h2>
 
+      {/* Área de Seleção */}
       <div className={dropzoneClasses}>
         <UploadIcon className={styles.uploadIcon} />
         <label htmlFor="file-upload" className={styles.selectLabel}>
@@ -71,7 +65,7 @@ export default function DocumentUpload({ onUpload, isLoading, className = '' }) 
             name="file-upload"
             type="file"
             ref={fileInputRef}
-            className={styles.fileInput}
+            className={styles.fileInput} // Aplica classe para esconder
             onChange={handleFileChange}
             accept=".pdf,.docx,.xlsx,.xls,.png,.jpg,.jpeg"
           />
@@ -87,16 +81,17 @@ export default function DocumentUpload({ onUpload, isLoading, className = '' }) 
         {error && <p className={styles.errorMessage}>{error}</p>}
       </div>
 
+      {/* Botão de Envio */}
       <Button
         onClick={handleUploadClick}
         className={styles.uploadButton}
         disabled={isLoading || !selectedFile}
-        variant="primary"
+        variant="primary" // Usa a variante azul
       >
         {isLoading ? (
-          <Spinner size="sm" className="mr-2" />
+          <Spinner size="sm" className="mr-2" /> /* Classe mr-2 pode precisar de CSS global */
         ) : (
-          <UploadIcon className="h-5 w-5 mr-2" />
+          <UploadIcon className="h-5 w-5 mr-2" /> /* Idem */
         )}
         {isLoading ? 'Enviando...' : 'Enviar Arquivo'}
       </Button>
