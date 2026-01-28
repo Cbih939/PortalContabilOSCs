@@ -7,6 +7,19 @@ import { DownloadIcon } from '../../components/common/Icons.jsx';
 import { formatDate } from '../../utils/formatDate.js';
 import styles from './Documents.module.css';
 
+// Ícone de Informação (Tooltip) declarado localmente
+const InfoIcon = () => (
+  <svg 
+    style={{ width: '18px', height: '18px', color: '#EC6D12', cursor: 'help', marginLeft: '10px' }} 
+    xmlns="http://www.w3.org/2000/svg" 
+    fill="none" 
+    viewBox="0 0 24 24" 
+    stroke="currentColor"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
 export default function ContadorDocumentsPage() {
   const { user } = useAuth();
   const [documents, setDocuments] = useState([]);
@@ -15,10 +28,7 @@ export default function ContadorDocumentsPage() {
   const fetchReceivedDocs = async () => {
     setIsLoading(true);
     try {
-      // Tenta chamar a rota correta. Certifique-se que o service usa /documents/received
       const data = await docService.getReceivedDocuments(); 
-      
-      // Ordenação Alfanumérica pelo nome do remetente ou título
       const sorted = data.sort((a, b) => 
         (a.title || a.original_name).localeCompare(b.title || b.original_name)
       );
@@ -44,14 +54,21 @@ export default function ContadorDocumentsPage() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Documentos Recebidos das OSCs</h1>
+      <div className={styles.headerWithInfo}>
+        <h1 className={styles.title}>Documentos Recebidos das OSCs</h1>
+        <div className={styles.tooltipContainer}>
+          <InfoIcon />
+          <span className={styles.tooltipText}>
+            Esta central reúne todos os documentos enviados pelas suas OSCs. Ao clicar em um arquivo, você pode visualizá-lo para realizar a conferência e validar o status no painel de controle da organização.
+          </span>
+        </div>
+      </div>
 
       {isLoading ? (
         <Spinner text="Carregando documentos..." />
       ) : documents.length === 0 ? (
         <div className={styles.empty}>Nenhum documento recebido até o momento.</div>
       ) : (
-        /* Grelha de 5 colunas idêntica à da OSC */
         <div className={styles.pdfGrid}>
           {documents.map((doc) => (
             <div 
@@ -60,9 +77,7 @@ export default function ContadorDocumentsPage() {
               onClick={() => handleDownload(doc)}
             >
               <div className={styles.pdfThumbnail}>
-                {/* Miniatura da capa do PDF */}
                 <PdfThumbnail fileUrl={`${import.meta.env.VITE_API_URL}/${doc.file_path}`} />
-                
                 <div className={styles.downloadOverlay}>
                   <DownloadIcon />
                 </div>
