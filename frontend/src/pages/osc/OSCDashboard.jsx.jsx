@@ -14,6 +14,13 @@ const MsgIcon = () => (
   <svg className={styles.cardIconGreen} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
 );
 
+// Ícone de Informação (Tooltip)
+const InfoIcon = () => (
+  <svg className={styles.infoIcon} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
 export default function OSCDashboard() {
   const { user } = useAuth();
 
@@ -48,36 +55,72 @@ export default function OSCDashboard() {
 
       {/* 2. Cards de Resumo */}
       <div className={styles.statsGrid}>
+        
+        {/* Card: Docs | Modelos */}
         <div className={styles.card}>
           <div className={styles.iconCircleBlue}><FileIcon /></div>
           <div className={styles.cardContent}>
-            <span className={styles.cardLabel}>Docs | Modelos</span>
+            <div className={styles.labelWithInfo}>
+              <span className={styles.cardLabel}>Docs | Modelos</span>
+              <div className={styles.tooltipContainer}>
+                <InfoIcon />
+                <span className={styles.tooltipText}>
+                  Esta planilha contém as informações e instruções passo a passo de como preencher corretamente os documentos que devem ser enviados ao escritório de contabilidade.
+                </span>
+              </div>
+            </div>
             <strong className={styles.cardValueText}>Planilha Formato Base</strong>
           </div>
           <button className={styles.downloadBtn}>↓</button>
         </div>
 
+        {/* Card: Docs Pendentes */}
         <div className={styles.card}>
           <div className={styles.iconCircleYellow}><FolderWarningIcon /></div>
           <div className={styles.cardContent}>
-            <span className={styles.cardLabel}>Docs. Pendentes</span>
+            <div className={styles.labelWithInfo}>
+              <span className={styles.cardLabel}>Docs. Pendentes</span>
+              <div className={styles.tooltipContainer}>
+                <InfoIcon />
+                <span className={styles.tooltipText}>
+                  Indica a quantidade de documentos mensais obrigatórios que ainda não foram enviados ou que precisam de correção.
+                </span>
+              </div>
+            </div>
             <strong className={styles.cardValue}>4</strong>
           </div>
         </div>
 
+        {/* Card: Mensagens */}
         <div className={styles.card}>
           <div className={styles.iconCircleGreen}><MsgIcon /></div>
           <div className={styles.cardContent}>
-            <span className={styles.cardLabel}>Mensagens</span>
+            <div className={styles.labelWithInfo}>
+              <span className={styles.cardLabel}>Mensagens</span>
+              <div className={styles.tooltipContainer}>
+                <InfoIcon />
+                <span className={styles.tooltipText}>
+                  Comunicações diretas do seu contador. Verifique sempre para responder dúvidas sobre sua prestação de contas.
+                </span>
+              </div>
+            </div>
             <strong className={styles.cardValue}>3</strong>
           </div>
         </div>
       </div>
 
-      {/* 3. CALENDÁRIO DE SITUAÇÃO (NOVO) */}
+      {/* 3. CALENDÁRIO DE SITUAÇÃO */}
       <div className={styles.calendarSection}>
         <div className={styles.calendarHeader}>
-          <h2 className={styles.calendarTitle}>Sua Situação em 2026</h2>
+          <div className={styles.labelWithInfo}>
+            <h2 className={styles.calendarTitle}>Sua Situação em 2026</h2>
+            <div className={styles.tooltipContainer}>
+              <InfoIcon />
+              <span className={styles.tooltipText}>
+                Acompanhe o status mensal da sua organização. Cada cor representa uma etapa do envio e validação dos seus documentos contábeis.
+              </span>
+            </div>
+          </div>
           <div className={styles.legendGrid}>
             <span className={styles.legendItem}><i className={styles.bgRed}></i> Atraso</span>
             <span className={styles.legendItem}><i className={styles.bgYellow}></i> Aberto</span>
