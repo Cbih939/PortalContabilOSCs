@@ -15,6 +15,16 @@ import { useNotification } from '../../contexts/NotificationContext.jsx';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
+// Ícone de Informação Local
+const InfoIcon = () => (
+  <svg 
+    style={{ width: '14px', height: '14px', color: '#EC6D12', cursor: 'help', marginLeft: '6px' }} 
+    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
 const COLORS = ['#EC6D12', '#1f2937', '#6b7280', '#eab308'];
 
 export default function ContadorDashboard() {
@@ -65,7 +75,6 @@ export default function ContadorDashboard() {
 
   const handleDownloadPDF = async () => {
     const element = document.querySelector(`.${styles.pageContainer}`);
-
     const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
@@ -75,7 +84,6 @@ export default function ContadorDashboard() {
 
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
-
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     const imgHeight = (canvas.height * pageWidth) / canvas.width;
@@ -117,12 +125,25 @@ export default function ContadorDashboard() {
       </div>
 
       <div className={styles.topActions}>
-          <button onClick={handleDownloadPDF} className={`${styles.downloadReportBtn} ${styles.noPrint}`}>
-          <DownloadIcon /> Baixar Relatório (PDF)
-        </button>
+          <div className={styles.tooltipContainer}>
+            <button onClick={handleDownloadPDF} className={`${styles.downloadReportBtn} ${styles.noPrint}`}>
+              <DownloadIcon /> Baixar Relatório (PDF)
+            </button>
+            <span className={styles.tooltipText}>
+              Gera um documento consolidado em PDF contendo todos os gráficos e tabelas deste painel para fins de auditoria ou apresentação.
+            </span>
+          </div>
       </div>
 
-      <h2 className={styles.title}>Painel de Controle Analítico</h2>
+      <div className={styles.headerWithInfo}>
+        <h2 className={styles.title}>Painel de Controle Analítico</h2>
+        <div className={styles.tooltipContainer}>
+          <InfoIcon />
+          <span className={styles.tooltipText}>
+            Visão geral em tempo real da conformidade documental e fluxo de comunicação de todas as OSCs sob sua responsabilidade.
+          </span>
+        </div>
+      </div>
 
       {/* KPIs */}
       <div className={styles.statsGrid}>
@@ -137,38 +158,64 @@ export default function ContadorDashboard() {
         </div>
       </div>
 
-      {/* GRÁFICOS – ORDEM CORRIGIDA */}
-      <div className={styles.sectionCard}>
-        <h3>Volume de Envios (Semanal)</h3>
-        <ResponsiveContainer width="100%" height={280}>
-          <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="envios" fill="#EC6D12" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      <div className={styles.chartsGrid}>
+        {/* GRÁFICOS */}
+        <div className={styles.sectionCard}>
+          <div className={styles.headerWithInfo}>
+            <h3>Volume de Envios (Semanal)</h3>
+            <div className={styles.tooltipContainer}>
+              <InfoIcon />
+              <span className={styles.tooltipText}>
+                Métrica de produtividade que mostra a quantidade de documentos submetidos pelas OSCs nos últimos 5 dias úteis.
+              </span>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="envios" fill="#EC6D12" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
 
-      <div className={styles.sectionCard}>
-        <h3>Distribuição de Demandas</h3>
-        <ResponsiveContainer width="100%" height={280}>
-          <PieChart>
-            <Pie data={pieData} dataKey="value" outerRadius={100}>
-              {pieData.map((_, i) => (
-                <Cell key={i} fill={COLORS[i % COLORS.length]} />
-              ))}
-            </Pie>
-            <Legend />
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
+        <div className={styles.sectionCard}>
+          <div className={styles.headerWithInfo}>
+            <h3>Distribuição de Demandas</h3>
+            <div className={styles.tooltipContainer}>
+              <InfoIcon />
+              <span className={styles.tooltipText}>
+                Proporção atual entre documentos aguardando análise, mensagens não lidas e volume de clientes ativos.
+              </span>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <PieChart>
+              <Pie data={pieData} dataKey="value" outerRadius={100}>
+                {pieData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Legend />
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {/* TABELAS */}
       <div className={styles.sectionCard}>
-        <h3>Documentos em Falta / OSCs com Pendências</h3>
+        <div className={styles.headerWithInfo}>
+          <h3>Documentos em Falta / OSCs com Pendências</h3>
+          <div className={styles.tooltipContainer}>
+            <InfoIcon />
+            <span className={styles.tooltipText}>
+              Lista crítica de organizações que possuem documentos obrigatórios vencidos ou não enviados, impedindo a conformidade contábil.
+            </span>
+          </div>
+        </div>
         <table className={styles.missingTable}>
           <thead>
             <tr>
@@ -188,14 +235,24 @@ export default function ContadorDashboard() {
       </div>
 
       <div className={styles.sectionCard}>
-        <h3>Fluxo de Atividades Recentes</h3>
-        {recentActivity.map(item => (
-          <div key={item.id}>
-            <strong>{item.oscName}</strong> — {item.content}
-            <br />
-            <small>{formatDateTime(item.timestamp)}</small>
+        <div className={styles.headerWithInfo}>
+          <h3>Fluxo de Atividades Recentes</h3>
+          <div className={styles.tooltipContainer}>
+            <InfoIcon />
+            <span className={styles.tooltipText}>
+              Log cronológico das últimas interações, incluindo uploads de documentos e novas mensagens recebidas.
+            </span>
           </div>
-        ))}
+        </div>
+        <div className={styles.activityList}>
+          {recentActivity.map(item => (
+            <div key={item.id} className={styles.activityItem}>
+              <strong>{item.oscName}</strong> — {item.content}
+              <br />
+              <small>{formatDateTime(item.timestamp)}</small>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
