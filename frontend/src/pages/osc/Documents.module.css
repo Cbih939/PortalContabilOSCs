@@ -123,6 +123,55 @@
   color: #6b7280;
 }
 
+.headerWithInfo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.tooltipContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.tooltipText {
+  visibility: hidden;
+  width: 280px;
+  background-color: #1e293b;
+  color: #ffffff;
+  text-align: left;
+  border-radius: 8px;
+  padding: 12px;
+  position: absolute;
+  z-index: 100;
+  top: 125%; /* Aparece abaixo do título para não cortar no topo da página */
+  left: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  font-weight: normal;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+/* Seta da Tooltip */
+.tooltipText::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 20px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent #1e293b transparent;
+}
+
+.tooltipContainer:hover .tooltipText {
+  visibility: visible;
+  opacity: 1;
+}
+
 .welcomeText { font-size: 0.9rem; margin-bottom: 1rem; color: #4b5563; }
 .orangeLink { color: #ff6600; font-weight: 600; text-decoration: none; }
 .infoText { font-size: 0.875rem; margin-top: 0.5rem; }

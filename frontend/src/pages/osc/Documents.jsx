@@ -10,7 +10,20 @@ import { FileIcon, DownloadIcon } from '../../components/common/Icons.jsx';
 import { formatDate } from '../../utils/formatDate.js';
 import styles from './Documents.module.css';
 
-// --- ESTILOS INLINE PARA O CALENDÁRIO (Objeto separado do CSS Module) ---
+// Ícone de Informação declarado localmente
+const InfoIcon = () => (
+  <svg 
+    style={{ width: '14px', height: '14px', color: '#9ca3af', cursor: 'help', marginLeft: '6px' }} 
+    xmlns="http://www.w3.org/2000/svg" 
+    fill="none" 
+    viewBox="0 0 24 24" 
+    stroke="currentColor"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
+// --- ESTILOS INLINE PARA O CALENDÁRIO ---
 const calStyles = {
   legend: {
     display: 'flex',
@@ -42,7 +55,9 @@ const calStyles = {
     color: '#374151',
     marginBottom: '12px',
     textTransform: 'uppercase',
-    letterSpacing: '0.05em'
+    letterSpacing: '0.05em',
+    display: 'flex',
+    alignItems: 'center'
   },
   calendarGrid: {
     display: 'grid',
@@ -74,9 +89,6 @@ const calStyles = {
   }
 };
 
-/**
- * Página de Documentos da OSC - Versão em Lista com Calendário
- */
 export default function OSCDocumentsPage() {
   const { user } = useAuth();
   const addNotification = useNotification();
@@ -92,10 +104,7 @@ export default function OSCDocumentsPage() {
   const currentMonthIndex = new Date().getMonth();
 
   const getMonthStatus = (monthIndex) => {
-    // 1. Futuro
     if (monthIndex > currentMonthIndex) return 'future';
-
-    // 2. Mês Atual
     if (monthIndex === currentMonthIndex) {
         const hasDocCurrentMonth = myFiles.some(d => {
             const dateStr = d.date || d.created_at;
@@ -104,30 +113,25 @@ export default function OSCDocumentsPage() {
         });
         if (!hasDocCurrentMonth) return 'pending';
     }
-
-    // 3. Passado (ou atual com doc)
     const docsInMonth = myFiles.filter(d => {
         const dateStr = d.date || d.created_at;
         if (!dateStr) return false;
         return new Date(dateStr).getMonth() === monthIndex;
     });
-
     const hasDoc = docsInMonth.length > 0;
     const isVerified = hasDoc && docsInMonth.some(d => d.verified === true || d.status === 'APPROVED');
-
     if (isVerified) return 'concluded';
     if (hasDoc) return 'sent';
-    
     return 'late';
   };
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'late': return ['#fee2e2', '#b91c1c', '#fecaca'];      // Vermelho
-      case 'pending': return ['#fef9c3', '#a16207', '#fde047'];   // Amarelo
-      case 'sent': return ['#dbeafe', '#1d4ed8', '#bfdbfe'];      // Azul
-      case 'concluded': return ['#dcfce7', '#15803d', '#86efac']; // Verde
-      default: return ['#f3f4f6', '#9ca3af', '#e5e7eb'];          // Cinza
+      case 'late': return ['#fee2e2', '#b91c1c', '#fecaca'];
+      case 'pending': return ['#fef9c3', '#a16207', '#fde047'];
+      case 'sent': return ['#dbeafe', '#1d4ed8', '#bfdbfe'];
+      case 'concluded': return ['#dcfce7', '#15803d', '#86efac'];
+      default: return ['#f3f4f6', '#9ca3af', '#e5e7eb'];
     }
   };
 
@@ -140,7 +144,6 @@ export default function OSCDocumentsPage() {
       default: return '-';
     }
   };
-  // -----------------------------
 
   const fetchDocuments = async () => {
     setIsLoadingList(true);
@@ -148,7 +151,6 @@ export default function OSCDocumentsPage() {
     try {
       const response = await docService.getMyDocuments();
       const docs = Array.isArray(response) ? response : (response.data || []);
-      
       const sortedData = docs.sort((a, b) => {
         const nameA = (a.name || a.original_name || '').toLowerCase();
         const nameB = (b.name || b.original_name || '').toLowerCase();
@@ -197,14 +199,22 @@ export default function OSCDocumentsPage() {
         {/* Coluna 1: Info e Upload */}
         <div className={styles.uploadColumn}>
           <div className={`${styles.infoCard} mb-8`}>
-            <p className={styles.welcomeText}>
-              Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais. 
-              Baixe-os na aba{" "}
-              <Link to="/osc/modelos" className={styles.orangeLink}>
-                "Docs | Modelos"
-              </Link>
-              , realize o registro em cartório (ou assine virtualmente) e os encaminhe para o nosso aplicativo abaixo:
-            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <p className={styles.welcomeText}>
+                Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais. 
+                Baixe-os na aba{" "}
+                <Link to="/osc/modelos" className={styles.orangeLink}>
+                  "Docs | Modelos"
+                </Link>
+                ...
+              </p>
+              <div className={styles.tooltipContainer}>
+                <InfoIcon />
+                <span className={styles.tooltipText}>
+                  Utilize esta área para enviar os documentos preenchidos. O seu contador receberá uma notificação automática para validação.
+                </span>
+              </div>
+            </div>
             <p className={styles.infoText}><strong>Nome:</strong> {user.name}</p>
             <p className={styles.infoText}><strong>CNPJ:</strong> {user.cnpj || 'Não informado'}</p>
           </div>
@@ -215,11 +225,18 @@ export default function OSCDocumentsPage() {
         <div className={`${styles.listCard} ${styles.listColumn}`}>
           <h2 className={styles.cardTitle}>Meus Documentos</h2>
 
-          {/* === CALENDÁRIO (Usando calStyles) === */}
+          {/* === CALENDÁRIO === */}
           <div style={{marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '20px'}}>
-            <h4 style={calStyles.sectionTitle}>Sua Situação em {new Date().getFullYear()}</h4>
+            <h4 style={calStyles.sectionTitle}>
+              Sua Situação em {new Date().getFullYear()}
+              <div className={styles.tooltipContainer}>
+                <InfoIcon />
+                <span className={styles.tooltipText}>
+                  Este calendário mostra a pontualidade dos seus envios mensais. O status "OK" (Verde) significa que o contador já validou o seu arquivo.
+                </span>
+              </div>
+            </h4>
             
-            {/* Legenda */}
             <div style={calStyles.legend}>
                 <div style={calStyles.legendItem}>
                     <div style={calStyles.colorBox('#fee2e2', '#fecaca')}></div> Atraso
@@ -235,7 +252,6 @@ export default function OSCDocumentsPage() {
                 </div>
             </div>
 
-            {/* Grid dos Meses */}
             <div style={calStyles.calendarGrid}>
                 {months.map((m, idx) => {
                     const status = getMonthStatus(idx);
@@ -249,7 +265,6 @@ export default function OSCDocumentsPage() {
                 })}
             </div>
           </div>
-          {/* =================================== */}
 
           {isLoadingList ? (
             <div className={styles.loadingContainer}><Spinner text="A carregar..." /></div>

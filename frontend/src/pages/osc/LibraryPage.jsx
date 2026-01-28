@@ -3,6 +3,19 @@ import * as fileService from '../../services/publicFileService.js';
 import PdfThumbnail from '../osc/components/PdfThumbnail.jsx'; 
 import styles from './Downloads.module.css';
 
+// Ícone de Informação (Tooltip) declarado localmente
+const InfoIcon = () => (
+  <svg 
+    style={{ width: '18px', height: '18px', color: '#EC6D12', cursor: 'help', marginLeft: '10px' }} 
+    xmlns="http://www.w3.org/2000/svg" 
+    fill="none" 
+    viewBox="0 0 24 24" 
+    stroke="currentColor"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
 const BookIcon = ({ className }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -22,12 +35,7 @@ export default function LibraryPage() {
   useEffect(() => {
     fileService.getFilesByCategory('BIBLIOTECA')
       .then(data => {
-        // 1. Filtramos apenas os arquivos da categoria correta
         const filtered = data.filter(f => f.category === 'BIBLIOTECA');
-        
-        // 2. ORDENAÇÃO ALFANUMÉRICA (A-Z)
-        // Usamos localeCompare com 'numeric: true' para que "Ebook 2" venha antes de "Ebook 10"
-        // e 'sensitivity: base' para ignorar acentos na ordenação primária.
         const sorted = filtered.sort((a, b) => {
           const titleA = a.title || "";
           const titleB = b.title || "";
@@ -36,7 +44,6 @@ export default function LibraryPage() {
             sensitivity: 'base' 
           });
         });
-
         setEbooks(sorted);
       })
       .catch(err => console.error("Erro ao carregar biblioteca:", err))
@@ -50,7 +57,15 @@ export default function LibraryPage() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Biblioteca | Downloads</h1>
+      <div className={styles.headerWithInfo}>
+        <h1 className={styles.title}>Biblioteca | Downloads</h1>
+        <div className={styles.tooltipContainer}>
+          <InfoIcon />
+          <span className={styles.tooltipText}>
+            A Biblioteca Digital contém E-books, Manuais e Guias orientativos para fortalecer a gestão da sua OSC. Diferente dos "Modelos", estes arquivos são para leitura e consulta técnica.
+          </span>
+        </div>
+      </div>
 
       {isLoading ? (
         <div className={styles.loading}>Carregando biblioteca...</div>
@@ -64,27 +79,12 @@ export default function LibraryPage() {
               className={styles.bookCard} 
               onClick={() => handleDownload(file.file_path)}
             >
-              <div 
-                className={styles.thumbnailWrapper} 
-                style={{ 
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    alignItems: 'center', 
-                    backgroundColor: 'transparent', 
-                    border: 'none',
-                    overflow: 'hidden'
-                }}
-              >
+              <div className={styles.thumbnailWrapper}>
                 {file.cover_path ? (
                   <img 
                     src={`https://contacomigo.org.br/${file.cover_path.replace(/\\/g, '/')}`} 
                     alt={file.title} 
                     className={styles.bookCoverImage}
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
-                      objectFit: 'contain' 
-                    }}
                   />
                 ) : (
                   <PdfThumbnail fileUrl={`https://contacomigo.org.br/${file.file_path.replace(/\\/g, '/')}`} />
