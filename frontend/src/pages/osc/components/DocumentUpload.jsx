@@ -4,7 +4,6 @@ import useApi from '@/hooks/useApi.jsx';
 import { useNotification } from '@/contexts/NotificationContext.jsx';
 import { Link } from 'react-router-dom';
 import * as docService from '@/services/documentService.js';
-import DocumentUpload from './components/DocumentUpload.jsx';
 import Spinner from '@/components/common/Spinner.jsx';
 import { FileIcon, DownloadIcon } from '@/components/common/Icons.jsx';
 import { formatDate } from '@/utils/formatDate.js';
