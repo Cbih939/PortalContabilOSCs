@@ -7,7 +7,7 @@ import styles from './DocumentUpload.module.css';
 // Ícone de Informação Local
 const InfoIcon = () => (
   <svg 
-    style={{ width: '14px', height: '14px', color: '#9ca3af', cursor: 'help', marginLeft: '6px' }} 
+    style={{ width: '14px', height: '14px', color: '#EC6D12', cursor: 'help', marginLeft: '6px' }} 
     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
   >
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -51,16 +51,15 @@ export default function DocumentUpload({ onUpload, isLoading, className = '' }) 
 
   return (
     <div className={`${styles.card} ${className}`}>
-      <h2 className={styles.title}>
-        Enviar Documento
-        {/* Adicionado Tooltip Explicativo aqui */}
+      <div className={styles.titleRow}>
+        <h2 className={styles.title}>Enviar Documento</h2>
         <div className={styles.tooltipContainer}>
           <InfoIcon />
           <span className={styles.tooltipText}>
             Selecione o arquivo oficial (Estatuto, Ata, etc) já assinado e registrado. O sistema aceita formatos PDF, Word, Excel e Imagens.
           </span>
         </div>
-      </h2>
+      </div>
 
       <div className={dropzoneClasses}>
         <UploadIcon className={styles.uploadIcon} />

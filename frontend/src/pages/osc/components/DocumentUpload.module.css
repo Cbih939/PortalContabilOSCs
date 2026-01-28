@@ -1,54 +1,105 @@
-/* src/pages/osc/components/DocumentUpload.module.css */
-
 .card {
   background-color: white;
-  padding: 1.5rem; /* p-6 */
-  border-radius: 0.5rem; /* rounded-lg */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  position: relative; /* Mantém o contexto para tooltips internos */
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
 }
 
 .title {
-  font-size: 1.25rem; /* text-xl */
-  font-weight: 600; /* font-semibold */
-  margin-bottom: 1rem; /* mb-4 */
-  color: #374151; /* text-gray-700 */
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+.tooltipContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.tooltipText {
+  visibility: hidden;
+  width: 240px;
+  background-color: #1e293b;
+  color: #fff;
+  text-align: left;
+  border-radius: 8px;
+  padding: 12px;
+  position: absolute;
+  z-index: 9999; /* Garante que fique acima de tudo */
+  
+  /* CORREÇÃO: Abre para baixo para não cortar no topo */
+  top: 150%; 
+  right: 0; 
+  
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: normal;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+/* Seta apontando para cima (em direção ao ícone) */
+.tooltipText::after {
+  content: "";
+  position: absolute;
+  bottom: 100%; 
+  right: 10px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent #1e293b transparent;
+}
+
+.tooltipContainer:hover .tooltipText {
+  visibility: visible;
+  opacity: 1;
 }
 
 .dropzone {
-  border: 2px dashed #d1d5db; /* border-2 border-dashed border-gray-300 */
-  border-radius: 0.5rem; /* rounded-lg */
-  padding: 1.5rem; /* p-6 */
+  border: 2px dashed #d1d5db;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
   text-align: center;
   transition: border-color 0.2s ease;
 }
 
 .dropzoneError {
-  border-color: #ef4444; /* border-red-500 */
+  border-color: #ef4444;
 }
 
 .uploadIcon {
   margin-left: auto;
   margin-right: auto;
-  height: 3rem; /* h-12 */
-  width: 3rem; /* w-12 */
-  color: #9ca3af; /* text-gray-400 */
+  height: 3rem;
+  width: 3rem;
+  color: #9ca3af;
 }
 
 .selectLabel {
   cursor: pointer;
-  margin-top: 0.5rem; /* mt-2 */
-  color: #3b82f6; /* text-blue-600 */
-  font-weight: 600; /* font-semibold */
-  display: block; /* Garante que ocupa a linha */
+  margin-top: 0.5rem;
+  color: #3b82f6;
+  font-weight: 600;
+  display: block;
   transition: color 0.2s ease;
 }
 
 .selectLabel:hover {
-  color: #1d4ed8; /* hover:text-blue-800 */
+  color: #1d4ed8;
 }
 
 .fileInput {
-  /* Esconde o input original (sr-only) */
   position: absolute;
   width: 1px;
   height: 1px;
@@ -61,83 +112,26 @@
 }
 
 .fileHint {
-  font-size: 0.75rem; /* text-xs */
-  color: #6b7280; /* text-gray-500 */
-  margin-top: 0.25rem; /* mt-1 */
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
 }
 
 .fileName {
-  font-size: 0.875rem; /* text-sm */
-  color: #4b5563; /* text-gray-600 */
-  margin-top: 0.5rem; /* mt-2 */
-  font-weight: 500; /* font-medium */
-  word-break: break-all; /* Quebra nomes longos */
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin-top: 0.5rem;
+  font-weight: 500;
+  word-break: break-all;
 }
 
 .errorMessage {
-    font-size: 0.875rem; /* text-sm */
-    color: #dc2626; /* text-red-600 */
-    margin-top: 0.5rem; /* mt-2 */
+  font-size: 0.875rem;
+  color: #dc2626;
+  margin-top: 0.5rem;
 }
 
 .uploadButton {
-    margin-top: 1rem; /* mt-4 */
-    width: 100%;
-    /* O estilo visual vem do componente Button importado */
-}
-
-.title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* Garante espaço para o ícone */
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 16px;
-}
-
-.tooltipContainer {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.tooltipText {
-  visibility: hidden;
-  width: 220px;
-  background-color: #1e293b;
-  color: #fff;
-  text-align: left;
-  border-radius: 6px;
-  padding: 10px;
-  position: absolute;
-  z-index: 1000;
-  
-  /* AJUSTE AQUI: Abre para baixo para não cortar no topo da tela */
-  top: 140%; 
-  right: 0; /* Alinha com a borda direita para não sair da tela na lateral */
-  
-  opacity: 0;
-  transition: opacity 0.3s;
-  font-size: 12px;
-  line-height: 1.4;
-  font-weight: normal;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-  pointer-events: none;
-}
-
-/* Seta apontando para cima */
-.tooltipText::after {
-  content: "";
-  position: absolute;
-  bottom: 100%; /* Seta no topo da caixa */
-  right: 10px;
-  border-width: 6px;
-  border-style: solid;
-  border-color: transparent transparent #1e293b transparent;
-}
-
-.tooltipContainer:hover .tooltipText {
-  visibility: visible;
-  opacity: 1;
+  margin-top: 1rem;
+  width: 100%;
 }
