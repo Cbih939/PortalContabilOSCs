@@ -1,12 +1,16 @@
-import React, { useState, useRef } from 'react';
-// IMPORTANTE: Subindo 3 níveis para chegar na raiz de src
-import { useAuth } from '../../../hooks/useAuth.jsx'; 
-import { UploadIcon } from '../../../components/common/Icons.jsx';
-import Button from '../../../components/common/Button.jsx';
-import Spinner from '../../../components/common/Spinner.jsx';
-import styles from './DocumentUpload.module.css';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../hooks/useAuth.jsx';
+import useApi from '../../hooks/useApi.jsx';
+import { useNotification } from '../../contexts/NotificationContext.jsx';
+import { Link } from 'react-router-dom';
+import * as docService from '../../services/documentService.js';
+import DocumentUpload from './components/DocumentUpload.jsx';
+import Spinner from '../../components/common/Spinner.jsx';
+import { FileIcon, DownloadIcon } from '../../components/common/Icons.jsx';
+import { formatDate } from '../../utils/formatDate.js';
+import styles from './Documents.module.css';
 
-// Ícone de Informação Local
+// Ícone de Informação Local (Reutilizado para Tooltips)
 const InfoIcon = () => (
   <svg 
     style={{ width: '16px', height: '16px', color: '#EC6D12', cursor: 'help' }} 
@@ -19,6 +23,7 @@ const InfoIcon = () => (
   </svg>
 );
 
+// Estilos dinâmicos para o Calendário de Situação
 const calStyles = {
   legend: { display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px', fontSize: '11px', color: '#555', padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #eee' },
   legendItem: { display: 'flex', alignItems: 'center', gap: '6px' },
@@ -42,6 +47,7 @@ export default function OSCDocumentsPage() {
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const currentMonthIndex = new Date().getMonth();
 
+  // --- LÓGICA DE STATUS DO CALENDÁRIO ---
   const getMonthStatus = (monthIndex) => {
     if (monthIndex > currentMonthIndex) return 'future';
     const docsInMonth = myFiles.filter(d => {
@@ -76,14 +82,17 @@ export default function OSCDocumentsPage() {
     }
   };
 
+  // --- BUSCA DE DOCUMENTOS ---
   const fetchDocuments = async () => {
     setIsLoadingList(true);
+    setErrorLoading(null);
     try {
       const response = await docService.getMyDocuments();
       const docs = Array.isArray(response) ? response : (response.data || []);
       setMyFiles(docs.sort((a, b) => (a.name || a.original_name || '').localeCompare(b.name || b.original_name || '')));
     } catch (err) {
-      setErrorLoading("Erro ao carregar documentos.");
+      setErrorLoading("Não foi possível carregar os documentos.");
+      addNotification("Erro ao carregar documentos.", "error");
     } finally {
       setIsLoadingList(false);
     }
@@ -93,6 +102,7 @@ export default function OSCDocumentsPage() {
     if(user?.id) fetchDocuments(); 
   }, [user?.id]);
 
+  // --- HANDLERS ---
   const handleFileUpload = async (file) => {
     try {
       const formData = new FormData();
@@ -101,7 +111,7 @@ export default function OSCDocumentsPage() {
       addNotification('Ficheiro enviado com sucesso!', 'success');
       fetchDocuments();
     } catch (err) {
-      addNotification('Falha no upload', 'error');
+      addNotification('Falha no upload do ficheiro.', 'error');
     }
   };
 
@@ -109,52 +119,63 @@ export default function OSCDocumentsPage() {
     try {
       await docService.downloadDocument(file.id, file.name || file.original_name);
     } catch (err) {
-      addNotification('Erro ao descarregar ficheiro', 'error');
+      addNotification('Erro ao descarregar ficheiro.', 'error');
     }
   };
 
   return (
     <div className={styles.pageContainer}>
       <div className={styles.grid}>
+        
+        {/* Coluna 1: Info e Upload */}
         <div className={styles.uploadColumn}>
           <div className={`${styles.infoCard} mb-8`}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
               <p className={styles.welcomeText} style={{ margin: 0, paddingRight: '20px' }}>
-                Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais. Utilize a aba "Docs | Modelos" para baixar os padrões necessários.
+                Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais. Utilize a aba{" "}
+                <Link to="/osc/modelos" className={styles.orangeLink}>
+                  "Docs | Modelos"
+                </Link>{" "}
+                para baixar os padrões necessários.
               </p>
               <div className={styles.tooltipContainer}>
                 <InfoIcon />
                 <span className={styles.tooltipText} style={{ top: '150%', bottom: 'auto', transform: 'translateX(-90%)' }}>
-                  Utilize esta área para enviar os documentos preenchidos.
+                  Utilize esta área para enviar os documentos preenchidos. O seu contador receberá uma notificação automática para validação.
                 </span>
               </div>
             </div>
-            <p className={styles.infoText}><strong>Nome:</strong> {user?.name}</p>
+            <p className={styles.infoText}><strong>Nome:</strong> {user?.name || 'Carregando...'}</p>
             <p className={styles.infoText}><strong>CNPJ:</strong> {user?.cnpj || 'Não informado'}</p>
           </div>
-          {/* Componente que estava faltando a importação ou falhando */}
           <DocumentUpload onUpload={handleFileUpload} isLoading={isUploading} />
         </div>
 
+        {/* Coluna 2: Calendário + Lista de Documentos */}
         <div className={`${styles.listCard} ${styles.listColumn}`}>
           <h2 className={styles.cardTitle}>Meus Documentos</h2>
+
+          {/* Calendário de Situação Mensal */}
           <div style={{marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '20px'}}>
             <h4 style={calStyles.sectionTitle}>
               Sua Situação em {new Date().getFullYear()}
               <div className={styles.tooltipContainer}>
                 <InfoIcon />
                 <span className={styles.tooltipText} style={{ top: '150%', bottom: 'auto' }}>
-                  Acompanhe a pontualidade dos seus envios mensais.
+                  Acompanhe a pontualidade dos seus envios mensais. O status "OK" (Verde) significa que o contador já validou o seu arquivo.
                 </span>
               </div>
             </h4>
+            
             <div style={calStyles.legend}>
-                {['late', 'pending', 'sent', 'concluded'].map(s => (
-                  <div key={s} style={calStyles.legendItem}>
-                    <div style={calStyles.colorBox(getStatusStyle(s)[0], getStatusStyle(s)[2])}></div> {getStatusLabel(s)}
+                {['late', 'pending', 'sent', 'concluded'].map(status => (
+                  <div key={status} style={calStyles.legendItem}>
+                    <div style={calStyles.colorBox(getStatusStyle(status)[0], getStatusStyle(status)[2])}></div> 
+                    {getStatusLabel(status)}
                   </div>
                 ))}
             </div>
+
             <div style={calStyles.calendarGrid}>
                 {months.map((m, idx) => {
                     const status = getMonthStatus(idx);
@@ -168,26 +189,38 @@ export default function OSCDocumentsPage() {
                 })}
             </div>
           </div>
-          {isLoadingList ? <Spinner text="A carregar documentos..." /> : (
+
+          {/* Lista de Ficheiros Enviados */}
+          {isLoadingList ? (
+            <div className={styles.loadingContainer}><Spinner text="A carregar documentos..." /></div>
+          ) : errorLoading ? (
+            <div className={styles.emptyContainer} style={{color: 'red'}}>{errorLoading}</div>
+          ) : myFiles.length === 0 ? (
+            <div className={styles.emptyContainer}><p>Nenhum documento encontrado.</p></div>
+          ) : (
             <div className={styles.fileListContainer}>
-              {myFiles.length === 0 ? (
-                <p className={styles.emptyText}>Nenhum documento encontrado.</p>
-              ) : (
-                myFiles.map(file => (
-                  <div key={file.id} className={styles.fileItem}>
-                    <div className={styles.fileInfo}>
-                      <FileIcon className={styles.fileIcon} />
-                      <div className={styles.fileText}>
-                        <span className={styles.fileName}>{file.name || file.original_name}</span>
-                        <span className={styles.fileDate}>Postado em {formatDate(file.date || file.created_at)}</span>
-                      </div>
+              {myFiles.map((file) => (
+                <div key={file.id} className={styles.fileItem}>
+                  <div className={styles.fileInfo}>
+                    <FileIcon className={styles.fileIcon} />
+                    <div className={styles.fileText}>
+                      <span className={styles.fileName} title={file.name || file.original_name}>
+                        {file.name || file.original_name}
+                      </span>
+                      <span className={styles.fileDate}>
+                        Postado em {formatDate(file.date || file.created_at)}
+                      </span>
                     </div>
-                    <button onClick={() => handleDownload(file)} className={styles.downloadButton}>
-                      <DownloadIcon />
-                    </button>
                   </div>
-                ))
-              )}
+                  <button 
+                    onClick={() => handleDownload(file)} 
+                    className={styles.downloadButton}
+                    title="Descarregar arquivo"
+                  >
+                    <DownloadIcon />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
