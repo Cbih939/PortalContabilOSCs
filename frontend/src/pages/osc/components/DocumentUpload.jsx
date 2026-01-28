@@ -46,11 +46,12 @@ export default function OSCDocumentsPage() {
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const currentMonthIndex = new Date().getMonth();
 
+  // --- LÓGICA DE STATUS ---
   const getMonthStatus = (monthIndex) => {
     if (monthIndex > currentMonthIndex) return 'future';
     const docsInMonth = myFiles.filter(d => {
-        const dateStr = d.date || d.created_at;
-        return dateStr && new Date(dateStr).getMonth() === monthIndex;
+      const dateStr = d.date || d.created_at;
+      return dateStr && new Date(dateStr).getMonth() === monthIndex;
     });
     if (monthIndex === currentMonthIndex && docsInMonth.length === 0) return 'pending';
     const hasDoc = docsInMonth.length > 0;
@@ -80,6 +81,7 @@ export default function OSCDocumentsPage() {
     }
   };
 
+  // --- BUSCA DE DADOS ---
   const fetchDocuments = async () => {
     setIsLoadingList(true);
     try {
@@ -93,8 +95,11 @@ export default function OSCDocumentsPage() {
     }
   };
 
-  useEffect(() => { if(user?.id) fetchDocuments(); }, [user?.id]);
+  useEffect(() => { 
+    if(user?.id) fetchDocuments(); 
+  }, [user?.id]);
 
+  // --- HANDLERS ---
   const handleFileUpload = async (file) => {
     try {
       const formData = new FormData();
@@ -107,6 +112,14 @@ export default function OSCDocumentsPage() {
     }
   };
 
+  const handleDownload = async (file) => {
+    try {
+      await docService.downloadDocument(file.id, file.name || file.original_name);
+    } catch (err) {
+      addNotification('Erro ao descarregar ficheiro', 'error');
+    }
+  };
+
   return (
     <div className={styles.pageContainer}>
       <div className={styles.grid}>
@@ -114,7 +127,7 @@ export default function OSCDocumentsPage() {
           <div className={`${styles.infoCard} mb-8`}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
               <p className={styles.welcomeText} style={{ margin: 0, paddingRight: '20px' }}>
-                Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais...
+                Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais. Utilize a aba "Docs | Modelos" para baixar os padrões necessários.
               </p>
               <div className={styles.tooltipContainer}>
                 <InfoIcon />
@@ -123,8 +136,8 @@ export default function OSCDocumentsPage() {
                 </span>
               </div>
             </div>
-            <p className={styles.infoText}><strong>Nome:</strong> {user.name}</p>
-            <p className={styles.infoText}><strong>CNPJ:</strong> {user.cnpj || 'Não informado'}</p>
+            <p className={styles.infoText}><strong>Nome:</strong> {user?.name}</p>
+            <p className={styles.infoText}><strong>CNPJ:</strong> {user?.cnpj || 'Não informado'}</p>
           </div>
           <DocumentUpload onUpload={handleFileUpload} isLoading={isUploading} />
         </div>
@@ -161,20 +174,26 @@ export default function OSCDocumentsPage() {
                 })}
             </div>
           </div>
-          {isLoadingList ? <Spinner /> : (
+          {isLoadingList ? <Spinner text="A carregar documentos..." /> : (
             <div className={styles.fileListContainer}>
-              {myFiles.map(file => (
-                <div key={file.id} className={styles.fileItem}>
-                  <div className={styles.fileInfo}>
-                    <FileIcon className={styles.fileIcon} />
-                    <div className={styles.fileText}>
-                      <span className={styles.fileName}>{file.name || file.original_name}</span>
-                      <span className={styles.fileDate}>Postado em {formatDate(file.date || file.created_at)}</span>
+              {myFiles.length === 0 ? (
+                <p className={styles.emptyText}>Nenhum documento encontrado.</p>
+              ) : (
+                myFiles.map(file => (
+                  <div key={file.id} className={styles.fileItem}>
+                    <div className={styles.fileInfo}>
+                      <FileIcon className={styles.fileIcon} />
+                      <div className={styles.fileText}>
+                        <span className={styles.fileName}>{file.name || file.original_name}</span>
+                        <span className={styles.fileDate}>Postado em {formatDate(file.date || file.created_at)}</span>
+                      </div>
                     </div>
+                    <button onClick={() => handleDownload(file)} className={styles.downloadButton}>
+                      <DownloadIcon />
+                    </button>
                   </div>
-                  <button onClick={() => docService.downloadDocument(file.id)} className={styles.downloadButton}><DownloadIcon /></button>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           )}
         </div>
