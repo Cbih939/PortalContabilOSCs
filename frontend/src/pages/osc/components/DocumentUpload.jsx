@@ -10,7 +10,7 @@ import { FileIcon, DownloadIcon } from '../../components/common/Icons.jsx';
 import { formatDate } from '../../utils/formatDate.js';
 import styles from './Documents.module.css';
 
-// Ícone de Informação Local (Reutilizado para Tooltips)
+// Ícone de Informação Local
 const InfoIcon = () => (
   <svg 
     style={{ width: '16px', height: '16px', color: '#EC6D12', cursor: 'help' }} 
@@ -23,7 +23,6 @@ const InfoIcon = () => (
   </svg>
 );
 
-// Estilos dinâmicos para o Calendário de Situação
 const calStyles = {
   legend: { display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px', fontSize: '11px', color: '#555', padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #eee' },
   legendItem: { display: 'flex', alignItems: 'center', gap: '6px' },
@@ -38,6 +37,7 @@ const calStyles = {
 export default function OSCDocumentsPage() {
   const { user } = useAuth();
   const addNotification = useNotification();
+
   const [myFiles, setMyFiles] = useState([]);
   const [isLoadingList, setIsLoadingList] = useState(true);
   const [errorLoading, setErrorLoading] = useState(null);
@@ -47,14 +47,21 @@ export default function OSCDocumentsPage() {
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const currentMonthIndex = new Date().getMonth();
 
-  // --- LÓGICA DE STATUS DO CALENDÁRIO ---
   const getMonthStatus = (monthIndex) => {
     if (monthIndex > currentMonthIndex) return 'future';
+    if (monthIndex === currentMonthIndex) {
+        const hasDocCurrentMonth = myFiles.some(d => {
+            const dateStr = d.date || d.created_at;
+            if (!dateStr) return false;
+            return new Date(dateStr).getMonth() === monthIndex;
+        });
+        if (!hasDocCurrentMonth) return 'pending';
+    }
     const docsInMonth = myFiles.filter(d => {
-      const dateStr = d.date || d.created_at;
-      return dateStr && new Date(dateStr).getMonth() === monthIndex;
+        const dateStr = d.date || d.created_at;
+        if (!dateStr) return false;
+        return new Date(dateStr).getMonth() === monthIndex;
     });
-    if (monthIndex === currentMonthIndex && docsInMonth.length === 0) return 'pending';
     const hasDoc = docsInMonth.length > 0;
     const isVerified = hasDoc && docsInMonth.some(d => d.verified === true || d.status === 'APPROVED');
     if (isVerified) return 'concluded';
@@ -82,15 +89,20 @@ export default function OSCDocumentsPage() {
     }
   };
 
-  // --- BUSCA DE DOCUMENTOS ---
   const fetchDocuments = async () => {
     setIsLoadingList(true);
     setErrorLoading(null);
     try {
       const response = await docService.getMyDocuments();
       const docs = Array.isArray(response) ? response : (response.data || []);
-      setMyFiles(docs.sort((a, b) => (a.name || a.original_name || '').localeCompare(b.name || b.original_name || '')));
+      const sortedData = docs.sort((a, b) => {
+        const nameA = (a.name || a.original_name || '').toLowerCase();
+        const nameB = (b.name || b.original_name || '').toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+      setMyFiles(sortedData);
     } catch (err) {
+      console.error("Erro ao carregar documentos:", err);
       setErrorLoading("Não foi possível carregar os documentos.");
       addNotification("Erro ao carregar documentos.", "error");
     } finally {
@@ -98,82 +110,85 @@ export default function OSCDocumentsPage() {
     }
   };
 
-  useEffect(() => { 
-    if(user?.id) fetchDocuments(); 
+  useEffect(() => {
+    if(user?.id) fetchDocuments();
   }, [user?.id]);
 
-  // --- HANDLERS ---
   const handleFileUpload = async (file) => {
     try {
       const formData = new FormData();
       formData.append('file', file);
       await uploadFile(formData);
       addNotification('Ficheiro enviado com sucesso!', 'success');
-      fetchDocuments();
+      await fetchDocuments();
     } catch (err) {
-      addNotification('Falha no upload do ficheiro.', 'error');
+      addNotification(`Falha no upload: ${err.response?.data?.message || err.message}`, 'error');
+      throw err;
     }
   };
 
   const handleDownload = async (file) => {
+    addNotification(`A iniciar download: ${file.name || file.original_name}`, 'info');
     try {
-      await docService.downloadDocument(file.id, file.name || file.original_name);
+      await docService.downloadDocument(file.id, file.original_name || file.name);
     } catch (err) {
-      addNotification('Erro ao descarregar ficheiro.', 'error');
+      addNotification(err.message || 'Falha no download.', 'error');
     }
   };
 
   return (
     <div className={styles.pageContainer}>
       <div className={styles.grid}>
-        
-        {/* Coluna 1: Info e Upload */}
         <div className={styles.uploadColumn}>
           <div className={`${styles.infoCard} mb-8`}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-              <p className={styles.welcomeText} style={{ margin: 0, paddingRight: '20px' }}>
-                Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais. Utilize a aba{" "}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <p className={styles.welcomeText}>
+                Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais. 
+                Baixe-os na aba{" "}
                 <Link to="/osc/modelos" className={styles.orangeLink}>
                   "Docs | Modelos"
-                </Link>{" "}
-                para baixar os padrões necessários.
+                </Link>
+                ...
               </p>
               <div className={styles.tooltipContainer}>
                 <InfoIcon />
-                <span className={styles.tooltipText} style={{ top: '150%', bottom: 'auto', transform: 'translateX(-90%)' }}>
+                <span className={styles.tooltipText}>
                   Utilize esta área para enviar os documentos preenchidos. O seu contador receberá uma notificação automática para validação.
                 </span>
               </div>
             </div>
-            <p className={styles.infoText}><strong>Nome:</strong> {user?.name || 'Carregando...'}</p>
-            <p className={styles.infoText}><strong>CNPJ:</strong> {user?.cnpj || 'Não informado'}</p>
+            <p className={styles.infoText}><strong>Nome:</strong> {user.name}</p>
+            <p className={styles.infoText}><strong>CNPJ:</strong> {user.cnpj || 'Não informado'}</p>
           </div>
           <DocumentUpload onUpload={handleFileUpload} isLoading={isUploading} />
         </div>
 
-        {/* Coluna 2: Calendário + Lista de Documentos */}
         <div className={`${styles.listCard} ${styles.listColumn}`}>
           <h2 className={styles.cardTitle}>Meus Documentos</h2>
-
-          {/* Calendário de Situação Mensal */}
           <div style={{marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '20px'}}>
             <h4 style={calStyles.sectionTitle}>
-              Sua Situação em {new Date().getFullYear()}
+              Sua Situação em 2026
               <div className={styles.tooltipContainer}>
                 <InfoIcon />
-                <span className={styles.tooltipText} style={{ top: '150%', bottom: 'auto' }}>
-                  Acompanhe a pontualidade dos seus envios mensais. O status "OK" (Verde) significa que o contador já validou o seu arquivo.
+                <span className={styles.tooltipText}>
+                  Este calendário mostra a pontualidade dos seus envios mensais. O status "OK" (Verde) significa que o contador já validou o seu arquivo.
                 </span>
               </div>
             </h4>
             
             <div style={calStyles.legend}>
-                {['late', 'pending', 'sent', 'concluded'].map(status => (
-                  <div key={status} style={calStyles.legendItem}>
-                    <div style={calStyles.colorBox(getStatusStyle(status)[0], getStatusStyle(status)[2])}></div> 
-                    {getStatusLabel(status)}
-                  </div>
-                ))}
+                <div style={calStyles.legendItem}>
+                    <div style={calStyles.colorBox('#fee2e2', '#fecaca')}></div> Atraso
+                </div>
+                <div style={calStyles.legendItem}>
+                    <div style={calStyles.colorBox('#fef9c3', '#fde047')}></div> Aberto
+                </div>
+                <div style={calStyles.legendItem}>
+                    <div style={calStyles.colorBox('#dbeafe', '#bfdbfe')}></div> Enviado
+                </div>
+                <div style={calStyles.legendItem}>
+                    <div style={calStyles.colorBox('#dcfce7', '#86efac')}></div> Concluso
+                </div>
             </div>
 
             <div style={calStyles.calendarGrid}>
@@ -190,9 +205,8 @@ export default function OSCDocumentsPage() {
             </div>
           </div>
 
-          {/* Lista de Ficheiros Enviados */}
           {isLoadingList ? (
-            <div className={styles.loadingContainer}><Spinner text="A carregar documentos..." /></div>
+            <div className={styles.loadingContainer}><Spinner text="A carregar..." /></div>
           ) : errorLoading ? (
             <div className={styles.emptyContainer} style={{color: 'red'}}>{errorLoading}</div>
           ) : myFiles.length === 0 ? (
@@ -212,12 +226,12 @@ export default function OSCDocumentsPage() {
                       </span>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => handleDownload(file)} 
+                  <button
+                    onClick={() => handleDownload(file)}
                     className={styles.downloadButton}
                     title="Descarregar arquivo"
                   >
-                    <DownloadIcon />
+                    <DownloadIcon className={styles.icon} />
                   </button>
                 </div>
               ))}
