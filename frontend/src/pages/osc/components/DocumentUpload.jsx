@@ -1,14 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../hooks/useAuth.jsx';
-import useApi from '../../hooks/useApi.jsx';
-import { useNotification } from '../../contexts/NotificationContext.jsx';
-import { Link } from 'react-router-dom';
-import * as docService from '../../services/documentService.js';
-import DocumentUpload from './components/DocumentUpload.jsx'; // Certifique-se que este arquivo existe nesta pasta
-import Spinner from '../../components/common/Spinner.jsx';
-import { FileIcon, DownloadIcon } from '../../components/common/Icons.jsx';
-import { formatDate } from '../../utils/formatDate.js';
-import styles from './Documents.module.css';
+import React, { useState, useRef } from 'react';
+// IMPORTANTE: Subindo 3 níveis para chegar na raiz de src
+import { useAuth } from '../../../hooks/useAuth.jsx'; 
+import { UploadIcon } from '../../../components/common/Icons.jsx';
+import Button from '../../../components/common/Button.jsx';
+import Spinner from '../../../components/common/Spinner.jsx';
+import styles from './DocumentUpload.module.css';
 
 // Ícone de Informação Local
 const InfoIcon = () => (
