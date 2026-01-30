@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import * as oscService from '../../services/oscService.js';
 import * as alertService from '../../services/alertService.js';
+import * as docService from '../../services/documentService.js'; // Importado para função de check
 
 // Componentes modais
 import ViewOSCModal from './components/ViewOSCModal.jsx';
@@ -30,7 +31,10 @@ const IconBell = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
 );
 const IconFileText = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
+);
+const IconCheck = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
 );
 const IconSearch = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -38,8 +42,6 @@ const IconSearch = () => (
 const IconPlus = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
 );
-
-// Ícone de Informação (Tooltip)
 const IconInfo = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EC6D12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{cursor: 'help'}}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
 );
@@ -59,79 +61,113 @@ const styles = {
   oscInfo: { display: 'flex', flexDirection: 'column' },
   oscName: { fontSize: '16px', fontWeight: 'bold', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '8px' },
   oscCnpj: { fontSize: '13px', color: '#6b7280', marginTop: '4px' },
-  actions: { display: 'flex', gap: '8px' },
+  actions: { display: 'flex', gap: '8px', alignItems: 'center' },
   actionBtn: (color, bg) => ({ padding: '8px', borderRadius: '50%', border: 'none', cursor: 'pointer', color: color, backgroundColor: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.2s' }),
   accordionBody: { padding: '20px', backgroundColor: '#f9fafb', borderTop: '1px solid #eee' },
   legend: { display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '20px', fontSize: '12px', color: '#555' },
   legendItem: { display: 'flex', alignItems: 'center', gap: '6px' },
   colorBox: (bg, border) => ({ width: '12px', height: '12px', backgroundColor: bg, border: `1px solid ${border}`, borderRadius: '2px' }),
-  sectionTitle: { fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' },
+  sectionTitle: { fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '20px' },
   calendarGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '10px', marginBottom: '24px' },
   monthBox: (bg, color, border) => ({ backgroundColor: bg, color: color, border: `1px solid ${border}`, borderRadius: '6px', padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60px' }),
   monthText: { fontSize: '14px', fontWeight: 'bold' },
   statusText: { fontSize: '10px', fontWeight: '600', marginTop: '4px', textTransform: 'uppercase' },
-  docList: { backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '6px', maxHeight: '200px', overflowY: 'auto' },
-  docItem: { padding: '12px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px' },
-  emptyState: { textAlign: 'center', padding: '40px', color: '#9ca3af', backgroundColor: '#f9fafb', borderRadius: '8px', border: '2px dashed #e5e7eb' },
   
-  // TOOLTIP STYLES (Inline simulation)
+  // Lista de Documentos Estilizada
+  docList: { backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' },
+  docItem: { 
+    padding: '12px 16px', 
+    borderBottom: '1px solid #f3f4f6', 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    fontSize: '14px',
+    cursor: 'pointer',
+    transition: 'background 0.2s'
+  },
+  docMain: { display: 'flex', alignItems: 'center', gap: '10px', color: '#2563eb', fontWeight: '500' },
+  docMeta: { display: 'flex', alignItems: 'center', gap: '12px' },
+  typeBadge: (isMensal) => ({
+    fontSize: '10px',
+    padding: '2px 6px',
+    borderRadius: '4px',
+    backgroundColor: isMensal ? '#fef3c7' : '#e0e7ff',
+    color: isMensal ? '#92400e' : '#3730a3',
+    fontWeight: 'bold'
+  }),
+  docDate: { fontSize: '12px', color: '#9ca3af' },
+
+  // Botão de Check
+  checkBtn: {
+    backgroundColor: '#10b981',
+    color: '#fff',
+    border: 'none',
+    padding: '6px 12px',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    marginLeft: '10px'
+  },
+
+  emptyState: { textAlign: 'center', padding: '40px', color: '#9ca3af', backgroundColor: '#f9fafb', borderRadius: '8px', border: '2px dashed #e5e7eb' },
   tooltipWrapper: { position: 'relative', display: 'inline-flex', alignItems: 'center' },
   tooltipBox: {
-    visibility: 'hidden',
-    width: '240px',
-    backgroundColor: '#1e2937',
-    color: '#fff',
-    textAlign: 'left',
-    borderRadius: '6px',
-    padding: '10px',
-    position: 'absolute',
-    zIndex: 10,
-    bottom: '125%',
-    left: '50%',
-    marginLeft: '-120px',
-    opacity: 0,
-    transition: 'opacity 0.3s',
-    fontSize: '12px',
-    lineHeight: '1.4',
-    fontWeight: 'normal',
-    pointerEvents: 'none',
-    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+    visibility: 'hidden', width: '240px', backgroundColor: '#1e2937', color: '#fff', textAlign: 'left', borderRadius: '6px', padding: '10px', position: 'absolute', zIndex: 10, bottom: '125%', left: '50%', marginLeft: '-120px', opacity: 0, transition: 'opacity 0.3s', fontSize: '12px', lineHeight: '1.4', fontWeight: 'normal', pointerEvents: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
   }
 };
 
-// Inserção de CSS Global dinâmico para os estados de Hover do Tooltip
 const injectStyles = () => {
+  if (document.getElementById('osc-styles')) return;
   const styleTag = document.createElement('style');
+  styleTag.id = 'osc-styles';
   styleTag.innerHTML = `
     .tooltip-container:hover .tooltip-box { visibility: visible !important; opacity: 1 !important; }
     .accordion-header:hover { background-color: #f9fafb !important; }
+    .doc-item-row:hover { background-color: #eff6ff !important; }
   `;
   document.head.appendChild(styleTag);
 };
 injectStyles();
 
-// --- COMPONENTE LOCAL: Item do Acordeon ---
-const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAlert }) => {
+const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAlert, onRefresh }) => {
+  const addNotification = useNotification();
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const currentMonthIndex = new Date().getMonth(); 
 
+  const handleConcludeMonth = async (e) => {
+    e.stopPropagation();
+    if (!window.confirm("Deseja marcar este mês como CONCLUÍDO para esta OSC?")) return;
+    try {
+      await docService.markAsConcluded(osc.id);
+      addNotification("Mês concluído e documentos atualizados!", "success");
+      onRefresh();
+    } catch (err) {
+      addNotification("Erro ao concluir mês.", "error");
+    }
+  };
+
+  const openDocument = (id) => {
+    const url = `${import.meta.env.VITE_API_URL}/api/documents/download/${id}`;
+    window.open(url, '_blank');
+  };
+
   const getMonthStatus = (monthIndex) => {
     if (monthIndex > currentMonthIndex) return 'future';
-    if (monthIndex === currentMonthIndex) {
-        const hasDocCurrentMonth = osc.documents && osc.documents.some(d => {
-            if (!d.createdAt) return false;
-            return new Date(d.createdAt).getMonth() === monthIndex;
-        });
-        if (!hasDocCurrentMonth) return 'pending';
-    }
     const docsInMonth = osc.documents ? osc.documents.filter(d => {
         if (!d.createdAt) return false;
         return new Date(d.createdAt).getMonth() === monthIndex;
     }) : [];
+
     const hasDoc = docsInMonth.length > 0;
-    const isVerified = hasDoc && docsInMonth.some(d => d.verified === true || d.status === 'APPROVED');
+    const isVerified = hasDoc && docsInMonth.some(d => d.status === 'CONCLUIDO' || d.verified === true);
+
     if (isVerified) return 'concluded'; 
     if (hasDoc) return 'sent';          
+    if (monthIndex === currentMonthIndex) return 'pending';
     return 'late';
   };
 
@@ -161,11 +197,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
       border: isExpanded ? '1px solid #93c5fd' : '1px solid #e0e0e0',
       boxShadow: isExpanded ? '0 0 0 1px #bfdbfe' : 'none'
     }}>
-      <div 
-        className="accordion-header"
-        style={styles.accordionHeader}
-        onClick={() => onToggle(osc.id)}
-      >
+      <div className="accordion-header" style={styles.accordionHeader} onClick={() => onToggle(osc.id)}>
         <div style={styles.oscInfo}>
           <span style={styles.oscName}>
             {osc.name}
@@ -175,13 +207,16 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
         </div>
 
         <div style={styles.actions} onClick={(e) => e.stopPropagation()}>
-          <button style={styles.actionBtn('#2563eb', '#eff6ff')} onClick={() => onView(osc)} title="Ver">
+          <button style={styles.checkBtn} onClick={handleConcludeMonth} title="Marcar Mês como Concluído">
+            <IconCheck /> Concluir Mês
+          </button>
+          <button style={styles.actionBtn('#2563eb', '#eff6ff')} onClick={() => onView(osc)} title="Ver Detalhes">
             <IconEye />
           </button>
-          <button style={styles.actionBtn('#d97706', '#fffbeb')} onClick={() => onEdit(osc)} title="Editar">
+          <button style={styles.actionBtn('#d97706', '#fffbeb')} onClick={() => onEdit(osc)} title="Editar Dados">
             <IconEdit />
           </button>
-          <button style={styles.actionBtn('#dc2626', '#fef2f2')} onClick={() => onSendAlert(osc)} title="Alertar">
+          <button style={styles.actionBtn('#dc2626', '#fef2f2')} onClick={() => onSendAlert(osc)} title="Enviar Alerta">
             <IconBell />
           </button>
         </div>
@@ -196,16 +231,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             <div style={styles.legendItem}><div style={styles.colorBox('#dcfce7', '#86efac')}></div> Concluso</div>
           </div>
 
-          <h4 style={styles.sectionTitle}>
-            Situação Anual ({new Date().getFullYear()})
-            <div className="tooltip-container" style={styles.tooltipWrapper}>
-              <IconInfo />
-              <div className="tooltip-box" style={styles.tooltipBox}>
-                Este calendário monitora a conformidade mensal da OSC. O status "OK" indica que os documentos foram revisados e aprovados por você.
-              </div>
-            </div>
-          </h4>
-          
+          <h4 style={styles.sectionTitle}>Situação Anual ({new Date().getFullYear()})</h4>
           <div style={styles.calendarGrid}>
             {months.map((m, idx) => {
               const status = getMonthStatus(idx);
@@ -219,45 +245,39 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             })}
           </div>
 
-          <h4 style={{...styles.sectionTitle, gap: '8px'}}>
-            <IconFileText /> Documentações Recentes
-            <div className="tooltip-container" style={styles.tooltipWrapper}>
-              <IconInfo />
-              <div className="tooltip-box" style={styles.tooltipBox}>
-                Lista dos últimos arquivos submetidos pela organização para conferência.
-              </div>
-            </div>
-          </h4>
-          
-          {osc.documents && osc.documents.length > 0 ? (
-            <div style={styles.docList}>
-                {osc.documents.map((doc, i) => (
-                    <div key={i} style={styles.docItem}>
-                        <span style={{color: '#374151', fontWeight: '500'}}>{doc.title || `Documento sem título`}</span>
-                        <span style={{fontSize: '12px', color: '#6b7280'}}>
-                            {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString() : '-'}
-                        </span>
-                    </div>
-                ))}
-            </div>
-          ) : (
-            <div style={{padding: '15px', color: '#888', fontStyle: 'italic', border: '1px dashed #ccc', borderRadius: '4px', textAlign: 'center', fontSize: '13px'}}>
-                Nenhuma documentação registrada.
-            </div>
-          )}
+          <h4 style={styles.sectionTitle}><IconFileText /> Documentações Recebidas (Data/Hora)</h4>
+          <div style={styles.docList}>
+            {osc.documents && osc.documents.length > 0 ? (
+              osc.documents.map((doc, i) => (
+                <div key={i} className="doc-item-row" style={styles.docItem} onClick={() => openDocument(doc.id)}>
+                  <div style={styles.docMain}>
+                    <IconFileText />
+                    <span>{doc.original_name || doc.title}</span>
+                  </div>
+                  <div style={styles.docMeta}>
+                    <span style={styles.typeBadge(doc.doc_type === 'MENSAL')}>
+                      {doc.doc_type || 'MENSAL'}
+                    </span>
+                    <span style={styles.docDate}>
+                      {doc.createdAt ? new Date(doc.createdAt).toLocaleString('pt-BR') : '-'}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={styles.emptyState}>Nenhuma documentação registrada.</div>
+            )}
+          </div>
         </div>
       )}
     </div>
   );
 };
 
-// --- PÁGINA PRINCIPAL ---
-
 export default function OSCsPage() {
   const [oscs, setOscs] = useState([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [expandedOscId, setExpandedOscId] = useState(null);
-
   const [searchName, setSearchName] = useState('');
   const [searchCnpj, setSearchCnpj] = useState('');
   const [searchResponsible, setSearchResponsible] = useState('');
@@ -270,24 +290,20 @@ export default function OSCsPage() {
   const { request: updateOSC, isLoading: isUpdating } = useApi(oscService.updateOSC);
   const { request: sendAlert, isLoading: isSendingAlert } = useApi(alertService.sendAlertToOSC);
 
-  useEffect(() => {
-    const fetchOSCs = async () => {
-      setIsLoadingData(true);
-      try {
-        const response = await oscService.getMyOSCs();
-        let data = [];
-        if (Array.isArray(response)) data = response;
-        else if (response?.data) data = Array.isArray(response.data) ? response.data : response.data.data || [];
+  const fetchOSCs = async () => {
+    setIsLoadingData(true);
+    try {
+      const response = await oscService.getMyOSCs();
+      let data = Array.isArray(response) ? response : (response?.data || []);
+      setOscs(data.sort((a, b) => (a.name || '').localeCompare(b.name || '')));
+    } catch (err) {
+      addNotification("Erro ao carregar OSCs.", "error");
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
 
-        setOscs(data.sort((a, b) => (a.name || '').localeCompare(b.name || '')));
-      } catch (err) {
-        addNotification("Erro ao carregar OSCs.", "error");
-      } finally {
-        setIsLoadingData(false);
-      }
-    };
-    fetchOSCs();
-  }, [addNotification]);
+  useEffect(() => { fetchOSCs(); }, [addNotification]);
 
   const filteredOscs = oscs.filter(osc => {
     const nameMatch = osc.name?.toLowerCase().includes(searchName.toLowerCase());
@@ -298,15 +314,12 @@ export default function OSCsPage() {
 
   const handleToggleAccordion = (id) => setExpandedOscId(prevId => (prevId === id ? null : id));
   const handleCloseModals = () => { setOscToView(null); setOscToEdit(null); setOscToSendAlert(null); };
-  const handleRegister = () => setOscToEdit({});
 
   const handleSaveEdit = async (formData) => {
     try {
-      const isCreation = !formData.id;
-      const response = await updateOSC(formData.id, formData);
-      const updatedOSC = response.data || response; 
-      setOscs(prev => isCreation ? [...prev, updatedOSC] : prev.map(o => o.id === updatedOSC.id ? updatedOSC : o));
-      addNotification(`OSC salva com sucesso!`, 'success');
+      await updateOSC(formData.id, formData);
+      addNotification(`Dados atualizados!`, 'success');
+      fetchOSCs();
       handleCloseModals();
     } catch (err) { addNotification('Erro ao salvar.', 'error'); }
   };
@@ -325,15 +338,15 @@ export default function OSCsPage() {
     <div style={styles.container}>
       <div style={styles.headerRow}>
         <h1 style={styles.title}>
-          Organizações Cadastradas
+          Minhas Organizações (OSCs)
           <div className="tooltip-container" style={styles.tooltipWrapper}>
             <IconInfo />
             <div className="tooltip-box" style={styles.tooltipBox}>
-              Gerencie aqui todas as OSCs vinculadas à sua carteira. Você pode monitorar documentos, editar dados e enviar alertas de pendências.
+              Gerencie suas organizações, valide envios mensais e monitore a conformidade contábil.
             </div>
           </div>
         </h1>
-        <button style={styles.registerBtn} onClick={handleRegister}>
+        <button style={styles.registerBtn} onClick={() => setOscToEdit({})}>
           <IconPlus /> Cadastrar Nova OSC
         </button>
       </div>
@@ -341,15 +354,11 @@ export default function OSCsPage() {
       <div style={styles.searchRow}>
         <div style={styles.searchWrapper}>
           <div style={styles.searchIcon}><IconSearch /></div>
-          <input type="text" placeholder="Nome da OSC..." style={styles.searchInput} value={searchName} onChange={(e) => setSearchName(e.target.value)} />
+          <input type="text" placeholder="Nome..." style={styles.searchInput} value={searchName} onChange={(e) => setSearchName(e.target.value)} />
         </div>
         <div style={styles.searchWrapper}>
           <div style={styles.searchIcon}><IconSearch /></div>
           <input type="text" placeholder="CNPJ..." style={styles.searchInput} value={searchCnpj} onChange={(e) => setSearchCnpj(e.target.value)} />
-        </div>
-        <div style={styles.searchWrapper}>
-          <div style={styles.searchIcon}><IconSearch /></div>
-          <input type="text" placeholder="Responsável..." style={styles.searchInput} value={searchResponsible} onChange={(e) => setSearchResponsible(e.target.value)} />
         </div>
       </div>
 
@@ -363,9 +372,10 @@ export default function OSCsPage() {
                     osc={osc} 
                     isExpanded={expandedOscId === osc.id}
                     onToggle={handleToggleAccordion}
-                    onView={(o) => setOscToView(o)}
-                    onEdit={(o) => setOscToEdit(o)}
-                    onSendAlert={(o) => setOscToSendAlert(o)}
+                    onView={setOscToView}
+                    onEdit={setOscToEdit}
+                    onSendAlert={setOscToSendAlert}
+                    onRefresh={fetchOSCs}
                 />
             ))
         )}

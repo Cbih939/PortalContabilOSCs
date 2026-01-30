@@ -10,10 +10,10 @@ import { FileIcon, DownloadIcon } from '../../components/common/Icons.jsx';
 import { formatDate } from '../../utils/formatDate.js';
 import styles from './Documents.module.css';
 
-// Ícone de Informação declarado localmente
+// Ícone de Informação Local
 const InfoIcon = () => (
   <svg 
-    style={{ width: '14px', height: '14px', color: '#9ca3af', cursor: 'help', marginLeft: '6px' }} 
+    style={{ width: '16px', height: '16px', color: '#EC6D12', cursor: 'help' }} 
     xmlns="http://www.w3.org/2000/svg" 
     fill="none" 
     viewBox="0 0 24 24" 
@@ -23,70 +23,16 @@ const InfoIcon = () => (
   </svg>
 );
 
-// --- ESTILOS INLINE PARA O CALENDÁRIO ---
+// Estilos para o Calendário
 const calStyles = {
-  legend: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '12px',
-    marginBottom: '16px',
-    fontSize: '11px',
-    color: '#555',
-    padding: '10px',
-    backgroundColor: '#f9fafb',
-    borderRadius: '6px',
-    border: '1px solid #eee'
-  },
-  legendItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px'
-  },
-  colorBox: (bg, border) => ({
-    width: '10px',
-    height: '10px',
-    backgroundColor: bg,
-    border: `1px solid ${border}`,
-    borderRadius: '2px'
-  }),
-  sectionTitle: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: '12px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-    display: 'flex',
-    alignItems: 'center'
-  },
-  calendarGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))',
-    gap: '8px',
-    marginBottom: '24px'
-  },
-  monthBox: (bg, color, border) => ({
-    backgroundColor: bg,
-    color: color,
-    border: `1px solid ${border}`,
-    borderRadius: '6px',
-    padding: '8px 4px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: '50px'
-  }),
-  monthText: {
-    fontSize: '12px',
-    fontWeight: 'bold'
-  },
-  statusText: {
-    fontSize: '9px',
-    fontWeight: '600',
-    marginTop: '2px',
-    textTransform: 'uppercase'
-  }
+  legend: { display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px', fontSize: '11px', color: '#555', padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #eee' },
+  legendItem: { display: 'flex', alignItems: 'center', gap: '6px' },
+  colorBox: (bg, border) => ({ width: '10px', height: '10px', backgroundColor: bg, border: `1px solid ${border}`, borderRadius: '2px' }),
+  sectionTitle: { fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' },
+  calendarGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))', gap: '8px', marginBottom: '24px' },
+  monthBox: (bg, color, border) => ({ backgroundColor: bg, color: color, border: `1px solid ${border}`, borderRadius: '6px', padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50px' }),
+  monthText: { fontSize: '12px', fontWeight: 'bold' },
+  statusText: { fontSize: '9px', fontWeight: '600', marginTop: '2px', textTransform: 'uppercase' }
 };
 
 export default function OSCDocumentsPage() {
@@ -96,6 +42,7 @@ export default function OSCDocumentsPage() {
   const [myFiles, setMyFiles] = useState([]);
   const [isLoadingList, setIsLoadingList] = useState(true);
   const [errorLoading, setErrorLoading] = useState(null);
+  const [docType, setDocType] = useState('MENSAL'); // Estado para controlar o tipo de documento
 
   const { request: uploadFile, isLoading: isUploading } = useApi(docService.uploadDocument);
 
@@ -105,21 +52,17 @@ export default function OSCDocumentsPage() {
 
   const getMonthStatus = (monthIndex) => {
     if (monthIndex > currentMonthIndex) return 'future';
-    if (monthIndex === currentMonthIndex) {
-        const hasDocCurrentMonth = myFiles.some(d => {
-            const dateStr = d.date || d.created_at;
-            if (!dateStr) return false;
-            return new Date(dateStr).getMonth() === monthIndex;
-        });
-        if (!hasDocCurrentMonth) return 'pending';
-    }
     const docsInMonth = myFiles.filter(d => {
-        const dateStr = d.date || d.created_at;
-        if (!dateStr) return false;
-        return new Date(dateStr).getMonth() === monthIndex;
+      const dateStr = d.date || d.created_at;
+      if (!dateStr) return false;
+      return new Date(dateStr).getMonth() === monthIndex;
     });
+
+    if (monthIndex === currentMonthIndex && docsInMonth.length === 0) return 'pending';
+    
     const hasDoc = docsInMonth.length > 0;
-    const isVerified = hasDoc && docsInMonth.some(d => d.verified === true || d.status === 'APPROVED');
+    const isVerified = hasDoc && docsInMonth.some(d => d.status === 'CONCLUIDO' || d.verified === true);
+
     if (isVerified) return 'concluded';
     if (hasDoc) return 'sent';
     return 'late';
@@ -151,14 +94,9 @@ export default function OSCDocumentsPage() {
     try {
       const response = await docService.getMyDocuments();
       const docs = Array.isArray(response) ? response : (response.data || []);
-      const sortedData = docs.sort((a, b) => {
-        const nameA = (a.name || a.original_name || '').toLowerCase();
-        const nameB = (b.name || b.original_name || '').toLowerCase();
-        return nameA.localeCompare(nameB);
-      });
+      const sortedData = docs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       setMyFiles(sortedData);
     } catch (err) {
-      console.error("Erro ao buscar documentos:", err);
       setErrorLoading("Não foi possível carregar os documentos.");
       addNotification("Erro ao carregar documentos.", "error");
     } finally {
@@ -174,21 +112,22 @@ export default function OSCDocumentsPage() {
     try {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('doc_type', docType); // Envia o tipo (MENSAL ou FIXO)
+      
       await uploadFile(formData);
       addNotification('Ficheiro enviado com sucesso!', 'success');
       await fetchDocuments();
     } catch (err) {
-      addNotification(`Falha no upload: ${err.response?.data?.message || err.message}`, 'error');
-      throw err;
+      const errorMsg = err.response?.data?.message || err.message;
+      addNotification(`Falha no upload: ${errorMsg}`, 'error');
     }
   };
 
   const handleDownload = async (file) => {
-    addNotification(`A iniciar download: ${file.name || file.original_name}`, 'info');
     try {
       await docService.downloadDocument(file.id, file.original_name || file.name);
     } catch (err) {
-      addNotification(err.message || 'Falha no download.', 'error');
+      addNotification('Erro ao descarregar ficheiro.', 'error');
     }
   };
 
@@ -199,25 +138,35 @@ export default function OSCDocumentsPage() {
         {/* Coluna 1: Info e Upload */}
         <div className={styles.uploadColumn}>
           <div className={`${styles.infoCard} mb-8`}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
               <p className={styles.welcomeText}>
                 Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais. 
-                Baixe-os na aba{" "}
-                <Link to="/osc/modelos" className={styles.orangeLink}>
-                  "Docs | Modelos"
-                </Link>
-                ...
+                Baixe modelos na aba <Link to="/osc/modelos" className={styles.orangeLink}>"Docs | Modelos"</Link>.
               </p>
               <div className={styles.tooltipContainer}>
                 <InfoIcon />
-                <span className={styles.tooltipText}>
-                  Utilize esta área para enviar os documentos preenchidos. O seu contador receberá uma notificação automática para validação.
+                <span className={styles.tooltipText} style={{ top: '150%', bottom: 'auto', transform: 'translateX(-90%)' }}>
+                  Documentação Mensal: limitada a 20 arquivos por mês. Documentos Fixos: arquivos permanentes como Estatutos.
                 </span>
               </div>
             </div>
-            <p className={styles.infoText}><strong>Nome:</strong> {user.name}</p>
-            <p className={styles.infoText}><strong>CNPJ:</strong> {user.cnpj || 'Não informado'}</p>
+            
+            <div style={{ marginBottom: '15px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>Tipo de Documento:</label>
+                <select 
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                    value={docType}
+                    onChange={(e) => setDocType(e.target.value)}
+                >
+                    <option value="MENSAL">Envio Mensal (Contábil)</option>
+                    <option value="FIXO">Documento Fixo (Permanente)</option>
+                </select>
+            </div>
+
+            <p className={styles.infoText}><strong>Organização:</strong> {user?.name}</p>
+            <p className={styles.infoText}><strong>CNPJ:</strong> {user?.cnpj || 'Não informado'}</p>
           </div>
+          
           <DocumentUpload onUpload={handleFileUpload} isLoading={isUploading} />
         </div>
 
@@ -231,25 +180,18 @@ export default function OSCDocumentsPage() {
               Sua Situação em {new Date().getFullYear()}
               <div className={styles.tooltipContainer}>
                 <InfoIcon />
-                <span className={styles.tooltipText}>
-                  Este calendário mostra a pontualidade dos seus envios mensais. O status "OK" (Verde) significa que o contador já validou o seu arquivo.
+                <span className={styles.tooltipText} style={{ top: '150%', bottom: 'auto' }}>
+                  "Enviado" (Azul) indica recebimento. "OK" (Verde) indica conferência finalizada pelo contador.
                 </span>
               </div>
             </h4>
             
             <div style={calStyles.legend}>
-                <div style={calStyles.legendItem}>
-                    <div style={calStyles.colorBox('#fee2e2', '#fecaca')}></div> Atraso
-                </div>
-                <div style={calStyles.legendItem}>
-                    <div style={calStyles.colorBox('#fef9c3', '#fde047')}></div> Aberto
-                </div>
-                <div style={calStyles.legendItem}>
-                    <div style={calStyles.colorBox('#dbeafe', '#bfdbfe')}></div> Enviado
-                </div>
-                <div style={calStyles.legendItem}>
-                    <div style={calStyles.colorBox('#dcfce7', '#86efac')}></div> Concluso
-                </div>
+                {['late', 'pending', 'sent', 'concluded'].map(s => (
+                    <div key={s} style={calStyles.legendItem}>
+                        <div style={calStyles.colorBox(getStatusStyle(s)[0], getStatusStyle(s)[2])}></div> {getStatusLabel(s)}
+                    </div>
+                ))}
             </div>
 
             <div style={calStyles.calendarGrid}>
@@ -266,6 +208,7 @@ export default function OSCDocumentsPage() {
             </div>
           </div>
 
+          {/* === LISTA DE DOCUMENTOS === */}
           {isLoadingList ? (
             <div className={styles.loadingContainer}><Spinner text="A carregar..." /></div>
           ) : errorLoading ? (
@@ -279,19 +222,18 @@ export default function OSCDocumentsPage() {
                   <div className={styles.fileInfo}>
                     <FileIcon className={styles.fileIcon} />
                     <div className={styles.fileText}>
-                      <span className={styles.fileName} title={file.name || file.original_name}>
-                        {file.name || file.original_name}
+                      <span className={styles.fileName}>
+                        {file.original_name || file.name}
+                        <span style={{ fontSize: '10px', marginLeft: '8px', color: file.doc_type === 'FIXO' ? '#4f46e5' : '#92400e' }}>
+                           [{file.doc_type || 'MENSAL'}]
+                        </span>
                       </span>
                       <span className={styles.fileDate}>
-                        Postado em {formatDate(file.date || file.created_at)}
+                        Postado em {new Date(file.date || file.created_at).toLocaleString('pt-BR')}
                       </span>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDownload(file)}
-                    className={styles.downloadButton}
-                    title="Descarregar arquivo"
-                  >
+                  <button onClick={() => handleDownload(file)} className={styles.downloadButton} title="Descarregar">
                     <DownloadIcon className={styles.icon} />
                   </button>
                 </div>

@@ -6,18 +6,14 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// --- LISTAR DOCUMENTOS (Geral/Filtros) ---
 export const getDocuments = async (req, res) => {
   try {
-    const { oscId, status } = req.query;
+    const { oscId, status, type } = req.query;
     const userId = req.user.id;
     const userRole = req.user.role;
 
     let query = `
-      SELECT 
-        d.*, 
-        COALESCE(o.razao_social, u.name, 'OSC Desconhecida') as osc_name,
-        o.cnpj as osc_cnpj
+      SELECT d.*, COALESCE(o.razao_social, u.name, 'OSC Desconhecida') as osc_name
       FROM documents d
       JOIN oscs o ON d.osc_id = o.id
       LEFT JOIN users u ON o.user_id = u.id
@@ -30,41 +26,20 @@ export const getDocuments = async (req, res) => {
       conditions.push('o.assigned_contador_id = ?');
       params.push(userId);
     } else if (userRole === 'OSC') {
-      conditions.push('d.osc_id = (SELECT id FROM oscs WHERE user_id = ? LIMIT 1)');
+      conditions.push('o.user_id = ?');
       params.push(userId);
     }
 
-    if (oscId) {
-      conditions.push('d.osc_id = ?');
-      params.push(oscId);
-    }
-    if (status) {
-      conditions.push('d.status = ?');
-      params.push(status);
-    }
+    if (oscId) { conditions.push('d.osc_id = ?'); params.push(oscId); }
+    if (status) { conditions.push('d.status = ?'); params.push(status); }
+    if (type) { conditions.push('d.doc_type = ?'); params.push(type); }
 
-    if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
-    }
-
+    if (conditions.length > 0) query += ' WHERE ' + conditions.join(' AND ');
     query += ' ORDER BY d.created_at DESC';
 
     const [rows] = await pool.execute(query, params);
-
-    const safeDocs = rows.map(doc => ({
-        id: doc.id,
-        name: doc.original_name || 'Sem Nome', 
-        from_name: doc.osc_name, 
-        date: doc.created_at,
-        status: doc.status || 'Pendente',
-        type: doc.mime_type || 'application/octet-stream',
-        size: doc.file_size_bytes || 0,
-        file_path: doc.saved_filename // Necessário para a capa do PDF
-    }));
-
-    res.json(safeDocs);
+    res.json(rows);
   } catch (error) {
-    console.error('[Docs] Erro ao listar:', error);
     res.status(500).json({ message: 'Erro ao listar documentos.' });
   }
 };
@@ -105,62 +80,72 @@ export const getReceivedDocuments = async (req, res) => {
   }
 };
 
-// --- UPLOAD DE DOCUMENTO (Com correção de uploaded_by_user_id) ---
 export const uploadDocument = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'Arquivo não enviado.' });
 
     const userId = req.user.id;
-    // Busca o ID da OSC vinculada ao usuário logado
+    const { doc_type } = req.body; // 'FIXO' ou 'MENSAL'
+
     const [oscRows] = await pool.execute('SELECT id, assigned_contador_id FROM oscs WHERE user_id = ?', [userId]);
-    
-    if (oscRows.length === 0) return res.status(403).json({ message: 'Usuário não é uma OSC vinculada.' });
+    if (oscRows.length === 0) return res.status(403).json({ message: 'OSC não encontrada.' });
 
     const osc_id = oscRows[0].id;
-    const receiver_id = oscRows[0].assigned_contador_id;
+
+    // REGRA: Limite de 20 documentos mensais
+    if (doc_type === 'MENSAL') {
+      const [countRows] = await pool.execute(
+        `SELECT COUNT(*) as total FROM documents 
+         WHERE osc_id = ? AND doc_type = 'MENSAL' 
+         AND MONTH(created_at) = MONTH(CURRENT_DATE()) 
+         AND YEAR(created_at) = YEAR(CURRENT_DATE())`,
+        [osc_id]
+      );
+
+      if (countRows[0].total >= 20) {
+        return res.status(400).json({ message: 'Limite de 20 documentos mensais atingido para este mês.' });
+      }
+    }
 
     const [result] = await pool.execute(
       `INSERT INTO documents 
-       (original_name, saved_filename, mime_type, file_size_bytes, osc_id, receiver_id, uploaded_by_user_id, status) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendente')`,
-      [
-        req.file.originalname,
-        req.file.filename,
-        req.file.mimetype,
-        req.file.size,
-        osc_id,
-        receiver_id,
-        userId, // <--- CORREÇÃO: Enviando o ID do usuário que fez o upload
-      ]
+       (original_name, saved_filename, mime_type, file_size_bytes, osc_id, receiver_id, uploaded_by_user_id, doc_type, status, created_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ENVIADO', NOW())`,
+      [req.file.originalname, req.file.filename, req.file.mimetype, req.file.size, osc_id, oscRows[0].assigned_contador_id, userId, doc_type || 'MENSAL']
     );
 
-    res.status(201).json({ message: 'Documento enviado!', id: result.insertId });
+    res.status(201).json({ message: 'Enviado com sucesso!', id: result.insertId });
   } catch (error) {
-    console.error('[Upload] Erro:', error);
-    res.status(500).json({ message: 'Erro ao processar upload.' });
+    res.status(500).json({ message: 'Erro no upload.' });
   }
 };
 
-// --- DOWNLOAD E VISUALIZAÇÃO ---
+// NOVO: Marcar mês como Concluído (Check do Contador)
+export const markMonthAsConcluded = async (req, res) => {
+  try {
+    const { oscId } = req.body;
+    await pool.execute(
+      `UPDATE documents SET status = 'CONCLUIDO' 
+       WHERE osc_id = ? AND doc_type = 'MENSAL' 
+       AND MONTH(created_at) = MONTH(CURRENT_DATE()) 
+       AND YEAR(created_at) = YEAR(CURRENT_DATE())`,
+      [oscId]
+    );
+    res.json({ message: 'Mês marcado como concluído com sucesso.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao concluir mês.' });
+  }
+};
+
 export const downloadDocument = async (req, res) => {
   try {
     const { id } = req.params;
-    const [rows] = await pool.execute('SELECT saved_filename, original_name, mime_type FROM documents WHERE id = ?', [id]);
-
-    if (rows.length === 0) return res.status(404).json({ message: 'Documento não encontrado.' });
-
-    const { saved_filename, original_name, mime_type } = rows[0];
-    const filePath = path.join(__dirname, '../../uploads', saved_filename);
-
-    if (fs.existsSync(filePath)) {
-      res.setHeader('Content-Type', mime_type || 'application/octet-stream');
-      res.download(filePath, original_name);
-    } else {
-      res.status(404).json({ message: 'Arquivo físico não encontrado.' });
-    }
+    const [rows] = await pool.execute('SELECT saved_filename, original_name FROM documents WHERE id = ?', [id]);
+    if (rows.length === 0) return res.status(404).json({ message: 'Não encontrado.' });
+    const filePath = path.join(__dirname, '../../uploads', rows[0].saved_filename);
+    res.download(filePath, rows[0].original_name);
   } catch (error) {
-    console.error('[Download] Erro:', error);
-    res.status(500).json({ message: 'Erro ao baixar.' });
+    res.status(500).json({ message: 'Erro no download.' });
   }
 };
 
