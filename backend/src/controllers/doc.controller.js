@@ -154,9 +154,12 @@ export const uploadDocument = async (req, res) => {
 export const markMonthAsConcluded = async (req, res) => {
   try {
     const { oscId } = req.body;
-    if (!oscId) return res.status(400).json({ message: 'ID da OSC não fornecido.' });
+    console.log('[DEBUG] Tentando concluir mês para OSC:', oscId);
 
-    // Atualiza todos os documentos MENSAL do mês atual para CONCLUIDO
+    if (!oscId) {
+      return res.status(400).json({ message: 'ID da OSC é obrigatório.' });
+    }
+
     const [result] = await pool.execute(
       `UPDATE documents SET status = 'CONCLUIDO' 
        WHERE osc_id = ? AND doc_type = 'MENSAL' 
@@ -165,14 +168,13 @@ export const markMonthAsConcluded = async (req, res) => {
       [oscId]
     );
 
-    if (result.affectedRows === 0) {
-        return res.status(404).json({ message: 'Nenhum documento mensal encontrado para concluir neste mês.' });
-    }
-
-    res.json({ message: 'Mês marcado como concluído com sucesso.' });
+    res.json({ 
+      message: 'Mês concluído com sucesso.', 
+      updatedRows: result.affectedRows 
+    });
   } catch (error) {
-    console.error('[Conclude] Erro:', error);
-    res.status(500).json({ message: 'Erro ao concluir mês.' });
+    console.error('[ERROR Conclude]:', error);
+    res.status(500).json({ message: 'Erro interno ao concluir mês.' });
   }
 };
 

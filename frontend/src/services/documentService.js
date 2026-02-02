@@ -118,3 +118,8 @@ export const getDocumentBlob = async (fileId) => {
     throw new Error(error.response?.data?.message || 'Não foi possível carregar o ficheiro.');
   }
 };
+
+export const markAsConcluded = async (data) => {
+  // data deve ser { oscId: 123 }
+  return await api.post('/documents/conclude', data); 
+};
