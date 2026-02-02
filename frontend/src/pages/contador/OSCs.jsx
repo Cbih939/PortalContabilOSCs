@@ -1,9 +1,9 @@
 // src/pages/contador/OSCs.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import * as oscService from '../../services/oscService.js';
 import * as alertService from '../../services/alertService.js';
-import * as docService from '../../services/documentService.js'; // Importado para função de check
+import * as docService from '../../services/documentService.js'; 
 
 // Componentes modais
 import ViewOSCModal from './components/ViewOSCModal.jsx';
@@ -45,6 +45,9 @@ const IconPlus = () => (
 const IconInfo = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EC6D12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{cursor: 'help'}}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
 );
+const IconUpload = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+);
 
 // --- ESTILOS ---
 const styles = {
@@ -73,7 +76,6 @@ const styles = {
   monthText: { fontSize: '14px', fontWeight: 'bold' },
   statusText: { fontSize: '10px', fontWeight: '600', marginTop: '4px', textTransform: 'uppercase' },
   
-  // Lista de Documentos Estilizada
   docList: { backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' },
   docItem: { 
     padding: '12px 16px', 
@@ -97,7 +99,6 @@ const styles = {
   }),
   docDate: { fontSize: '12px', color: '#9ca3af' },
 
-  // Botão de Check
   checkBtn: {
     backgroundColor: '#10b981',
     color: '#fff',
@@ -111,6 +112,20 @@ const styles = {
     alignItems: 'center',
     gap: '6px',
     marginLeft: '10px'
+  },
+
+  counterUploadBtn: {
+    backgroundColor: '#3b82f6',
+    color: '#fff',
+    border: 'none',
+    padding: '6px 12px',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
   },
 
   emptyState: { textAlign: 'center', padding: '40px', color: '#9ca3af', backgroundColor: '#f9fafb', borderRadius: '8px', border: '2px dashed #e5e7eb' },
@@ -135,6 +150,9 @@ injectStyles();
 
 const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAlert, onRefresh }) => {
   const addNotification = useNotification();
+  const fileInputRef = useRef(null);
+  const [isUploading, setIsUploading] = useState(false);
+  
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const currentMonthIndex = new Date().getMonth(); 
 
@@ -142,11 +160,34 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     e.stopPropagation();
     if (!window.confirm("Deseja marcar este mês como CONCLUÍDO para esta OSC?")) return;
     try {
-      await docService.markAsConcluded(osc.id);
+      // Ajuste para enviar objeto com oscId conforme esperado pelo controller
+      await docService.markAsConcluded({ oscId: osc.id });
       addNotification("Mês concluído e documentos atualizados!", "success");
       onRefresh();
     } catch (err) {
       addNotification("Erro ao concluir mês.", "error");
+    }
+  };
+
+  const handleCounterUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('osc_id', osc.id);
+      formData.append('doc_type', 'FIXO'); // Documentos do contador são tratados como fixos/oficiais
+      
+      await docService.uploadDocument(formData);
+      addNotification("Documento enviado para a OSC com sucesso!", "success");
+      onRefresh();
+    } catch (err) {
+      addNotification("Erro ao enviar documento para a OSC.", "error");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -157,13 +198,16 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
 
   const getMonthStatus = (monthIndex) => {
     if (monthIndex > currentMonthIndex) return 'future';
+    
+    // Filtra documentos pela data de criação
     const docsInMonth = osc.documents ? osc.documents.filter(d => {
-        if (!d.createdAt) return false;
-        return new Date(d.createdAt).getMonth() === monthIndex;
+        const date = d.createdAt || d.created_at;
+        if (!date) return false;
+        return new Date(date).getMonth() === monthIndex;
     }) : [];
 
     const hasDoc = docsInMonth.length > 0;
-    const isVerified = hasDoc && docsInMonth.some(d => d.status === 'CONCLUIDO' || d.verified === true);
+    const isVerified = hasDoc && docsInMonth.some(d => d.status === 'CONCLUIDO' || d.status === 'APPROVED');
 
     if (isVerified) return 'concluded'; 
     if (hasDoc) return 'sent';          
@@ -200,7 +244,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
       <div className="accordion-header" style={styles.accordionHeader} onClick={() => onToggle(osc.id)}>
         <div style={styles.oscInfo}>
           <span style={styles.oscName}>
-            {osc.name}
+            {osc.name || osc.razao_social}
             {isExpanded ? <IconChevronUp /> : <IconChevronDown />}
           </span>
           <span style={styles.oscCnpj}>CNPJ: {osc.cnpj || 'Não informado'}</span>
@@ -245,7 +289,24 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             })}
           </div>
 
-          <h4 style={styles.sectionTitle}><IconFileText /> Documentações Recebidas (Data/Hora)</h4>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h4 style={{ ...styles.sectionTitle, margin: 0 }}>
+              <IconFileText /> Documentações Recentes (Data/Hora)
+            </h4>
+            
+            {/* Novo botão de upload do Contador para a OSC */}
+            <label style={styles.counterUploadBtn}>
+              {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar Doc p/ OSC</>}
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                style={{ display: 'none' }} 
+                onChange={handleCounterUpload} 
+                disabled={isUploading} 
+              />
+            </label>
+          </div>
+          
           <div style={styles.docList}>
             {osc.documents && osc.documents.length > 0 ? (
               osc.documents.map((doc, i) => (
@@ -259,7 +320,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
                       {doc.doc_type || 'MENSAL'}
                     </span>
                     <span style={styles.docDate}>
-                      {doc.createdAt ? new Date(doc.createdAt).toLocaleString('pt-BR') : '-'}
+                      { (doc.createdAt || doc.created_at) ? new Date(doc.createdAt || doc.created_at).toLocaleString('pt-BR') : '-'}
                     </span>
                   </div>
                 </div>
@@ -295,7 +356,16 @@ export default function OSCsPage() {
     try {
       const response = await oscService.getMyOSCs();
       let data = Array.isArray(response) ? response : (response?.data || []);
-      setOscs(data.sort((a, b) => (a.name || '').localeCompare(b.name || '')));
+      
+      // Garante que os documentos internos estejam ordenados por data decrescente
+      const sortedData = data.map(osc => ({
+        ...osc,
+        documents: osc.documents ? [...osc.documents].sort((a, b) => 
+          new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at)
+        ) : []
+      }));
+
+      setOscs(sortedData.sort((a, b) => (a.name || a.razao_social || '').localeCompare(b.name || b.razao_social || '')));
     } catch (err) {
       addNotification("Erro ao carregar OSCs.", "error");
     } finally {
@@ -306,9 +376,10 @@ export default function OSCsPage() {
   useEffect(() => { fetchOSCs(); }, [addNotification]);
 
   const filteredOscs = oscs.filter(osc => {
-    const nameMatch = osc.name?.toLowerCase().includes(searchName.toLowerCase());
-    const cnpjMatch = osc.cnpj?.replace(/\D/g, '').includes(searchCnpj.replace(/\D/g, ''));
-    const respMatch = !searchResponsible || osc.responsible?.toLowerCase().includes(searchResponsible.toLowerCase());
+    const name = osc.name || osc.razao_social || '';
+    const nameMatch = name.toLowerCase().includes(searchName.toLowerCase());
+    const cnpjMatch = (osc.cnpj || '').replace(/\D/g, '').includes(searchCnpj.replace(/\D/g, ''));
+    const respMatch = !searchResponsible || (osc.responsible || '').toLowerCase().includes(searchResponsible.toLowerCase());
     return nameMatch && cnpjMatch && respMatch;
   });
 
