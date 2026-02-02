@@ -6,14 +6,13 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// --- LISTAR DOCUMENTOS (Ajustado para retornar documentos vinculados à OSC) ---
+// --- LISTAR DOCUMENTOS ---
 export const getDocuments = async (req, res) => {
   try {
-    const { oscId, status, type } = req.query;
+    const { oscId, status, type, year } = req.query;
     const userId = req.user.id;
     const userRole = req.user.role;
 
-    // Query base que traz os documentos e informações da OSC
     let query = `
       SELECT d.*, 
              d.created_at as createdAt, 
@@ -26,7 +25,6 @@ export const getDocuments = async (req, res) => {
     const params = [];
     const conditions = [];
 
-    // Segurança: Contador vê apenas suas OSCs, OSC vê apenas seus próprios documentos
     if (userRole === 'Contador') {
       conditions.push('o.assigned_contador_id = ?');
       params.push(userId);
@@ -38,9 +36,13 @@ export const getDocuments = async (req, res) => {
     if (oscId) { conditions.push('d.osc_id = ?'); params.push(oscId); }
     if (status) { conditions.push('d.status = ?'); params.push(status); }
     if (type) { conditions.push('d.doc_type = ?'); params.push(type); }
+    // Filtro por ano de competência
+    if (year) { conditions.push('d.ref_year = ?'); params.push(year); }
 
     if (conditions.length > 0) query += ' WHERE ' + conditions.join(' AND ');
-    query += ' ORDER BY d.created_at DESC';
+    
+    // Ordenação priorizando a competência contábil
+    query += ' ORDER BY d.ref_year DESC, d.ref_month DESC, d.created_at DESC';
 
     const [rows] = await pool.execute(query, params);
     res.json(rows);
@@ -50,11 +52,10 @@ export const getDocuments = async (req, res) => {
   }
 };
 
-// --- BUSCAR DOCUMENTOS RECEBIDOS (Mapeamento para o carrossel do Contador) ---
+// --- BUSCAR DOCUMENTOS RECEBIDOS ---
 export const getReceivedDocuments = async (req, res) => {
   try {
     const userId = req.user.id;
-
     const query = `
       SELECT d.*, u.name as sender_name, o.razao_social
       FROM documents d
@@ -63,9 +64,7 @@ export const getReceivedDocuments = async (req, res) => {
       WHERE o.assigned_contador_id = ?
       ORDER BY d.created_at DESC
     `;
-
     const [rows] = await pool.execute(query, [userId]);
-    
     const formatted = rows.map(doc => ({
       id: doc.id,
       title: doc.original_name,
@@ -74,7 +73,6 @@ export const getReceivedDocuments = async (req, res) => {
       created_at: doc.created_at,
       file_path: `uploads/${doc.saved_filename}`
     }));
-
     res.json(formatted);
   } catch (error) {
     console.error('[Docs Received] Erro:', error);
@@ -82,58 +80,58 @@ export const getReceivedDocuments = async (req, res) => {
   }
 };
 
-// --- UPLOAD DE DOCUMENTO (Ajustado para fluxo bidirecional Contador <-> OSC) ---
+// --- UPLOAD DE DOCUMENTO (Com Competência ref_month / ref_year) ---
 export const uploadDocument = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'Arquivo não enviado.' });
 
     const userId = req.user.id;
     const userRole = req.user.role;
-    const { doc_type, osc_id: bodyOscId } = req.body; 
+    // Captura mês e ano de referência enviados pelo seletor do frontend
+    const { doc_type, osc_id: bodyOscId, ref_month, ref_year } = req.body; 
 
     let finalOscId;
     let targetContadorId;
 
-    // Se o Contador estiver fazendo o upload para uma OSC específica
     if (userRole === 'Contador' && bodyOscId) {
       finalOscId = bodyOscId;
       const [oscRows] = await pool.execute('SELECT assigned_contador_id FROM oscs WHERE id = ?', [finalOscId]);
       targetContadorId = userId; 
     } else {
-      // Fluxo normal: OSC enviando para seu contador
-      const [oscRows] = await pool.execute(
-        'SELECT id, assigned_contador_id FROM oscs WHERE user_id = ?', 
-        [userId]
-      );
+      const [oscRows] = await pool.execute('SELECT id, assigned_contador_id FROM oscs WHERE user_id = ?', [userId]);
       if (oscRows.length === 0) return res.status(403).json({ message: 'OSC não encontrada.' });
       finalOscId = oscRows[0].id;
       targetContadorId = oscRows[0].assigned_contador_id;
     }
 
-    // REGRA: Limite de 20 documentos mensais (Apenas para uploads da OSC)
+    // Fallback caso não venha competência: usa data atual
+    const monthRef = ref_month || (new Date().getMonth() + 1);
+    const yearRef = ref_year || new Date().getFullYear();
+
+    // REGRA: Limite de 20 documentos baseada na COMPETÊNCIA escolhida
     if (userRole === 'OSC' && doc_type === 'MENSAL') {
       const [countRows] = await pool.execute(
         `SELECT COUNT(*) as total FROM documents 
          WHERE osc_id = ? AND doc_type = 'MENSAL' 
-         AND MONTH(created_at) = MONTH(CURRENT_DATE()) 
-         AND YEAR(created_at) = YEAR(CURRENT_DATE())`,
-        [finalOscId]
+         AND ref_month = ? AND ref_year = ?`,
+        [finalOscId, monthRef, yearRef]
       );
 
       if (countRows[0].total >= 20) {
-        return res.status(400).json({ message: 'Limite de 20 documentos mensais atingido.' });
+        return res.status(400).json({ message: 'Limite de 20 documentos atingido para este período.' });
       }
     }
 
-    // INSERT completo para evitar Erro 500
     const [result] = await pool.execute(
       `INSERT INTO documents 
-       (osc_id, uploaded_by_user_id, doc_type, original_name, saved_filename, file_path, file_size_bytes, mime_type, to_contador_id, status) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ENVIADO')`,
+       (osc_id, uploaded_by_user_id, doc_type, ref_month, ref_year, original_name, saved_filename, file_path, file_size_bytes, mime_type, to_contador_id, status) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ENVIADO')`,
       [
         finalOscId, 
         userId, 
-        doc_type || 'MENSAL', 
+        doc_type || 'MENSAL',
+        monthRef,
+        yearRef,
         req.file.originalname, 
         req.file.filename, 
         req.file.path || `uploads/${req.file.filename}`, 
@@ -150,26 +148,24 @@ export const uploadDocument = async (req, res) => {
   }
 };
 
-// --- CONCLUIR MÊS (Check do Contador) ---
+// --- CONCLUIR PERÍODO (Mês/Ano Específico) ---
 export const markMonthAsConcluded = async (req, res) => {
   try {
-    const { oscId } = req.body;
-    console.log('[DEBUG] Tentando concluir mês para OSC:', oscId);
-
-    if (!oscId) {
-      return res.status(400).json({ message: 'ID da OSC é obrigatório.' });
+    const { oscId, month, year } = req.body;
+    
+    if (!oscId || !month || !year) {
+      return res.status(400).json({ message: 'OSC, Mês e Ano de referência são obrigatórios.' });
     }
 
     const [result] = await pool.execute(
       `UPDATE documents SET status = 'CONCLUIDO' 
        WHERE osc_id = ? AND doc_type = 'MENSAL' 
-       AND MONTH(created_at) = MONTH(CURRENT_DATE()) 
-       AND YEAR(created_at) = YEAR(CURRENT_DATE())`,
-      [oscId]
+       AND ref_month = ? AND ref_year = ?`,
+      [oscId, month, year]
     );
 
     res.json({ 
-      message: 'Mês marcado como concluído com sucesso.', 
+      message: `Mês ${month}/${year} concluído com sucesso.`, 
       updatedRows: result.affectedRows 
     });
   } catch (error) {
