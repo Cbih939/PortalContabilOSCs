@@ -111,7 +111,6 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    marginLeft: '10px'
   },
 
   counterUploadBtn: {
@@ -126,6 +125,24 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '6px'
+  },
+
+  actionPanel: {
+    display: 'flex', 
+    gap: '10px', 
+    marginBottom: '20px', 
+    alignItems: 'center', 
+    background: '#ffffff', 
+    padding: '15px', 
+    borderRadius: '8px',
+    border: '1px solid #e5e7eb'
+  },
+
+  selectInput: {
+    padding: '6px',
+    borderRadius: '4px',
+    border: '1px solid #d1d5db',
+    fontSize: '13px'
   },
 
   emptyState: { textAlign: 'center', padding: '40px', color: '#9ca3af', backgroundColor: '#f9fafb', borderRadius: '8px', border: '2px dashed #e5e7eb' },
@@ -153,18 +170,28 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
   const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
   
-  const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-  const currentMonthIndex = new Date().getMonth(); 
+  // Controle de Visualização do Calendário
+  const [viewYear, setViewYear] = useState(new Date().getFullYear());
+  
+  // Controle de Ação (Upload / Conclusão)
+  const [actionMonth, setActionMonth] = useState(new Date().getMonth() + 1);
+  const [actionYear, setActionYear] = useState(new Date().getFullYear());
 
-  const handleConcludeMonth = async (e) => {
-    e.stopPropagation();
-    if (!window.confirm("Deseja marcar este mês como CONCLUÍDO para esta OSC?")) return;
+  const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const years = [2024, 2025, 2026];
+
+  const handleConcludeMonth = async () => {
+    if (!window.confirm(`Deseja marcar ${months[actionMonth-1]}/${actionYear} como CONCLUÍDO para esta OSC?`)) return;
     try {
-      await docService.markAsConcluded({ oscId: osc.id });
-      addNotification("Mês concluído e documentos atualizados!", "success");
+      await docService.markAsConcluded({ 
+        oscId: osc.id,
+        month: actionMonth,
+        year: actionYear
+      });
+      addNotification(`Período ${actionMonth}/${actionYear} concluído com sucesso!`, "success");
       onRefresh();
     } catch (err) {
-      addNotification("Erro ao concluir mês.", "error");
+      addNotification("Erro ao concluir período.", "error");
     }
   };
 
@@ -178,12 +205,14 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
       formData.append('file', file);
       formData.append('osc_id', osc.id);
       formData.append('doc_type', 'FIXO'); 
+      formData.append('ref_month', actionMonth);
+      formData.append('ref_year', actionYear);
       
       await docService.uploadDocument(formData);
-      addNotification("Documento enviado para a OSC com sucesso!", "success");
+      addNotification(`Documento enviado para a OSC (${actionMonth}/${actionYear})!`, "success");
       onRefresh();
     } catch (err) {
-      addNotification("Erro ao enviar documento para a OSC.", "error");
+      addNotification("Erro ao enviar documento.", "error");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -196,12 +225,9 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
   };
 
   const getMonthStatus = (monthIndex) => {
-    if (monthIndex > currentMonthIndex) return 'future';
-    
+    const monthNum = monthIndex + 1;
     const docsInMonth = osc.documents ? osc.documents.filter(d => {
-        const date = d.createdAt || d.created_at;
-        if (!date) return false;
-        return new Date(date).getMonth() === monthIndex;
+        return d.ref_month === monthNum && d.ref_year === viewYear;
     }) : [];
 
     const hasDoc = docsInMonth.length > 0;
@@ -209,8 +235,9 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
 
     if (isVerified) return 'concluded'; 
     if (hasDoc) return 'sent';          
-    if (monthIndex === currentMonthIndex) return 'pending';
-    return 'late';
+    if (viewYear === new Date().getFullYear() && monthIndex === new Date().getMonth()) return 'pending';
+    if (viewYear < new Date().getFullYear() || (viewYear === new Date().getFullYear() && monthIndex < new Date().getMonth())) return 'late';
+    return 'future';
   };
 
   const getStatusStyle = (status) => {
@@ -249,9 +276,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
         </div>
 
         <div style={styles.actions} onClick={(e) => e.stopPropagation()}>
-          <button style={styles.checkBtn} onClick={handleConcludeMonth} title="Marcar Mês como Concluído">
-            <IconCheck /> Concluir Mês
-          </button>
           <button style={styles.actionBtn('#2563eb', '#eff6ff')} onClick={() => onView(osc)} title="Ver Detalhes">
             <IconEye />
           </button>
@@ -266,6 +290,47 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
 
       {isExpanded && (
         <div style={styles.accordionBody}>
+          
+          {/* PAINEL DE AÇÕES DE COMPETÊNCIA */}
+          <div style={styles.actionPanel}>
+            <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+              <span style={{fontSize: '13px', fontWeight: 'bold', color: '#374151'}}>Período para Ação:</span>
+              <select 
+                style={styles.selectInput} 
+                value={actionMonth} 
+                onChange={(e) => setActionMonth(parseInt(e.target.value))}
+              >
+                {months.map((m, i) => <option key={i} value={i+1}>{m}</option>)}
+              </select>
+              <select 
+                style={styles.selectInput} 
+                value={actionYear} 
+                onChange={(e) => setActionYear(parseInt(e.target.value))}
+              >
+                {years.map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+
+            <div style={{borderLeft: '1px solid #ddd', height: '24px', margin: '0 10px'}}></div>
+
+            <div style={{display: 'flex', gap: '10px'}}>
+              <button style={styles.checkBtn} onClick={handleConcludeMonth}>
+                <IconCheck /> Concluir Período
+              </button>
+              
+              <label style={styles.counterUploadBtn}>
+                {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar p/ este Período</>}
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  style={{ display: 'none' }} 
+                  onChange={handleCounterUpload} 
+                  disabled={isUploading} 
+                />
+              </label>
+            </div>
+          </div>
+
           <div style={styles.legend}>
             <div style={styles.legendItem}><div style={styles.colorBox('#fee2e2', '#fecaca')}></div> Em Atraso</div>
             <div style={styles.legendItem}><div style={styles.colorBox('#fef9c3', '#fde047')}></div> Pendente</div>
@@ -273,7 +338,17 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             <div style={styles.legendItem}><div style={styles.colorBox('#dcfce7', '#86efac')}></div> Concluso</div>
           </div>
 
-          <h4 style={styles.sectionTitle}>Situação Anual ({new Date().getFullYear()})</h4>
+          <h4 style={styles.sectionTitle}>
+            Situação do Ano: 
+            <select 
+              style={{...styles.selectInput, marginLeft: '10px'}} 
+              value={viewYear} 
+              onChange={(e) => setViewYear(parseInt(e.target.value))}
+            >
+              {years.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </h4>
+
           <div style={styles.calendarGrid}>
             {months.map((m, idx) => {
               const status = getMonthStatus(idx);
@@ -287,43 +362,32 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             })}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <h4 style={{ ...styles.sectionTitle, margin: 0 }}>
-              <IconFileText /> Documentações Recentes (Data/Hora)
-            </h4>
-            
-            <label style={styles.counterUploadBtn}>
-              {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar Doc p/ OSC</>}
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                style={{ display: 'none' }} 
-                onChange={handleCounterUpload} 
-                disabled={isUploading} 
-              />
-            </label>
-          </div>
-          
+          <h4 style={styles.sectionTitle}><IconFileText /> Documentações do Ano de {viewYear}</h4>
           <div style={styles.docList}>
-            {osc.documents && osc.documents.length > 0 ? (
-              osc.documents.map((doc, i) => (
-                <div key={i} className="doc-item-row" style={styles.docItem} onClick={() => openDocument(doc.id)}>
-                  <div style={styles.docMain}>
-                    <IconFileText />
-                    <span>{doc.original_name || doc.title}</span>
+            {osc.documents && osc.documents.filter(d => d.ref_year === viewYear).length > 0 ? (
+              osc.documents
+                .filter(d => d.ref_year === viewYear)
+                .map((doc, i) => (
+                  <div key={i} className="doc-item-row" style={styles.docItem} onClick={() => openDocument(doc.id)}>
+                    <div style={styles.docMain}>
+                      <IconFileText />
+                      <span>{doc.original_name}</span>
+                    </div>
+                    <div style={styles.docMeta}>
+                      <span style={{fontSize: '11px', color: '#6b7280', fontWeight: '600'}}>
+                        Ref: {months[doc.ref_month - 1]}/{doc.ref_year}
+                      </span>
+                      <span style={styles.typeBadge(doc.doc_type === 'MENSAL')}>
+                        {doc.doc_type || 'MENSAL'}
+                      </span>
+                      <span style={styles.docDate}>
+                        Envio: {new Date(doc.createdAt || doc.created_at).toLocaleDateString('pt-BR')}
+                      </span>
+                    </div>
                   </div>
-                  <div style={styles.docMeta}>
-                    <span style={styles.typeBadge(doc.doc_type === 'MENSAL')}>
-                      {doc.doc_type || 'MENSAL'}
-                    </span>
-                    <span style={styles.docDate}>
-                      { (doc.createdAt || doc.created_at) ? new Date(doc.createdAt || doc.created_at).toLocaleString('pt-BR') : '-'}
-                    </span>
-                  </div>
-                </div>
-              ))
+                ))
             ) : (
-              <div style={styles.emptyState}>Nenhuma documentação registrada.</div>
+              <div style={styles.emptyState}>Nenhuma documentação registrada para o ano de {viewYear}.</div>
             )}
           </div>
         </div>
@@ -338,7 +402,6 @@ export default function OSCsPage() {
   const [expandedOscId, setExpandedOscId] = useState(null);
   const [searchName, setSearchName] = useState('');
   const [searchCnpj, setSearchCnpj] = useState('');
-  const [searchResponsible, setSearchResponsible] = useState('');
 
   const [oscToView, setOscToView] = useState(null);
   const [oscToEdit, setOscToEdit] = useState(null);
@@ -375,8 +438,7 @@ export default function OSCsPage() {
     const name = osc.name || osc.razao_social || '';
     const nameMatch = name.toLowerCase().includes(searchName.toLowerCase());
     const cnpjMatch = (osc.cnpj || '').replace(/\D/g, '').includes(searchCnpj.replace(/\D/g, ''));
-    const respMatch = !searchResponsible || (osc.responsible || '').toLowerCase().includes(searchResponsible.toLowerCase());
-    return nameMatch && cnpjMatch && respMatch;
+    return nameMatch && cnpjMatch;
   });
 
   const handleToggleAccordion = (id) => setExpandedOscId(prevId => (prevId === id ? null : id));
