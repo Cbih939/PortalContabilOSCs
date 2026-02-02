@@ -160,7 +160,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     e.stopPropagation();
     if (!window.confirm("Deseja marcar este mês como CONCLUÍDO para esta OSC?")) return;
     try {
-      // Ajuste para enviar objeto com oscId conforme esperado pelo controller
       await docService.markAsConcluded({ oscId: osc.id });
       addNotification("Mês concluído e documentos atualizados!", "success");
       onRefresh();
@@ -178,7 +177,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
       const formData = new FormData();
       formData.append('file', file);
       formData.append('osc_id', osc.id);
-      formData.append('doc_type', 'FIXO'); // Documentos do contador são tratados como fixos/oficiais
+      formData.append('doc_type', 'FIXO'); 
       
       await docService.uploadDocument(formData);
       addNotification("Documento enviado para a OSC com sucesso!", "success");
@@ -199,7 +198,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
   const getMonthStatus = (monthIndex) => {
     if (monthIndex > currentMonthIndex) return 'future';
     
-    // Filtra documentos pela data de criação
     const docsInMonth = osc.documents ? osc.documents.filter(d => {
         const date = d.createdAt || d.created_at;
         if (!date) return false;
@@ -207,7 +205,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     }) : [];
 
     const hasDoc = docsInMonth.length > 0;
-    const isVerified = hasDoc && docsInMonth.some(d => d.status === 'CONCLUIDO' || d.status === 'APPROVED');
+    const isVerified = hasDoc && docsInMonth.some(d => d.status === 'CONCLUIDO');
 
     if (isVerified) return 'concluded'; 
     if (hasDoc) return 'sent';          
@@ -294,7 +292,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
               <IconFileText /> Documentações Recentes (Data/Hora)
             </h4>
             
-            {/* Novo botão de upload do Contador para a OSC */}
             <label style={styles.counterUploadBtn}>
               {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar Doc p/ OSC</>}
               <input 
@@ -357,7 +354,6 @@ export default function OSCsPage() {
       const response = await oscService.getMyOSCs();
       let data = Array.isArray(response) ? response : (response?.data || []);
       
-      // Garante que os documentos internos estejam ordenados por data decrescente
       const sortedData = data.map(osc => ({
         ...osc,
         documents: osc.documents ? [...osc.documents].sort((a, b) => 

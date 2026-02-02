@@ -125,7 +125,7 @@ export const uploadDocument = async (req, res) => {
       }
     }
 
-    // INSERT completo para evitar Erro 500 (Unknown column file_path etc)
+    // INSERT completo para evitar Erro 500
     const [result] = await pool.execute(
       `INSERT INTO documents 
        (osc_id, uploaded_by_user_id, doc_type, original_name, saved_filename, file_path, file_size_bytes, mime_type, to_contador_id, status) 
@@ -169,7 +169,7 @@ export const markMonthAsConcluded = async (req, res) => {
     );
 
     res.json({ 
-      message: 'Mês concluído com sucesso.', 
+      message: 'Mês marcado como concluído com sucesso.', 
       updatedRows: result.affectedRows 
     });
   } catch (error) {
