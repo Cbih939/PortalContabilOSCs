@@ -135,7 +135,8 @@ const styles = {
     background: '#ffffff', 
     padding: '15px', 
     borderRadius: '8px',
-    border: '1px solid #e5e7eb'
+    border: '1px solid #e5e7eb',
+    flexWrap: 'wrap'
   },
 
   selectInput: {
@@ -170,10 +171,10 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
   const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
   
-  // Controle de Visualização do Calendário
+  // Controle de Visualização do Calendário (Ano)
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
   
-  // Controle de Ação (Upload / Conclusão)
+  // Controle de Ação (Upload / Conclusão de Mês específico)
   const [actionMonth, setActionMonth] = useState(new Date().getMonth() + 1);
   const [actionYear, setActionYear] = useState(new Date().getFullYear());
 
@@ -209,7 +210,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
       formData.append('ref_year', actionYear);
       
       await docService.uploadDocument(formData);
-      addNotification(`Documento enviado para a OSC (${actionMonth}/${actionYear})!`, "success");
+      addNotification(`Documento enviado (${actionMonth}/${actionYear})!`, "success");
       onRefresh();
     } catch (err) {
       addNotification("Erro ao enviar documento.", "error");
@@ -226,8 +227,9 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
 
   const getMonthStatus = (monthIndex) => {
     const monthNum = monthIndex + 1;
+    // Filtra documentos pela competência (ref_month e ref_year)
     const docsInMonth = osc.documents ? osc.documents.filter(d => {
-        return d.ref_month === monthNum && d.ref_year === viewYear;
+        return parseInt(d.ref_month) === monthNum && parseInt(d.ref_year) === viewYear;
     }) : [];
 
     const hasDoc = docsInMonth.length > 0;
@@ -235,8 +237,10 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
 
     if (isVerified) return 'concluded'; 
     if (hasDoc) return 'sent';          
-    if (viewYear === new Date().getFullYear() && monthIndex === new Date().getMonth()) return 'pending';
-    if (viewYear < new Date().getFullYear() || (viewYear === new Date().getFullYear() && monthIndex < new Date().getMonth())) return 'late';
+    
+    const now = new Date();
+    if (viewYear === now.getFullYear() && monthIndex === now.getMonth()) return 'pending';
+    if (viewYear < now.getFullYear() || (viewYear === now.getFullYear() && monthIndex < now.getMonth())) return 'late';
     return 'future';
   };
 
@@ -291,10 +295,10 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
       {isExpanded && (
         <div style={styles.accordionBody}>
           
-          {/* PAINEL DE AÇÕES DE COMPETÊNCIA */}
+          {/* PAINEL DE AÇÕES DE COMPETÊNCIA (UPLOAD E CHECK) */}
           <div style={styles.actionPanel}>
             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-              <span style={{fontSize: '13px', fontWeight: 'bold', color: '#374151'}}>Período para Ação:</span>
+              <span style={{fontSize: '13px', fontWeight: 'bold', color: '#374151'}}>Ação para Competência:</span>
               <select 
                 style={styles.selectInput} 
                 value={actionMonth} 
@@ -313,13 +317,13 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
 
             <div style={{borderLeft: '1px solid #ddd', height: '24px', margin: '0 10px'}}></div>
 
-            <div style={{display: 'flex', gap: '10px'}}>
+            <div style={{display: 'flex', gap: '10px', flex: 1}}>
               <button style={styles.checkBtn} onClick={handleConcludeMonth}>
-                <IconCheck /> Concluir Período
+                <IconCheck /> Concluir Este Mês
               </button>
               
-              <label style={styles.counterUploadBtn}>
-                {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar p/ este Período</>}
+              <label style={{...styles.counterUploadBtn, flex: 1, justifyContent: 'center'}}>
+                {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar p/ esta Ref.</>}
                 <input 
                   type="file" 
                   ref={fileInputRef} 
@@ -339,7 +343,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
           </div>
 
           <h4 style={styles.sectionTitle}>
-            Situação do Ano: 
+            Calendário de Conformidade - Ano: 
             <select 
               style={{...styles.selectInput, marginLeft: '10px'}} 
               value={viewYear} 
@@ -362,11 +366,11 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             })}
           </div>
 
-          <h4 style={styles.sectionTitle}><IconFileText /> Documentações do Ano de {viewYear}</h4>
+          <h4 style={styles.sectionTitle}><IconFileText /> Documentos da Competência {viewYear}</h4>
           <div style={styles.docList}>
-            {osc.documents && osc.documents.filter(d => d.ref_year === viewYear).length > 0 ? (
+            {osc.documents && osc.documents.filter(d => parseInt(d.ref_year) === viewYear).length > 0 ? (
               osc.documents
-                .filter(d => d.ref_year === viewYear)
+                .filter(d => parseInt(d.ref_year) === viewYear)
                 .map((doc, i) => (
                   <div key={i} className="doc-item-row" style={styles.docItem} onClick={() => openDocument(doc.id)}>
                     <div style={styles.docMain}>
@@ -375,19 +379,19 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
                     </div>
                     <div style={styles.docMeta}>
                       <span style={{fontSize: '11px', color: '#6b7280', fontWeight: '600'}}>
-                        Ref: {months[doc.ref_month - 1]}/{doc.ref_year}
+                        Ref: {months[(doc.ref_month || 1) - 1]}/{doc.ref_year}
                       </span>
                       <span style={styles.typeBadge(doc.doc_type === 'MENSAL')}>
                         {doc.doc_type || 'MENSAL'}
                       </span>
                       <span style={styles.docDate}>
-                        Envio: {new Date(doc.createdAt || doc.created_at).toLocaleDateString('pt-BR')}
+                        Postado: {new Date(doc.createdAt || doc.created_at).toLocaleDateString('pt-BR')}
                       </span>
                     </div>
                   </div>
                 ))
             ) : (
-              <div style={styles.emptyState}>Nenhuma documentação registrada para o ano de {viewYear}.</div>
+              <div style={styles.emptyState}>Sem registros para o ano de {viewYear}.</div>
             )}
           </div>
         </div>
@@ -471,7 +475,7 @@ export default function OSCsPage() {
           <div className="tooltip-container" style={styles.tooltipWrapper}>
             <IconInfo />
             <div className="tooltip-box" style={styles.tooltipBox}>
-              Gerencie suas organizações, valide envios mensais e monitore a conformidade contábil.
+              Gerencie suas organizações, valide envios e monitore a conformidade contábil.
             </div>
           </div>
         </h1>
