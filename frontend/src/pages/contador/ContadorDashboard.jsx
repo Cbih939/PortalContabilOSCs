@@ -12,6 +12,7 @@ import styles from './ContadorDashboard.module.css';
 import Spinner from '../../components/common/Spinner.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 
+
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 

@@ -85,12 +85,18 @@ export const uploadDocument = async (req, res) => {
     if (!req.file) return res.status(400).json({ message: 'Arquivo não enviado.' });
 
     const userId = req.user.id;
-    const { doc_type } = req.body; // 'FIXO' ou 'MENSAL'
+    const { doc_type } = req.body; 
 
-    const [oscRows] = await pool.execute('SELECT id, assigned_contador_id FROM oscs WHERE user_id = ?', [userId]);
+    // Busca dados da OSC e do Contador vinculado
+    const [oscRows] = await pool.execute(
+      'SELECT id, assigned_contador_id FROM oscs WHERE user_id = ?', 
+      [userId]
+    );
+    
     if (oscRows.length === 0) return res.status(403).json({ message: 'OSC não encontrada.' });
 
     const osc_id = oscRows[0].id;
+    const contador_id = oscRows[0].assigned_contador_id;
 
     // REGRA: Limite de 20 documentos mensais
     if (doc_type === 'MENSAL') {
@@ -103,20 +109,32 @@ export const uploadDocument = async (req, res) => {
       );
 
       if (countRows[0].total >= 20) {
-        return res.status(400).json({ message: 'Limite de 20 documentos mensais atingido para este mês.' });
+        return res.status(400).json({ message: 'Limite de 20 documentos mensais atingido.' });
       }
     }
 
+    // INSERT ajustado para as colunas do seu DESCRIBE
     const [result] = await pool.execute(
       `INSERT INTO documents 
-       (original_name, saved_filename, mime_type, file_size_bytes, osc_id, receiver_id, uploaded_by_user_id, doc_type, status, created_at) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ENVIADO', NOW())`,
-      [req.file.originalname, req.file.filename, req.file.mimetype, req.file.size, osc_id, oscRows[0].assigned_contador_id, userId, doc_type || 'MENSAL']
+       (osc_id, uploaded_by_user_id, doc_type, original_name, saved_filename, file_path, file_size_bytes, mime_type, to_contador_id, status) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ENVIADO')`,
+      [
+        osc_id, 
+        userId, 
+        doc_type || 'MENSAL', 
+        req.file.originalname, 
+        req.file.filename, 
+        req.file.path, // Caminho gerado pelo multer
+        req.file.size, 
+        req.file.mimetype, 
+        contador_id
+      ]
     );
 
     res.status(201).json({ message: 'Enviado com sucesso!', id: result.insertId });
   } catch (error) {
-    res.status(500).json({ message: 'Erro no upload.' });
+    console.error('[Upload Error]:', error);
+    res.status(500).json({ message: 'Erro interno ao processar upload.' });
   }
 };
 
