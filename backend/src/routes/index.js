@@ -8,6 +8,7 @@ import contadorRoutes from './contador.routes.js';
 import alertRoutes from './alert.routes.js';
 import messageRoutes from './msg.routes.js';
 import publicFileRoutes from './publicFile.routes.js';
+import messageRoutes from './message.routes.js';
 
 const router = express.Router();
 

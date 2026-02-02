@@ -1,21 +1,17 @@
 import { Router } from 'express';
+import * as messageController from '../controllers/message.controller.js'; // Esta linha é a que estava faltando ou errada
 import { protect } from '../middlewares/auth.middleware.js';
-import { getContacts, getMessages, sendMessage } from '../controllers/message.controller.js';
 
 const router = Router();
 
-router.use(protect);
+// Listar contatos para a barra lateral
+router.get('/contacts', protect, messageController.getContacts);
 
-// Rota que corrige o erro 404: /api/messages/contacts
-router.get('/contacts', getContacts);
-
-// Obter histórico com um contato específico
-router.get('/:contactId', getMessages);
+// Obter histórico de mensagens (Suporta /?contactId=X ou /:id)
+router.get('/', protect, messageController.getMessages);
+router.get('/:id', protect, messageController.getMessages);
 
 // Enviar mensagem
-router.post('/', sendMessage);
-
-// Receber mensagem
-router.get('/', protect, messageController.getMessages)
+router.post('/', protect, messageController.sendMessage);
 
 export default router;
