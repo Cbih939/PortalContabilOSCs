@@ -75,31 +75,27 @@ export const getOSCById = async (req, res) => {
  * @route   PUT /api/oscs/:id
  */
 export const updateOSC = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { razao_social, cnpj, email, phone, address, responsible } = req.body;
+  try {
+    const { id } = req.params;
+    // Captura apenas os campos que realmente pertencem à tabela oscs
+    const { razao_social, cnpj, responsavel, telefone, email, assigned_contador_id } = req.body;
 
-        console.log(`[OSC Update] Atualizando perfil da OSC ID: ${id}`);
+    console.log(`[OSC] Atualizando ID ${id} com dados:`, req.body);
 
-        const [result] = await pool.execute(
-            `UPDATE oscs SET 
-                razao_social = ?, 
-                cnpj = ?, 
-                email = ?, 
-                phone = ?, 
-                address = ?, 
-                responsible = ? 
-            WHERE id = ?`,
-            [razao_social, cnpj, email, phone, address, responsible, id]
-        );
+    const [result] = await pool.execute(
+      `UPDATE oscs 
+       SET razao_social = ?, cnpj = ?, responsavel = ?, telefone = ?, email = ?, assigned_contador_id = ? 
+       WHERE id = ?`,
+      [razao_social, cnpj, responsavel, telefone, email, assigned_contador_id, id]
+    );
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'OSC não encontrada para atualização.' });
-        }
-
-        return res.status(200).json({ message: 'Perfil atualizado com sucesso!' });
-    } catch (error) {
-        console.error('[OSC Update Error]:', error);
-        return res.status(500).json({ message: 'Erro ao atualizar o perfil da OSC.' });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "OSC não encontrada." });
     }
+
+    res.json({ message: "OSC atualizada com sucesso!" });
+  } catch (error) {
+    console.error("[OSC Update Error]:", error);
+    res.status(500).json({ message: "Erro interno ao atualizar OSC. Verifique se os campos estão corretos." });
+  }
 };

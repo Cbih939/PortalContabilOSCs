@@ -15,4 +15,7 @@ router.get('/:contactId', getMessages);
 // Enviar mensagem
 router.post('/', sendMessage);
 
+// Receber mensagem
+router.get('/', protect, messageController.getMessages)
+
 export default router;

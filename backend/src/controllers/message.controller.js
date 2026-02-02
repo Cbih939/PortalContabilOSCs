@@ -71,13 +71,13 @@ export const getContacts = async (req, res) => {
 export const getMessages = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { contactId } = req.query; // Importante: o frontend deve enviar ?contactId=X
+        // Tenta pegar o ID tanto da URL (/3) quanto da Query (?contactId=3)
+        const contactId = req.params.id || req.query.contactId;
 
         if (!contactId) {
-            return res.status(400).json({ message: "contactId é obrigatório para filtrar a conversa." });
+            return res.status(400).json({ message: "contactId é necessário." });
         }
 
-        // Busca mensagens trocadas especificamente entre o logado e o contato selecionado
         const query = `
             SELECT * FROM messages 
             WHERE (sender_id = ? AND receiver_id = ?)
@@ -91,20 +91,11 @@ export const getMessages = async (req, res) => {
             id: m.id,
             text: m.content,       
             isMe: m.sender_id === userId,
-            sender_id: m.sender_id,
-            receiver_id: m.receiver_id,
             created_at: m.created_at
         }));
 
-        // Opcional: Marcar mensagens como lidas ao abrir a conversa
-        await pool.execute(
-            'UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ?',
-            [contactId, userId]
-        );
-
         res.json(safeMsgs);
     } catch (error) {
-        console.error('[Chat Error] getMessages:', error);
         res.status(500).json([]);
     }
 };

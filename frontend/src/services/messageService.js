@@ -5,10 +5,7 @@ export const getContacts = async () => {
   return response.data;
 };
 
-export const getMessages = async (contactId) => {
-  const response = await api.get(`/messages/${contactId}`);
-  return response.data;
-};
+export const getMessages = (contactId) => api.get(`/messages?contactId=${contactId}`);
 
 export const getMyMessages = async () => {
   const response = await api.get('/messages/my');
