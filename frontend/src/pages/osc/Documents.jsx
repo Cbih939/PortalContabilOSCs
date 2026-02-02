@@ -1,3 +1,5 @@
+// src/pages/osc/Documents.jsx
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import useApi from '../../hooks/useApi.jsx';
@@ -7,7 +9,6 @@ import * as docService from '../../services/documentService.js';
 import DocumentUpload from './components/DocumentUpload.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
 import { FileIcon, DownloadIcon } from '../../components/common/Icons.jsx';
-import { formatDate } from '../../utils/formatDate.js';
 import styles from './Documents.module.css';
 
 // Ícone de Informação Local
@@ -32,7 +33,8 @@ const calStyles = {
   calendarGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))', gap: '8px', marginBottom: '24px' },
   monthBox: (bg, color, border) => ({ backgroundColor: bg, color: color, border: `1px solid ${border}`, borderRadius: '6px', padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50px' }),
   monthText: { fontSize: '12px', fontWeight: 'bold' },
-  statusText: { fontSize: '9px', fontWeight: '600', marginTop: '2px', textTransform: 'uppercase' }
+  statusText: { fontSize: '9px', fontWeight: '600', marginTop: '2px', textTransform: 'uppercase' },
+  periodSelector: { marginBottom: '15px', padding: '12px', backgroundColor: '#fff7ed', borderRadius: '8px', border: '1px solid #ffedd5' }
 };
 
 export default function OSCDocumentsPage() {
@@ -42,30 +44,39 @@ export default function OSCDocumentsPage() {
   const [myFiles, setMyFiles] = useState([]);
   const [isLoadingList, setIsLoadingList] = useState(true);
   const [errorLoading, setErrorLoading] = useState(null);
-  const [docType, setDocType] = useState('MENSAL'); // Estado para controlar o tipo de documento
+  
+  // ESTADOS DE COMPETÊNCIA
+  const [docType, setDocType] = useState('MENSAL');
+  const [refMonth, setRefMonth] = useState(new Date().getMonth() + 1);
+  const [refYear, setRefYear] = useState(new Date().getFullYear());
+  const [viewYear, setViewYear] = useState(new Date().getFullYear());
 
   const { request: uploadFile, isLoading: isUploading } = useApi(docService.uploadDocument);
 
-  // --- LÓGICA DO CALENDÁRIO ---
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-  const currentMonthIndex = new Date().getMonth();
+  const years = [2024, 2025, 2026];
 
+  // --- LÓGICA DO CALENDÁRIO BASEADA EM REFERÊNCIA ---
   const getMonthStatus = (monthIndex) => {
-    if (monthIndex > currentMonthIndex) return 'future';
-    const docsInMonth = myFiles.filter(d => {
-      const dateStr = d.date || d.created_at;
-      if (!dateStr) return false;
-      return new Date(dateStr).getMonth() === monthIndex;
-    });
-
-    if (monthIndex === currentMonthIndex && docsInMonth.length === 0) return 'pending';
+    const monthNum = monthIndex + 1;
     
+    // Filtra documentos pela competência selecionada no visualizador
+    const docsInMonth = myFiles.filter(d => d.ref_month === monthNum && d.ref_year === viewYear);
+
     const hasDoc = docsInMonth.length > 0;
-    const isVerified = hasDoc && docsInMonth.some(d => d.status === 'CONCLUIDO' || d.verified === true);
+    const isVerified = hasDoc && docsInMonth.some(d => d.status === 'CONCLUIDO');
 
     if (isVerified) return 'concluded';
     if (hasDoc) return 'sent';
-    return 'late';
+    
+    // Lógica de atraso ou pendência baseada na data atual do sistema
+    const now = new Date();
+    const isCurrentMonth = viewYear === now.getFullYear() && monthIndex === now.getMonth();
+    const isPast = viewYear < now.getFullYear() || (viewYear === now.getFullYear() && monthIndex < now.getMonth());
+
+    if (isCurrentMonth) return 'pending';
+    if (isPast) return 'late';
+    return 'future';
   };
 
   const getStatusStyle = (status) => {
@@ -94,7 +105,11 @@ export default function OSCDocumentsPage() {
     try {
       const response = await docService.getMyDocuments();
       const docs = Array.isArray(response) ? response : (response.data || []);
-      const sortedData = docs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      // Ordena por competência (mais recente primeiro)
+      const sortedData = docs.sort((a, b) => {
+        if (b.ref_year !== a.ref_year) return b.ref_year - a.ref_year;
+        return b.ref_month - a.ref_month;
+      });
       setMyFiles(sortedData);
     } catch (err) {
       setErrorLoading("Não foi possível carregar os documentos.");
@@ -112,10 +127,12 @@ export default function OSCDocumentsPage() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('doc_type', docType); // Envia o tipo (MENSAL ou FIXO)
+      formData.append('doc_type', docType);
+      formData.append('ref_month', refMonth);
+      formData.append('ref_year', refYear);
       
       await uploadFile(formData);
-      addNotification('Ficheiro enviado com sucesso!', 'success');
+      addNotification(`Ficheiro enviado para o período ${refMonth}/${refYear}!`, 'success');
       await fetchDocuments();
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message;
@@ -140,27 +157,53 @@ export default function OSCDocumentsPage() {
           <div className={`${styles.infoCard} mb-8`}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
               <p className={styles.welcomeText}>
-                Caro usuário, este é o espaço para compartilhamento dos seus documentos oficiais. 
-                Baixe modelos na aba <Link to="/osc/modelos" className={styles.orangeLink}>"Docs | Modelos"</Link>.
+                Espaço para compartilhamento de documentos oficiais. 
+                Selecione o <strong>Mês e Ano</strong> antes de enviar.
               </p>
               <div className={styles.tooltipContainer}>
                 <InfoIcon />
                 <span className={styles.tooltipText} style={{ top: '150%', bottom: 'auto', transform: 'translateX(-90%)' }}>
-                  Documentação Mensal: limitada a 20 arquivos por mês. Documentos Fixos: arquivos permanentes como Estatutos.
+                  Documentação Mensal: limitada a 20 arquivos. O envio retroativo é permitido selecionando o ano anterior.
                 </span>
               </div>
             </div>
             
-            <div style={{ marginBottom: '15px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>Tipo de Documento:</label>
-                <select 
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                    value={docType}
-                    onChange={(e) => setDocType(e.target.value)}
-                >
-                    <option value="MENSAL">Envio Mensal (Contábil)</option>
-                    <option value="FIXO">Documento Fixo (Permanente)</option>
-                </select>
+            {/* SELETORES DE COMPETÊNCIA PARA UPLOAD */}
+            <div style={calStyles.periodSelector}>
+                <div style={{ marginBottom: '10px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: 'bold', display: 'block', color: '#ea580c' }}>1. TIPO DE DOCUMENTO</label>
+                    <select 
+                        style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                        value={docType}
+                        onChange={(e) => setDocType(e.target.value)}
+                    >
+                        <option value="MENSAL">Envio Mensal (Contábil)</option>
+                        <option value="FIXO">Documento Fixo (Permanente)</option>
+                    </select>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ flex: 1 }}>
+                        <label style={{ fontSize: '11px', fontWeight: 'bold', display: 'block', color: '#ea580c' }}>2. MÊS REF.</label>
+                        <select 
+                            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                            value={refMonth}
+                            onChange={(e) => setRefMonth(parseInt(e.target.value))}
+                        >
+                            {months.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+                        </select>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <label style={{ fontSize: '11px', fontWeight: 'bold', display: 'block', color: '#ea580c' }}>3. ANO REF.</label>
+                        <select 
+                            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                            value={refYear}
+                            onChange={(e) => setRefYear(parseInt(e.target.value))}
+                        >
+                            {years.map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <p className={styles.infoText}><strong>Organização:</strong> {user?.name}</p>
@@ -172,18 +215,26 @@ export default function OSCDocumentsPage() {
 
         {/* Coluna 2: Calendário + Lista de Documentos */}
         <div className={`${styles.listCard} ${styles.listColumn}`}>
-          <h2 className={styles.cardTitle}>Meus Documentos</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h2 className={styles.cardTitle} style={{ margin: 0 }}>Meus Documentos</h2>
+            
+            {/* SELETOR DE ANO PARA VISUALIZAÇÃO */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Ano:</span>
+              <select 
+                style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                value={viewYear}
+                onChange={(e) => setViewYear(parseInt(e.target.value))}
+              >
+                {years.map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+          </div>
 
-          {/* === CALENDÁRIO === */}
+          {/* === CALENDÁRIO FILTRADO POR ANO === */}
           <div style={{marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '20px'}}>
             <h4 style={calStyles.sectionTitle}>
-              Sua Situação em {new Date().getFullYear()}
-              <div className={styles.tooltipContainer}>
-                <InfoIcon />
-                <span className={styles.tooltipText} style={{ top: '150%', bottom: 'auto' }}>
-                  "Enviado" (Azul) indica recebimento. "OK" (Verde) indica conferência finalizada pelo contador.
-                </span>
-              </div>
+              Situação em {viewYear}
             </h4>
             
             <div style={calStyles.legend}>
@@ -213,23 +264,23 @@ export default function OSCDocumentsPage() {
             <div className={styles.loadingContainer}><Spinner text="A carregar..." /></div>
           ) : errorLoading ? (
             <div className={styles.emptyContainer} style={{color: 'red'}}>{errorLoading}</div>
-          ) : myFiles.length === 0 ? (
-            <div className={styles.emptyContainer}><p>Nenhum documento encontrado.</p></div>
+          ) : myFiles.filter(f => f.ref_year === viewYear).length === 0 ? (
+            <div className={styles.emptyContainer}><p>Nenhum documento referente a {viewYear}.</p></div>
           ) : (
             <div className={styles.fileListContainer}>
-              {myFiles.map((file) => (
+              {myFiles.filter(f => f.ref_year === viewYear).map((file) => (
                 <div key={file.id} className={styles.fileItem}>
                   <div className={styles.fileInfo}>
                     <FileIcon className={styles.fileIcon} />
                     <div className={styles.fileText}>
                       <span className={styles.fileName}>
                         {file.original_name || file.name}
-                        <span style={{ fontSize: '10px', marginLeft: '8px', color: file.doc_type === 'FIXO' ? '#4f46e5' : '#92400e' }}>
-                           [{file.doc_type || 'MENSAL'}]
+                        <span style={{ fontSize: '10px', marginLeft: '8px', color: file.doc_type === 'FIXO' ? '#4f46e5' : '#92400e', fontWeight: 'bold' }}>
+                            [{file.doc_type || 'MENSAL'}]
                         </span>
                       </span>
                       <span className={styles.fileDate}>
-                        Postado em {new Date(file.date || file.created_at).toLocaleString('pt-BR')}
+                        Ref: {months[file.ref_month - 1]}/{file.ref_year} • Enviado em {new Date(file.created_at).toLocaleDateString('pt-BR')}
                       </span>
                     </div>
                   </div>
