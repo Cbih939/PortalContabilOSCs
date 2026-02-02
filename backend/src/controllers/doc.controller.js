@@ -9,46 +9,41 @@ const __dirname = path.dirname(__filename);
 // --- LISTAR DOCUMENTOS ---
 export const getDocuments = async (req, res) => {
   try {
-    const { oscId, status, type, year } = req.query;
+    const { oscId, year } = req.query;
     const userId = req.user.id;
     const userRole = req.user.role;
 
+    // INNER JOIN garante que apenas documentos de OSCs vinculadas ao contador apareçam
     let query = `
       SELECT d.*, 
              d.created_at as createdAt, 
-             COALESCE(o.razao_social, u.name, 'OSC Desconhecida') as osc_name
+             o.razao_social as osc_name
       FROM documents d
-      JOIN oscs o ON d.osc_id = o.id
-      LEFT JOIN users u ON o.user_id = u.id
+      INNER JOIN oscs o ON d.osc_id = o.id
     `;
     
     const params = [];
     const conditions = [];
 
+    // Filtro de Segurança: Contador vê suas OSCs vinculadas, OSC vê seus próprios docs
     if (userRole === 'Contador') {
       conditions.push('o.assigned_contador_id = ?');
       params.push(userId);
-    } else if (userRole === 'OSC') {
+    } else {
       conditions.push('o.user_id = ?');
       params.push(userId);
     }
 
     if (oscId) { conditions.push('d.osc_id = ?'); params.push(oscId); }
-    if (status) { conditions.push('d.status = ?'); params.push(status); }
-    if (type) { conditions.push('d.doc_type = ?'); params.push(type); }
-    // Filtro por ano de competência
     if (year) { conditions.push('d.ref_year = ?'); params.push(year); }
 
     if (conditions.length > 0) query += ' WHERE ' + conditions.join(' AND ');
-    
-    // Ordenação priorizando a competência contábil
     query += ' ORDER BY d.ref_year DESC, d.ref_month DESC, d.created_at DESC';
 
     const [rows] = await pool.execute(query, params);
     res.json(rows);
   } catch (error) {
-    console.error('[Docs] Erro ao listar:', error);
-    res.status(500).json({ message: 'Erro ao listar documentos.' });
+    res.status(500).json({ message: 'Erro ao carregar documentos das OSCs.' });
   }
 };
 
