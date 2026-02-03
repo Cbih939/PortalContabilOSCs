@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import * as messageController from '../controllers/message.controller.js'; // Esta linha é a que estava faltando ou errada
+import * as messageController from '../controllers/message.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 
 const router = Router();

@@ -75,15 +75,25 @@ export const sendMessage = async (req, res) => {
     try {
         const sender_id = req.user.id;
         const { receiver_id, content } = req.body;
-        if (!receiver_id || !content) return res.status(400).json({ success: false });
 
-        await pool.execute(
-            'INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)',
+        // LOG PARA DEBUG - Verifique no console do PM2 (pm2 logs)
+        console.log(`[Chat Debug] Tentando salvar mensagem: De ${sender_id} para ${receiver_id}. Conteúdo: ${content}`);
+
+        if (!receiver_id || !content) {
+            console.error('[Chat Error] Dados ausentes no corpo da requisição:', req.body);
+            return res.status(400).json({ success: false, message: "Dados incompletos" });
+        }
+
+        const [result] = await pool.execute(
+            'INSERT INTO messages (sender_id, receiver_id, content, is_read) VALUES (?, ?, ?, 0)',
             [sender_id, receiver_id, content]
         );
-        return res.status(201).json({ success: true });
+
+        console.log(`[Chat Success] Mensagem salva com ID: ${result.insertId}`);
+        return res.status(201).json({ id: result.insertId, success: true });
     } catch (error) {
-        return res.status(500).json({ success: false });
+        console.error('[Chat Database Error]:', error);
+        return res.status(500).json({ success: false, message: "Erro interno ao salvar no DB" });
     }
 };
 
