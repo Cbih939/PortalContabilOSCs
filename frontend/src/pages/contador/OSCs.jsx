@@ -448,22 +448,40 @@ export default function OSCsPage() {
   const handleToggleAccordion = (id) => setExpandedOscId(prevId => (prevId === id ? null : id));
   const handleCloseModals = () => { setOscToView(null); setOscToEdit(null); setOscToSendAlert(null); };
 
-  const handleSaveEdit = async (formData) => {
-    try {
-      await updateOSC(formData.id, formData);
-      addNotification(`Dados atualizados!`, 'success');
-      fetchOSCs();
-      handleCloseModals();
-    } catch (err) { addNotification('Erro ao salvar.', 'error'); }
-  };
+  // Dentro do componente OSCsPage
+const handleSaveEdit = async (formData) => {
+  // LOG DE DEBUG: Verifique se o ID aparece no console do navegador
+  console.log("Dados recebidos para salvar:", formData);
 
-  const handleSendAlertSubmit = async (formData) => {
-    try {
-      await sendAlert(formData);
-      addNotification('Alerta enviado!', 'success');
-      handleCloseModals();
-    } catch (err) { addNotification('Erro ao enviar.', 'error'); }
-  };
+  if (!formData.id) {
+    addNotification("Erro: ID da OSC não encontrado para edição.", "error");
+    return;
+  }
+
+  try {
+    // Garante que o ID vai na URL e os dados no corpo
+    await updateOSC(formData.id, formData);
+    addNotification(`Dados de ${formData.name || 'OSC'} atualizados!`, 'success');
+    fetchOSCs();
+    handleCloseModals();
+  } catch (err) { 
+    addNotification('Erro ao salvar alterações no servidor.', 'error'); 
+  }
+};
+
+// No retorno do seu map, garanta que o objeto passado para o modal de edição tenha o ID
+{filteredOscs.map(osc => (
+    <OSCAccordionItem 
+        key={osc.id} 
+        osc={osc} 
+        isExpanded={expandedOscId === osc.id}
+        onToggle={handleToggleAccordion}
+        onView={setOscToView}
+        onEdit={(oscData) => setOscToEdit({ ...oscData, id: osc.id })} // Força a inclusão do ID
+        onSendAlert={setOscToSendAlert}
+        onRefresh={fetchOSCs}
+    />
+))}
 
   if (isLoadingData) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}><Spinner text="Carregando..." /></div>;
 
