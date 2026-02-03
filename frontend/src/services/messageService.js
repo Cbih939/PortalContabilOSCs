@@ -1,8 +1,13 @@
 import api from './api.js';
 
 export const getContacts = async () => {
-  const response = await api.get('/messages/contacts');
-  return response.data;
+  try {
+    const response = await api.get('/messages/contacts');
+    // Retorna apenas o array de dados. Se não for array, retorna []
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (err) {
+    return [];
+  }
 };
 
 export const getMessages = (contactId) => api.get(`/messages?contactId=${contactId}`);
