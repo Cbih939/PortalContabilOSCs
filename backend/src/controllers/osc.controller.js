@@ -36,23 +36,30 @@ export const assignContador = async (req, res) => {
 };
 
 export const getMyOSCs = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const userRole = req.user.role;
-        
-        let query = 'SELECT id, razao_social as name, cnpj FROM oscs';
-        let params = [];
+  try {
+    const userId = req.user.id;
+    
+    // Busca OSCs vinculadas ao contador logado e traz os documentos de cada uma
+    const [oscs] = await pool.execute(
+      `SELECT o.*, o.razao_social as name 
+       FROM oscs o 
+       WHERE o.assigned_contador_id = ?`, 
+      [userId]
+    );
 
-        if (userRole === 'Contador') {
-            query += ' WHERE assigned_contador_id = ?';
-            params.push(userId);
-        }
+    // Para cada OSC, busca os documentos vinculados
+    const oscsWithDocs = await Promise.all(oscs.map(async (osc) => {
+      const [docs] = await pool.execute(
+        `SELECT * FROM documents WHERE osc_id = ? ORDER BY ref_year DESC, ref_month DESC`,
+        [osc.id]
+      );
+      return { ...osc, documents: docs };
+    }));
 
-        const [rows] = await pool.execute(query, params);
-        res.json(rows);
-    } catch (error) {
-        res.status(500).json({ message: "Erro ao buscar OSCs" });
-    }
+    res.json(oscsWithDocs);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao carregar OSCs para o contador." });
+  }
 };
 
 export const getOSCById = async (req, res) => {
