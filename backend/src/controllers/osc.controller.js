@@ -35,45 +35,66 @@ export const assignContador = async (req, res) => {
     }
 };
 
+// função getMyOSCs
 export const getMyOSCs = async (req, res) => {
   try {
     const userId = req.user.id;
-    
-    // Busca OSCs vinculadas ao contador
-    const [oscs] = await pool.execute(
-      `SELECT id, razao_social, cnpj, responsavel, email, telefone, user_id 
-       FROM oscs 
-       WHERE assigned_contador_id = ?`, 
-      [userId]
-    );
+    const userRole = req.user.role;
 
-    // Busca os documentos de cada OSC para preencher o calendário
+    console.log(`[DEBUG] Buscando OSCs para: ${userId} (Role: ${userRole})`);
+
+    // 1. Definir a Query baseada na Role
+    let query = `
+      SELECT id, razao_social, cnpj, responsavel, email, telefone 
+      FROM oscs
+    `;
+    let params = [];
+
+    if (userRole === 'Contador') {
+      query += ' WHERE assigned_contador_id = ?';
+      params.push(userId);
+    } else if (userRole === 'OSC') {
+      query += ' WHERE user_id = ?';
+      params.push(userId);
+    }
+
+    const [oscs] = await pool.execute(query, params);
+
+    // 2. Buscar documentos para cada OSC de forma segura
     const oscsWithDocs = await Promise.all(oscs.map(async (osc) => {
-      const [docs] = await pool.execute(
-        `SELECT id, original_name, doc_type, status, ref_month, ref_year, created_at 
-         FROM documents 
-         WHERE osc_id = ?`,
-        [osc.id]
-      );
-      return { 
-        ...osc, 
-        name: osc.razao_social, // Garante que o frontend veja 'name'
-        documents: docs 
-      };
+      try {
+        const [docs] = await pool.execute(
+          `SELECT id, original_name, doc_type, status, ref_month, ref_year 
+           FROM documents 
+           WHERE osc_id = ?`,
+          [osc.id]
+        );
+        return { 
+          ...osc, 
+          name: osc.razao_social, 
+          documents: docs || [] 
+        };
+      } catch (docError) {
+        console.error(`Erro ao buscar docs da OSC ${osc.id}:`, docError);
+        return { ...osc, name: osc.razao_social, documents: [] };
+      }
     }));
 
     res.json(oscsWithDocs);
   } catch (error) {
-    console.error('Erro getMyOSCs:', error);
-    res.status(500).json({ message: "Erro ao carregar dados das organizações." });
+    console.error('ERRO FATAL getMyOSCs:', error);
+    res.status(500).json({ message: "Erro interno no servidor ao listar OSCs." });
   }
 };
+
+// função getOSCById
 
 export const getOSCById = async (req, res) => {
     const [rows] = await pool.execute('SELECT * FROM oscs WHERE id = ?', [req.params.id]);
     res.json(rows[0]);
 };
 
+// função updateOSC
 export const updateOSC = async (req, res) => {
   try {
     const { id } = req.params;
