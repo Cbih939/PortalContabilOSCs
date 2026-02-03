@@ -1,52 +1,73 @@
 import api from './api.js';
 
+/**
+ * LISTAR CONTATOS
+ * Retorna sempre um Array para evitar erro .map()
+ */
 export const getContacts = async () => {
   try {
     const response = await api.get('/messages/contacts');
-    // Retorna apenas o array de dados. Se não for array, retorna []
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (err) {
+    console.error("Erro ao carregar contatos:", err);
+    return [];
+  }
+};
+
+/**
+ * OBTER MENSAGENS (CORRIGIDO)
+ * Adicionada trava de segurança para retornar apenas o array de dados
+ */
+export const getMessages = async (contactId) => {
+  try {
+    if (!contactId) return [];
+    const response = await api.get(`/messages?contactId=${contactId}`);
+    // O React quebra se receber a resposta bruta do Axios. 
+    // Esta linha garante que ele receba apenas a lista de mensagens.
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (err) {
+    console.error("Erro ao buscar histórico:", err);
+    return [];
+  }
+};
+
+/**
+ * BUSCAR MINHAS MENSAGENS
+ */
+export const getMyMessages = async () => {
+  try {
+    const response = await api.get('/messages/my');
     return Array.isArray(response.data) ? response.data : [];
   } catch (err) {
     return [];
   }
 };
 
-export const getMessages = (contactId) => api.get(`/messages?contactId=${contactId}`);
-
-export const getMyMessages = async () => {
-  const response = await api.get('/messages/my');
-  return response.data;
-};
-
 /**
- * ENVIO DE MENSAGEM CORRIGIDO
- * Garante que o ID do destinatário (receiver_id) seja capturado corretamente.
+ * ENVIO DE MENSAGEM
  */
 export const sendMessage = async (arg1, arg2) => {
   let payload = {};
 
-  // Verifica se o componente enviou um objeto estruturado
   if (typeof arg1 === 'object' && arg1 !== null) {
     payload = {
       receiver_id: arg1.receiver_id || arg1.id,
       content: arg1.content || arg1.text
     };
   } else {
-    // Fallback para parâmetros soltos (ID, Texto)
     payload = {
       receiver_id: arg1,
       content: arg2
     };
   }
 
-  // VALIDAÇÃO PRÉVIA: Impede requisições vazias que geram erros de banco
   if (!payload.receiver_id || !payload.content) {
-    console.error("Dados incompletos para envio:", payload);
     throw new Error("Erro: Destinatário ou conteúdo ausente.");
   }
 
-  // O uso de POST garante que os dados sejam salvos e não lidos do cache (Erro 304)
   const response = await api.post('/messages', payload);
   return response.data;
 };
 
-export const getMessagesHistory = (oscId) => getMessages(oscId);
+// Mantém compatibilidade com nomes antigos
+export const getMessagesHistory = (contactId) => getMessages(contactId);
