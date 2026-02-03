@@ -450,24 +450,29 @@ export default function OSCsPage() {
 
   // Dentro do componente OSCsPage
 const handleSaveEdit = async (formData) => {
-  // LOG DE DEBUG: Verifique se o ID aparece no console do navegador
-  console.log("Dados recebidos para salvar:", formData);
+    // 1. Verificação Crítica: O ID precisa estar presente
+    const oscId = formData.id;
+    
+    if (!oscId) {
+      addNotification("Erro: ID da OSC não identificado.", "error");
+      return;
+    }
 
-  if (!formData.id) {
-    addNotification("Erro: ID da OSC não encontrado para edição.", "error");
-    return;
-  }
+    // 2. Mapeamento de campos: O formulário envia 'responsible', o banco quer 'responsavel'
+    const payload = {
+      ...formData,
+      responsavel: formData.responsible || formData.responsavel // Garante compatibilidade
+    };
 
-  try {
-    // Garante que o ID vai na URL e os dados no corpo
-    await updateOSC(formData.id, formData);
-    addNotification(`Dados de ${formData.name || 'OSC'} atualizados!`, 'success');
-    fetchOSCs();
-    handleCloseModals();
-  } catch (err) { 
-    addNotification('Erro ao salvar alterações no servidor.', 'error'); 
-  }
-};
+    try {
+      await updateOSC(oscId, payload);
+      addNotification(`Organização atualizada com sucesso!`, 'success');
+      fetchOSCs();
+      handleCloseModals();
+    } catch (err) { 
+      addNotification('Erro ao salvar no servidor. Verifique os dados.', 'error'); 
+    }
+  };
 
 // No retorno do seu map, garanta que o objeto passado para o modal de edição tenha o ID
 {filteredOscs.map(osc => (

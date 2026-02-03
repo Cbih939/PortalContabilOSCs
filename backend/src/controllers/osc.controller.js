@@ -39,26 +39,33 @@ export const getMyOSCs = async (req, res) => {
   try {
     const userId = req.user.id;
     
-    // Busca OSCs vinculadas ao contador logado e traz os documentos de cada uma
+    // Busca OSCs vinculadas ao contador
     const [oscs] = await pool.execute(
-      `SELECT o.*, o.razao_social as name 
-       FROM oscs o 
-       WHERE o.assigned_contador_id = ?`, 
+      `SELECT id, razao_social, cnpj, responsavel, email, telefone, user_id 
+       FROM oscs 
+       WHERE assigned_contador_id = ?`, 
       [userId]
     );
 
-    // Para cada OSC, busca os documentos vinculados
+    // Busca os documentos de cada OSC para preencher o calendário
     const oscsWithDocs = await Promise.all(oscs.map(async (osc) => {
       const [docs] = await pool.execute(
-        `SELECT * FROM documents WHERE osc_id = ? ORDER BY ref_year DESC, ref_month DESC`,
+        `SELECT id, original_name, doc_type, status, ref_month, ref_year, created_at 
+         FROM documents 
+         WHERE osc_id = ?`,
         [osc.id]
       );
-      return { ...osc, documents: docs };
+      return { 
+        ...osc, 
+        name: osc.razao_social, // Garante que o frontend veja 'name'
+        documents: docs 
+      };
     }));
 
     res.json(oscsWithDocs);
   } catch (error) {
-    res.status(500).json({ message: "Erro ao carregar OSCs para o contador." });
+    console.error('Erro getMyOSCs:', error);
+    res.status(500).json({ message: "Erro ao carregar dados das organizações." });
   }
 };
 
@@ -70,19 +77,24 @@ export const getOSCById = async (req, res) => {
 export const updateOSC = async (req, res) => {
   try {
     const { id } = req.params;
-    const { razao_social, cnpj, responsavel, telefone, email, assigned_contador_id } = req.body;
+    if (!id || id === 'undefined') return res.status(400).json({ message: "ID inválido." });
+
+    // Aceita tanto 'responsavel' quanto 'responsible' do frontend
+    const { razao_social, name, cnpj, responsavel, responsible, telefone, email } = req.body;
+
+    const finalName = razao_social || name;
+    const finalResponsible = responsavel || responsible;
 
     const [result] = await pool.execute(
       `UPDATE oscs 
-       SET razao_social = ?, cnpj = ?, responsavel = ?, telefone = ?, email = ?, assigned_contador_id = ? 
+       SET razao_social = ?, cnpj = ?, responsavel = ?, telefone = ?, email = ?
        WHERE id = ?`,
-      [razao_social, cnpj, responsavel, telefone, email, assigned_contador_id, id]
+      [finalName, cnpj, finalResponsible, telefone, email, id]
     );
 
-    if (result.affectedRows === 0) return res.status(404).json({ message: "OSC não encontrada." });
-    res.json({ message: "OSC atualizada com sucesso!" });
+    res.json({ message: "Dados atualizados com sucesso!" });
   } catch (error) {
-    console.error("[Update Error]:", error);
-    res.status(500).json({ message: "Erro ao atualizar. Verifique os dados." });
+    console.error("[Update OSC Error]:", error);
+    res.status(500).json({ message: "Erro interno. Verifique se o CNPJ já existe." });
   }
 };
