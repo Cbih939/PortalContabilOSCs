@@ -1,6 +1,7 @@
 import pool from '../config/db.js';
 
 export const getContacts = async (req, res) => {
+    res.setHeader('Content-Type', 'application/json'); // Força JSON
     try {
         const userId = req.user.id;
         const userRole = req.user.role;
@@ -8,7 +9,7 @@ export const getContacts = async (req, res) => {
 
         if (userRole === 'Contador') {
             const [oscs] = await pool.execute(`
-                SELECT u.id, u.name, u.email, o.razao_social
+                SELECT u.id, u.name, o.razao_social
                 FROM users u
                 JOIN oscs o ON o.user_id = u.id
                 WHERE o.assigned_contador_id = ?
@@ -16,51 +17,30 @@ export const getContacts = async (req, res) => {
             rows = oscs || [];
         } else {
             const [contacts] = await pool.execute(`
-                SELECT u.id, u.name, u.email 
+                SELECT u.id, u.name 
                 FROM users u
                 JOIN oscs o ON o.assigned_contador_id = u.id
                 WHERE o.user_id = ?
             `, [userId]);
             rows = contacts || [];
-
-            if (rows.length === 0) {
-                const [admin] = await pool.execute('SELECT id, name, email FROM users WHERE id = 2');
-                if (admin && admin.length > 0) rows.push(admin[0]);
-            }
         }
 
-        // Se por algum motivo não for array, força ser.
-        const safeRows = Array.isArray(rows) ? rows : [];
-
-        const contactsWithMsg = await Promise.all(safeRows.map(async (contact) => {
-            try {
-                const [msgs] = await pool.execute(`
-                    SELECT content, created_at, is_read, sender_id 
-                    FROM messages 
-                    WHERE (sender_id = ? AND receiver_id = ?) 
-                       OR (sender_id = ? AND receiver_id = ?)
-                    ORDER BY created_at DESC LIMIT 1
-                `, [userId, contact.id, contact.id, userId]);
-
-                const lastMsg = (msgs && msgs.length > 0) ? msgs[0] : {};
-
-                return {
-                    id: contact.id,
-                    name: contact.razao_social || contact.name || 'Usuário',
-                    lastMessage: lastMsg.content || 'Sem mensagens',
-                    time: lastMsg.created_at || null,
-                    unread: (lastMsg.sender_id === contact.id && lastMsg.is_read === 0) ? 1 : 0
-                };
-            } catch (innerErr) {
-                return { id: contact.id, name: contact.name, lastMessage: '', unread: 0 };
-            }
+        const contactsWithMsg = await Promise.all(rows.map(async (c) => {
+            const [m] = await pool.execute(
+                'SELECT content FROM messages WHERE (sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?) ORDER BY created_at DESC LIMIT 1',
+                [userId, c.id, c.id, userId]
+            );
+            return {
+                id: c.id,
+                name: c.razao_social || c.name,
+                lastMessage: m[0]?.content || 'Inicie uma conversa'
+            };
         }));
 
-        res.set('Content-Type', 'application/json');
-        return res.status(200).send(JSON.stringify(contactsWithMsg));
+        return res.status(200).json(contactsWithMsg);
     } catch (error) {
-        console.error('[Chat Error] Contacts:', error);
-        return res.status(200).json([]); // Retorna array vazio em vez de erro
+        console.error(error);
+        return res.status(200).json([]); // Nunca retorne erro 500 aqui para não quebrar o map
     }
 };
 
