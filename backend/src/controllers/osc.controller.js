@@ -1,25 +1,5 @@
 import pool from '../config/db.js';
 
-export const getAllOSCs = async (req, res) => {
-    try {
-        const [rows] = await pool.execute(`
-            SELECT o.id, o.razao_social, o.cnpj, u.name as contador_nome_sql
-            FROM oscs o
-            LEFT JOIN users u ON o.assigned_contador_id = u.id
-        `);
-        const formattedRows = rows.map(osc => ({
-            id: osc.id,
-            cnpj: osc.cnpj || '',
-            name: osc.razao_social || 'Sem Razão Social', 
-            contadorName: osc.contador_nome_sql || 'Nenhum',
-            status: 'Ativo' 
-        }));
-        return res.status(200).json(formattedRows);
-    } catch (error) {
-        return res.status(500).json({ message: 'Erro interno' });
-    }
-};
-
 export const assignContador = async (req, res) => {
     try {
         const { id } = req.params;
@@ -35,22 +15,14 @@ export const assignContador = async (req, res) => {
     }
 };
 
-// função getOSCById
-
-export const getOSCById = async (req, res) => {
-    const [rows] = await pool.execute('SELECT * FROM oscs WHERE id = ?', [req.params.id]);
-    res.json(rows[0]);
-};
-
-// função getMyOSCs
 export const getMyOSCs = async (req, res) => {
   try {
     const userId = req.user.id;
     const userRole = req.user.role;
 
-    // Ajustado 'responsavel' para 'responsible' conforme o erro do banco
+    // Query usando os nomes EXATOS das colunas do seu banco
     let query = `
-      SELECT id, razao_social, cnpj, responsible, email, telefone 
+      SELECT id, cnpj, razao_social, responsible, email, phone, address, user_id, assigned_contador_id
       FROM oscs
     `;
     let params = [];
@@ -65,6 +37,7 @@ export const getMyOSCs = async (req, res) => {
 
     const [oscs] = await pool.execute(query, params);
 
+    // Mapeamento para garantir que o Frontend receba os dados esperados
     const oscsWithDocs = await Promise.all(oscs.map(async (osc) => {
       try {
         const [docs] = await pool.execute(
@@ -75,7 +48,9 @@ export const getMyOSCs = async (req, res) => {
         );
         return { 
           ...osc, 
-          name: osc.razao_social, 
+          name: osc.razao_social, // Frontend usa 'name'
+          responsible: osc.responsible,
+          phone: osc.phone,
           documents: docs || [] 
         };
       } catch (docError) {
@@ -85,34 +60,70 @@ export const getMyOSCs = async (req, res) => {
 
     res.json(oscsWithDocs);
   } catch (error) {
-    console.error('ERRO FATAL getMyOSCs:', error);
-    res.status(500).json({ message: "Erro interno ao listar OSCs." });
+    console.error('[OSC Controller] Erro em getMyOSCs:', error);
+    res.status(500).json({ message: "Erro ao carregar lista de organizações." });
   }
 };
 
+// --- ATUALIZAR OSC (GESTÃO DO CONTADOR) ---
 export const updateOSC = async (req, res) => {
   try {
     const { id } = req.params;
-    // Capturamos name/razao_social e responsible/responsavel para evitar erros do frontend
-    const { razao_social, name, cnpj, responsavel, responsible, telefone, email } = req.body;
+    
+    // Captura os dados do body tratando variações de nomes do frontend
+    const { 
+      razao_social, name, 
+      cnpj, 
+      responsible, responsavel, 
+      phone, telefone, 
+      email, address 
+    } = req.body;
 
     const finalName = razao_social || name;
     const finalResponsible = responsible || responsavel;
+    const finalPhone = phone || telefone;
 
-    // Query de UPDATE usando 'responsible' (coluna correta do seu banco)
+    // Update usando as colunas confirmadas pelo DESCRIBE
     const [result] = await pool.execute(
       `UPDATE oscs 
-       SET razao_social = ?, cnpj = ?, responsible = ?, telefone = ?, email = ?
+       SET razao_social = ?, cnpj = ?, responsible = ?, phone = ?, email = ?, address = ?
        WHERE id = ?`,
-      [finalName, cnpj, finalResponsible, telefone, email, id]
+      [finalName, cnpj, finalResponsible, finalPhone, email, address, id]
     );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "OSC não encontrada." });
+    }
 
     res.json({ message: "Dados atualizados com sucesso!" });
   } catch (error) {
-    console.error("[Update OSC Error]:", error);
-    res.status(500).json({ message: "Erro ao salvar no banco. Verifique os dados." });
+    console.error("[OSC Controller] Erro em updateOSC:", error);
+    res.status(500).json({ message: "Erro ao atualizar os dados no banco de dados." });
   }
 };
 
+// --- OUTRAS FUNÇÕES AUXILIARES ---
+export const getOSCById = async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM oscs WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ message: "Não encontrado" });
+    res.json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao buscar OSC" });
+  }
+};
+
+export const getAllOSCs = async (req, res) => {
+    try {
+        const [rows] = await pool.execute(`
+            SELECT o.id, o.razao_social, o.cnpj, u.name as contadorName
+            FROM oscs o
+            LEFT JOIN users u ON o.assigned_contador_id = u.id
+        `);
+        res.json(rows.map(r => ({ ...r, name: r.razao_social, status: 'Ativo' })));
+    } catch (error) {
+        res.status(500).json({ message: 'Erro interno' });
+    }
+};
 
 
