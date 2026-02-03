@@ -366,7 +366,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             })}
           </div>
 
-          <h4 style={styles.sectionTitle}><IconFileText /> Documentos da Competência {viewYear}</h4>
+          <h4 style={styles.sectionTitle}><IconFileText /> DOCUMENTAÇÃO | GOVERNANÇA {viewYear}</h4>
           <div style={styles.docList}>
             {osc.documents && osc.documents.filter(d => parseInt(d.ref_year) === viewYear).length > 0 ? (
               osc.documents
