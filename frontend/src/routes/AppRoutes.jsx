@@ -17,8 +17,8 @@ import LoginPage from '../pages/Login.jsx';
 import NotFoundPage from '../pages/NotFound.jsx';
 import PrivacyPolicyPage from '../pages/legal/PrivacyPolicyPage.jsx'; 
 import TermsOfUsePage from '../pages/legal/TermsOfUsePage.jsx';
-import EsqueceuSenhaPage from './pages/EsqueceuSenha.jsx'; 
-import RedefinirSenhaPage from './pages/RedefinirSenha.jsx';
+import RedefinirSenhaPage from '../pages/RedefinirSenha.jsx'; 
+import EsqueceuSenhaPage from '../pages/EsqueceuSenha.jsx';
 
 // --- ADMIN ---
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
