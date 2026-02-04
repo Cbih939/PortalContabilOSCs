@@ -301,3 +301,54 @@
   visibility: visible;
   opacity: 1;
 }
+
+.calendarHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.calendarTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.yearSelector {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  font-weight: 700;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+/* Novos Estados Visuais */
+.statusAtraso { 
+  background-color: #fee2e2 !important; 
+  border: 1px solid #fecaca !important; 
+}
+.statusAtraso .monthName, .statusAtraso .monthStatus { color: #dc2626 !important; }
+
+.statusAberto { 
+  background-color: #fef9c3 !important; 
+  border: 1px solid #fef08a !important; 
+}
+.statusAberto .monthName, .statusAberto .monthStatus { color: #a16207 !important; }
+
+.statusFuturo { 
+  opacity: 0.5; 
+  background-color: #f8fafc; 
+}
+
+.retroactiveLabel {
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-top: 4px;
+  color: #dc2626;
+}
