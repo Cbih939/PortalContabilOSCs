@@ -184,3 +184,33 @@ export default function OSCMessagesPage() {
     </div>
   );
 }
+
+const SuporteGovernanca = () => {
+  const handleSuporteEmail = () => {
+    const email = "relacionamento@redepapelsolidario.org.br";
+    const assunto = encodeURIComponent("Dúvida sobre Governança - [Nome da sua OSC]");
+    const corpo = encodeURIComponent("Olá, gostaria de tirar uma dúvida sobre a Governança da minha OSC:\n\nDetalhamento:");
+    
+    window.location.href = `mailto:${email}?subject=${assunto}&body=${corpo}`;
+  };
+
+  return (
+    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 shadow-sm my-4">
+      <h3 className="text-blue-800 font-bold text-lg mb-1">Ficou alguma dúvida?</h3>
+      <p className="text-blue-700 text-sm mb-3">
+        Suporte a respeito da Governança da sua OSC. Conte-nos com detalhes e entraremos em contato em seguida.
+      </p>
+      <div className="flex flex-col gap-2">
+        <button 
+          onClick={handleSuporteEmail}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors flex items-center justify-center gap-2"
+        >
+          <span>📩</span> Abrir Suporte
+        </button>
+        <p className="text-gray-500 text-xs italic text-center">
+          Horário de funcionamento: das 8 às 17 horas.
+        </p>
+      </div>
+    </div>
+  );
+};
