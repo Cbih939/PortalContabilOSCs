@@ -183,3 +183,68 @@
     max-width: 85%;
   }
 }
+
+.supportCard {
+  background: #f0f7ff;
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.supportContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.supportText h3 {
+  color: #0369a1;
+  font-weight: 700;
+  margin: 0 0 5px 0;
+}
+
+.supportText p {
+  color: #0c4a6e;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.hours {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+.supportButton {
+  background-color: #0284c7;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.supportButton:hover {
+  background-color: #0369a1;
+}
+
+.supportIcon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Responsividade para mobile */
+@media (max-width: 768px) {
+  .supportContent {
+    flex-direction: column;
+    text-align: center;
+  }
+}

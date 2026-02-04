@@ -1,5 +1,3 @@
-// src/pages/contador/OSCs.jsx (ou src/pages/osc/Messages.jsx)
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import * as messageService from '../../services/messageService.js';
@@ -7,7 +5,15 @@ import styles from './Messages.module.css';
 
 // Ícones SVG
 const SendIcon = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" /></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+  </svg>
+);
+
+const SupportIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+  </svg>
 );
 
 export default function OSCMessagesPage() {
@@ -17,48 +23,32 @@ export default function OSCMessagesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef(null);
 
-  // Busca e processa as mensagens
+  // Função para suporte via E-mail
+  const handleSupportEmail = () => {
+    const email = "relacionamento@redepapelsolidario.org.br";
+    const subject = encodeURIComponent(`Dúvida sobre Governança - ${user?.name || 'Minha OSC'}`);
+    const body = encodeURIComponent("Olá,\n\nGostaria de suporte a respeito da Governança da minha OSC.\n\nDetalhes da dúvida:\n");
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+  };
+
   const fetchMessages = async () => {
     if (!user || !user.id) return;
-
     try {
       const response = await messageService.getMyMessages();
-      console.log('🔄 Polling Mensagens:', response); // Debug no console
-
-      let rawData = [];
-      if (Array.isArray(response)) {
-        rawData = response;
-      } else if (response && Array.isArray(response.data)) {
-        rawData = response.data;
-      } else if (response && response.data && Array.isArray(response.data.data)) {
-         rawData = response.data.data;
-      }
-
-      const formattedMessages = rawData.map(msg => {
-        const senderIdStr = String(msg.sender_id || msg.senderId);
-        const myUserIdStr = String(user.id);
-        
-        // Verifica se fui eu quem mandei
-        const isMe = senderIdStr === myUserIdStr || (msg.sender_role === 'OSC');
-
-        return {
-          ...msg,
-          text: msg.content || msg.message || msg.text || '',
-          isMe: isMe,
-          created_at: msg.created_at || new Date().toISOString()
-        };
-      });
-
-      const sortedMessages = formattedMessages.sort((a, b) => 
-        new Date(a.created_at) - new Date(b.created_at)
-      );
-
-      // Só atualiza se houver mudança ou se for a primeira carga
-      // Isso evita que a mensagem suma enquanto o backend não processa
-      if (JSON.stringify(sortedMessages) !== JSON.stringify(messages) || isLoading) {
-          setMessages(sortedMessages);
-      }
+      let rawData = Array.isArray(response) ? response : (response?.data || []);
       
+      const formattedMessages = rawData.map(msg => ({
+        ...msg,
+        text: msg.content || msg.message || msg.text || '',
+        isMe: String(msg.sender_id) === String(user.id),
+        created_at: msg.created_at || new Date().toISOString()
+      }));
+
+      const sorted = formattedMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      
+      if (JSON.stringify(sorted) !== JSON.stringify(messages) || isLoading) {
+        setMessages(sorted);
+      }
     } catch (error) {
       console.error("Erro ao buscar mensagens:", error);
     } finally {
@@ -68,9 +58,9 @@ export default function OSCMessagesPage() {
 
   useEffect(() => {
     fetchMessages();
-    const interval = setInterval(fetchMessages, 5000); 
+    const interval = setInterval(fetchMessages, 5000);
     return () => clearInterval(interval);
-  }, [user?.id]); 
+  }, [user?.id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -81,43 +71,25 @@ export default function OSCMessagesPage() {
     const textToSend = newMessage.trim();
     if (!textToSend) return;
 
-    // ID de fallback (2) se não houver vínculo
-    const targetId = user?.assigned_contador_id || user?.contador_id || 2;
-
-    // 1. ATUALIZAÇÃO OTIMISTA (Adiciona na tela na hora)
+    const targetId = user?.assigned_contador_id || 2;
     const optimisticMsg = {
-        id: 'temp-' + Date.now(),
-        text: textToSend,
-        isMe: true,
-        created_at: new Date().toISOString()
+      id: 'temp-' + Date.now(),
+      text: textToSend,
+      isMe: true,
+      created_at: new Date().toISOString()
     };
-    
+
     setMessages(prev => [...prev, optimisticMsg]);
     setNewMessage('');
 
     try {
-      console.log(`📤 Enviando para ID: ${targetId} | Msg: ${textToSend}`);
-
-      // 2. Envia com payload completo para garantir que o backend aceite
-      const payload = {
+      await messageService.sendMessage({
         receiver_id: targetId,
-        content: textToSend,
-        receiver_role: 'contador' // Adicionado para garantir roteamento no backend
-      };
-
-      await messageService.sendMessage(payload);
-      
-      // 3. Força atualização imediata
-      await fetchMessages();
-
+        content: textToSend
+      });
+      fetchMessages();
     } catch (error) {
-      console.error("❌ Erro fatal ao enviar:", error);
-      
-      // Mostra o erro exato na tela para sabermos o que o backend respondeu
-      const errorMsg = error.response?.data?.message || error.message;
-      alert(`Falha ao enviar: ${errorMsg}. \nVerifique se o ID ${targetId} existe no banco.`);
-      
-      // Remove a mensagem otimista se falhou
+      alert("Falha ao enviar mensagem.");
       setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
       setNewMessage(textToSend);
     }
@@ -125,41 +97,48 @@ export default function OSCMessagesPage() {
 
   return (
     <div className={styles.pageContainer}>
-      <h1 className={styles.pageTitle}>Mensagens</h1>
+      <header className={styles.headerSection}>
+        <h1 className={styles.pageTitle}>Mensagens e Suporte</h1>
+      </header>
+
+      {/* NOVO CARD DE SUPORTE À GOVERNANÇA */}
+      <div className={styles.supportCard}>
+        <div className={styles.supportContent}>
+          <div className={styles.supportText}>
+            <h3>Ficou alguma dúvida?</h3>
+            <p>Suporte a respeito da Governança da sua OSC. Conte-nos com detalhes e entraremos em contato em seguida.</p>
+            <span className={styles.hours}>Horário de funcionamento: das 08:00 às 17:00.</span>
+          </div>
+          <button onClick={handleSupportEmail} className={styles.supportButton}>
+            <SupportIcon className={styles.supportIcon} />
+            Contatar Suporte
+          </button>
+        </div>
+      </div>
 
       <div className={styles.chatCard}>
         <div className={styles.chatHeader}>
           <div className={styles.headerInfo}>
-            <h2 className={styles.contactName}>Meu Contador</h2>
-            <div style={{display:'flex', alignItems:'center', gap:'6px'}}>
-                <span className={styles.statusIndicator}></span>
-                <span className={styles.status}>Online (Suporte)</span>
+            <h2 className={styles.contactName}>Meu Contador Especialista</h2>
+            <div className={styles.statusBox}>
+              <span className={styles.statusIndicator}></span>
+              <span className={styles.statusText}>Canal Direto</span>
             </div>
           </div>
         </div>
 
         <div className={styles.messagesArea}>
           {isLoading && messages.length === 0 ? (
-            <div className={styles.loading}>
-                <div className={styles.spinner}></div> Carregando...
-            </div>
+            <div className={styles.loading}><div className={styles.spinner}></div></div>
           ) : messages.length === 0 ? (
-            <div className={styles.emptyState}>
-                <p>Nenhuma mensagem no histórico.</p>
-                <p style={{fontSize:'0.85rem', marginTop:'5px'}}>Envie um "Olá" para testar a conexão.</p>
-            </div>
+            <div className={styles.emptyState}>Sem histórico de mensagens.</div>
           ) : (
             messages.map((msg, index) => (
-              <div 
-                key={msg.id || index} 
-                className={`${styles.messageRow} ${msg.isMe ? styles.sent : styles.received}`}
-              >
+              <div key={msg.id || index} className={`${styles.messageRow} ${msg.isMe ? styles.sent : styles.received}`}>
                 <div className={styles.bubble}>
                   <p className={styles.messageText}>{msg.text}</p>
                   <span className={styles.timestamp}>
-                    {msg.created_at 
-                      ? new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
-                      : '...'}
+                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
               </div>
@@ -172,7 +151,7 @@ export default function OSCMessagesPage() {
           <input
             type="text"
             className={styles.inputField}
-            placeholder="Digite sua mensagem..."
+            placeholder="Digite sua dúvida aqui..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
           />
@@ -184,33 +163,3 @@ export default function OSCMessagesPage() {
     </div>
   );
 }
-
-const SuporteGovernanca = () => {
-  const handleSuporteEmail = () => {
-    const email = "relacionamento@redepapelsolidario.org.br";
-    const assunto = encodeURIComponent("Dúvida sobre Governança - [Nome da sua OSC]");
-    const corpo = encodeURIComponent("Olá, gostaria de tirar uma dúvida sobre a Governança da minha OSC:\n\nDetalhamento:");
-    
-    window.location.href = `mailto:${email}?subject=${assunto}&body=${corpo}`;
-  };
-
-  return (
-    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 shadow-sm my-4">
-      <h3 className="text-blue-800 font-bold text-lg mb-1">Ficou alguma dúvida?</h3>
-      <p className="text-blue-700 text-sm mb-3">
-        Suporte a respeito da Governança da sua OSC. Conte-nos com detalhes e entraremos em contato em seguida.
-      </p>
-      <div className="flex flex-col gap-2">
-        <button 
-          onClick={handleSuporteEmail}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors flex items-center justify-center gap-2"
-        >
-          <span>📩</span> Abrir Suporte
-        </button>
-        <p className="text-gray-500 text-xs italic text-center">
-          Horário de funcionamento: das 8 às 17 horas.
-        </p>
-      </div>
-    </div>
-  );
-};
