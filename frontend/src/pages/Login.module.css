@@ -70,3 +70,30 @@
   border-radius: 0.375rem;
   width: 100%;
 }
+
+.formOptions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1rem 0;
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+.rememberMe {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.forgotPassword {
+  color: #EC6D12; /* Cor de destaque da sua marca */
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.forgotPassword:hover {
+  text-decoration: underline;
+}

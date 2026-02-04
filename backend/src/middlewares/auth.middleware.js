@@ -37,3 +37,27 @@ export const checkRole = (allowedRoles) => {
         next();
     };
 };
+
+// 1. Bloqueia acesso se estiver em manutenção (exceto admins)
+export const maintenanceGuard = async (req, res, next) => {
+    const [settings] = await pool.execute('SELECT maintenance_mode FROM system_settings WHERE id = 1');
+    if (settings[0].maintenance_mode && req.user?.role !== 'admin') {
+        return res.status(503).json({ 
+            maintenance: true, 
+            message: "Plataforma em manutenção para atualizações. Voltamos em breve!" 
+        });
+    }
+    next();
+};
+
+// 2. Bloqueia módulos se estiver em débito
+export const debtGuard = (req, res, next) => {
+    // Se o usuário estiver em débito e tentar acessar rotas que NÃO sejam financeiro ou mensagens
+    if (req.user?.is_in_debt && !req.path.includes('/financeiro') && !req.path.includes('/messages')) {
+        return res.status(402).json({ 
+            debt: true, 
+            message: "Acesso bloqueado. Regularize seu financeiro para liberar todos os módulos." 
+        });
+    }
+    next();
+};
