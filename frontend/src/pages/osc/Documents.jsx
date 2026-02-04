@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import useApi from '../../hooks/useApi.jsx';
@@ -43,12 +43,10 @@ export default function OSCDocumentsPage() {
   const [isLoadingList, setIsLoadingList] = useState(true);
   const [errorLoading, setErrorLoading] = useState(null);
   
-  // Lógica para capturar Mês/Ano da URL (vindo do Dashboard)
   const queryParams = new URLSearchParams(location.search);
   const initialMonth = parseInt(queryParams.get('month')) || new Date().getMonth() + 1;
   const initialYear = parseInt(queryParams.get('year')) || new Date().getFullYear();
 
-  // ESTADOS DE COMPETÊNCIA
   const [docType, setDocType] = useState('MENSAL');
   const [refMonth, setRefMonth] = useState(initialMonth);
   const [refYear, setRefYear] = useState(initialYear);
@@ -59,14 +57,20 @@ export default function OSCDocumentsPage() {
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const years = [2024, 2025, 2026];
 
-  // Sincroniza os seletores caso a URL mude (navegação interna)
   useEffect(() => {
-    if (queryParams.get('month')) setRefMonth(parseInt(queryParams.get('month')));
-    if (queryParams.get('year')) {
-        setRefYear(parseInt(queryParams.get('year')));
-        setViewYear(parseInt(queryParams.get('year')));
+    const month = parseInt(queryParams.get('month'));
+    const year = parseInt(queryParams.get('year'));
+    if (month) setRefMonth(month);
+    if (year) {
+        setRefYear(year);
+        setViewYear(year);
     }
   }, [location.search]);
+
+  // FILTRO DINÂMICO: Filtra a lista pelo mês e ano selecionados no calendário
+  const filteredFiles = useMemo(() => {
+    return myFiles.filter(f => f.ref_year === viewYear && f.ref_month === refMonth);
+  }, [myFiles, viewYear, refMonth]);
 
   const getMonthStatus = (monthIndex) => {
     const monthNum = monthIndex + 1;
@@ -82,7 +86,6 @@ export default function OSCDocumentsPage() {
     if (isVerified) return 'concluded';
     if (hasDoc) return 'sent';
     
-    // Regra de Atraso (Anos anteriores ou mês passado após dia 10)
     if (viewYear < currentYear) return 'late';
     if (viewYear === currentYear) {
       if (monthNum < currentMonthNum) {
@@ -139,7 +142,7 @@ export default function OSCDocumentsPage() {
       formData.append('ref_year', refYear);
       
       await uploadFile(formData);
-      addNotification(`Documento enviado com sucesso para ${refMonth}/${refYear}!`, 'success');
+      addNotification(`Documento enviado para ${refMonth}/${refYear}!`, 'success');
       await fetchDocuments();
     } catch (err) {
       addNotification(`Erro no upload: ${err.response?.data?.message || err.message}`, 'error');
@@ -158,18 +161,17 @@ export default function OSCDocumentsPage() {
     <div className={styles.pageContainer}>
       <div className={styles.grid}>
         
-        {/* Coluna 1: Configuração e Upload */}
         <div className={styles.uploadColumn}>
           <div className={`${styles.infoCard} mb-8`}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
               <p className={styles.welcomeText}>
                 <strong>Upload de Documentos</strong><br/>
-                Certifique-se de selecionar a competência correta (Mês/Ano) antes de realizar o envio.
+                Período Selecionado: <strong>{months[refMonth - 1]}/{refYear}</strong>
               </p>
               <div className={styles.tooltipContainer}>
                 <InfoIcon />
                 <span className={styles.tooltipText} style={{ top: '150%', bottom: 'auto', transform: 'translateX(-90%)' }}>
-                  Envios retroativos são permitidos para regularização de meses em atraso.
+                  Selecione o mês no calendário ao lado para ver ou enviar arquivos daquele período.
                 </span>
               </div>
             </div>
@@ -210,22 +212,18 @@ export default function OSCDocumentsPage() {
                     </div>
                 </div>
             </div>
-
             <p className={styles.infoText}><strong>OSC:</strong> {user?.name}</p>
           </div>
-          
           <DocumentUpload onUpload={handleFileUpload} isLoading={isUploading} />
         </div>
 
-        {/* Coluna 2: Calendário de Situação e Histórico */}
         <div className={`${styles.listCard} ${styles.listColumn}`}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h2 className={styles.cardTitle} style={{ margin: 0 }}>Painel de Documentos</h2>
-            
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Visualizar Ano:</span>
+              <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Ano:</span>
               <select 
-                style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #ccc', fontWeight: 'bold' }}
+                style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #ccc' }}
                 value={viewYear}
                 onChange={(e) => setViewYear(parseInt(e.target.value))}
               >
@@ -235,8 +233,7 @@ export default function OSCDocumentsPage() {
           </div>
 
           <div style={{marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '20px'}}>
-            <h4 style={calStyles.sectionTitle}>Situação das Entregas em {viewYear}</h4>
-            
+            <h4 style={calStyles.sectionTitle}>Situação em {viewYear}</h4>
             <div style={calStyles.legend}>
                 {['late', 'pending', 'sent', 'concluded'].map(s => (
                     <div key={s} style={calStyles.legendItem}>
@@ -249,14 +246,16 @@ export default function OSCDocumentsPage() {
                 {months.map((m, idx) => {
                     const status = getMonthStatus(idx);
                     const [bg, color, border] = getStatusStyle(status);
+                    const isSelected = refMonth === idx + 1 && viewYear === refYear;
                     return (
                         <div 
                           key={m} 
                           style={{
                             ...calStyles.monthBox(bg, color, border),
                             cursor: 'pointer',
-                            transform: refMonth === idx + 1 && viewYear === refYear ? 'scale(1.05)' : 'scale(1)',
-                            boxShadow: refMonth === idx + 1 && viewYear === refYear ? '0 0 0 2px #ea580c' : 'none'
+                            transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                            boxShadow: isSelected ? '0 0 0 2px #ea580c' : 'none',
+                            fontWeight: isSelected ? 'bold' : 'normal'
                           }}
                           onClick={() => {
                             setRefMonth(idx + 1);
@@ -271,33 +270,37 @@ export default function OSCDocumentsPage() {
             </div>
           </div>
 
+          <h4 style={{...calStyles.sectionTitle, borderTop: '1px solid #eee', paddingTop: '15px'}}>
+            Arquivos de {months[refMonth - 1]}/{viewYear}
+          </h4>
+
           {isLoadingList ? (
-            <div className={styles.loadingContainer}><Spinner text="Carregando arquivos..." /></div>
+            <div className={styles.loadingContainer}><Spinner text="Carregando..." /></div>
+          ) : filteredFiles.length === 0 ? (
+            <div className={styles.emptyContainer}>
+                <p>Nenhum documento enviado para <strong>{months[refMonth - 1]}/{viewYear}</strong>.</p>
+            </div>
           ) : (
             <div className={styles.fileListContainer}>
-              {myFiles.filter(f => f.ref_year === viewYear).length === 0 ? (
-                <div className={styles.emptyContainer}><p>Nenhum documento encontrado para o ano de {viewYear}.</p></div>
-              ) : (
-                myFiles.filter(f => f.ref_year === viewYear).map((file) => (
-                  <div key={file.id} className={styles.fileItem}>
-                    <div className={styles.fileInfo}>
-                      <FileIcon className={styles.fileIcon} />
-                      <div className={styles.fileText}>
-                        <span className={styles.fileName}>
-                          {file.original_name || file.name}
-                          <span style={{ fontSize: '10px', marginLeft: '8px', color: '#6366f1' }}>[{file.doc_type}]</span>
-                        </span>
-                        <span className={styles.fileDate}>
-                          Competência: {months[file.ref_month - 1]}/{file.ref_year} • Status: {file.status}
-                        </span>
-                      </div>
+              {filteredFiles.map((file) => (
+                <div key={file.id} className={styles.fileItem}>
+                  <div className={styles.fileInfo}>
+                    <FileIcon className={styles.fileIcon} />
+                    <div className={styles.fileText}>
+                      <span className={styles.fileName}>
+                        {file.original_name || file.name}
+                        <span style={{ fontSize: '10px', marginLeft: '8px', color: '#6366f1' }}>[{file.doc_type}]</span>
+                      </span>
+                      <span className={styles.fileDate}>
+                        Enviado em {new Date(file.created_at).toLocaleDateString('pt-BR')} • Status: {file.status}
+                      </span>
                     </div>
-                    <button onClick={() => handleDownload(file)} className={styles.downloadButton}>
-                      <DownloadIcon className={styles.icon} />
-                    </button>
                   </div>
-                ))
-              )}
+                  <button onClick={() => handleDownload(file)} className={styles.downloadButton}>
+                    <DownloadIcon className={styles.icon} />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
