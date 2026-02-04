@@ -18,6 +18,7 @@ import NotFoundPage from '../pages/NotFound.jsx';
 import PrivacyPolicyPage from '../pages/legal/PrivacyPolicyPage.jsx'; 
 import TermsOfUsePage from '../pages/legal/TermsOfUsePage.jsx';
 
+
 // --- ADMIN ---
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import ManageUsers from '../pages/admin/ManageUsers.jsx';
@@ -124,6 +125,8 @@ export default function AppRoutes() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
           <Route path="/termos-de-uso" element={<TermsOfUsePage />} />
+          <Route path="/esqueceu-senha" element={<EsqueceuSenhaPage />} />
+          <Route path="/redefinir-senha/:token" element={<RedefinirSenhaPage />} />
         </Route>
 
         {/* --- Rotas Protegidas --- */}
