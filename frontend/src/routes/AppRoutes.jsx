@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
+// Páginas Compartilhadas
+import FinanceiroPage from '../pages/shared/Financeiro.jsx';
+import ManutencaoPage from '../pages/Manutencao.jsx';
+
 // Hooks e Constantes
 import { useAuth } from '../hooks/useAuth.jsx';
 import { ROLES } from '../utils/constants.js';
@@ -19,7 +23,6 @@ import PrivacyPolicyPage from '../pages/legal/PrivacyPolicyPage.jsx';
 import TermsOfUsePage from '../pages/legal/TermsOfUsePage.jsx';
 import RedefinirSenhaPage from '../pages/RedefinirSenha.jsx'; 
 import EsqueceuSenhaPage from '../pages/EsqueceuSenha.jsx';
-import ManutencaoPage from '../pages/Manutencao.jsx';
 
 // --- ADMIN ---
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
@@ -52,8 +55,6 @@ import OSCLibraryPage from '../pages/osc/LibraryPage.jsx';
 import OSCSidebar from '../pages/osc/components/OSCSidebar.jsx';
 import OSCHeader from '../pages/osc/components/OSCHeader.jsx';
 
-// --- FINANCEIRO ---
-import FinanceiroPage from '../pages/shared/Financeiro.jsx';
 
 /**
  * Componente "Redirecionador"
