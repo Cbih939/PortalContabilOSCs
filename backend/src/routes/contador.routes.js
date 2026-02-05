@@ -8,17 +8,12 @@ import {
 
 const router = Router();
 
-// Middleware de proteção
 router.use(protect);
-router.use(checkRole(['Contador', 'Adm']));
+// Use os nomes EXATOS que estão no seu ENUM do banco de dados (geralmente minúsculos)
+router.use(checkRole(['contador', 'admin', 'Contador', 'Adm'])); 
 
-// CORREÇÃO: Ajuste das URLs para bater com o Frontend
-// Antes: /dashboard-stats -> Agora: /dashboard/stats
 router.get('/dashboard/stats', getDashboardStats);
-
-// Nova rota adicionada para corrigir o erro 404 da activity
 router.get('/dashboard/activity', getRecentActivity);
-
 router.get('/my-oscs', getMyOSCs);
 
 export default router;

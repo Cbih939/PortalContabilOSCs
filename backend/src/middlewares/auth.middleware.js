@@ -58,10 +58,13 @@ export const maintenanceGuard = async (req, res, next) => {
     next();
 };
 
-// 2. Bloqueia módulos se estiver em débito
+// 2. Bloqueia módulos se estiver em débito (CORRIGIDO)
 export const debtGuard = (req, res, next) => {
-    // Se o usuário estiver em débito e tentar acessar rotas que NÃO sejam financeiro ou mensagens
-    if (req.user?.is_in_debt && !req.path.includes('/financeiro') && !req.path.includes('/messages')) {
+    // Adicionei suporte a 'mensagens' e 'financeiro' para evitar bloqueio desses módulos essenciais
+    const allowedPaths = ['/financeiro', '/mensagens', '/messages'];
+    const isAllowedPath = allowedPaths.some(p => req.path.includes(p));
+
+    if (req.user?.is_in_debt && !isAllowedPath) {
         return res.status(402).json({ 
             debt: true, 
             message: "Acesso bloqueado. Regularize seu financeiro para liberar todos os módulos." 
