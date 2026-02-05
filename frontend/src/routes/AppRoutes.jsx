@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 // Páginas Compartilhadas
@@ -66,14 +66,14 @@ function RootRedirect() {
     return <Navigate to="/login" replace />;
   }
 
-  // Debug para você ver no console do navegador se o papel está vindo certo
-  console.log("Redirecionando usuário:", user?.role);
+  // Normalização para evitar erro de Case-Sensitive (Maiúsculas/Minúsculas)
+  const userRole = user?.role?.toLowerCase();
+  console.log("Redirecionando usuário. Role detectado:", userRole);
 
-  switch (user?.role?.toLowerCase()) {
+  switch (userRole) {
     case 'admin':
       return <Navigate to="/admin/dashboard" replace />;
     case 'contador':
-      // Verifique se o path abaixo é exatamente o que está nas suas rotas
       return <Navigate to="/contador/dashboard" replace />;
     case 'financeiro':
       return <Navigate to="/financeiro" replace />;
@@ -124,60 +124,66 @@ function OSCLayoutWrapper() {
 export default function AppRoutes() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<RootRedirect />} />
-        <Route path="/manutencao" element={<ManutencaoPage />} />
+      <Suspense fallback={<div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>Carregando...</div>}>
+        <Routes>
+          <Route path="/" element={<RootRedirect />} />
+          <Route path="/manutencao" element={<ManutencaoPage />} />
 
-        {/* --- Rotas Públicas (Guest) --- */}
-        <Route element={<GuestLayout />}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
-          <Route path="/termos-de-uso" element={<TermsOfUsePage />} />
-          <Route path="/esqueceu-senha" element={<EsqueceuSenhaPage />} />
-          <Route path="/redefinir-senha/:token" element={<RedefinirSenhaPage />} />
-        </Route>
-
-        {/* --- Rotas do ADMIN --- */}
-        <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
-          <Route element={<AdminLayoutWrapper />}>
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/avisos" element={<AdminNoticesPage />} />
-            <Route path="/admin/usuarios" element={<ManageUsers />} />
-            <Route path="/admin/oscs" element={<ManageOSCs />} />
-            <Route path="/admin/biblioteca" element={<ManageLibrary />} />
-            <Route path="/admin/financeiro" element={<FinanceiroPage />} />
+          {/* --- Rotas Públicas (Guest) --- */}
+          <Route element={<GuestLayout />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
+            <Route path="/termos-de-uso" element={<TermsOfUsePage />} />
+            <Route path="/esqueceu-senha" element={<EsqueceuSenhaPage />} />
+            <Route path="/redefinir-senha/:token" element={<RedefinirSenhaPage />} />
           </Route>
-        </Route>
 
-        {/* --- Rotas do CONTADOR --- */}
-        <Route element={<ProtectedRoute allowedRoles={[ROLES.CONTADOR]} />}>
-          <Route element={<ContadorLayoutWrapper />}>
-            <Route path="/contador/dashboard" element={<ContadorDashboard />} />
-            <Route path="/contador/oscs" element={<OSCsPage />} />
-            <Route path="/contador/oscs/novo" element={<CreateOSCPage />} />
-            <Route path="/contador/documentos" element={<DocumentsPage />} />
-            <Route path="/contador/avisos" element={<NoticesPage />} />
-            <Route path="/contador/perfil" element={<ContadorProfilePage />} />
-            <Route path="/contador/modelos" element={<ContadorTemplatesPage />} />
-            <Route path="/contador/mensagens" element={<ContadorMessagesPage />} />
+          {/* --- Rotas do ADMIN --- */}
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, 'admin']} />}>
+            <Route element={<AdminLayoutWrapper />}>
+                <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/avisos" element={<AdminNoticesPage />} />
+                <Route path="/admin/usuarios" element={<ManageUsers />} />
+                <Route path="/admin/oscs" element={<ManageOSCs />} />
+                <Route path="/admin/biblioteca" element={<ManageLibrary />} />
+                <Route path="/admin/financeiro" element={<FinanceiroPage />} />
+            </Route>
           </Route>
-        </Route>
 
-        {/* --- Rotas da OSC e FINANCEIRO --- */}
-        <Route element={<ProtectedRoute allowedRoles={[ROLES.OSC, 'financeiro']} />}>
-          <Route element={<OSCLayoutWrapper />}> 
-            <Route path="/osc/inicio" element={<OSCDashboard />} />
-            <Route path="/osc/documentos" element={<OSCDocumentsPage />} />
-            <Route path="/osc/mensagens" element={<OSCMessagesPage />} />
-            <Route path="/osc/perfil" element={<OSCProfilePage />} />
-            <Route path="/osc/modelos" element={<OSCTemplatesPage />} />
-            <Route path="/osc/biblioteca" element={<OSCLibraryPage />} />
-            <Route path="/financeiro" element={<FinanceiroPage />} />
+          {/* --- Rotas do CONTADOR --- */}
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.CONTADOR, 'contador']} />}>
+            <Route element={<ContadorLayoutWrapper />}>
+                <Route path="/contador" element={<Navigate to="/contador/dashboard" replace />} />
+                <Route path="/contador/dashboard" element={<ContadorDashboard />} />
+                <Route path="/contador/oscs" element={<OSCsPage />} />
+                <Route path="/contador/oscs/novo" element={<CreateOSCPage />} />
+                <Route path="/contador/documentos" element={<DocumentsPage />} />
+                <Route path="/contador/avisos" element={<NoticesPage />} />
+                <Route path="/contador/perfil" element={<ContadorProfilePage />} />
+                <Route path="/contador/modelos" element={<ContadorTemplatesPage />} />
+                <Route path="/contador/mensagens" element={<ContadorMessagesPage />} />
+            </Route>
           </Route>
-        </Route>
 
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+          {/* --- Rotas da OSC e FINANCEIRO --- */}
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.OSC, 'osc', 'financeiro', 'admin']} />}>
+            <Route element={<OSCLayoutWrapper />}> 
+              <Route path="/osc" element={<Navigate to="/osc/inicio" replace />} />
+              <Route path="/osc/inicio" element={<OSCDashboard />} />
+              <Route path="/osc/documentos" element={<OSCDocumentsPage />} />
+              <Route path="/osc/mensagens" element={<OSCMessagesPage />} />
+              <Route path="/osc/perfil" element={<OSCProfilePage />} />
+              <Route path="/osc/modelos" element={<OSCTemplatesPage />} />
+              <Route path="/osc/biblioteca" element={<OSCLibraryPage />} />
+              <Route path="/financeiro" element={<FinanceiroPage />} />
+            </Route>
+          </Route>
+
+          {/* --- Página 404 (Not Found) --- */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
