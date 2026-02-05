@@ -61,19 +61,26 @@ import OSCHeader from '../pages/osc/components/OSCHeader.jsx';
  */
 function RootRedirect() {
   const { isAuthenticated, user } = useAuth();
+  
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  switch (user?.role) {
-    case ROLES.ADMIN:
+
+  // Debug para você ver no console do navegador se o papel está vindo certo
+  console.log("Redirecionando usuário:", user?.role);
+
+  switch (user?.role?.toLowerCase()) {
+    case 'admin':
       return <Navigate to="/admin/dashboard" replace />;
-    case ROLES.CONTADOR:
+    case 'contador':
+      // Verifique se o path abaixo é exatamente o que está nas suas rotas
       return <Navigate to="/contador/dashboard" replace />;
     case 'financeiro':
       return <Navigate to="/financeiro" replace />;
-    case ROLES.OSC:
+    case 'osc':
       return <Navigate to="/osc/inicio" replace />;
     default:
+      console.error("Papel de usuário não reconhecido:", user?.role);
       return <Navigate to="/login" replace />;
   }
 }

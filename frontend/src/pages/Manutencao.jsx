@@ -1,14 +1,20 @@
 import React from 'react';
-import styles from './Login.module.css'; // Reaproveitando estilos de centralização
 
 export default function ManutencaoPage() {
   return (
-    <div className={styles.loginCard} style={{ textAlign: 'center' }}>
-      <img src="/logo_portal.png" alt="Logo" className={styles.logo} />
-      <h2 style={{ color: '#EC6D12' }}>Estamos em Manutenção</h2>
-      <p>O Portal Contábil está passando por atualizações para melhor atendê-lo.</p>
-      <p><strong>Previsão de retorno:</strong> Em alguns minutos.</p>
-      <div style={{ marginTop: '2rem', fontSize: '3rem' }}>🛠️</div>
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      height: '100vh', 
+      fontFamily: 'sans-serif',
+      textAlign: 'center',
+      padding: '20px'
+    }}>
+      <img src="/logo_portal.png" alt="Logo" style={{ width: '150px', marginBottom: '20px' }} />
+      <h1 style={{ color: '#EC6D12' }}>Portal em Atualização</h1>
+      <p>Estamos a realizar melhorias técnicas. Voltamos já!</p>
     </div>
   );
 }
