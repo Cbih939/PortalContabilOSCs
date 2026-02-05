@@ -23,13 +23,21 @@ export const verifyToken = (req, res, next) => {
 // 2. Alias para rotas que importam { protect }
 export const protect = verifyToken;
 
-// 3. Verifica o papel (Role) do usuário
+// 3. Verifica o papel (Role) do usuário (VERSÃO CORRIGIDA)
 export const checkRole = (allowedRoles) => {
     return (req, res, next) => {
-        // allowedRoles pode ser uma string ou array. Convertemos para array.
+        if (!req.user || !req.user.role) {
+            return res.status(403).json({ message: 'Acesso proibido. Role não identificado.' });
+        }
+
         const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
         
-        if (!req.user || !roles.includes(req.user.role)) {
+        // Normalizamos tudo para minúsculas antes de comparar
+        const userRole = req.user.role.toLowerCase();
+        const hasPermission = roles.some(role => role.toLowerCase() === userRole);
+
+        if (!hasPermission) {
+            console.warn(`[Acesso Negado] Usuário ${req.user.id} com role '${req.user.role}' tentou acessar rota permitida para: ${roles}`);
             return res.status(403).json({ 
                 message: 'Acesso proibido. Você não tem permissão para acessar este recurso.' 
             });
