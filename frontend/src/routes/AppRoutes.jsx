@@ -71,7 +71,7 @@ function RootRedirect() {
   console.log("Redirecionando usuário. Role detectado:", userRole);
 
   switch (userRole) {
-    case 'admin', 'Admin':
+    case 'admin':
       return <Navigate to="/admin/dashboard" replace />;
     case 'contador':
       return <Navigate to="/contador/dashboard" replace />;
@@ -139,7 +139,7 @@ export default function AppRoutes() {
           </Route>
 
           {/* --- Rotas do ADMIN --- */}
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, 'admin', 'Admin']} />}>
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, 'admin']} />}>
             <Route element={<AdminLayoutWrapper />}>
                 <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
