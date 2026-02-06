@@ -97,6 +97,8 @@ function ContadorLayoutWrapper() {
   );
 }
 
+
+
 // Wrapper para Admin
 function AdminLayoutWrapper() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -148,6 +150,14 @@ export default function AppRoutes() {
                 <Route path="/admin/oscs" element={<ManageOSCs />} />
                 <Route path="/admin/biblioteca" element={<ManageLibrary />} />
                 <Route path="/admin/financeiro" element={<FinanceiroPage />} />
+            </Route>
+          </Route>
+
+          {/* --- Rotas do FINANCEIRO / ADMIN --- */}
+            <Route element={<ProtectedRoute allowedRoles={['admin', 'financeiro']} />}>
+          {/* Aqui você decide qual Wrapper usar. Se o Financeiro usa o mesmo layout do Admin: */}
+          <Route element={<AdminLayoutWrapper />}>
+            <Route path="/financeiro" element={<FinanceiroPage />} />
             </Route>
           </Route>
 
