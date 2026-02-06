@@ -97,8 +97,6 @@ function ContadorLayoutWrapper() {
   );
 }
 
-
-
 // Wrapper para Admin
 function AdminLayoutWrapper() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -153,11 +151,10 @@ export default function AppRoutes() {
             </Route>
           </Route>
 
-          {/* --- Rotas do FINANCEIRO / ADMIN --- */}
-            <Route element={<ProtectedRoute allowedRoles={['admin', 'financeiro']} />}>
-          {/* Aqui você decide qual Wrapper usar. Se o Financeiro usa o mesmo layout do Admin: */}
-          <Route element={<AdminLayoutWrapper />}>
-            <Route path="/financeiro" element={<FinanceiroPage />} />
+          {/* --- Rotas exclusivas do FINANCEIRO --- */}
+          <Route element={<ProtectedRoute allowedRoles={['financeiro']} />}>
+            <Route element={<AdminLayoutWrapper />}>
+              <Route path="/financeiro" element={<FinanceiroPage />} />
             </Route>
           </Route>
 
@@ -176,8 +173,8 @@ export default function AppRoutes() {
             </Route>
           </Route>
 
-          {/* --- Rotas da OSC e FINANCEIRO --- */}
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.OSC, 'osc', 'financeiro', 'admin']} />}>
+          {/* --- Rotas exclusivas da OSC --- */}
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.OSC, 'osc']} />}>
             <Route element={<OSCLayoutWrapper />}> 
               <Route path="/osc" element={<Navigate to="/osc/inicio" replace />} />
               <Route path="/osc/inicio" element={<OSCDashboard />} />
@@ -186,7 +183,6 @@ export default function AppRoutes() {
               <Route path="/osc/perfil" element={<OSCProfilePage />} />
               <Route path="/osc/modelos" element={<OSCTemplatesPage />} />
               <Route path="/osc/biblioteca" element={<OSCLibraryPage />} />
-              <Route path="/financeiro" element={<FinanceiroPage />} />
             </Route>
           </Route>
 
