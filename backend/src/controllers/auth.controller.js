@@ -3,7 +3,7 @@ import pool from '../config/db.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'seusecretoseguro123';
+const JWT_SECRET = process.env.JWT_SECRET || 'seusecretoseguro123jwt';
 
 export const verifyToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];

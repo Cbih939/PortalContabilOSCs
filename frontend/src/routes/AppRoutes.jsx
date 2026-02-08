@@ -61,28 +61,35 @@ import OSCHeader from '../pages/osc/components/OSCHeader.jsx';
  */
 function RootRedirect() {
   const { isAuthenticated, user } = useAuth();
-  
+  const location = useLocation();
+
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Normalização para evitar erro de Case-Sensitive (Maiúsculas/Minúsculas)
-  const userRole = user?.role?.toLowerCase();
-  console.log("Redirecionando usuário. Role detectado:", userRole);
+  // Normalização rigorosa do Role
+  const role = user?.role?.toLowerCase().trim();
+  console.log("RootRedirect: Redirecionando Role ->", role);
 
-  switch (userRole) {
-    case 'admin':
-      return <Navigate to="/admin/dashboard" replace />;
-    case 'contador':
-      return <Navigate to="/contador/dashboard" replace />;
-    case 'financeiro':
-      return <Navigate to="/financeiro" replace />;
-    case 'osc':
-      return <Navigate to="/osc/inicio" replace />;
-    default:
-      console.error("Papel de usuário não reconhecido:", user?.role);
-      return <Navigate to="/login" replace />;
+  if (role === 'admin') {
+    return <Navigate to="/admin/dashboard" replace />;
   }
+  
+  if (role === 'contador') {
+    return <Navigate to="/contador/dashboard" replace />;
+  }
+
+  if (role === 'financeiro') {
+    return <Navigate to="/financeiro" replace />;
+  }
+
+  if (role === 'osc') {
+    return <Navigate to="/osc/inicio" replace />;
+  }
+
+  // Se chegar aqui, o papel é inválido
+  console.error("Papel não reconhecido no RootRedirect:", role);
+  return <Navigate to="/login" replace />;
 }
 
 // Wrapper para Contador
