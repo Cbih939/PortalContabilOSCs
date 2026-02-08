@@ -61,3 +61,37 @@ export const getFinanceiroStats = async (req, res) => {
         res.status(500).json({ message: "Erro ao processar dados financeiros" });
     }
 };
+
+export const listOSCsFinanceiro = async (req, res) => {
+  try {
+    const { query } = req.query;
+    let sql = "SELECT id, name, cnpj, is_in_debt, email FROM users WHERE role = 'osc'";
+    let params = [];
+
+    if (query) {
+      sql += " AND (name LIKE ? OR cnpj LIKE ?)";
+      params.push(`%${query}%`, `%${query}%`);
+    }
+
+    sql += " ORDER BY name ASC";
+
+    const [rows] = await db.query(sql, params);
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro ao listar OSCs" });
+  }
+};
+
+export const updateDebtStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { is_in_debt } = req.body;
+
+    await db.query("UPDATE users SET is_in_debt = ? WHERE id = ?", [is_in_debt ? 1 : 0, id]);
+    
+    res.json({ message: "Status atualizado com sucesso" });
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao atualizar status" });
+  }
+};
