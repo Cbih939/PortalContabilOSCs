@@ -1,40 +1,32 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import Header from '../../../components/layout/Header.jsx'; 
-import { MenuIcon } from '../../../components/common/Icons.jsx';
-import { useAuth } from '../../../hooks/useAuth.jsx';
+import { useAuth } from '../../../hooks/useAuth.jsx'; // ADICIONE ESTE IMPORT
 import styles from './AdminHeader.module.css';
 
-export default function AdminHeader({ onToggleSidebar }) {
-  const { user } = useAuth();
+export default function AdminHeader({ onToggleSidebar, rightContent }) {
+  const { user } = useAuth(); // EXTRAIA O USER AQUI
 
-  const leftContent = (
-    <button
-      onClick={onToggleSidebar}
-      className={styles.menuButton}
-      aria-label="Abrir/Fechar menu lateral"
-    >
-      <MenuIcon />
-    </button>
+  return (
+    <header className={styles.header}>
+      <div className={styles.left}>
+        <button onClick={onToggleSidebar} className={styles.hamburger}>
+          <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <h1 className={styles.title}>Painel Administrativo</h1>
+      </div>
+
+      <div className={styles.right}>
+        {/* Se houver conteúdo injetado (Sino/Avatar), ele entra aqui */}
+        {rightContent}
+        
+        {/* Caso não use o rightContent do AppLayout, exibe direto aqui: */}
+        {!rightContent && (
+          <div className={styles.adminProfile}>
+            <span>{user?.name || 'Administrador'}</span>
+          </div>
+        )}
+      </div>
+    </header>
   );
-
-  const rightContent = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-      <span className={styles.welcomeText}>
-         {user?.name || 'Admin'}
-      </span>
-      {/* Link no Avatar do Admin */}
-      <Link to="#" style={{ textDecoration: 'none' }}>
-        <div className={styles.avatarCircle} style={{ 
-          width: '35px', height: '35px', backgroundColor: '#EC6D12', 
-          borderRadius: '50%', display: 'flex', alignItems: 'center', 
-          justifyContent: 'center', color: 'white', fontWeight: 'bold' 
-        }}>
-          {user?.name?.charAt(0).toUpperCase() || 'A'}
-        </div>
-      </Link>
-    </div>
-  );
-
-  return <Header leftContent={leftContent} rightContent={rightContent} />;
 }
