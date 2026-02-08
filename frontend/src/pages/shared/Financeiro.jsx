@@ -8,19 +8,19 @@ export default function FinanceiroPage() {
   const [loading, setLoading] = useState(false);
 
   const fetchOSCs = async () => {
-    setLoading(true);
-    try {
-      // Passamos o termo de busca como query param
-      const response = await api.get(`/admin/financeiro/oscs`, {
-        params: { query: search }
-      });
-      setOscs(response.data);
-    } catch (err) {
-      console.error("Erro ao buscar lista de OSCs:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    // Usar o objeto params garante que a URL fique: /api/admin/financeiro/oscs?query=termo
+    const response = await api.get('/admin/financeiro/oscs', {
+      params: { query: search }
+    });
+    setOscs(response.data);
+  } catch (err) {
+    console.error("Erro ao buscar lista de OSCs:", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {

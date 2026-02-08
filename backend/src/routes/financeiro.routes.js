@@ -1,11 +1,14 @@
+// src/routes/admin.routes.js
 import express from 'express';
-import { getStripeConfig, updateStripeConfig } from '../controllers/financeiro.controller.js';
-import { auth, checkRole } from '../middlewares/auth.js'; // Seus middlewares de segurança
+import { listOSCsFinanceiro, updateDebtStatus } from '../controllers/financeiro.controller.js';
+import { auth, checkRole } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-// Rotas protegidas: apenas admin ou financeiro podem mexer aqui
+// A rota final será: GET /api/admin/financeiro/oscs
 router.get('/financeiro/oscs', auth, checkRole(['admin', 'financeiro']), listOSCsFinanceiro);
+
+// A rota final será: PATCH /api/admin/financeiro/oscs/:id/status
 router.patch('/financeiro/oscs/:id/status', auth, checkRole(['admin', 'financeiro']), updateDebtStatus);
 
 export default router;

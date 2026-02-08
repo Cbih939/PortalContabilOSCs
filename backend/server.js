@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import pool, { testConnection } from './src/config/db.js';
 
 // Rotas
+import adminRoutes from './routes/admin.routes.js';
 import authRoutes from './src/routes/auth.routes.js';
 import contadorRoutes from './src/routes/contador.routes.js';
 import userRoutes from './src/routes/user.routes.js';
@@ -46,6 +47,7 @@ app.use('/api/notices', noticeRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/public-files', publicFileRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/', (req, res) => {
     res.send('API Portal Contábil a funcionar 🚀');
