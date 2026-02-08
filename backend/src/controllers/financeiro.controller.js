@@ -66,7 +66,9 @@ export const getFinanceiroStats = async (req, res) => {
 export const listOSCsFinanceiro = async (req, res) => {
   try {
     const { query } = req.query;
-    let sql = "SELECT id, name, cnpj, is_in_debt, email FROM users WHERE role = 'osc'";
+    
+    // Usamos COALESCE para garantir que se o CNPJ for NULL, ele retorne uma string vazia
+    let sql = "SELECT id, name, COALESCE(cnpj, '') as cnpj, is_in_debt, email FROM users WHERE role = 'osc'";
     let params = [];
 
     if (query) {
@@ -76,13 +78,11 @@ export const listOSCsFinanceiro = async (req, res) => {
 
     sql += " ORDER BY name ASC";
     
-    // CORREÇÃO: Certifica-te que aqui diz 'pool' e não 'db'
     const [rows] = await pool.query(sql, params); 
     res.json(rows);
   } catch (error) {
-    // IMPORTANTE: Este console.log vai mostrar o erro real no 'pm2 logs'
-    console.error("ERRO REAL NA QUERY:", error); 
-    res.status(500).json({ message: "Erro ao listar OSCs", details: error.message });
+    console.error("ERRO REAL NA QUERY:", error);
+    res.status(500).json({ message: "Erro ao listar OSCs" });
   }
 };
 
