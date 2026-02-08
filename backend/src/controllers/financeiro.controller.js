@@ -75,10 +75,14 @@ export const listOSCsFinanceiro = async (req, res) => {
     }
 
     sql += " ORDER BY name ASC";
-    const [rows] = await pool.query(sql, params);
+    
+    // CORREÇÃO: Certifica-te que aqui diz 'pool' e não 'db'
+    const [rows] = await pool.query(sql, params); 
     res.json(rows);
   } catch (error) {
-    res.status(500).json({ message: "Erro ao listar OSCs" });
+    // IMPORTANTE: Este console.log vai mostrar o erro real no 'pm2 logs'
+    console.error("ERRO REAL NA QUERY:", error); 
+    res.status(500).json({ message: "Erro ao listar OSCs", details: error.message });
   }
 };
 
