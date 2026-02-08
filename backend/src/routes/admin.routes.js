@@ -6,15 +6,18 @@ import {
     getStripeConfig, 
     updateStripeConfig 
 } from '../controllers/financeiro.controller.js';
-
-import { auth as authMiddleware, checkRole } from '../middlewares/auth.middleware.js';
-import { protect as auth, checkRole } from '../middlewares/auth.middleware.js';
+import { auth, checkRole } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-router.get('/financeiro/stats', authMiddleware, checkRole(['admin', 'financeiro']), getFinanceiroStats);
+// Dashboard e Stats
+router.get('/financeiro/stats', auth, checkRole(['admin', 'financeiro']), getFinanceiroStats);
+
+// Gestão de OSCs
 router.get('/financeiro/oscs', auth, checkRole(['admin', 'financeiro']), listOSCsFinanceiro);
 router.patch('/financeiro/oscs/:id/status', auth, checkRole(['admin', 'financeiro']), updateDebtStatus);
+
+// Configurações do Stripe
 router.get('/financeiro/config', auth, checkRole(['admin', 'financeiro']), getStripeConfig);
 router.post('/financeiro/config', auth, checkRole(['admin', 'financeiro']), updateStripeConfig);
 
