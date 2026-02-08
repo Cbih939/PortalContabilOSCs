@@ -1,5 +1,6 @@
 import React, { useState, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+// CORREÇÃO: Adicionado useLocation aqui no import
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 // Páginas Compartilhadas
 import FinanceiroPage from '../pages/shared/Financeiro.jsx';
@@ -55,7 +56,6 @@ import OSCLibraryPage from '../pages/osc/LibraryPage.jsx';
 import OSCSidebar from '../pages/osc/components/OSCSidebar.jsx';
 import OSCHeader from '../pages/osc/components/OSCHeader.jsx';
 
-
 /**
  * Componente "Redirecionador"
  */
@@ -87,12 +87,10 @@ function RootRedirect() {
     return <Navigate to="/osc/inicio" replace />;
   }
 
-  // Se chegar aqui, o papel é inválido
-  console.error("Papel não reconhecido no RootRedirect:", role);
   return <Navigate to="/login" replace />;
 }
 
-// Wrapper para Contador
+// Wrappers de Layout
 function ContadorLayoutWrapper() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -104,7 +102,6 @@ function ContadorLayoutWrapper() {
   );
 }
 
-// Wrapper para Admin
 function AdminLayoutWrapper() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -116,7 +113,6 @@ function AdminLayoutWrapper() {
   );
 }
 
-// Wrapper para OSC
 function OSCLayoutWrapper() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -158,8 +154,8 @@ export default function AppRoutes() {
             </Route>
           </Route>
 
-          {/* --- Rotas exclusivas do FINANCEIRO --- */}
-          <Route element={<ProtectedRoute allowedRoles={['financeiro']} />}>
+          {/* --- Rotas do FINANCEIRO --- */}
+          <Route element={<ProtectedRoute allowedRoles={['financeiro', 'admin']} />}>
             <Route element={<AdminLayoutWrapper />}>
               <Route path="/financeiro" element={<FinanceiroPage />} />
             </Route>
@@ -180,7 +176,7 @@ export default function AppRoutes() {
             </Route>
           </Route>
 
-          {/* --- Rotas exclusivas da OSC --- */}
+          {/* --- Rotas da OSC (Exclusivas) --- */}
           <Route element={<ProtectedRoute allowedRoles={[ROLES.OSC, 'osc']} />}>
             <Route element={<OSCLayoutWrapper />}> 
               <Route path="/osc" element={<Navigate to="/osc/inicio" replace />} />
@@ -193,7 +189,7 @@ export default function AppRoutes() {
             </Route>
           </Route>
 
-          {/* --- Página 404 (Not Found) --- */}
+          {/* --- Página 404 --- */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
