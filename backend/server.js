@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import pool, { testConnection } from './src/config/db.js';
 
 // Rotas
-import adminRoutes from './routes/admin.routes.js';
+import adminRoutes from './src/routes/admin.routes.js';
 import authRoutes from './src/routes/auth.routes.js';
 import contadorRoutes from './src/routes/contador.routes.js';
 import userRoutes from './src/routes/user.routes.js';
