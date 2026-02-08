@@ -1,0 +1,91 @@
+.sidebar {
+  width: 260px;
+  height: 100%;
+  background-color: #f16e13;
+  color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.logoContainer {
+  padding: 30px 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.logoWrapper {
+  width: 110px;
+  height: 110px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.sidebarLogo {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.nav {
+  flex: 1;
+  padding: 10px 15px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  color: white;
+  text-decoration: none;
+  border-radius: 25px; /* Estilo Pílula */
+  margin-bottom: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+}
+
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.active {
+  background: white !important;
+  color: #f16e13 !important;
+  font-weight: 600;
+  border: 1px solid white !important;
+}
+
+.footer {
+  padding: 20px 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logoutBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 20px;
+  background: transparent;
+  border: 1px solid white;
+  color: white;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.logoutBtn:hover {
+  background: white;
+  color: #f16e13;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+}

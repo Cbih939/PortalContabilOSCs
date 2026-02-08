@@ -1,0 +1,61 @@
+.container {
+  padding: 10px;
+}
+
+.header {
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 1.75rem;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #64748b;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.statCard {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-left: 5px solid #cbd5e1;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-top: 0.5rem;
+}
+
+.danger { border-left-color: #ef4444; }
+.danger .statValue { color: #ef4444; }
+
+.success { border-left-color: #10b981; }
+.success .statValue { color: #10b981; }
+
+.recentActivity {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}

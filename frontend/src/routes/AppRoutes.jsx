@@ -33,6 +33,11 @@ import AdminSidebar from '../pages/admin/components/AdminSidebar.jsx';
 import AdminHeader from '../pages/admin/components/AdminHeader.jsx';
 import AdminNoticesPage from '../pages/admin/AdminNoticesPage.jsx';
 
+// --- FINANCEIRO ---
+import FinanceiroDashboard from '../pages/financeiro/FinanceiroDashboard.jsx';
+import FinanceiroSidebar from '../pages/financeiro/components/FinanceiroSidebar.jsx';
+import FinanceiroHeader from '../pages/financeiro/components/FinanceiroHeader.jsx';
+
 // --- CONTADOR ---
 import ContadorDashboard from '../pages/contador/ContadorDashboard.jsx';
 import OSCsPage from '../pages/contador/OSCs.jsx';
@@ -71,30 +76,16 @@ function RootRedirect() {
 
   if (role === 'admin') return <Navigate to="/admin/dashboard" replace />;
   if (role === 'contador') return <Navigate to="/contador/dashboard" replace />;
-  if (role === 'financeiro') return <Navigate to="/financeiro" replace />;
+  if (role === 'financeiro') return <Navigate to="/financeiro/dashboard" replace />;
   if (role === 'osc') return <Navigate to="/osc/inicio" replace />;
 
   return <Navigate to="/login" replace />;
 }
 
-// --- WRAPPERS DE LAYOUT (CORRIGIDOS) ---
-
-function ContadorLayoutWrapper() {
-  const { user } = useAuth(); // Extração explícita
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-  
-  return (
-    <AppLayout
-      user={user} 
-      sidebarComponent={<ContadorSidebar isOpen={isSidebarOpen} user={user} />}
-      headerComponent={<ContadorHeader onToggleSidebar={toggleSidebar} user={user} />}
-    />
-  );
-}
+// --- WRAPPERS DE LAYOUT ---
 
 function AdminLayoutWrapper() {
-  const { user } = useAuth(); // Extração explícita
+  const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -107,8 +98,36 @@ function AdminLayoutWrapper() {
   );
 }
 
+function FinanceiroLayoutWrapper() {
+  const { user } = useAuth();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  return (
+    <AppLayout
+      user={user}
+      sidebarComponent={<FinanceiroSidebar isOpen={isSidebarOpen} user={user} />}
+      headerComponent={<FinanceiroHeader onToggleSidebar={toggleSidebar} user={user} />}
+    />
+  );
+}
+
+function ContadorLayoutWrapper() {
+  const { user } = useAuth();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  
+  return (
+    <AppLayout
+      user={user} 
+      sidebarComponent={<ContadorSidebar isOpen={isSidebarOpen} user={user} />}
+      headerComponent={<ContadorHeader onToggleSidebar={toggleSidebar} user={user} />}
+    />
+  );
+}
+
 function OSCLayoutWrapper() {
-  const { user } = useAuth(); // Extração explícita
+  const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -153,10 +172,11 @@ export default function AppRoutes() {
             </Route>
           </Route>
 
-          {/* Rotas do FINANCEIRO */}
+          {/* Rotas do FINANCEIRO (Acesso também para Admin) */}
           <Route element={<ProtectedRoute allowedRoles={['financeiro', 'admin']} />}>
-            <Route element={<AdminLayoutWrapper />}>
-              <Route path="/financeiro" element={<FinanceiroPage />} />
+            <Route element={<FinanceiroLayoutWrapper />}>
+              <Route path="/financeiro/dashboard" element={<FinanceiroDashboard />} />
+              <Route path="/financeiro/gestao" element={<FinanceiroPage />} />
             </Route>
           </Route>
 
