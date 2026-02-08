@@ -1,4 +1,8 @@
 import express from 'express';
+// 1. Importando o middleware corretamente: 
+// 'auth' como default e 'checkRole' como nomeado
+import auth, { checkRole } from '../middlewares/auth.middleware.js';
+
 import { 
     listOSCsFinanceiro, 
     updateDebtStatus, 
@@ -6,7 +10,6 @@ import {
     getStripeConfig, 
     updateStripeConfig 
 } from '../controllers/financeiro.controller.js';
-import { auth, checkRole } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
