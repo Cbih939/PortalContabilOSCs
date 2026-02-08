@@ -37,6 +37,8 @@ import AdminNoticesPage from '../pages/admin/AdminNoticesPage.jsx';
 import FinanceiroDashboard from '../pages/financeiro/FinanceiroDashboard.jsx';
 import FinanceiroSidebar from '../pages/financeiro/components/FinanceiroSidebar.jsx';
 import FinanceiroHeader from '../pages/financeiro/components/FinanceiroHeader.jsx';
+import StripeConfig from '../pages/financeiro/StripeConfig.jsx';
+
 
 // --- CONTADOR ---
 import ContadorDashboard from '../pages/contador/ContadorDashboard.jsx';
@@ -101,13 +103,12 @@ function AdminLayoutWrapper() {
 function FinanceiroLayoutWrapper() {
   const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   return (
     <AppLayout
       user={user}
       sidebarComponent={<FinanceiroSidebar isOpen={isSidebarOpen} user={user} />}
-      headerComponent={<FinanceiroHeader onToggleSidebar={toggleSidebar} user={user} />}
+      headerComponent={<FinanceiroHeader onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} user={user} />}
     />
   );
 }
@@ -177,6 +178,7 @@ export default function AppRoutes() {
             <Route element={<FinanceiroLayoutWrapper />}>
               <Route path="/financeiro/dashboard" element={<FinanceiroDashboard />} />
               <Route path="/financeiro/gestao" element={<FinanceiroPage />} />
+              <Route path="/financeiro/configuracao" element={<StripeConfig />} />
             </Route>
           </Route>
 
