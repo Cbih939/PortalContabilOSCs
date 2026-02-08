@@ -1,5 +1,4 @@
 import React, { useState, Suspense } from 'react';
-// CORREÇÃO: Adicionado useLocation aqui no import
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 // Páginas Compartilhadas
@@ -68,60 +67,52 @@ function RootRedirect() {
   }
 
   const role = user?.role?.toLowerCase().trim();
-  
-  // LOG DE DEBUG - Verifique isso no console do navegador (F12)
-  console.log("DEBUG AUTH:", { role: role, fullUser: user });
+  console.log("RootRedirect: Redirecionando usuário ->", role);
 
-  if (role === 'admin') {
-    return <Navigate to="/admin/dashboard" replace />;
-  }
-  
-  if (role === 'contador') {
-    return <Navigate to="/contador/dashboard" replace />;
-  }
-
-  if (role === 'financeiro') {
-    return <Navigate to="/financeiro" replace />;
-  }
-
-  // OSC é a última opção
-  if (role === 'osc') {
-    return <Navigate to="/osc/inicio" replace />;
-  }
+  if (role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+  if (role === 'contador') return <Navigate to="/contador/dashboard" replace />;
+  if (role === 'financeiro') return <Navigate to="/financeiro" replace />;
+  if (role === 'osc') return <Navigate to="/osc/inicio" replace />;
 
   return <Navigate to="/login" replace />;
 }
 
-// Wrappers de Layout
+// Wrappers de Layout - Adicionado useAuth() em cada um para evitar "user is not defined"
 function ContadorLayoutWrapper() {
+  const { user } = useAuth(); // Importante para o AppLayout/Sidebar receber o contexto
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  
   return (
     <AppLayout
-      sidebarComponent={<ContadorSidebar isOpen={isSidebarOpen} />}
-      headerComponent={<ContadorHeader onToggleSidebar={toggleSidebar} />}
+      sidebarComponent={<ContadorSidebar isOpen={isSidebarOpen} user={user} />}
+      headerComponent={<ContadorHeader onToggleSidebar={toggleSidebar} user={user} />}
     />
   );
 }
 
 function AdminLayoutWrapper() {
+  const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
   return (
     <AppLayout
-      sidebarComponent={<AdminSidebar isOpen={isSidebarOpen} />}
-      headerComponent={<AdminHeader onToggleSidebar={toggleSidebar} />}
+      sidebarComponent={<AdminSidebar isOpen={isSidebarOpen} user={user} />}
+      headerComponent={<AdminHeader onToggleSidebar={toggleSidebar} user={user} />}
     />
   );
 }
 
 function OSCLayoutWrapper() {
+  const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
   return (
     <AppLayout
-      sidebarComponent={<OSCSidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />}
-      headerComponent={<OSCHeader onToggleSidebar={toggleSidebar} />}
+      sidebarComponent={<OSCSidebar isOpen={isSidebarOpen} onClose={toggleSidebar} user={user} />}
+      headerComponent={<OSCHeader onToggleSidebar={toggleSidebar} user={user} />}
     />
   );
 }
@@ -134,7 +125,7 @@ export default function AppRoutes() {
           <Route path="/" element={<RootRedirect />} />
           <Route path="/manutencao" element={<ManutencaoPage />} />
 
-          {/* --- Rotas Públicas (Guest) --- */}
+          {/* --- Rotas Públicas --- */}
           <Route element={<GuestLayout />}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
@@ -144,7 +135,7 @@ export default function AppRoutes() {
           </Route>
 
           {/* --- Rotas do ADMIN --- */}
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, 'admin']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['admin', ROLES.ADMIN]} />}>
             <Route element={<AdminLayoutWrapper />}>
                 <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -164,7 +155,7 @@ export default function AppRoutes() {
           </Route>
 
           {/* --- Rotas do CONTADOR --- */}
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.CONTADOR, 'contador']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['contador', ROLES.CONTADOR]} />}>
             <Route element={<ContadorLayoutWrapper />}>
                 <Route path="/contador" element={<Navigate to="/contador/dashboard" replace />} />
                 <Route path="/contador/dashboard" element={<ContadorDashboard />} />
@@ -178,8 +169,8 @@ export default function AppRoutes() {
             </Route>
           </Route>
 
-          {/* --- Rotas da OSC (Exclusivas) --- */}
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.OSC, 'osc']} />}>
+          {/* --- Rotas da OSC --- */}
+          <Route element={<ProtectedRoute allowedRoles={['osc', ROLES.OSC]} />}>
             <Route element={<OSCLayoutWrapper />}> 
               <Route path="/osc" element={<Navigate to="/osc/inicio" replace />} />
               <Route path="/osc/inicio" element={<OSCDashboard />} />
@@ -191,7 +182,6 @@ export default function AppRoutes() {
             </Route>
           </Route>
 
-          {/* --- Página 404 --- */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
