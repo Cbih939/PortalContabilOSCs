@@ -6,7 +6,9 @@ import {
     getStripeConfig, 
     updateStripeConfig 
 } from '../controllers/financeiro.controller.js';
-import { auth, checkRole } from '../middlewares/auth.middleware.js';
+
+import auth from '../middlewares/auth.middleware.js';
+import { protect as auth, checkRole } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
