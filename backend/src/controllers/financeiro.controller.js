@@ -1,9 +1,10 @@
+import pool from '../config/db.js';
 import SystemSettings from '../models/SystemSettings.js';
 
+// 1. Configurações do Stripe
 export const getStripeConfig = async (req, res) => {
     try {
         const settings = await SystemSettings.getSettings();
-        // Mapeamos para camelCase para o frontend
         const config = {
             stripePublishableKey: settings?.stripe_publishable_key,
             stripeSecretKey: settings?.stripe_secret_key,
@@ -27,10 +28,10 @@ export const updateStripeConfig = async (req, res) => {
     }
 };
 
+// 2. Estatísticas do Dashboard
 export const getFinanceiroStats = async (req, res) => {
     try {
-        // Busca contagem de usuários OSC
-        const [counts] = await db.query(`
+        const [counts] = await pool.query(`
             SELECT 
                 COUNT(*) as totalOSCs,
                 SUM(CASE WHEN is_in_debt = 0 THEN 1 ELSE 0 END) as emDia,
@@ -38,8 +39,7 @@ export const getFinanceiroStats = async (req, res) => {
             FROM users WHERE role = 'osc'
         `);
 
-        // Busca histórico de faturamento real
-        const [history] = await db.query(`
+        const [history] = await pool.query(`
             SELECT 
                 DATE_FORMAT(payment_date, '%b') as mes, 
                 SUM(amount) as valor
@@ -62,6 +62,7 @@ export const getFinanceiroStats = async (req, res) => {
     }
 };
 
+// 3. Gestão de OSCs
 export const listOSCsFinanceiro = async (req, res) => {
   try {
     const { query } = req.query;
@@ -74,11 +75,9 @@ export const listOSCsFinanceiro = async (req, res) => {
     }
 
     sql += " ORDER BY name ASC";
-
-    const [rows] = await db.query(sql, params);
+    const [rows] = await pool.query(sql, params);
     res.json(rows);
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Erro ao listar OSCs" });
   }
 };
@@ -87,9 +86,7 @@ export const updateDebtStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { is_in_debt } = req.body;
-
-    await db.query("UPDATE users SET is_in_debt = ? WHERE id = ?", [is_in_debt ? 1 : 0, id]);
-    
+    await pool.query("UPDATE users SET is_in_debt = ? WHERE id = ?", [is_in_debt ? 1 : 0, id]);
     res.json({ message: "Status atualizado com sucesso" });
   } catch (error) {
     res.status(500).json({ message: "Erro ao atualizar status" });
