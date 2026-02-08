@@ -67,9 +67,10 @@ function RootRedirect() {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Normalização rigorosa do Role
   const role = user?.role?.toLowerCase().trim();
-  console.log("RootRedirect: Redirecionando Role ->", role);
+  
+  // LOG DE DEBUG - Verifique isso no console do navegador (F12)
+  console.log("DEBUG AUTH:", { role: role, fullUser: user });
 
   if (role === 'admin') {
     return <Navigate to="/admin/dashboard" replace />;
@@ -83,6 +84,7 @@ function RootRedirect() {
     return <Navigate to="/financeiro" replace />;
   }
 
+  // OSC é a última opção
   if (role === 'osc') {
     return <Navigate to="/osc/inicio" replace />;
   }
