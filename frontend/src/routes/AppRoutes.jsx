@@ -77,14 +77,16 @@ function RootRedirect() {
   return <Navigate to="/login" replace />;
 }
 
-// Wrappers de Layout - Adicionado useAuth() em cada um para evitar "user is not defined"
+// --- WRAPPERS DE LAYOUT (CORRIGIDOS) ---
+
 function ContadorLayoutWrapper() {
-  const { user } = useAuth(); // Importante para o AppLayout/Sidebar receber o contexto
+  const { user } = useAuth(); // Extração explícita
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   
   return (
     <AppLayout
+      user={user} 
       sidebarComponent={<ContadorSidebar isOpen={isSidebarOpen} user={user} />}
       headerComponent={<ContadorHeader onToggleSidebar={toggleSidebar} user={user} />}
     />
@@ -92,12 +94,13 @@ function ContadorLayoutWrapper() {
 }
 
 function AdminLayoutWrapper() {
-  const { user } = useAuth();
+  const { user } = useAuth(); // Extração explícita
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   return (
     <AppLayout
+      user={user}
       sidebarComponent={<AdminSidebar isOpen={isSidebarOpen} user={user} />}
       headerComponent={<AdminHeader onToggleSidebar={toggleSidebar} user={user} />}
     />
@@ -105,17 +108,20 @@ function AdminLayoutWrapper() {
 }
 
 function OSCLayoutWrapper() {
-  const { user } = useAuth();
+  const { user } = useAuth(); // Extração explícita
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   return (
     <AppLayout
+      user={user}
       sidebarComponent={<OSCSidebar isOpen={isSidebarOpen} onClose={toggleSidebar} user={user} />}
       headerComponent={<OSCHeader onToggleSidebar={toggleSidebar} user={user} />}
     />
   );
 }
+
+// --- DEFINIÇÃO DAS ROTAS ---
 
 export default function AppRoutes() {
   return (
@@ -125,7 +131,7 @@ export default function AppRoutes() {
           <Route path="/" element={<RootRedirect />} />
           <Route path="/manutencao" element={<ManutencaoPage />} />
 
-          {/* --- Rotas Públicas --- */}
+          {/* Rotas Públicas */}
           <Route element={<GuestLayout />}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
@@ -134,7 +140,7 @@ export default function AppRoutes() {
             <Route path="/redefinir-senha/:token" element={<RedefinirSenhaPage />} />
           </Route>
 
-          {/* --- Rotas do ADMIN --- */}
+          {/* Rotas do ADMIN */}
           <Route element={<ProtectedRoute allowedRoles={['admin', ROLES.ADMIN]} />}>
             <Route element={<AdminLayoutWrapper />}>
                 <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
@@ -147,14 +153,14 @@ export default function AppRoutes() {
             </Route>
           </Route>
 
-          {/* --- Rotas do FINANCEIRO --- */}
+          {/* Rotas do FINANCEIRO */}
           <Route element={<ProtectedRoute allowedRoles={['financeiro', 'admin']} />}>
             <Route element={<AdminLayoutWrapper />}>
               <Route path="/financeiro" element={<FinanceiroPage />} />
             </Route>
           </Route>
 
-          {/* --- Rotas do CONTADOR --- */}
+          {/* Rotas do CONTADOR */}
           <Route element={<ProtectedRoute allowedRoles={['contador', ROLES.CONTADOR]} />}>
             <Route element={<ContadorLayoutWrapper />}>
                 <Route path="/contador" element={<Navigate to="/contador/dashboard" replace />} />
@@ -169,7 +175,7 @@ export default function AppRoutes() {
             </Route>
           </Route>
 
-          {/* --- Rotas da OSC --- */}
+          {/* Rotas da OSC */}
           <Route element={<ProtectedRoute allowedRoles={['osc', ROLES.OSC]} />}>
             <Route element={<OSCLayoutWrapper />}> 
               <Route path="/osc" element={<Navigate to="/osc/inicio" replace />} />
