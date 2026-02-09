@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom'; // Importante para ler a URL
+import { useLocation } from 'react-router-dom';
 import styles from './OSCFinanceiro.module.css';
 import { getMeusPagamentos } from '@/services/oscService';
 import api from '@/services/api';
@@ -13,10 +13,10 @@ const OSCFinanceiro = () => {
     const location = useLocation();
 
     useEffect(() => {
-        // Lógica para detetar retorno do Stripe na URL
+        // Detectar parâmetros de retorno do Stripe
         const queryParams = new URLSearchParams(location.search);
         if (queryParams.get('success')) {
-            setMessage({ type: 'success', text: '✅ Pagamento realizado com sucesso! O seu acesso será atualizado em breve.' });
+            setMessage({ type: 'success', text: '✅ Pagamento realizado com sucesso! Sua assinatura está ativa.' });
         } else if (queryParams.get('canceled')) {
             setMessage({ type: 'warning', text: 'ℹ️ O pagamento foi cancelado. Você pode tentar novamente quando quiser.' });
         }
@@ -39,7 +39,6 @@ const OSCFinanceiro = () => {
         try {
             setError(null);
             const response = await api.post('/webhooks/create-checkout-session');
-            
             if (response.data && response.data.url) {
                 window.location.href = response.data.url;
             } else {
@@ -47,7 +46,7 @@ const OSCFinanceiro = () => {
             }
         } catch (err) {
             console.error("Erro ao iniciar Stripe:", err);
-            alert("Erro ao conectar com o Stripe. Verifique se o seu saldo ou chaves API estão corretos.");
+            alert("Erro ao conectar com o Stripe. Verifique sua conexão ou chaves API.");
         }
     };
 
@@ -57,20 +56,35 @@ const OSCFinanceiro = () => {
         <div className={styles.container}>
             <h1 className={styles.title}>Financeiro</h1>
 
-            {/* Mensagens de Sucesso ou Cancelamento */}
             {message.text && (
                 <div className={`${styles.alert} ${styles[message.type]}`}>
                     {message.text}
                 </div>
             )}
 
-            <div className={styles.paymentCard}>
-                <h3>Status da Assinatura</h3>
-                <p>Mantenha sua contribuição em dia para acessar todos os recursos.</p>
-                {error && <p className={styles.error} style={{color: 'red'}}>{error}</p>}
+            {/* Novo Card de Assinatura baseado na Imagem 2 */}
+            <div className={styles.subscriptionCard}>
+                <div className={styles.cardHeader}>
+                    <h2>Assinatura Mensal</h2>
+                    <div className={styles.priceContainer}>
+                        <span className={styles.currency}>R$</span>
+                        <span className={styles.price}>50,00</span>
+                    </div>
+                    <p className={styles.subtitle}>Gestão completa e segura para sua OSC</p>
+                </div>
+
+                <ul className={styles.featuresList}>
+                    <li><span>check</span> Contabilidade completa (ITG 2002)</li>
+                    <li><span>check</span> Relatórios e documentos automáticos</li>
+                    <li><span>check</span> Biblioteca de E-books e Modelos</li>
+                    <li><span>check</span> Gestão de voluntários e projetos</li>
+                    <li><span>check</span> Guias de abertura e regularização</li>
+                </ul>
+
                 <button onClick={handlePagamento} className={styles.payButton}>
-                    Pagar Mensalidade Agora
+                    Quero assinar agora
                 </button>
+                <p className={styles.footerNote}>Cancelamento a qualquer momento. Suporte incluso.</p>
             </div>
 
             <div className={styles.historyCard}>
@@ -94,8 +108,8 @@ const OSCFinanceiro = () => {
                                     <td>{r.stripe_subscription_id || 'Pendente'}</td>
                                     <td>R$ {r.amount ? Number(r.amount).toFixed(2) : '0.00'}</td>
                                     <td>
-                                        <span className={styles[`status_${r.status}`]}>
-                                            {r.status === 'active' ? '✅ Ativo' : '⏳ ' + r.status}
+                                        <span className={`${styles.statusBadge} ${styles[`status_${r.status}`]}`}>
+                                            {r.status === 'active' ? '✅ Ativo' : r.status}
                                         </span>
                                     </td>
                                 </tr>
