@@ -1,16 +1,13 @@
 import pool from '../config/db.js';
 
-// --- 1. CONFIGURAÇÕES DO STRIPE ---
+// --- 1. CONFIGURAÇÕES DO STRIPE (Direto no Banco) ---
 
-/**
- * Busca as configurações do Stripe na tabela stripe_configs
- */
 export const getStripeConfig = async (req, res) => {
     try {
+        // Buscamos diretamente na tabela que criamos
         const [rows] = await pool.query('SELECT * FROM stripe_configs WHERE id = 1');
         
         if (rows.length === 0) {
-            // Retorna objeto vazio para não quebrar o formulário no Frontend
             return res.json({
                 stripePublishableKey: '',
                 stripeSecretKey: '',
@@ -20,24 +17,20 @@ export const getStripeConfig = async (req, res) => {
             });
         }
 
-        const settings = rows[0];
-        const config = {
-            stripePublishableKey: settings.stripePublishableKey,
-            stripeSecretKey: settings.stripeSecretKey,
-            stripeWebhookSecret: settings.stripeWebhookSecret,
-            monthlyPriceId: settings.monthlyPriceId,
-            packageValue: settings.packageValue
-        };
-        res.json(config);
+        const s = rows[0];
+        res.json({
+            stripePublishableKey: s.stripePublishableKey || '',
+            stripeSecretKey: s.stripeSecretKey || '',
+            stripeWebhookSecret: s.stripeWebhookSecret || '',
+            monthlyPriceId: s.monthlyPriceId || '',
+            packageValue: s.packageValue || ''
+        });
     } catch (error) {
         console.error("Erro ao buscar configurações Stripe:", error);
-        res.status(500).json({ message: "Erro ao buscar configurações" });
+        res.status(500).json({ message: "Erro interno ao buscar configurações" });
     }
 };
 
-/**
- * Atualiza ou Insere as configurações do Stripe (Upsert)
- */
 export const updateStripeConfig = async (req, res) => {
     try {
         const { 
@@ -60,11 +53,11 @@ export const updateStripeConfig = async (req, res) => {
         `;
 
         await pool.execute(query, [
-            stripePublishableKey, 
-            stripeSecretKey, 
-            stripeWebhookSecret, 
-            monthlyPriceId, 
-            packageValue
+            stripePublishableKey || null, 
+            stripeSecretKey || null, 
+            stripeWebhookSecret || null, 
+            monthlyPriceId || null, 
+            packageValue || 0
         ]);
 
         res.json({ message: "Configurações atualizadas com sucesso!" });
@@ -109,12 +102,11 @@ export const getFinanceiroStats = async (req, res) => {
     }
 };
 
-// --- 3. GESTÃO DE OSCS (LISTAGEM E STATUS) ---
+// --- 3. GESTÃO DE OSCS ---
 
 export const listOSCsFinanceiro = async (req, res) => {
     try {
         const { query } = req.query;
-        
         let sql = "SELECT id, name, COALESCE(cnpj, '') as cnpj, is_in_debt, email FROM users WHERE role = 'osc'";
         let params = [];
 
@@ -124,11 +116,10 @@ export const listOSCsFinanceiro = async (req, res) => {
         }
 
         sql += " ORDER BY name ASC";
-        
         const [rows] = await pool.query(sql, params); 
         res.json(rows);
     } catch (error) {
-        console.error("ERRO NA LISTAGEM DE OSCS:", error);
+        console.error("Erro na listagem:", error);
         res.status(500).json({ message: "Erro ao listar OSCs" });
     }
 };
@@ -137,10 +128,7 @@ export const updateDebtStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { is_in_debt } = req.body;
-        
-        // Converte para 1 ou 0 para garantir compatibilidade com o MySQL TinyInt
         const status = is_in_debt ? 1 : 0;
-        
         await pool.query("UPDATE users SET is_in_debt = ? WHERE id = ?", [status, id]);
         res.json({ message: "Status atualizado com sucesso" });
     } catch (error) {
