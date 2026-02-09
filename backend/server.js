@@ -17,8 +17,6 @@ import noticeRoutes from './src/routes/notice.routes.js';
 import messageRoutes from './src/routes/message.routes.js';
 import publicFileRoutes from './src/routes/publicFile.routes.js';
 import alertRoutes from './src/routes/alert.routes.js';
-
-// CORREÇÃO: Certifique-se que o ficheiro existe em: ./src/routes/webhook.routes.js
 import webhookRoutes from './src/routes/webhook.routes.js'; 
 
 dotenv.config();
@@ -26,32 +24,37 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Configuração de Caminhos Absolutos
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // 1. CONFIGURAÇÃO DE CORS
 app.use(cors({
-  origin: ['https://contacomigo.org.br', 'http://localhost:5173'], // Adicionado localhost para facilitar teus testes
+  origin: ['https://contacomigo.org.br', 'http://localhost:5173'],
   credentials: true
 }));
 
 /**
- * 2. ROTA DE WEBHOOK (IMPORTANTE)
- * Esta rota deve vir ANTES do express.json() para que o Stripe 
- * consiga validar a assinatura do corpo bruto (raw body).
+ * 2. ROTA DE WEBHOOK (ANTES DE TUDO)
+ * Necessário express.raw para validar assinatura do Stripe
  */
 app.use('/api/webhooks', webhookRoutes);
 
-// 3. MIDDLEWARES PADRÃO
+/**
+ * 3. SERVIDOR DE ARQUIVOS ESTÁTICOS (UPLOADS)
+ * Se o seu server.js está na raiz e a pasta uploads também, 
+ * o path.resolve garante que o Node encontre o caminho físico real na VPS.
+ */
+app.use('/uploads', express.static(path.resolve(__dirname, 'uploads')));
+
+// 4. MIDDLEWARES DE PARSER
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Configuração de Caminhos para Uploads
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Testar conexão com o Banco
 testConnection();
 
-// 4. DEFINIÇÃO DAS ROTAS DA API
+// 5. DEFINIÇÃO DAS ROTAS DA API
 app.use('/api/auth', authRoutes);
 app.use('/api/contador', contadorRoutes);
 app.use('/api/users', userRoutes);
@@ -69,7 +72,7 @@ app.get('/', (req, res) => {
     res.send('API Portal Contábil a funcionar 🚀');
 });
 
-// 5. TRATAMENTO DE ERROS GLOBAL
+// 6. TRATAMENTO DE ERROS GLOBAL
 app.use((err, req, res, next) => {
     console.error('[Global Error]:', err.stack);
     res.status(500).json({ 
@@ -78,8 +81,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Inicialização do Servidor
 app.listen(PORT, () => {
     console.log(`[Server] Backend a rodar na porta ${PORT}`);
-    console.log(`[Webhook] Rota de monitoramento Stripe ativa em /api/webhooks/stripe`);
+    console.log(`[Path] Servindo uploads de: ${path.resolve(__dirname, 'uploads')}`);
 });
