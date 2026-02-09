@@ -6,30 +6,32 @@ import pool from '../config/db.js';
  */
 export const getMyPayments = async (req, res) => {
   try {
-    const userId = req.user.id;
-    
-    // Primeiro, localizamos o ID da OSC vinculada ao utilizador logado
-    const [oscRows] = await pool.execute('SELECT id FROM oscs WHERE user_id = ?', [userId]);
-    
-    if (oscRows.length === 0) {
-      return res.status(404).json({ message: 'OSC não encontrada para este utilizador.' });
-    }
+    const oscId = req.user.osc_id;
 
-    const oscId = oscRows[0].id;
-
-    // Buscamos as subscrições/pagamentos. 
-    // OBS: Ajuste o nome da tabela para 'payments' se necessário.
-    const [payments] = await pool.execute(
-      `SELECT * FROM subscriptions WHERE osc_id = ? ORDER BY created_at DESC`,
+    const [rows] = await db.query(
+      `
+      SELECT 
+        id,
+        amount,
+        status,
+        payment_date,
+        competence
+      FROM payments
+      WHERE osc_id = ?
+      ORDER BY payment_date DESC
+      `,
       [oscId]
     );
 
-    res.json(payments);
+    return res.json(rows);
   } catch (error) {
     console.error('[OSC Controller] Erro em getMyPayments:', error);
-    res.status(500).json({ message: 'Erro ao carregar pagamentos.' });
+    return res.status(500).json({
+      message: 'Erro ao buscar pagamentos da OSC'
+    });
   }
 };
+
 
 /**
  * --- ASSOCIAR CONTADOR ---
