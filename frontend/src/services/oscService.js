@@ -65,3 +65,7 @@ export const deleteOSC = async (oscId) => {
   const response = await api.delete(`/oscs/${oscId}`);
   return response.data;
 };
+
+export const getMeusPagamentos = () => {
+  return api.get('/api/oscs/financeiro/meus-pagamentos');
+};
