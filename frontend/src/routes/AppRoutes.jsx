@@ -182,18 +182,17 @@ export default function AppRoutes() {
           {/* Rotas do CONTADOR */}
 <Route element={<ProtectedRoute allowedRoles={['contador', ROLES.CONTADOR]} />}>
   <Route element={<ContadorLayoutWrapper />}>
-      <Route path="/contador/dashboard" element={<ContadorDashboard />} />
-      <Route path="/contador/oscs" element={<OSCsPage />} />
-      <Route path="/contador/documentos" element={<DocumentsPage />} />
-      <Route path="/contador/avisos" element={<NoticesPage />} />
-      
-      {/* CORREÇÃO AQUI: Verifique se estes nomes de componentes estão importados no topo do arquivo */}
-      <Route path="/contador/modelos" element={<ContadorTemplatesPage />} />
-      <Route path="/contador/perfil" element={<ContadorProfilePage />} />
-      <Route path="/contador/mensagens" element={<ContadorMessagesPage />} />
-
-      {/* Rota padrão para caso ele acesse apenas /contador */}
-      <Route path="/contador" element={<Navigate to="/contador/dashboard" replace />} />
+    {/* Use caminhos absolutos e certifique-se que o componente existe */}
+    <Route path="/contador/dashboard" element={<ContadorDashboard />} />
+    <Route path="/contador/oscs" element={<OSCsPage />} />
+    <Route path="/contador/documentos" element={<DocumentsPage />} />
+    <Route path="/contador/avisos" element={<NoticesPage />} />
+    <Route path="/contador/modelos" element={<ContadorTemplatesPage />} />
+    <Route path="/contador/perfil" element={<ContadorProfilePage />} />
+    <Route path="/contador/mensagens" element={<ContadorMessagesPage />} />
+    
+    {/* Index da área do contador */}
+    <Route index element={<Navigate to="/contador/dashboard" replace />} />
   </Route>
 </Route>
 
