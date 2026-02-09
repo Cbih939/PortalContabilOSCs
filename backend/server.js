@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import pool, { testConnection } from './src/config/db.js';
 
-// Importação das Rotas
+// --- IMPORTAÇÃO DAS ROTAS ---
 import adminRoutes from './src/routes/admin.routes.js';
 import authRoutes from './src/routes/auth.routes.js';
 import contadorRoutes from './src/routes/contador.routes.js';
@@ -24,19 +24,20 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Configuração para suportar ES Modules (__dirname)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// --- CONFIGURAÇÃO DE SEGURANÇA E CORS ---
+// --- 1. CONFIGURAÇÃO DE SEGURANÇA E CORS ---
 app.use(cors({
   origin: ['https://contacomigo.org.br', 'http://localhost:5173'],
   credentials: true
 }));
 
-// --- SERVIDOR DE FICHEIROS ESTÁTICOS (CONFIGURAÇÃO PRIORITÁRIA) ---
+// --- 2. SERVIDOR DE FICHEIROS ESTÁTICOS (RESOLUÇÃO DE ERRO 404) ---
 /**
- * Configuramos os caminhos absolutos para evitar erro 404 na VPS.
- * 'Content-Disposition: inline' permite que o navegador abra PDFs/Imagens em vez de baixar.
+ * Definimos caminhos absolutos para garantir que a VPS encontre os ficheiros.
+ * O cabeçalho 'inline' permite abrir PDFs e Imagens diretamente no browser.
  */
 const staticOptions = {
   setHeaders: (res, filePath) => {
@@ -48,27 +49,27 @@ const staticOptions = {
   }
 };
 
-// Caminhos Absolutos na VPS
+// Caminhos físicos absolutos na VPS
 const uploadsPath = path.resolve(__dirname, 'uploads');
 const publicUploadsPath = path.resolve(uploadsPath, 'public');
 
-// 1. Servir a subpasta public primeiro (Prioridade para imagens da biblioteca)
+// Mapeamento prioritário: primeiro a subpasta 'public' (imagens da biblioteca)
 app.use('/uploads/public', express.static(publicUploadsPath, staticOptions));
 
-// 2. Servir a pasta de uploads geral
+// Mapeamento secundário: pasta raiz 'uploads' (documentos das OSCs)
 app.use('/uploads', express.static(uploadsPath, staticOptions));
 
-// --- ROTA DE WEBHOOK (DEVE VIR ANTES DO BODY PARSER JSON) ---
+// --- 3. MIDDLEWARES DE PROCESSAMENTO ---
+// Webhooks devem vir antes do express.json() se precisarem de raw body
 app.use('/api/webhooks', webhookRoutes);
 
-// --- MIDDLEWARES DE PARSER ---
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Testar conexão com o Banco
+// --- 4. CONEXÃO COM O BANCO DE DADOS ---
 testConnection();
 
-// --- DEFINIÇÃO DAS ROTAS DA API ---
+// --- 5. DEFINIÇÃO DAS ROTAS DA API ---
 app.use('/api/auth', authRoutes);
 app.use('/api/contador', contadorRoutes);
 app.use('/api/users', userRoutes);
@@ -81,21 +82,25 @@ app.use('/api/public-files', publicFileRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Rota de Boas-vindas/Saúde do Sistema
-app.get('/', (req, res) => res.send('API Portal Contábil Ativa 🚀'));
+// Rota de teste de saúde da API
+app.get('/', (req, res) => {
+  res.send('API Portal Contábil Ativa e Operacional 🚀');
+});
 
-// --- TRATAMENTO DE ERROS GLOBAL ---
+// --- 6. TRATAMENTO DE ERROS GLOBAL ---
 app.use((err, req, res, next) => {
-  console.error('[Global Error]:', err.stack);
+  console.error('[Global Server Error]:', err.stack);
   res.status(500).json({ 
-    message: 'Algo deu errado no servidor!',
+    message: 'Ocorreu um erro interno no servidor!',
     error: process.env.NODE_ENV === 'development' ? err.message : {}
   });
 });
 
-// --- INICIALIZAÇÃO ---
+// --- 7. INICIALIZAÇÃO DO SERVIDOR ---
 app.listen(PORT, () => {
-  console.log(`[Server] Rodando na porta ${PORT}`);
-  console.log(`[Static] Pasta Geral: ${uploadsPath}`);
-  console.log(`[Static] Pasta Pública: ${publicUploadsPath}`);
+  console.log(`\n=========================================`);
+  console.log(`🚀 Servidor rodando na porta: ${PORT}`);
+  console.log(`📁 Pasta Uploads: ${uploadsPath}`);
+  console.log(`🖼️  Pasta Public: ${publicUploadsPath}`);
+  console.log(`=========================================\n`);
 });
