@@ -144,7 +144,10 @@ function OSCLayoutWrapper() {
 // --- DEFINIÇÃO DAS ROTAS ---
 
 export default function AppRoutes() {
-  const { user } = useAuth(); // CORREÇÃO: User agora definido no escopo das rotas
+  const { user } = useAuth(); 
+
+  // Lógica de verificação de débito
+  const isDebt = Number(user?.is_in_debt) === 1;
 
   return (
     <BrowserRouter>
@@ -200,25 +203,26 @@ export default function AppRoutes() {
             </Route>
           </Route>
 
-          {/* Rotas da OSC com Bloqueio de Inadimplência */}
+          {/* Rotas da OSC com Lógica de Bloqueio Ativa */}
           <Route element={<ProtectedRoute allowedRoles={['osc', ROLES.OSC]} />}>
             <Route element={<OSCLayoutWrapper />}>
               <Route 
                 path="/osc/inicio" 
-                element={Number(user?.is_in_debt) === 1 ? <Navigate to="/osc/financeiro" replace /> : <OSCDashboard />} 
+                element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCDashboard />} 
               />
               <Route 
                 path="/osc/documentos" 
-                element={Number(user?.is_in_debt) === 1 ? <Navigate to="/osc/financeiro" replace /> : <OSCDocumentsPage />} 
+                element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCDocumentsPage />} 
               />
               <Route 
                 path="/osc/modelos" 
-                element={Number(user?.is_in_debt) === 1 ? <Navigate to="/osc/financeiro" replace /> : <OSCTemplatesPage />} 
+                element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCTemplatesPage />} 
               />
               <Route 
                 path="/osc/biblioteca" 
-                element={Number(user?.is_in_debt) === 1 ? <Navigate to="/osc/financeiro" replace /> : <OSCLibraryPage />} 
+                element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCLibraryPage />} 
               />
+              {/* Rotas que permanecem abertas para suporte e regularização */}
               <Route path="/osc/mensagens" element={<OSCMessagesPage />} />
               <Route path="/osc/perfil" element={<OSCProfilePage />} />
               <Route path="/osc/financeiro" element={<OSCFinanceiro />} />

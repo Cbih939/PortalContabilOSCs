@@ -13,63 +13,29 @@ const ProfileIcon = () => <svg className={styles.icon} fill="none" viewBox="0 0 
 const LogoutIcon = () => <svg className={styles.icon} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>;
 const CloseIcon = () => <svg className={styles.icon} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>;
 
-export default function OSCSidebar({ isOpen, onClose }) {
-  const { logout, user } = useAuth();
-  const navigate = useNavigate();
-
-  // Verificação rigorosa do débito (convertendo para número para evitar erro de string)
+export default function OSCSidebar({ isOpen, user }) {
   const isDebt = Number(user?.is_in_debt) === 1;
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
-  if (!isOpen) return null;
-
   return (
-    <aside className={styles.sidebar}>
-      <div className={styles.logoContainer}>
-        <img src="/logo_portal.png" alt="Portal" className={styles.sidebarLogo} />
-      </div>
-
+    <aside className={`${styles.sidebar} ${isOpen ? styles.open : styles.closed}`}>
       <nav className={styles.nav}>
-        {/* LINKS BLOQUEADOS: Só aparecem se NÃO estiver em débito */}
+        {/* Se NÃO estiver em débito, mostra tudo */}
         {!isDebt && (
           <>
-            <NavLink to="/osc/inicio" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
-              <DashboardIcon /> <span className={styles.label}>Painel Principal</span>
-            </NavLink>
-            <NavLink to="/osc/documentos" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
-              <DocsIcon /> <span className={styles.label}>Meus Documentos</span>
-            </NavLink>
-            <NavLink to="/osc/modelos" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
-              <DocsIcon /> <span className={styles.label}>Modelos</span>
-            </NavLink>
-            <NavLink to="/osc/biblioteca" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
-              <BookIcon /> <span className={styles.label}>Biblioteca | E-book</span>
-            </NavLink>
-            <NavLink to="/osc/perfil" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
-              <ProfileIcon /> <span className={styles.label}>Editar Perfil</span>
-            </NavLink>
+            <NavLink to="/osc/inicio" className={styles.navItem}>Painel Principal</NavLink>
+            <NavLink to="/osc/documentos" className={styles.navItem}>Meus Documentos</NavLink>
+            <NavLink to="/osc/modelos" className={styles.navItem}>Modelos</NavLink>
+            <NavLink to="/osc/biblioteca" className={styles.navItem}>Biblioteca</NavLink>
           </>
         )}
 
-        {/* LINKS LIBERADOS: Sempre aparecem para regularização */}
-        <NavLink to="/osc/mensagens" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
-          <ChatIcon /> <span className={styles.label}>Mensagens</span>
-        </NavLink>
-
-        <NavLink to="/osc/financeiro" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
-          <FinanceIcon /> <span className={styles.label}>Financeiro</span>
+        {/* Sempre visível */}
+        <NavLink to="/osc/mensagens" className={styles.navItem}>Mensagens</NavLink>
+        <NavLink to="/osc/perfil" className={styles.navItem}>Editar Perfil</NavLink>
+        <NavLink to="/osc/financeiro" className={styles.navItem} style={{ color: isDebt ? '#f27405' : 'inherit' }}>
+          Financeiro {isDebt && '⚠️'}
         </NavLink>
       </nav>
-
-      <div className={styles.footer}>
-        <button onClick={handleLogout} className={styles.logoutButton}>
-          <LogoutIcon /> <span>Sair</span>
-        </button>
-      </div>
     </aside>
   );
 }

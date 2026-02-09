@@ -26,7 +26,7 @@ export default function OSCProfilePage() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Verificação de débito rigorosa (convertendo para número para garantir)
+  // Verificação de débito rigorosa
   const isDebt = Number(user?.is_in_debt) === 1;
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export default function OSCProfilePage() {
     <div className={styles.pageContainer}>
       <h1 className={styles.pageTitle}>Editar Perfil</h1>
 
-      {/* Banner de Aviso de Bloqueio se estiver em débito */}
+      {/* Banner de Aviso de Bloqueio */}
       {isDebt && (
         <div className={styles.debtAlert} style={{ 
           backgroundColor: '#fee2e2', 
