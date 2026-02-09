@@ -38,7 +38,7 @@ import FinanceiroDashboard from '../pages/financeiro/FinanceiroDashboard.jsx';
 import FinanceiroSidebar from '../pages/financeiro/components/FinanceiroSidebar.jsx';
 import FinanceiroHeader from '../pages/financeiro/components/FinanceiroHeader.jsx';
 import StripeConfig from '../pages/financeiro/StripeConfig.jsx';
-
+import HistoricoFinanceiro from '../pages/financeiro/HistoricoFinanceiro.jsx'; // NOVA IMPORTAÇÃO
 
 // --- CONTADOR ---
 import ContadorDashboard from '../pages/contador/ContadorDashboard.jsx';
@@ -178,6 +178,7 @@ export default function AppRoutes() {
             <Route element={<FinanceiroLayoutWrapper />}>
               <Route path="/financeiro/dashboard" element={<FinanceiroDashboard />} />
               <Route path="/financeiro/gestao" element={<FinanceiroPage />} />
+              <Route path="/financeiro/historico" element={<HistoricoFinanceiro />} /> {/* NOVA ROTA REGISTRADA */}
               <Route path="/financeiro/configuracao" element={<StripeConfig />} />
             </Route>
           </Route>
