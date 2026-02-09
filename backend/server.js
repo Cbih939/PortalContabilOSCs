@@ -24,7 +24,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Configuração de Caminhos Absolutos
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -34,27 +33,23 @@ app.use(cors({
   credentials: true
 }));
 
-/**
- * 2. ROTA DE WEBHOOK (ANTES DE TUDO)
- * Necessário express.raw para validar assinatura do Stripe
- */
+// 2. WEBHOOK (DEVE VIR ANTES DO JSON PARSER)
 app.use('/api/webhooks', webhookRoutes);
 
-/**
- * 3. SERVIDOR DE ARQUIVOS ESTÁTICOS (UPLOADS)
- * Se o seu server.js está na raiz e a pasta uploads também, 
- * o path.resolve garante que o Node encontre o caminho físico real na VPS.
- */
-app.use('/uploads', express.static(path.resolve(__dirname, 'uploads')));
-
-// 4. MIDDLEWARES DE PARSER
+// 3. MIDDLEWARES PADRÃO
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+/**
+ * 4. CONFIGURAÇÃO DA PASTA DE UPLOADS (A CORREÇÃO)
+ * O path.resolve garante que o Express encontre a pasta física na raiz do projeto.
+ */
+app.use('/uploads', express.static(path.resolve(__dirname, 'uploads')));
 
 // Testar conexão com o Banco
 testConnection();
 
-// 5. DEFINIÇÃO DAS ROTAS DA API
+// 5. DEFINIÇÃO DAS ROTAS
 app.use('/api/auth', authRoutes);
 app.use('/api/contador', contadorRoutes);
 app.use('/api/users', userRoutes);
@@ -67,21 +62,18 @@ app.use('/api/public-files', publicFileRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Rota de Teste de integridade
 app.get('/', (req, res) => {
     res.send('API Portal Contábil a funcionar 🚀');
 });
 
-// 6. TRATAMENTO DE ERROS GLOBAL
+// Tratamento de erros
 app.use((err, req, res, next) => {
-    console.error('[Global Error]:', err.stack);
-    res.status(500).json({ 
-        message: 'Algo deu errado no servidor!',
-        error: process.env.NODE_ENV === 'development' ? err.message : {}
-    });
+    console.error(err.stack);
+    res.status(500).json({ message: 'Erro interno no servidor' });
 });
 
 app.listen(PORT, () => {
     console.log(`[Server] Backend a rodar na porta ${PORT}`);
-    console.log(`[Path] Servindo uploads de: ${path.resolve(__dirname, 'uploads')}`);
+    // Log para conferir se o caminho está correto na VPS
+    console.log(`[Static] Servindo ficheiros de: ${path.resolve(__dirname, 'uploads')}`);
 });
