@@ -13,15 +13,23 @@ import { ROLES } from '../utils/constants.js'; // Para comparar roles
  */
 export const getMyAlerts = async (req, res) => {
   try {
-    const oscId = req.user.id;
-    if (req.user.role !== ROLES.OSC) {
-      return res.status(403).json({ message: 'Acesso negado.' });
+    const userId = req.user.id;
+    const userRole = req.user.role ? req.user.role.toUpperCase() : '';
+
+    // Se for Contador, ele vê os alertas que ele criou. 
+    // Se for OSC, ela vê os alertas destinados a ela.
+    let alerts;
+    if (userRole === 'CONTADOR') {
+      alerts = await AlertModel.findNoticesBySenderId(userId);
+    } else {
+      // Para OSC, buscamos pelo ID da OSC dela
+      alerts = await AlertModel.findAlertsByOSCId(userId);
     }
-    const alerts = await AlertModel.findAlertsByOSCId(oscId);
-    res.status(200).json(alerts);
+
+    res.status(200).json(alerts || []);
   } catch (error) {
-    console.error('[GetMyAlerts] Erro no controlador:', error);
-    res.status(500).json({ message: 'Erro interno do servidor ao buscar alertas.' });
+    console.error('[GetMyAlerts] Erro:', error);
+    res.status(500).json({ message: 'Erro ao buscar alertas.' });
   }
 };
 
