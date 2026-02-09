@@ -41,18 +41,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 /**
- * 4. CONFIGURAÇÃO DA PASTA DE UPLOADS (A CORREÇÃO)
- * O path.resolve garante que o Express encontre a pasta física na raiz do projeto.
+ * 4. CONFIGURAÇÃO DA PASTA DE UPLOADS (CAMINHO ABSOLUTO VPS)
+ * Esta configuração permite que o navegador acesse os ficheiros diretamente via URL
  */
 const uploadsPath = '/var/www/PortalContabilOSCs/backend/uploads';
 
 app.use('/uploads', express.static(uploadsPath, {
     setHeaders: (res) => {
-        res.set('Access-Control-Allow-Origin', '*'); // Resolve problemas de visualização de PDF
+        res.set('Access-Control-Allow-Origin', '*');
+        // 'inline' permite visualizar no navegador em vez de forçar download imediato
+        res.set('Content-Disposition', 'inline');
     }
 }));
-
-console.log(`[Static] Servindo arquivos de: ${uploadsPath}`);
 
 // Testar conexão com o Banco
 testConnection();
@@ -76,12 +76,11 @@ app.get('/', (req, res) => {
 
 // Tratamento de erros
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    console.error('[Server Error]:', err.stack);
     res.status(500).json({ message: 'Erro interno no servidor' });
 });
 
 app.listen(PORT, () => {
     console.log(`[Server] Backend a rodar na porta ${PORT}`);
-    // Log para conferir se o caminho está correto na VPS
-    console.log(`[Static] Servindo ficheiros de: ${path.resolve(__dirname, 'uploads')}`);
+    console.log(`[Static] Servindo ficheiros de: ${uploadsPath}`);
 });
