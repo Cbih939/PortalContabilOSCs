@@ -15,7 +15,7 @@ export const getDashboardStats = async (req, res) => {
         `, [cid]);
         const oscs = r1[0].total;
 
-        // CONTAR DOCUMENTOS PENDENTES
+        // CONTAR DOCUMENTOS PENDENTES .
         const [r2] = await pool.execute(`
             SELECT COUNT(d.id) as total 
             FROM documents d
