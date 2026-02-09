@@ -9,7 +9,7 @@ const OSCFinanceiro = () => {
     useEffect(() => {
         // Busca recibos pagos pelo usuário logado
         const fetchRecibos = async () => {
-            const res = await axios.get('/api/osc/financeiro/meus-pagamentos');
+            const res = await axios.get('/api/oscs/financeiro/meus-pagamentos');
             setRecibos(res.data);
             setLoading(false);
         };
