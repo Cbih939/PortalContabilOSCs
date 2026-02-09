@@ -1,4 +1,4 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 // Páginas Compartilhadas e Hooks
@@ -80,13 +80,11 @@ function RootRedirect() {
 function AdminLayoutWrapper() {
   const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
   return (
     <AppLayout
       user={user}
       sidebarComponent={<AdminSidebar isOpen={isSidebarOpen} user={user} />}
-      headerComponent={<AdminHeader onToggleSidebar={toggleSidebar} user={user} />}
+      headerComponent={<AdminHeader onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} user={user} />}
     />
   );
 }
@@ -94,7 +92,6 @@ function AdminLayoutWrapper() {
 function FinanceiroLayoutWrapper() {
   const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-
   return (
     <AppLayout
       user={user}
@@ -107,13 +104,11 @@ function FinanceiroLayoutWrapper() {
 function ContadorLayoutWrapper() {
   const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-  
   return (
     <AppLayout
       user={user} 
       sidebarComponent={<ContadorSidebar isOpen={isSidebarOpen} user={user} />}
-      headerComponent={<ContadorHeader onToggleSidebar={toggleSidebar} user={user} />}
+      headerComponent={<ContadorHeader onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} user={user} />}
     />
   );
 }
@@ -121,27 +116,27 @@ function ContadorLayoutWrapper() {
 function OSCLayoutWrapper() {
   const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
   return (
     <AppLayout
       user={user}
-      sidebarComponent={<OSCSidebar isOpen={isSidebarOpen} onClose={toggleSidebar} user={user} />}
-      headerComponent={<OSCHeader onToggleSidebar={toggleSidebar} user={user} />}
+      sidebarComponent={<OSCSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(!isSidebarOpen)} user={user} />}
+      headerComponent={<OSCHeader onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} user={user} />}
     />
   );
 }
 
-// --- DEFINIÇÃO DAS ROTAS ---
+// --- COMPONENTE PRINCIPAL ---
 
-useEffect(() => {
-    if (isAuthenticated) {
-      console.log("--- DEBUG FINANCEIRO ---");
-      console.log("Usuário logado:", user?.name);
-      console.log("is_in_debt (valor bruto):", user?.is_in_debt);
-      console.log("is_in_debt (tipo):", typeof user?.is_in_debt);
-      console.log("Bloqueio ativo?", Number(user?.is_in_debt) === 1 ? "SIM" : "NÃO");
-      console.log("------------------------");
+export default function AppRoutes() {
+  const { user, isAuthenticated } = useAuth();
+
+  // LOG PARA IDENTIFICAR O ERRO DE STATUS NO CONSOLE (F12)
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log(">>>> DEBUG STATUS FINANCEIRO <<<<");
+      console.log("Usuário:", user.name);
+      console.log("is_in_debt (banco):", user.is_in_debt);
+      console.log("Bloqueio Ativo?", Number(user.is_in_debt) === 1 ? "SIM" : "NÃO");
     }
   }, [user, isAuthenticated]);
 
@@ -157,18 +152,16 @@ useEffect(() => {
           {/* Rotas Públicas */}
           <Route element={<GuestLayout />}>
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
-            <Route path="/termos-de-uso" element={<TermsOfUsePage />} />
             <Route path="/esqueceu-senha" element={<EsqueceuSenhaPage />} />
             <Route path="/redefinir-senha/:token" element={<RedefinirSenhaPage />} />
+            <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
+            <Route path="/termos-de-uso" element={<TermsOfUsePage />} />
           </Route>
 
-          {/* Rotas do ADMIN */}
+          {/* ADMIN */}
           <Route element={<ProtectedRoute allowedRoles={['admin', ROLES.ADMIN]} />}>
             <Route element={<AdminLayoutWrapper />}>
-                <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                <Route path="/admin/avisos" element={<AdminNoticesPage />} />
                 <Route path="/admin/usuarios" element={<ManageUsers />} />
                 <Route path="/admin/oscs" element={<ManageOSCs />} />
                 <Route path="/admin/biblioteca" element={<ManageLibrary />} />
@@ -176,7 +169,7 @@ useEffect(() => {
             </Route>
           </Route>
 
-          {/* Rotas do FINANCEIRO (Acesso Admin também) */}
+          {/* FINANCEIRO */}
           <Route element={<ProtectedRoute allowedRoles={['financeiro', 'admin']} />}>
             <Route element={<FinanceiroLayoutWrapper />}>
               <Route path="/financeiro/dashboard" element={<FinanceiroDashboard />} />
@@ -186,30 +179,36 @@ useEffect(() => {
             </Route>
           </Route>
 
-          {/* Rotas do CONTADOR */}
+          {/* CONTADOR */}
           <Route element={<ProtectedRoute allowedRoles={['contador', ROLES.CONTADOR]} />}>
             <Route element={<ContadorLayoutWrapper />}>
-                <Route path="/contador" element={<Navigate to="/contador/dashboard" replace />} />
                 <Route path="/contador/dashboard" element={<ContadorDashboard />} />
                 <Route path="/contador/oscs" element={<OSCsPage />} />
-                <Route path="/contador/oscs/novo" element={<CreateOSCPage />} />
                 <Route path="/contador/documentos" element={<DocumentsPage />} />
                 <Route path="/contador/avisos" element={<NoticesPage />} />
-                <Route path="/contador/perfil" element={<ContadorProfilePage />} />
-                <Route path="/contador/modelos" element={<ContadorTemplatesPage />} />
                 <Route path="/contador/mensagens" element={<ContadorMessagesPage />} />
             </Route>
           </Route>
 
-          {/* Rotas OSC com BLOQUEIO REAL */}
+          {/* OSC - BLOQUEIO DINÂMICO AQUI */}
           <Route element={<ProtectedRoute allowedRoles={['osc', ROLES.OSC]} />}>
             <Route element={<OSCLayoutWrapper />}>
-              <Route path="/osc/inicio" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCDashboard />} />
-              <Route path="/osc/documentos" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCDocumentsPage />} />
-              <Route path="/osc/modelos" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCTemplatesPage />} />
-              <Route path="/osc/biblioteca" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCLibraryPage />} />
-              
-              {/* Rotas sempre abertas */}
+              <Route 
+                path="/osc/inicio" 
+                element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCDashboard />} 
+              />
+              <Route 
+                path="/osc/documentos" 
+                element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCDocumentsPage />} 
+              />
+              <Route 
+                path="/osc/modelos" 
+                element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCTemplatesPage />} 
+              />
+              <Route 
+                path="/osc/biblioteca" 
+                element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCLibraryPage />} 
+              />
               <Route path="/osc/mensagens" element={<OSCMessagesPage />} />
               <Route path="/osc/perfil" element={<OSCProfilePage />} />
               <Route path="/osc/financeiro" element={<OSCFinanceiro />} />
@@ -221,3 +220,4 @@ useEffect(() => {
       </Suspense>
     </BrowserRouter>
   );
+}
