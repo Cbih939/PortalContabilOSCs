@@ -201,18 +201,25 @@ export default function AppRoutes() {
           </Route>
 
           {/* Rotas da OSC */}
-          <Route element={<ProtectedRoute allowedRoles={['osc', ROLES.OSC]} />}>
-            <Route element={<OSCLayoutWrapper />}> 
-              <Route path="/osc" element={<Navigate to="/osc/inicio" replace />} />
-              <Route path="/osc/inicio" element={<OSCDashboard />} />
-              <Route path="/osc/documentos" element={<OSCDocumentsPage />} />
-              <Route path="/osc/mensagens" element={<OSCMessagesPage />} />
-              <Route path="/osc/perfil" element={<OSCProfilePage />} />
-              <Route path="/osc/modelos" element={<OSCTemplatesPage />} />
-              <Route path="/osc/biblioteca" element={<OSCLibraryPage />} />
-              <Route path="/osc/financeiro" element={<OSCFinanceiro />} />
-            </Route>
-          </Route>
+          <Route element={<ProtectedRoute allowedRoles={['osc']} />}>
+  <Route element={<OSCLayoutWrapper />}>
+    {/* Se estiver devendo, redireciona do início para o financeiro */}
+    <Route 
+      path="/osc/inicio" 
+      element={Number(user?.is_in_debt) === 1 ? <Navigate to="/osc/financeiro" /> : <OSCDashboard />} 
+    />
+    
+    {/* Proteção extra para documentos */}
+    <Route 
+      path="/osc/documentos" 
+      element={Number(user?.is_in_debt) === 1 ? <Navigate to="/osc/financeiro" /> : <OSCDocumentsPage />} 
+    />
+    
+    {/* Rota sempre liberada */}
+    <Route path="/osc/financeiro" element={<OSCFinanceiro />} />
+    <Route path="/osc/mensagens" element={<OSCMessagesPage />} />
+  </Route>
+</Route>
 
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
