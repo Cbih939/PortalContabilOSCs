@@ -38,7 +38,7 @@ import FinanceiroDashboard from '../pages/financeiro/FinanceiroDashboard.jsx';
 import FinanceiroSidebar from '../pages/financeiro/components/FinanceiroSidebar.jsx';
 import FinanceiroHeader from '../pages/financeiro/components/FinanceiroHeader.jsx';
 import StripeConfig from '../pages/financeiro/StripeConfig.jsx';
-import HistoricoFinanceiro from '../pages/financeiro/HistoricoFinanceiro.jsx'; // NOVA IMPORTAÇÃO
+import HistoricoFinanceiro from '../pages/financeiro/HistoricoFinanceiro.jsx';
 
 // --- CONTADOR ---
 import ContadorDashboard from '../pages/contador/ContadorDashboard.jsx';
@@ -63,7 +63,6 @@ import OSCSidebar from '../pages/osc/components/OSCSidebar.jsx';
 import OSCHeader from '../pages/osc/components/OSCHeader.jsx';
 import OSCFinanceiro from '../pages/osc/OSCFinanceiro.jsx';
 
-
 /**
  * Componente "Redirecionador"
  */
@@ -76,7 +75,6 @@ function RootRedirect() {
   }
 
   const role = user?.role?.toLowerCase().trim();
-  console.log("RootRedirect: Redirecionando usuário ->", role);
 
   if (role === 'admin') return <Navigate to="/admin/dashboard" replace />;
   if (role === 'contador') return <Navigate to="/contador/dashboard" replace />;
@@ -146,6 +144,8 @@ function OSCLayoutWrapper() {
 // --- DEFINIÇÃO DAS ROTAS ---
 
 export default function AppRoutes() {
+  const { user } = useAuth(); // CORREÇÃO: User agora definido no escopo das rotas
+
   return (
     <BrowserRouter>
       <Suspense fallback={<div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>Carregando...</div>}>
@@ -175,12 +175,12 @@ export default function AppRoutes() {
             </Route>
           </Route>
 
-          {/* Rotas do FINANCEIRO (Acesso também para Admin) */}
+          {/* Rotas do FINANCEIRO */}
           <Route element={<ProtectedRoute allowedRoles={['financeiro', 'admin']} />}>
             <Route element={<FinanceiroLayoutWrapper />}>
               <Route path="/financeiro/dashboard" element={<FinanceiroDashboard />} />
               <Route path="/financeiro/gestao" element={<FinanceiroPage />} />
-              <Route path="/financeiro/historico" element={<HistoricoFinanceiro />} /> {/* NOVA ROTA REGISTRADA */}
+              <Route path="/financeiro/historico" element={<HistoricoFinanceiro />} />
               <Route path="/financeiro/configuracao" element={<StripeConfig />} />
             </Route>
           </Route>
@@ -200,26 +200,30 @@ export default function AppRoutes() {
             </Route>
           </Route>
 
-          {/* Rotas da OSC */}
-          <Route element={<ProtectedRoute allowedRoles={['osc']} />}>
-  <Route element={<OSCLayoutWrapper />}>
-    {/* Se estiver devendo, redireciona do início para o financeiro */}
-    <Route 
-      path="/osc/inicio" 
-      element={Number(user?.is_in_debt) === 1 ? <Navigate to="/osc/financeiro" /> : <OSCDashboard />} 
-    />
-    
-    {/* Proteção extra para documentos */}
-    <Route 
-      path="/osc/documentos" 
-      element={Number(user?.is_in_debt) === 1 ? <Navigate to="/osc/financeiro" /> : <OSCDocumentsPage />} 
-    />
-    
-    {/* Rota sempre liberada */}
-    <Route path="/osc/financeiro" element={<OSCFinanceiro />} />
-    <Route path="/osc/mensagens" element={<OSCMessagesPage />} />
-  </Route>
-</Route>
+          {/* Rotas da OSC com Bloqueio de Inadimplência */}
+          <Route element={<ProtectedRoute allowedRoles={['osc', ROLES.OSC]} />}>
+            <Route element={<OSCLayoutWrapper />}>
+              <Route 
+                path="/osc/inicio" 
+                element={Number(user?.is_in_debt) === 1 ? <Navigate to="/osc/financeiro" replace /> : <OSCDashboard />} 
+              />
+              <Route 
+                path="/osc/documentos" 
+                element={Number(user?.is_in_debt) === 1 ? <Navigate to="/osc/financeiro" replace /> : <OSCDocumentsPage />} 
+              />
+              <Route 
+                path="/osc/modelos" 
+                element={Number(user?.is_in_debt) === 1 ? <Navigate to="/osc/financeiro" replace /> : <OSCTemplatesPage />} 
+              />
+              <Route 
+                path="/osc/biblioteca" 
+                element={Number(user?.is_in_debt) === 1 ? <Navigate to="/osc/financeiro" replace /> : <OSCLibraryPage />} 
+              />
+              <Route path="/osc/mensagens" element={<OSCMessagesPage />} />
+              <Route path="/osc/perfil" element={<OSCProfilePage />} />
+              <Route path="/osc/financeiro" element={<OSCFinanceiro />} />
+            </Route>
+          </Route>
 
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
