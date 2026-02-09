@@ -26,34 +26,47 @@ const PORT = process.env.PORT || 5000;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-app.use('/uploads/public', express.static('/var/www/PortalContabilOSCs/backend/uploads/public'));
 
-// 1. CONFIGURAÇÃO DE CORS
+// --- CONFIGURAÇÃO DE SEGURANÇA E CORS ---
 app.use(cors({
   origin: ['https://contacomigo.org.br', 'http://localhost:5173'],
   credentials: true
 }));
 
-// 2. WEBHOOK (ANTES DE TUDO)
+// --- SERVIDOR DE FICHEIROS ESTÁTICOS (CONFIGURAÇÃO PRIORITÁRIA) ---
+/**
+ * Adicionamos cabeçalhos CORS e Inline para garantir que Imagens e PDFs 
+ * abram diretamente no navegador sem erros de 403 ou 404.
+ */
+const staticOptions = {
+  setHeaders: (res, filePath) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    if (filePath.endsWith('.pdf')) {
+      res.set('Content-Type', 'application/pdf');
+    }
+    res.set('Content-Disposition', 'inline');
+  }
+};
+
+// 1. Servir a subpasta public (onde estão as imagens que davam 404)
+const publicUploadsPath = path.join(__dirname, 'uploads', 'public');
+app.use('/uploads/public', express.static(publicUploadsPath, staticOptions));
+
+// 2. Servir a pasta de uploads geral
+const uploadsPath = path.join(__dirname, 'uploads');
+app.use('/uploads', express.static(uploadsPath, staticOptions));
+
+// --- ROTA DE WEBHOOK (ANTES DO BODY PARSER) ---
 app.use('/api/webhooks', webhookRoutes);
 
-// 3. MIDDLEWARES PADRÃO
+// --- MIDDLEWARES DE PARSER ---
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 4. SERVIDOR DE FICHEIROS ESTÁTICOS (UPLOADS)
-const uploadsPath = path.resolve(__dirname, 'uploads');
-app.use('/uploads', express.static(uploadsPath, {
-    setHeaders: (res) => {
-        res.set('Access-Control-Allow-Origin', '*');
-        res.set('Content-Disposition', 'inline');
-    }
-}));
-
-// Testar conexão
+// Testar conexão com o Banco
 testConnection();
 
-// 5. DEFINIÇÃO DAS ROTAS DA API
+// --- DEFINIÇÃO DAS ROTAS DA API ---
 app.use('/api/auth', authRoutes);
 app.use('/api/contador', contadorRoutes);
 app.use('/api/users', userRoutes);
@@ -66,15 +79,21 @@ app.use('/api/public-files', publicFileRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/admin', adminRoutes);
 
+// Rota de Teste
 app.get('/', (req, res) => res.send('API Portal Contábil Ativa 🚀'));
 
-// Tratamento de erros global para evitar crash
+// --- TRATAMENTO DE ERROS GLOBAL ---
 app.use((err, req, res, next) => {
-    console.error('[Global Error]:', err.message);
-    res.status(500).json({ message: 'Erro interno no servidor' });
+  console.error('[Global Error]:', err.stack);
+  res.status(500).json({ 
+    message: 'Algo deu errado no servidor!',
+    error: process.env.NODE_ENV === 'development' ? err.message : {}
+  });
 });
 
+// --- INICIALIZAÇÃO ---
 app.listen(PORT, () => {
-    console.log(`[Server] Rodando na porta ${PORT}`);
-    console.log(`[Path] Uploads em: ${uploadsPath}`);
+  console.log(`[Server] Rodando na porta ${PORT}`);
+  console.log(`[Path] Servindo Uploads Gerais de: ${uploadsPath}`);
+  console.log(`[Path] Servindo Imagens Públicas de: ${publicUploadsPath}`);
 });
