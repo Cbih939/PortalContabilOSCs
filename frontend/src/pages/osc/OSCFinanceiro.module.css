@@ -100,3 +100,65 @@
     font-size: 0.75rem;
     font-weight: 600;
 }
+
+.subscriptionCard {
+    background: white;
+    border-radius: 20px;
+    border: 1px solid #f27405; /* Cor laranja da logo */
+    overflow: hidden;
+    max-width: 450px;
+    margin: 20px 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.cardHeader {
+    background-color: #f27405;
+    color: white;
+    padding: 30px;
+}
+
+.priceContainer {
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    margin: 10px 0;
+}
+
+.currency { font-size: 1.5rem; font-weight: bold; margin-right: 5px; }
+.price { font-size: 3rem; font-weight: 900; }
+
+.featuresList {
+    list-style: none;
+    padding: 20px 40px;
+    text-align: left;
+}
+
+.featuresList li {
+    padding: 10px 0;
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    color: #444;
+}
+
+.featuresList li span {
+    color: #f27405;
+    margin-right: 15px;
+    font-weight: bold;
+}
+
+.payButton {
+    background-color: #f27405;
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin: 20px 0;
+    transition: 0.3s;
+}
+
+.payButton:hover { background-color: #d66304; transform: scale(1.05); }
