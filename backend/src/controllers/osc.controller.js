@@ -8,7 +8,7 @@ export const getMyPayments = async (req, res) => {
   try {
     const oscId = req.user.osc_id;
 
-    const [rows] = await db.query(
+    const [rows] = await pool.query(
       `
       SELECT 
         id,
@@ -31,6 +31,7 @@ export const getMyPayments = async (req, res) => {
     });
   }
 };
+
 
 
 /**
