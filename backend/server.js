@@ -21,6 +21,8 @@ import webhookRoutes from './routes/webhook.routes.js';
 
 dotenv.config();
 
+app.use('/api/webhooks', webhookRoutes);
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
