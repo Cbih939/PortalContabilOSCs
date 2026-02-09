@@ -5,7 +5,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import pool, { testConnection } from './src/config/db.js';
 
-
 // --- IMPORTAÇÃO DAS ROTAS ---
 import adminRoutes from './src/routes/admin.routes.js';
 import authRoutes from './src/routes/auth.routes.js';
@@ -19,6 +18,7 @@ import messageRoutes from './src/routes/message.routes.js';
 import publicFileRoutes from './src/routes/publicFile.routes.js';
 import alertRoutes from './src/routes/alert.routes.js';
 import webhookRoutes from './src/routes/webhook.routes.js'; 
+
 
 dotenv.config();
 
