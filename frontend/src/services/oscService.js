@@ -67,5 +67,5 @@ export const deleteOSC = async (oscId) => {
 };
 
 export const getMeusPagamentos = () => {
-  return api.get('/api/oscs/financeiro/meus-pagamentos');
+  return api.get('/oscs/financeiro/meus-pagamentos');
 };
