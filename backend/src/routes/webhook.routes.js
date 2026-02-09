@@ -28,7 +28,7 @@ router.post('/create-checkout-session', protect, async (req, res) => {
                             name: 'Mensalidade Portal Contábil',
                             description: 'Acesso completo ao sistema',
                         },
-                        unit_amount: 5000, // Valor em centavos (R$ 50,00)
+                        unit_amount: 33900, // Valor em centavos (R$ 50,00)
                     },
                     quantity: 1,
                 },
