@@ -17,6 +17,7 @@ import noticeRoutes from './src/routes/notice.routes.js';
 import messageRoutes from './src/routes/message.routes.js';
 import publicFileRoutes from './src/routes/publicFile.routes.js';
 import alertRoutes from './src/routes/alert.routes.js';
+import webhookRoutes from './routes/webhook.routes.js';
 
 dotenv.config();
 
@@ -28,6 +29,8 @@ app.use(cors({
   credentials: true
 }));
 
+app.use('/api/webhooks', webhookRoutes);
+
 app.use(express.json());
 
 const __filename = fileURLToPath(import.meta.url);
@@ -35,6 +38,7 @@ const __dirname = path.dirname(__filename);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 testConnection();
+
 
 // Definição das Rotas
 app.use('/api/auth', authRoutes);
@@ -48,6 +52,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/public-files', publicFileRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/admin', adminRoutes);
+
 
 app.get('/', (req, res) => {
     res.send('API Portal Contábil a funcionar 🚀');
