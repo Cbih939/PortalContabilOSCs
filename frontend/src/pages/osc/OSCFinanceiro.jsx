@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import styles from './OSCFinanceiro.module.css';
+import { getMeusPagamentos } from '@/services/oscService';
+
 
 const OSCFinanceiro = () => {
     const [recibos, setRecibos] = useState([]);
