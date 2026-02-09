@@ -59,3 +59,16 @@
   border-radius: 16px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
+
+@media print {
+    .no-print { display: none; }
+    .print-only { display: block !important; }
+    .receipt-container {
+        border: 2px solid #000;
+        padding: 20px;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+}
+.print-only { display: none; }

@@ -9,6 +9,7 @@ import {
     getStripeConfig, 
     updateStripeConfig 
 } from '../controllers/financeiro.controller.js';
+import { getHistoricoPagamentos } from '../controllers/historico.controller.js';
 
 const router = express.Router();
 
@@ -18,5 +19,6 @@ router.get('/financeiro/oscs', protect, checkRole(['admin', 'financeiro']), list
 router.patch('/financeiro/oscs/:id/status', protect, checkRole(['admin', 'financeiro']), updateDebtStatus);
 router.get('/financeiro/config', protect, checkRole(['admin', 'financeiro']), getStripeConfig);
 router.post('/financeiro/config', protect, checkRole(['admin', 'financeiro']), updateStripeConfig);
+router.get('/financeiro/historico', protect, checkRole(['admin', 'financeiro']), getHistoricoPagamentos);
 
 export default router;
