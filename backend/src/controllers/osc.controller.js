@@ -1,12 +1,44 @@
 import pool from '../config/db.js';
 
+// --- BUSCAR PAGAMENTOS DA OSC (NOVA FUNÇÃO) ---
+export const getMyPayments = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Primeiro buscamos o ID da OSC vinculada a este usuário
+    const [oscRows] = await pool.execute('SELECT id FROM oscs WHERE user_id = ?', [userId]);
+    
+    if (oscRows.length === 0) {
+      return res.status(404).json({ message: 'OSC não encontrada para este usuário.' });
+    }
+
+    const oscId = oscRows[0].id;
+
+    // Buscamos os pagamentos na tabela de assinaturas/transações (ajuste o nome da tabela se for diferente)
+    // Assumindo que você tem uma tabela 'subscriptions' ou 'payments'
+    const [payments] = await pool.execute(
+      `SELECT id, amount, status, stripe_status, created_at, period_start, period_end 
+       FROM subscriptions 
+       WHERE osc_id = ? 
+       ORDER BY created_at DESC`,
+      [oscId]
+    );
+
+    res.json(payments);
+  } catch (error) {
+    console.error('[OSC Controller] Erro em getMyPayments:', error);
+    res.status(500).json({ message: 'Erro ao carregar histórico de pagamentos.' });
+  }
+};
+
+// --- ASSOCIAR CONTADOR ---
 export const assignContador = async (req, res) => {
     try {
         const { id } = req.params;
         const { contadorId } = req.body;
         await pool.execute(
             'UPDATE oscs SET assigned_contador_id = ? WHERE id = ?',
-            [contadorId === "null" ? null : contadorId, id]
+            [contadorId === "null" || !contadorId ? null : contadorId, id]
         );
         const [updated] = await pool.execute('SELECT id, razao_social as name FROM oscs WHERE id = ?', [id]);
         return res.json({ message: 'Sucesso', osc: updated[0] });
@@ -15,12 +47,12 @@ export const assignContador = async (req, res) => {
     }
 };
 
+// --- BUSCAR MINHAS OSCS (USADO PELO CONTADOR E PELA OSC) ---
 export const getMyOSCs = async (req, res) => {
   try {
     const userId = req.user.id;
     const userRole = req.user.role;
 
-    // Query usando os nomes EXATOS das colunas do seu banco
     let query = `
       SELECT id, cnpj, razao_social, responsible, email, phone, address, user_id, assigned_contador_id
       FROM oscs
@@ -37,20 +69,17 @@ export const getMyOSCs = async (req, res) => {
 
     const [oscs] = await pool.execute(query, params);
 
-    // Mapeamento para garantir que o Frontend receba os dados esperados
     const oscsWithDocs = await Promise.all(oscs.map(async (osc) => {
       try {
         const [docs] = await pool.execute(
-          `SELECT id, original_name, doc_type, status, ref_month, ref_year 
+          `SELECT id, original_name, saved_filename, file_path, doc_type, status, ref_month, ref_year, created_at 
            FROM documents 
            WHERE osc_id = ?`,
           [osc.id]
         );
         return { 
           ...osc, 
-          name: osc.razao_social, // Frontend usa 'name'
-          responsible: osc.responsible,
-          phone: osc.phone,
+          name: osc.razao_social, 
           documents: docs || [] 
         };
       } catch (docError) {
@@ -65,12 +94,10 @@ export const getMyOSCs = async (req, res) => {
   }
 };
 
-// --- ATUALIZAR OSC (GESTÃO DO CONTADOR) ---
+// --- ATUALIZAR OSC ---
 export const updateOSC = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // Captura os dados do body tratando variações de nomes do frontend
     const { 
       razao_social, name, 
       cnpj, 
@@ -83,7 +110,6 @@ export const updateOSC = async (req, res) => {
     const finalResponsible = responsible || responsavel;
     const finalPhone = phone || telefone;
 
-    // Update usando as colunas confirmadas pelo DESCRIBE
     const [result] = await pool.execute(
       `UPDATE oscs 
        SET razao_social = ?, cnpj = ?, responsible = ?, phone = ?, email = ?, address = ?
@@ -98,11 +124,11 @@ export const updateOSC = async (req, res) => {
     res.json({ message: "Dados atualizados com sucesso!" });
   } catch (error) {
     console.error("[OSC Controller] Erro em updateOSC:", error);
-    res.status(500).json({ message: "Erro ao atualizar os dados no banco de dados." });
+    res.status(500).json({ message: "Erro ao atualizar os dados." });
   }
 };
 
-// --- OUTRAS FUNÇÕES AUXILIARES ---
+// --- BUSCAR POR ID ---
 export const getOSCById = async (req, res) => {
   try {
     const [rows] = await pool.execute('SELECT * FROM oscs WHERE id = ?', [req.params.id]);
@@ -113,6 +139,7 @@ export const getOSCById = async (req, res) => {
   }
 };
 
+// --- LISTAR TODAS (ADMIN) ---
 export const getAllOSCs = async (req, res) => {
     try {
         const [rows] = await pool.execute(`
@@ -125,5 +152,3 @@ export const getAllOSCs = async (req, res) => {
         res.status(500).json({ message: 'Erro interno' });
     }
 };
-
-
