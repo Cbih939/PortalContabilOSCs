@@ -76,7 +76,7 @@ export default function ContadorDocumentsPage() {
       ) : (
         <div className={styles.pdfGrid}>
           {documents.map((doc) => {
-            const fileUrl = `${import.meta.env.VITE_API_URL}/${doc.file_path}`;
+            const fileUrl = `${import.meta.env.VITE_API_URL}/uploads/${doc.file_path}`;
             const fileName = doc.file_path || doc.original_name || "";
 
             return (

@@ -47,7 +47,6 @@ export const getDocuments = async (req, res) => {
   }
 };
 
-// --- BUSCAR DOCUMENTOS RECEBIDOS ---
 export const getReceivedDocuments = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -60,29 +59,34 @@ export const getReceivedDocuments = async (req, res) => {
       ORDER BY d.created_at DESC
     `;
     const [rows] = await pool.execute(query, [userId]);
+    
     const formatted = rows.map(doc => ({
       id: doc.id,
       title: doc.original_name,
       original_name: doc.original_name,
       sender_name: doc.razao_social || doc.sender_name,
       created_at: doc.created_at,
-      file_path: `uploads/${doc.saved_filename}`
+      // IMPORTANTE: Retornamos apenas o saved_filename para evitar duplicidade de "uploads/uploads/"
+      file_path: doc.saved_filename 
     }));
+    
     res.json(formatted);
   } catch (error) {
     console.error('[Docs Received] Erro:', error);
     res.status(500).json({ message: 'Erro ao buscar documentos recebidos.' });
   }
-};
+}
 
-// --- UPLOAD DE DOCUMENTO (Com Competência ref_month / ref_year) ---
+/**
+ * --- UPLOAD DE DOCUMENTO ---
+ * CORREÇÃO: Salva caminhos consistentes
+ */
 export const uploadDocument = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'Arquivo não enviado.' });
 
     const userId = req.user.id;
     const userRole = req.user.role;
-    // Captura mês e ano de referência enviados pelo seletor do frontend
     const { doc_type, osc_id: bodyOscId, ref_month, ref_year } = req.body; 
 
     let finalOscId;
@@ -99,28 +103,13 @@ export const uploadDocument = async (req, res) => {
       targetContadorId = oscRows[0].assigned_contador_id;
     }
 
-    // Fallback caso não venha competência: usa data atual
     const monthRef = ref_month || (new Date().getMonth() + 1);
     const yearRef = ref_year || new Date().getFullYear();
 
-    // REGRA: Limite de 20 documentos baseada na COMPETÊNCIA escolhida
-    if (userRole === 'OSC' && doc_type === 'MENSAL') {
-      const [countRows] = await pool.execute(
-        `SELECT COUNT(*) as total FROM documents 
-         WHERE osc_id = ? AND doc_type = 'MENSAL' 
-         AND ref_month = ? AND ref_year = ?`,
-        [finalOscId, monthRef, yearRef]
-      );
-
-      if (countRows[0].total >= 20) {
-        return res.status(400).json({ message: 'Limite de 20 documentos atingido para este período.' });
-      }
-    }
-
     const [result] = await pool.execute(
       `INSERT INTO documents 
-       (osc_id, uploaded_by_user_id, doc_type, ref_month, ref_year, original_name, saved_filename, file_path, file_size_bytes, mime_type, to_contador_id, status) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ENVIADO')`,
+        (osc_id, uploaded_by_user_id, doc_type, ref_month, ref_year, original_name, saved_filename, file_path, file_size_bytes, mime_type, to_contador_id, status) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ENVIADO')`,
       [
         finalOscId, 
         userId, 
@@ -129,7 +118,7 @@ export const uploadDocument = async (req, res) => {
         yearRef,
         req.file.originalname, 
         req.file.filename, 
-        req.file.path || `uploads/${req.file.filename}`, 
+        req.file.filename, // Guardamos apenas o nome do arquivo aqui para simplificar
         req.file.size, 
         req.file.mimetype, 
         targetContadorId
@@ -169,7 +158,10 @@ export const markMonthAsConcluded = async (req, res) => {
   }
 };
 
-// --- DOWNLOAD ---
+/**
+ * --- DOWNLOAD ---
+ * CORREÇÃO: Usa caminho absoluto baseado na raiz do projeto
+ */
 export const downloadDocument = async (req, res) => {
   try {
     const { id } = req.params;
@@ -178,11 +170,14 @@ export const downloadDocument = async (req, res) => {
     if (rows.length === 0) return res.status(404).json({ message: 'Documento não encontrado.' });
 
     const { saved_filename, original_name } = rows[0];
-    const filePath = path.join(__dirname, '../../../uploads', saved_filename);
+    
+    // CORREÇÃO DE CAMINHO: path.resolve garante que ele ache a pasta uploads na raiz do backend
+    const filePath = path.resolve(__dirname, '../../uploads', saved_filename);
 
     if (fs.existsSync(filePath)) {
       res.download(filePath, original_name);
     } else {
+      console.error('Arquivo não encontrado no disco:', filePath);
       res.status(404).json({ message: 'Arquivo físico não encontrado no servidor.' });
     }
   } catch (error) {
