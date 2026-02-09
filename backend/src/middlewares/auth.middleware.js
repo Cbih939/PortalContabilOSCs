@@ -60,14 +60,19 @@ export const maintenanceGuard = async (req, res, next) => {
 
 // 2. Bloqueia módulos se estiver em débito (CORRIGIDO)
 export const debtGuard = (req, res, next) => {
-    // Adicionei suporte a 'mensagens' e 'financeiro' para evitar bloqueio desses módulos essenciais
-    const allowedPaths = ['/financeiro', '/mensagens', '/messages'];
-    const isAllowedPath = allowedPaths.some(p => req.path.includes(p));
+    // Lista de caminhos que a OSC PODE acessar mesmo devendo
+    const allowedPaths = [
+        '/api/admin/financeiro', // Rota para buscar dados de pagamento
+        '/api/messages',         // Mensagens para suporte
+        '/api/auth/logout'       // Sair do sistema
+    ];
 
-    if (req.user?.is_in_debt && !isAllowedPath) {
+    const isAllowed = allowedPaths.some(path => req.path.startsWith(path));
+
+    if (req.user?.is_in_debt && !isAllowed && req.user?.role === 'osc') {
         return res.status(402).json({ 
             debt: true, 
-            message: "Acesso bloqueado. Regularize seu financeiro para liberar todos os módulos." 
+            message: "Acesso Suspenso. Por favor, regularize seu pagamento no módulo Financeiro." 
         });
     }
     next();

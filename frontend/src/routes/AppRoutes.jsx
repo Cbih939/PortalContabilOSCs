@@ -61,6 +61,8 @@ import OSCTemplatesPage from '../pages/osc/TemplatesPage.jsx';
 import OSCLibraryPage from '../pages/osc/LibraryPage.jsx';
 import OSCSidebar from '../pages/osc/components/OSCSidebar.jsx';
 import OSCHeader from '../pages/osc/components/OSCHeader.jsx';
+import OSCFinanceiro from '../pages/osc/OSCFinanceiro.jsx';
+
 
 /**
  * Componente "Redirecionador"
@@ -208,6 +210,7 @@ export default function AppRoutes() {
               <Route path="/osc/perfil" element={<OSCProfilePage />} />
               <Route path="/osc/modelos" element={<OSCTemplatesPage />} />
               <Route path="/osc/biblioteca" element={<OSCLibraryPage />} />
+              <Route path="/osc/financeiro" element={<OSCFinanceiro />} />
             </Route>
           </Route>
 
