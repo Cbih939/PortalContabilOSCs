@@ -17,7 +17,8 @@ export default function OSCSidebar({ isOpen, onClose }) {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
-  const isDebt = user?.is_in_debt === 1;
+  // Verificação rigorosa do débito (convertendo para número para evitar erro de string)
+  const isDebt = Number(user?.is_in_debt) === 1;
 
   const handleLogout = () => {
     logout();
@@ -29,16 +30,11 @@ export default function OSCSidebar({ isOpen, onClose }) {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.logoContainer}>
-        <img src="/logo_portal.png" alt="Portal Contábil" className={styles.sidebarLogo} />
-        {onClose && (
-          <button onClick={onClose} className={styles.closeButton}>
-            <CloseIcon />
-          </button>
-        )}
+        <img src="/logo_portal.png" alt="Portal" className={styles.sidebarLogo} />
       </div>
 
       <nav className={styles.nav}>
-        {/* Itens bloqueados se houver débito */}
+        {/* LINKS BLOQUEADOS: Só aparecem se NÃO estiver em débito */}
         {!isDebt && (
           <>
             <NavLink to="/osc/inicio" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
@@ -53,10 +49,13 @@ export default function OSCSidebar({ isOpen, onClose }) {
             <NavLink to="/osc/biblioteca" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
               <BookIcon /> <span className={styles.label}>Biblioteca | E-book</span>
             </NavLink>
+            <NavLink to="/osc/perfil" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
+              <ProfileIcon /> <span className={styles.label}>Editar Perfil</span>
+            </NavLink>
           </>
         )}
 
-        {/* Itens SEMPRE liberados */}
+        {/* LINKS LIBERADOS: Sempre aparecem para regularização */}
         <NavLink to="/osc/mensagens" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
           <ChatIcon /> <span className={styles.label}>Mensagens</span>
         </NavLink>
@@ -64,18 +63,11 @@ export default function OSCSidebar({ isOpen, onClose }) {
         <NavLink to="/osc/financeiro" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
           <FinanceIcon /> <span className={styles.label}>Financeiro</span>
         </NavLink>
-
-        {!isDebt && (
-          <NavLink to="/osc/perfil" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
-            <ProfileIcon /> <span className={styles.label}>Editar Perfil</span>
-          </NavLink>
-        )}
       </nav>
 
       <div className={styles.footer}>
         <button onClick={handleLogout} className={styles.logoutButton}>
-          <LogoutIcon />
-          <span>Sair</span>
+          <LogoutIcon /> <span>Sair</span>
         </button>
       </div>
     </aside>

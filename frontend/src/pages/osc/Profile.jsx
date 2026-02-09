@@ -26,6 +26,9 @@ export default function OSCProfilePage() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
 
+  // Verificação de débito rigorosa (convertendo para número para garantir)
+  const isDebt = Number(user?.is_in_debt) === 1;
+
   useEffect(() => {
     if (user?.id) loadData();
   }, [user]);
@@ -65,6 +68,21 @@ export default function OSCProfilePage() {
     <div className={styles.pageContainer}>
       <h1 className={styles.pageTitle}>Editar Perfil</h1>
 
+      {/* Banner de Aviso de Bloqueio se estiver em débito */}
+      {isDebt && (
+        <div className={styles.debtAlert} style={{ 
+          backgroundColor: '#fee2e2', 
+          border: '1px solid #ef4444', 
+          padding: '15px', 
+          borderRadius: '8px', 
+          marginBottom: '20px', 
+          color: '#b91c1c',
+          fontWeight: '500'
+        }}>
+          <strong>⚠️ ACESSO RESTRITO:</strong> Identificamos uma pendência financeira. Seus módulos de documentos, biblioteca e modelos estão suspensos até a regularização no menu <strong>Financeiro</strong>.
+        </div>
+      )}
+
       <div className={styles.formCard}>
         <div className={styles.cardHeader}>
           {!isEditing ? (
@@ -78,8 +96,8 @@ export default function OSCProfilePage() {
         <div className={styles.statusBanner} style={{ display: 'flex', gap: '20px', marginBottom: '30px', padding: '15px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
             <div style={{ flex: 1 }}>
                 <label style={{ fontSize: '12px', color: '#64748b', fontWeight: '600' }}>SITUAÇÃO DA OSC</label>
-                <div style={{ fontSize: '16px', fontWeight: 'bold', color: user?.is_in_debt ? '#ef4444' : '#22c55e' }}>
-                    {user?.is_in_debt ? '🔴 PENDENTE (Em débito)' : '🟢 REGULAR'}
+                <div style={{ fontSize: '16px', fontWeight: 'bold', color: isDebt ? '#ef4444' : '#22c55e' }}>
+                    {isDebt ? '🔴 PENDENTE (Inadimplente)' : '🟢 REGULAR'}
                 </div>
             </div>
             <div style={{ flex: 1 }}>
@@ -90,6 +108,7 @@ export default function OSCProfilePage() {
             </div>
         </div>
 
+        {/* 1. INFORMAÇÕES DA OSC */}
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>1. Informações da OSC</h3>
           <div className={styles.gridRow}>
@@ -100,6 +119,7 @@ export default function OSCProfilePage() {
           </div>
         </div>
 
+        {/* 2. CONTATO E ENDEREÇO */}
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>2. Contato e Endereço</h3>
           <div className={styles.gridRow}>
@@ -117,6 +137,7 @@ export default function OSCProfilePage() {
           </div>
         </div>
 
+        {/* 3. RESPONSÁVEL LEGAL */}
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>3. Responsável Legal (Presidente)</h3>
           <div className={styles.gridRow}>
@@ -125,6 +146,7 @@ export default function OSCProfilePage() {
           </div>
         </div>
 
+        {/* 4. COORDENADOR DO PROGRAMA */}
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>4. Coordenador do Programa (Usuário)</h3>
           <div className={styles.gridRow}>
