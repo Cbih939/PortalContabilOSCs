@@ -155,28 +155,25 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
    * FUNÇÃO TOTALMENTE FLEXÍVEL PARA ABRIR DOCUMENTOS
    * Esta versão tenta todas as propriedades possíveis (saved_filename, file_path, filename)
    */
-  const openDocument = (doc) => {
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://contacomigo.org.br';
-    
-    // Tenta encontrar o nome do arquivo em qualquer uma dessas propriedades
-    const rawPath = doc.saved_filename || doc.file_path || doc.filename || "";
-    
-    // Se não encontrou nada, avisa o usuário
-    if (!rawPath) {
-        console.error("Dados do documento recebido:", doc);
-        addNotification("Caminho do ficheiro não encontrado nos dados da OSC.", "error");
-        return;
-    }
+  // Substitua apenas a função openDocument dentro do seu componente
+const openDocument = (doc) => {
+  if (!doc) return;
+  
+  const apiUrl = import.meta.env.VITE_API_URL || 'https://contacomigo.org.br';
+  
+  // Mapeia todas as possibilidades para evitar nulo
+  const rawPath = doc.saved_filename || doc.file_path || doc.filename || "";
+  
+  if (!rawPath) {
+      alert("Caminho do arquivo não encontrado.");
+      return;
+  }
 
-    // Limpa o caminho removendo "uploads/" se ele já estiver lá
-    const cleanFileName = rawPath.replace('uploads/', '');
-    
-    // Monta a URL pública (usando a configuração que fizemos no server.js)
-    const fileUrl = `${apiUrl}/uploads/${cleanFileName}`;
-    
-    // Abre em nova aba
-    window.open(fileUrl, '_blank');
-  };
+  const cleanFileName = rawPath.replace('uploads/', '');
+  const fileUrl = `${apiUrl}/uploads/${cleanFileName}`;
+  
+  window.open(fileUrl, '_blank');
+};
 
   const getMonthStatus = (monthIndex) => {
     const monthNum = monthIndex + 1;

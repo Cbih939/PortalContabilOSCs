@@ -33,31 +33,26 @@ app.use(cors({
   credentials: true
 }));
 
-// 2. WEBHOOK (DEVE VIR ANTES DO JSON PARSER)
+// 2. WEBHOOK (ANTES DE TUDO)
 app.use('/api/webhooks', webhookRoutes);
 
 // 3. MIDDLEWARES PADRÃO
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/**
- * 4. CONFIGURAÇÃO DA PASTA DE UPLOADS (CAMINHO ABSOLUTO VPS)
- * Esta configuração permite que o navegador acesse os ficheiros diretamente via URL
- */
-const uploadsPath = '/var/www/PortalContabilOSCs/backend/uploads';
-
+// 4. SERVIDOR DE FICHEIROS ESTÁTICOS (UPLOADS)
+const uploadsPath = path.resolve(__dirname, 'uploads');
 app.use('/uploads', express.static(uploadsPath, {
     setHeaders: (res) => {
         res.set('Access-Control-Allow-Origin', '*');
-        // 'inline' permite visualizar no navegador em vez de forçar download imediato
         res.set('Content-Disposition', 'inline');
     }
 }));
 
-// Testar conexão com o Banco
+// Testar conexão
 testConnection();
 
-// 5. DEFINIÇÃO DAS ROTAS
+// 5. DEFINIÇÃO DAS ROTAS DA API
 app.use('/api/auth', authRoutes);
 app.use('/api/contador', contadorRoutes);
 app.use('/api/users', userRoutes);
@@ -70,17 +65,15 @@ app.use('/api/public-files', publicFileRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/admin', adminRoutes);
 
-app.get('/', (req, res) => {
-    res.send('API Portal Contábil a funcionar 🚀');
-});
+app.get('/', (req, res) => res.send('API Portal Contábil Ativa 🚀'));
 
-// Tratamento de erros
+// Tratamento de erros global para evitar crash
 app.use((err, req, res, next) => {
-    console.error('[Server Error]:', err.stack);
+    console.error('[Global Error]:', err.message);
     res.status(500).json({ message: 'Erro interno no servidor' });
 });
 
 app.listen(PORT, () => {
-    console.log(`[Server] Backend a rodar na porta ${PORT}`);
-    console.log(`[Static] Servindo ficheiros de: ${uploadsPath}`);
+    console.log(`[Server] Rodando na porta ${PORT}`);
+    console.log(`[Path] Uploads em: ${uploadsPath}`);
 });
