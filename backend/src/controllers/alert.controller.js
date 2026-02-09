@@ -146,3 +146,11 @@ export const getSentNoticesHistory = async (req, res) => {
     res.status(500).json({ message: 'Erro interno do servidor ao buscar histórico de avisos.' });
   }
 };
+
+export const updateAlert = async (req, res) => {
+    res.status(501).json({ message: "Funcionalidade em desenvolvimento" });
+};
+
+export const deleteAlert = async (req, res) => {
+    res.status(501).json({ message: "Funcionalidade em desenvolvimento" });
+};
