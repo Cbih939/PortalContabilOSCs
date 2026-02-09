@@ -1,34 +1,81 @@
 import pool from '../config/db.js';
-import SystemSettings from '../models/SystemSettings.js';
 
-// 1. Configurações do Stripe
+// --- 1. CONFIGURAÇÕES DO STRIPE ---
+
+/**
+ * Busca as configurações do Stripe na tabela stripe_configs
+ */
 export const getStripeConfig = async (req, res) => {
     try {
-        const settings = await SystemSettings.getSettings();
+        const [rows] = await pool.query('SELECT * FROM stripe_configs WHERE id = 1');
+        
+        if (rows.length === 0) {
+            // Retorna objeto vazio para não quebrar o formulário no Frontend
+            return res.json({
+                stripePublishableKey: '',
+                stripeSecretKey: '',
+                stripeWebhookSecret: '',
+                monthlyPriceId: '',
+                packageValue: ''
+            });
+        }
+
+        const settings = rows[0];
         const config = {
-            stripePublishableKey: settings?.stripe_publishable_key,
-            stripeSecretKey: settings?.stripe_secret_key,
-            stripeWebhookSecret: settings?.stripe_webhook_secret,
-            monthlyPriceId: settings?.monthly_price_id,
-            packageValue: settings?.package_value
+            stripePublishableKey: settings.stripePublishableKey,
+            stripeSecretKey: settings.stripeSecretKey,
+            stripeWebhookSecret: settings.stripeWebhookSecret,
+            monthlyPriceId: settings.monthlyPriceId,
+            packageValue: settings.packageValue
         };
         res.json(config);
     } catch (error) {
+        console.error("Erro ao buscar configurações Stripe:", error);
         res.status(500).json({ message: "Erro ao buscar configurações" });
     }
 };
 
+/**
+ * Atualiza ou Insere as configurações do Stripe (Upsert)
+ */
 export const updateStripeConfig = async (req, res) => {
     try {
-        await SystemSettings.updateSettings(req.body);
+        const { 
+            stripePublishableKey, 
+            stripeSecretKey, 
+            stripeWebhookSecret, 
+            monthlyPriceId, 
+            packageValue 
+        } = req.body;
+
+        const query = `
+            INSERT INTO stripe_configs (id, stripePublishableKey, stripeSecretKey, stripeWebhookSecret, monthlyPriceId, packageValue)
+            VALUES (1, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE 
+                stripePublishableKey = VALUES(stripePublishableKey),
+                stripeSecretKey = VALUES(stripeSecretKey),
+                stripeWebhookSecret = VALUES(stripeWebhookSecret),
+                monthlyPriceId = VALUES(monthlyPriceId),
+                packageValue = VALUES(packageValue)
+        `;
+
+        await pool.execute(query, [
+            stripePublishableKey, 
+            stripeSecretKey, 
+            stripeWebhookSecret, 
+            monthlyPriceId, 
+            packageValue
+        ]);
+
         res.json({ message: "Configurações atualizadas com sucesso!" });
     } catch (error) {
-        console.error(error);
+        console.error("Erro ao salvar configurações Stripe:", error);
         res.status(500).json({ message: "Erro ao salvar configurações" });
     }
 };
 
-// 2. Estatísticas do Dashboard
+// --- 2. ESTATÍSTICAS DO DASHBOARD ---
+
 export const getFinanceiroStats = async (req, res) => {
     try {
         const [counts] = await pool.query(`
@@ -54,7 +101,7 @@ export const getFinanceiroStats = async (req, res) => {
             totalOSCs: counts[0].totalOSCs || 0,
             emDia: counts[0].emDia || 0,
             inadimplentes: counts[0].inadimplentes || 0,
-            pagamentosHistorico: history
+            pagamentosHistorico: history || []
         });
     } catch (error) {
         console.error("Erro SQL Stats:", error);
@@ -62,37 +109,42 @@ export const getFinanceiroStats = async (req, res) => {
     }
 };
 
-// 3. Gestão de OSCs
+// --- 3. GESTÃO DE OSCS (LISTAGEM E STATUS) ---
+
 export const listOSCsFinanceiro = async (req, res) => {
-  try {
-    const { query } = req.query;
-    
-    // Usamos COALESCE para garantir que se o CNPJ for NULL, ele retorne uma string vazia
-    let sql = "SELECT id, name, COALESCE(cnpj, '') as cnpj, is_in_debt, email FROM users WHERE role = 'osc'";
-    let params = [];
+    try {
+        const { query } = req.query;
+        
+        let sql = "SELECT id, name, COALESCE(cnpj, '') as cnpj, is_in_debt, email FROM users WHERE role = 'osc'";
+        let params = [];
 
-    if (query) {
-      sql += " AND (name LIKE ? OR cnpj LIKE ?)";
-      params.push(`%${query}%`, `%${query}%`);
+        if (query) {
+            sql += " AND (name LIKE ? OR cnpj LIKE ?)";
+            params.push(`%${query}%`, `%${query}%`);
+        }
+
+        sql += " ORDER BY name ASC";
+        
+        const [rows] = await pool.query(sql, params); 
+        res.json(rows);
+    } catch (error) {
+        console.error("ERRO NA LISTAGEM DE OSCS:", error);
+        res.status(500).json({ message: "Erro ao listar OSCs" });
     }
-
-    sql += " ORDER BY name ASC";
-    
-    const [rows] = await pool.query(sql, params); 
-    res.json(rows);
-  } catch (error) {
-    console.error("ERRO REAL NA QUERY:", error);
-    res.status(500).json({ message: "Erro ao listar OSCs" });
-  }
 };
 
 export const updateDebtStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { is_in_debt } = req.body;
-    await pool.query("UPDATE users SET is_in_debt = ? WHERE id = ?", [is_in_debt ? 1 : 0, id]);
-    res.json({ message: "Status atualizado com sucesso" });
-  } catch (error) {
-    res.status(500).json({ message: "Erro ao atualizar status" });
-  }
+    try {
+        const { id } = req.params;
+        const { is_in_debt } = req.body;
+        
+        // Converte para 1 ou 0 para garantir compatibilidade com o MySQL TinyInt
+        const status = is_in_debt ? 1 : 0;
+        
+        await pool.query("UPDATE users SET is_in_debt = ? WHERE id = ?", [status, id]);
+        res.json({ message: "Status atualizado com sucesso" });
+    } catch (error) {
+        console.error("Erro ao atualizar débito:", error);
+        res.status(500).json({ message: "Erro ao atualizar status" });
+    }
 };
