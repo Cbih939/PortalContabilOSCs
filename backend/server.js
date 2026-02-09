@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import pool from '../config/db.js';
+import pool, { testConnection } from './src/config/db.js';
 
 
 // --- IMPORTAÇÃO DAS ROTAS ---
