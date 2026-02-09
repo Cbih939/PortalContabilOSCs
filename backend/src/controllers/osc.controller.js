@@ -4,30 +4,22 @@ import pool from '../config/db.js';
 export const getMyPayments = async (req, res) => {
   try {
     const userId = req.user.id;
-    
-    // Primeiro buscamos o ID da OSC vinculada a este usuário
     const [oscRows] = await pool.execute('SELECT id FROM oscs WHERE user_id = ?', [userId]);
     
     if (oscRows.length === 0) {
-      return res.status(404).json({ message: 'OSC não encontrada para este usuário.' });
+      return res.status(404).json({ message: 'OSC não encontrada.' });
     }
 
     const oscId = oscRows[0].id;
-
-    // Buscamos os pagamentos na tabela de assinaturas/transações (ajuste o nome da tabela se for diferente)
-    // Assumindo que você tem uma tabela 'subscriptions' ou 'payments'
     const [payments] = await pool.execute(
-      `SELECT id, amount, status, stripe_status, created_at, period_start, period_end 
-       FROM subscriptions 
-       WHERE osc_id = ? 
-       ORDER BY created_at DESC`,
+      `SELECT * FROM subscriptions WHERE osc_id = ? ORDER BY created_at DESC`,
       [oscId]
     );
 
     res.json(payments);
   } catch (error) {
-    console.error('[OSC Controller] Erro em getMyPayments:', error);
-    res.status(500).json({ message: 'Erro ao carregar histórico de pagamentos.' });
+    console.error('[OSC Controller] Erro:', error);
+    res.status(500).json({ message: 'Erro ao carregar pagamentos.' });
   }
 };
 
