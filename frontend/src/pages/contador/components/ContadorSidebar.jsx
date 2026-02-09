@@ -30,7 +30,6 @@ export default function ContadorSidebar({ isOpen }) {
   { path: '/contador/documentos', label: 'Meus Documentos', icon: DocsIcon },
   { path: '/contador/modelos', label: 'Documentos e Modelos', icon: LibraryIcon }, // Path deve ser igual ao Route
   { path: '/contador/avisos', label: 'Avisos', icon: MegaphoneIcon },
-  { path: '/contador/mensagens', label: 'Mensagens', icon: ChatIcon },
   { path: '/contador/perfil', label: 'Meu Perfil', icon: ProfileIcon },
 ];
 

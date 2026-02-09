@@ -7,7 +7,7 @@ import { DownloadIcon } from '../../components/common/Icons.jsx';
 import { formatDate } from '../../utils/formatDate.js';
 import styles from './Documents.module.css';
 
-// Ícone de Informação (Tooltip) declarado localmente
+// Ícone de Informação (Tooltip)
 const InfoIcon = () => (
   <svg 
     style={{ width: '18px', height: '18px', color: '#EC6D12', cursor: 'help', marginLeft: '10px' }} 
@@ -24,6 +24,11 @@ export default function ContadorDocumentsPage() {
   const { user } = useAuth();
   const [documents, setDocuments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Função para verificar se é imagem
+  const isImage = (fileName) => {
+    return /\.(jpg|jpeg|png|webp|gif)$/i.test(fileName);
+  };
 
   const fetchReceivedDocs = async () => {
     setIsLoading(true);
@@ -59,7 +64,7 @@ export default function ContadorDocumentsPage() {
         <div className={styles.tooltipContainer}>
           <InfoIcon />
           <span className={styles.tooltipText}>
-            Esta central reúne todos os documentos enviados pelas suas OSCs. Ao clicar em um arquivo, você pode visualizá-lo para realizar a conferência e validar o status no painel de controle da organização.
+            Esta central reúne todos os documentos enviados pelas suas OSCs. Ao clicar em um arquivo, você pode descarregá-lo para realizar a conferência.
           </span>
         </div>
       </div>
@@ -70,27 +75,45 @@ export default function ContadorDocumentsPage() {
         <div className={styles.empty}>Nenhum documento recebido até o momento.</div>
       ) : (
         <div className={styles.pdfGrid}>
-          {documents.map((doc) => (
-            <div 
-              key={doc.id} 
-              className={styles.pdfCard} 
-              onClick={() => handleDownload(doc)}
-            >
-              <div className={styles.pdfThumbnail}>
-                <PdfThumbnail fileUrl={`${import.meta.env.VITE_API_URL}/${doc.file_path}`} />
-                <div className={styles.downloadOverlay}>
-                  <DownloadIcon />
+          {documents.map((doc) => {
+            const fileUrl = `${import.meta.env.VITE_API_URL}/${doc.file_path}`;
+            const fileName = doc.file_path || doc.original_name || "";
+
+            return (
+              <div 
+                key={doc.id} 
+                className={styles.pdfCard} 
+                onClick={() => handleDownload(doc)}
+              >
+                <div className={styles.pdfThumbnail}>
+                  {/* LÓGICA DE TRATAMENTO DE IMAGEM VS PDF */}
+                  {isImage(fileName) ? (
+                    <img 
+                      src={fileUrl} 
+                      alt="Preview" 
+                      className={styles.imagePreview}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => { e.target.src = '/placeholder-file.png'; }} // Caso dê 404
+                    />
+                  ) : (
+                    <PdfThumbnail fileUrl={fileUrl} />
+                  )}
+                  
+                  <div className={styles.downloadOverlay}>
+                    <DownloadIcon />
+                  </div>
+                </div>
+                
+                <div className={styles.pdfInfo}>
+                  <span className={styles.pdfName} title={doc.title || doc.original_name}>
+                    {doc.title || doc.original_name}
+                  </span>
+                  <span className={styles.senderBadge}>{doc.sender_name}</span>
+                  <span className={styles.pdfDate}>{formatDate(doc.created_at)}</span>
                 </div>
               </div>
-              <div className={styles.pdfInfo}>
-                <span className={styles.pdfName} title={doc.title || doc.original_name}>
-                  {doc.title || doc.original_name}
-                </span>
-                <span className={styles.senderBadge}>{doc.sender_name}</span>
-                <span className={styles.pdfDate}>{formatDate(doc.created_at)}</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
