@@ -162,27 +162,42 @@ export const markMonthAsConcluded = async (req, res) => {
  * --- DOWNLOAD ---
  * CORREÇÃO: Usa caminho absoluto baseado na raiz do projeto
  */
+// --- DOWNLOAD / VISUALIZAÇÃO ---
 export const downloadDocument = async (req, res) => {
   try {
     const { id } = req.params;
-    const [rows] = await pool.execute('SELECT saved_filename, original_name FROM documents WHERE id = ?', [id]);
     
-    if (rows.length === 0) return res.status(404).json({ message: 'Documento não encontrado.' });
+    // Buscamos os dados do documento
+    const [rows] = await pool.execute(
+      'SELECT saved_filename, original_name, mime_type FROM documents WHERE id = ?', 
+      [id]
+    );
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Documento não encontrado no banco de dados.' });
+    }
 
-    const { saved_filename, original_name } = rows[0];
+    const { saved_filename, original_name, mime_type } = rows[0];
     
-    // CORREÇÃO DE CAMINHO: path.resolve garante que ele ache a pasta uploads na raiz do backend
+    // Caminho absoluto para a pasta uploads na raiz do projeto
     const filePath = path.resolve(__dirname, '../../uploads', saved_filename);
 
     if (fs.existsSync(filePath)) {
-      res.download(filePath, original_name);
+      // Configuramos o Content-Type para o navegador saber o que está abrindo (PDF, JPG, etc)
+      res.setHeader('Content-Type', mime_type || 'application/pdf');
+      
+      // 'inline' abre no navegador, 'attachment' força o download
+      res.setHeader('Content-Disposition', `inline; filename="${original_name}"`);
+
+      // Enviamos o arquivo físico
+      return res.sendFile(filePath);
     } else {
-      console.error('Arquivo não encontrado no disco:', filePath);
-      res.status(404).json({ message: 'Arquivo físico não encontrado no servidor.' });
+      console.error('Arquivo físico não encontrado:', filePath);
+      return res.status(404).json({ message: 'Arquivo físico não encontrado no servidor.' });
     }
   } catch (error) {
     console.error('[Download Error]:', error);
-    res.status(500).json({ message: 'Erro ao processar download.' });
+    res.status(500).json({ message: 'Erro ao processar a solicitação do documento.' });
   }
 };
 
