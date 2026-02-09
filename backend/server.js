@@ -35,8 +35,8 @@ app.use(cors({
 
 // --- SERVIDOR DE FICHEIROS ESTÁTICOS (CONFIGURAÇÃO PRIORITÁRIA) ---
 /**
- * Adicionamos cabeçalhos CORS e Inline para garantir que Imagens e PDFs 
- * abram diretamente no navegador sem erros de 403 ou 404.
+ * Configuramos os caminhos absolutos para evitar erro 404 na VPS.
+ * 'Content-Disposition: inline' permite que o navegador abra PDFs/Imagens em vez de baixar.
  */
 const staticOptions = {
   setHeaders: (res, filePath) => {
@@ -48,15 +48,17 @@ const staticOptions = {
   }
 };
 
-// 1. Servir a subpasta public (onde estão as imagens que davam 404)
-const publicUploadsPath = path.join(__dirname, 'uploads', 'public');
+// Caminhos Absolutos na VPS
+const uploadsPath = path.resolve(__dirname, 'uploads');
+const publicUploadsPath = path.resolve(uploadsPath, 'public');
+
+// 1. Servir a subpasta public primeiro (Prioridade para imagens da biblioteca)
 app.use('/uploads/public', express.static(publicUploadsPath, staticOptions));
 
 // 2. Servir a pasta de uploads geral
-const uploadsPath = path.join(__dirname, 'uploads');
 app.use('/uploads', express.static(uploadsPath, staticOptions));
 
-// --- ROTA DE WEBHOOK (ANTES DO BODY PARSER) ---
+// --- ROTA DE WEBHOOK (DEVE VIR ANTES DO BODY PARSER JSON) ---
 app.use('/api/webhooks', webhookRoutes);
 
 // --- MIDDLEWARES DE PARSER ---
@@ -79,7 +81,7 @@ app.use('/api/public-files', publicFileRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Rota de Teste
+// Rota de Boas-vindas/Saúde do Sistema
 app.get('/', (req, res) => res.send('API Portal Contábil Ativa 🚀'));
 
 // --- TRATAMENTO DE ERROS GLOBAL ---
@@ -94,6 +96,6 @@ app.use((err, req, res, next) => {
 // --- INICIALIZAÇÃO ---
 app.listen(PORT, () => {
   console.log(`[Server] Rodando na porta ${PORT}`);
-  console.log(`[Path] Servindo Uploads Gerais de: ${uploadsPath}`);
-  console.log(`[Path] Servindo Imagens Públicas de: ${publicUploadsPath}`);
+  console.log(`[Static] Pasta Geral: ${uploadsPath}`);
+  console.log(`[Static] Pasta Pública: ${publicUploadsPath}`);
 });
