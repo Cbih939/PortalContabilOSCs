@@ -134,10 +134,17 @@ function OSCLayoutWrapper() {
 
 // --- DEFINIÇÃO DAS ROTAS ---
 
-export default function AppRoutes() {
-  const { user } = useAuth();
+useEffect(() => {
+    if (isAuthenticated) {
+      console.log("--- DEBUG FINANCEIRO ---");
+      console.log("Usuário logado:", user?.name);
+      console.log("is_in_debt (valor bruto):", user?.is_in_debt);
+      console.log("is_in_debt (tipo):", typeof user?.is_in_debt);
+      console.log("Bloqueio ativo?", Number(user?.is_in_debt) === 1 ? "SIM" : "NÃO");
+      console.log("------------------------");
+    }
+  }, [user, isAuthenticated]);
 
-  // Lógica de bloqueio: 1 = Débito
   const isDebt = Number(user?.is_in_debt) === 1;
 
   return (
