@@ -15,10 +15,10 @@ import ProtectedRoute from './ProtectedRoute.jsx';
 // Páginas Públicas
 import LoginPage from '../pages/Login.jsx';
 import NotFoundPage from '../pages/NotFound.jsx';
-import PrivacyPolicyPage from '../pages/legal/PrivacyPolicyPage.jsx'; 
-import TermsOfUsePage from '../pages/legal/TermsOfUsePage.jsx';
 import RedefinirSenhaPage from '../pages/RedefinirSenha.jsx'; 
 import EsqueceuSenhaPage from '../pages/EsqueceuSenha.jsx';
+import PrivacyPolicyPage from '../pages/legal/PrivacyPolicyPage.jsx'; 
+import TermsOfUsePage from '../pages/legal/TermsOfUsePage.jsx';
 
 // --- ADMIN ---
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
@@ -33,8 +33,8 @@ import AdminNoticesPage from '../pages/admin/AdminNoticesPage.jsx';
 import FinanceiroDashboard from '../pages/financeiro/FinanceiroDashboard.jsx';
 import FinanceiroSidebar from '../pages/financeiro/components/FinanceiroSidebar.jsx';
 import FinanceiroHeader from '../pages/financeiro/components/FinanceiroHeader.jsx';
-import StripeConfig from '../pages/financeiro/StripeConfig.jsx';
 import HistoricoFinanceiro from '../pages/financeiro/HistoricoFinanceiro.jsx';
+import StripeConfig from '../pages/financeiro/StripeConfig.jsx';
 
 // --- CONTADOR ---
 import ContadorDashboard from '../pages/contador/ContadorDashboard.jsx';
@@ -64,9 +64,7 @@ import OSCFinanceiro from '../pages/osc/OSCFinanceiro.jsx';
  */
 function RootRedirect() {
   const { isAuthenticated, user } = useAuth();
-  const location = useLocation();
-
-  if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
   
   const role = user?.role?.toLowerCase().trim();
   if (role === 'admin') return <Navigate to="/admin/dashboard" replace />;
@@ -77,16 +75,18 @@ function RootRedirect() {
   return <Navigate to="/login" replace />;
 }
 
-// --- WRAPPERS DE LAYOUT (Garantindo passagem de USER para a Sidebar) ---
+// --- WRAPPERS DE LAYOUT ---
 
 function AdminLayoutWrapper() {
   const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
   return (
     <AppLayout
       user={user}
       sidebarComponent={<AdminSidebar isOpen={isSidebarOpen} user={user} />}
-      headerComponent={<AdminHeader onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} user={user} />}
+      headerComponent={<AdminHeader onToggleSidebar={toggleSidebar} user={user} />}
     />
   );
 }
@@ -94,6 +94,7 @@ function AdminLayoutWrapper() {
 function FinanceiroLayoutWrapper() {
   const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
   return (
     <AppLayout
       user={user}
@@ -106,11 +107,13 @@ function FinanceiroLayoutWrapper() {
 function ContadorLayoutWrapper() {
   const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  
   return (
     <AppLayout
       user={user} 
       sidebarComponent={<ContadorSidebar isOpen={isSidebarOpen} user={user} />}
-      headerComponent={<ContadorHeader onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} user={user} />}
+      headerComponent={<ContadorHeader onToggleSidebar={toggleSidebar} user={user} />}
     />
   );
 }
@@ -118,19 +121,23 @@ function ContadorLayoutWrapper() {
 function OSCLayoutWrapper() {
   const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
   return (
     <AppLayout
       user={user}
-      sidebarComponent={<OSCSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(!isSidebarOpen)} user={user} />}
-      headerComponent={<OSCHeader onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} user={user} />}
+      sidebarComponent={<OSCSidebar isOpen={isSidebarOpen} onClose={toggleSidebar} user={user} />}
+      headerComponent={<OSCHeader onToggleSidebar={toggleSidebar} user={user} />}
     />
   );
 }
 
+// --- DEFINIÇÃO DAS ROTAS ---
+
 export default function AppRoutes() {
   const { user } = useAuth();
 
-  // Helper para verificar inadimplência
+  // Lógica de bloqueio: 1 = Débito
   const isDebt = Number(user?.is_in_debt) === 1;
 
   return (
@@ -143,36 +150,59 @@ export default function AppRoutes() {
           {/* Rotas Públicas */}
           <Route element={<GuestLayout />}>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
+            <Route path="/termos-de-uso" element={<TermsOfUsePage />} />
             <Route path="/esqueceu-senha" element={<EsqueceuSenhaPage />} />
             <Route path="/redefinir-senha/:token" element={<RedefinirSenhaPage />} />
           </Route>
 
-          {/* Rotas ADMIN */}
+          {/* Rotas do ADMIN */}
           <Route element={<ProtectedRoute allowedRoles={['admin', ROLES.ADMIN]} />}>
             <Route element={<AdminLayoutWrapper />}>
+                <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/avisos" element={<AdminNoticesPage />} />
                 <Route path="/admin/usuarios" element={<ManageUsers />} />
                 <Route path="/admin/oscs" element={<ManageOSCs />} />
+                <Route path="/admin/biblioteca" element={<ManageLibrary />} />
                 <Route path="/admin/financeiro" element={<FinanceiroPage />} />
             </Route>
           </Route>
 
-          {/* Rotas FINANCEIRO */}
+          {/* Rotas do FINANCEIRO (Acesso Admin também) */}
           <Route element={<ProtectedRoute allowedRoles={['financeiro', 'admin']} />}>
             <Route element={<FinanceiroLayoutWrapper />}>
               <Route path="/financeiro/dashboard" element={<FinanceiroDashboard />} />
               <Route path="/financeiro/gestao" element={<FinanceiroPage />} />
               <Route path="/financeiro/historico" element={<HistoricoFinanceiro />} />
+              <Route path="/financeiro/configuracao" element={<StripeConfig />} />
             </Route>
           </Route>
 
-          {/* Rotas OSC com Redirecionamento de Débito */}
+          {/* Rotas do CONTADOR */}
+          <Route element={<ProtectedRoute allowedRoles={['contador', ROLES.CONTADOR]} />}>
+            <Route element={<ContadorLayoutWrapper />}>
+                <Route path="/contador" element={<Navigate to="/contador/dashboard" replace />} />
+                <Route path="/contador/dashboard" element={<ContadorDashboard />} />
+                <Route path="/contador/oscs" element={<OSCsPage />} />
+                <Route path="/contador/oscs/novo" element={<CreateOSCPage />} />
+                <Route path="/contador/documentos" element={<DocumentsPage />} />
+                <Route path="/contador/avisos" element={<NoticesPage />} />
+                <Route path="/contador/perfil" element={<ContadorProfilePage />} />
+                <Route path="/contador/modelos" element={<ContadorTemplatesPage />} />
+                <Route path="/contador/mensagens" element={<ContadorMessagesPage />} />
+            </Route>
+          </Route>
+
+          {/* Rotas OSC com BLOQUEIO REAL */}
           <Route element={<ProtectedRoute allowedRoles={['osc', ROLES.OSC]} />}>
             <Route element={<OSCLayoutWrapper />}>
               <Route path="/osc/inicio" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCDashboard />} />
               <Route path="/osc/documentos" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCDocumentsPage />} />
               <Route path="/osc/modelos" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCTemplatesPage />} />
               <Route path="/osc/biblioteca" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCLibraryPage />} />
+              
+              {/* Rotas sempre abertas */}
               <Route path="/osc/mensagens" element={<OSCMessagesPage />} />
               <Route path="/osc/perfil" element={<OSCProfilePage />} />
               <Route path="/osc/financeiro" element={<OSCFinanceiro />} />
