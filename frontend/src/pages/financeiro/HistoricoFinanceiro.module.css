@@ -1,0 +1,150 @@
+/* Container Principal */
+.container {
+    padding: 2rem;
+    background-color: #f9fafb;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Cabeçalho da Página */
+.headerSection {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.subtitle {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Botão de Impressão (Laranja da Logo) */
+.printButton {
+    background-color: #f27405; /* Cor oficial da logo */
+    color: white;
+    padding: 0.625rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.printButton:hover {
+    background-color: #d66604;
+}
+
+/* Card da Tabela */
+.tableCard {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+}
+
+.responsiveWrapper {
+    overflow-x: auto;
+}
+
+/* Estilização da Tabela */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.table thead {
+    background-color: #f3f4f6;
+}
+
+.table th {
+    padding: 1rem 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #4b5563;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.table td {
+    padding: 1rem 1.5rem;
+    font-size: 0.875rem;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.table tr:hover {
+    background-color: #f9fafb;
+}
+
+/* Colunas Específicas */
+.oscName {
+    font-weight: 600;
+    color: #111827;
+}
+
+.value {
+    font-weight: 700;
+    color: #059669; /* Verde para valores */
+    text-align: right;
+}
+
+/* Botão de Ação (Recibo) */
+.receiptButton {
+    color: #f27405;
+    background: transparent;
+    border: 1px solid #f27405;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.813rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.receiptButton:hover {
+    background-color: #fff7ed;
+    color: #d66604;
+}
+
+/* Estado de Carregamento/Vazio */
+.emptyState {
+    padding: 3rem;
+    text-align: center;
+    color: #9ca3af;
+}
+
+/* Regras de Impressão */
+@media print {
+    :global(.no-print) {
+        display: none !important;
+    }
+    .container {
+        padding: 0;
+        background: white;
+    }
+    .tableCard {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+    .table th {
+        background-color: #eee !important;
+        color: black !important;
+        border-bottom: 1px solid #000;
+    }
+}
