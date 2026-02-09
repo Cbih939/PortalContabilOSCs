@@ -152,21 +152,30 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
   };
 
   /**
-   * FUNÇÃO CORRIGIDA PARA ABRIR DOCUMENTOS
-   * Usa a rota estática pública configurada no server.js
+   * FUNÇÃO TOTALMENTE FLEXÍVEL PARA ABRIR DOCUMENTOS
+   * Esta versão tenta todas as propriedades possíveis (saved_filename, file_path, filename)
    */
   const openDocument = (doc) => {
     const apiUrl = import.meta.env.VITE_API_URL || 'https://contacomigo.org.br';
-    const path = doc.saved_filename || doc.file_path || "";
-    const cleanPath = path.replace('uploads/', '');
     
-    if (!cleanPath) {
-        addNotification("Caminho do ficheiro não encontrado.", "error");
+    // Tenta encontrar o nome do arquivo em qualquer uma dessas propriedades
+    const rawPath = doc.saved_filename || doc.file_path || doc.filename || "";
+    
+    // Se não encontrou nada, avisa o usuário
+    if (!rawPath) {
+        console.error("Dados do documento recebido:", doc);
+        addNotification("Caminho do ficheiro não encontrado nos dados da OSC.", "error");
         return;
     }
 
-    const url = `${apiUrl}/uploads/${cleanPath}`;
-    window.open(url, '_blank');
+    // Limpa o caminho removendo "uploads/" se ele já estiver lá
+    const cleanFileName = rawPath.replace('uploads/', '');
+    
+    // Monta a URL pública (usando a configuração que fizemos no server.js)
+    const fileUrl = `${apiUrl}/uploads/${cleanFileName}`;
+    
+    // Abre em nova aba
+    window.open(fileUrl, '_blank');
   };
 
   const getMonthStatus = (monthIndex) => {
