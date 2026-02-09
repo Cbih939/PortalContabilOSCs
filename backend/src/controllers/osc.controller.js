@@ -7,8 +7,6 @@ import pool from '../config/db.js';
 export const getMyPayments = async (req, res) => {
   try {
     const userId = req.user.id;
-    
-    // 1. Localizar a OSC
     const [oscRows] = await pool.execute('SELECT id FROM oscs WHERE user_id = ?', [userId]);
     
     if (oscRows.length === 0) {
@@ -17,28 +15,23 @@ export const getMyPayments = async (req, res) => {
 
     const osc_id = oscRows[0].id;
 
-    /**
-     * IMPORTANTE: Como a tabela 'subscriptions' não existe, 
-     * vamos retornar um array vazio por agora para o sistema não crashar.
-     * Assim que criar a tabela de pagamentos, o código abaixo funcionará.
-     */
+    // Bloco try-catch interno para a tabela inexistente
     try {
-        const [payments] = await pool.execute(
-          `SELECT * FROM subscriptions WHERE osc_id = ? ORDER BY created_at DESC`,
-          [osc_id]
-        );
-        return res.json(payments);
+      const [payments] = await pool.execute(
+        `SELECT * FROM subscriptions WHERE osc_id = ? ORDER BY created_at DESC`,
+        [osc_id]
+      );
+      res.json(payments);
     } catch (dbError) {
-        console.warn('Tabela subscriptions ainda não criada. Retornando vazio.');
-        return res.json([]); // Retorna vazio em vez de dar erro 500
+      // Se a tabela não existir, retorna array vazio em vez de quebrar a API
+      console.error('Tabela subscriptions não encontrada no DB.');
+      res.json([]); 
     }
-
   } catch (error) {
-    console.error('[OSC Controller] Erro em getMyPayments:', error);
-    res.status(500).json({ message: 'Erro interno ao carregar pagamentos.' });
+    console.error('[OSC Controller] Erro grave:', error);
+    res.status(500).json({ message: 'Erro interno ao processar pagamentos.' });
   }
 };
-
 
 
 /**
