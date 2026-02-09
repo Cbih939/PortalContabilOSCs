@@ -44,7 +44,10 @@ app.use(express.urlencoded({ extended: true }));
  * 4. CONFIGURAÇÃO DA PASTA DE UPLOADS (A CORREÇÃO)
  * O path.resolve garante que o Express encontre a pasta física na raiz do projeto.
  */
-app.use('/uploads', express.static(path.resolve(__dirname, 'uploads')));
+app.use('/uploads', express.static('/var/www/PortalContabilOSCs/backend/uploads'));
+
+// Log para você conferir no terminal se o caminho está certo
+console.log("Caminho absoluto dos uploads:", '/var/www/PortalContabilOSCs/backend/uploads');
 
 // Testar conexão com o Banco
 testConnection();
