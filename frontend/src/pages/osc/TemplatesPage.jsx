@@ -38,6 +38,7 @@ export default function TemplatesPage() {
     try {
       setLoading(true);
       const data = await fileService.getFilesByCategory('');
+      // Ordenação numérica baseada no início do título ou classificação
       const sortedData = data.sort((a, b) => 
         (a.title || "").toLowerCase().localeCompare((b.title || "").toLowerCase(), undefined, { numeric: true, sensitivity: 'base' })
       );
@@ -84,6 +85,13 @@ export default function TemplatesPage() {
     );
   };
 
+  // Funções de filtro para organização em subcategorias
+  const getFilesBySubcategory = (list, keywords) => {
+    return list.filter(file => 
+      keywords.some(key => file.title.toLowerCase().includes(key.toLowerCase()))
+    );
+  };
+
   if (loading) {
     return <div className={styles.loadingFull}><Spinner text="A carregar documentos..." /></div>;
   }
@@ -91,7 +99,7 @@ export default function TemplatesPage() {
   return (
     <div className={styles.pageContainer} style={{ width: '90%', maxWidth: '1200px', margin: '0 auto', padding: '40px 0' }}>
       
-      {/* SEÇÃO DE TEXTOS INSTITUCIONAIS */}
+      {/* SEÇÃO DE TEXTOS INSTITUCIONAIS - Mantida conforme original */}
       <section className={styles.libraryHeader}>
         <div className={styles.welcomeSection}>
           <h1 className={styles.mainTitle}>BEM-VINDO(A) AO CONTA COMIGO</h1>
@@ -178,13 +186,50 @@ export default function TemplatesPage() {
       </div>
 
       <div className={styles.gridContainer}>
+        {/* COLUNA 1: MODELOS DE DOCUMENTOS ORGANIZADOS POR CATEGORIA */}
         <div className={styles.listCard}>
           <h2 className={styles.cardHeader}>Modelos de Documentos</h2>
+          
           <div className={styles.fileListContainer}>
-            {modelos.length > 0 ? modelos.map(renderFileRow) : <p className={styles.empty}>Sem documentos nesta categoria.</p>}
+            {/* SUB-CATEGORIA: ESTATUTOS */}
+            <h3 className={styles.groupTitle} style={{ padding: '10px 15px', background: '#f8f9fa', fontSize: '0.9rem', color: '#f27405', borderLeft: '4px solid #f27405', margin: '10px 0' }}>
+              Estatutos Sociais
+            </h3>
+            {getFilesBySubcategory(modelos, ['Estatuto']).length > 0 ? 
+              getFilesBySubcategory(modelos, ['Estatuto']).map(renderFileRow) : 
+              <p className={styles.empty}>Sem estatutos disponíveis.</p>
+            }
+
+            {/* SUB-CATEGORIA: ATAS */}
+            <h3 className={styles.groupTitle} style={{ padding: '10px 15px', background: '#f8f9fa', fontSize: '0.9rem', color: '#f27405', borderLeft: '4px solid #f27405', margin: '20px 0 10px' }}>
+              Atas Institucionais
+            </h3>
+            {getFilesBySubcategory(modelos, ['Ata']).length > 0 ? 
+              getFilesBySubcategory(modelos, ['Ata']).map(renderFileRow) : 
+              <p className={styles.empty}>Sem atas disponíveis.</p>
+            }
+
+            {/* SUB-CATEGORIA: REGIMENTOS */}
+            <h3 className={styles.groupTitle} style={{ padding: '10px 15px', background: '#f8f9fa', fontSize: '0.9rem', color: '#f27405', borderLeft: '4px solid #f27405', margin: '20px 0 10px' }}>
+              Regimentos Internos
+            </h3>
+            {getFilesBySubcategory(modelos, ['Regimento']).length > 0 ? 
+              getFilesBySubcategory(modelos, ['Regimento']).map(renderFileRow) : 
+              <p className={styles.empty}>Sem regimentos disponíveis.</p>
+            }
+
+            {/* SUB-CATEGORIA: DECLARAÇÕES */}
+            <h3 className={styles.groupTitle} style={{ padding: '10px 15px', background: '#f8f9fa', fontSize: '0.9rem', color: '#f27405', borderLeft: '4px solid #f27405', margin: '20px 0 10px' }}>
+              Declarações
+            </h3>
+            {getFilesBySubcategory(modelos, ['Declaração', 'Declarações']).length > 0 ? 
+              getFilesBySubcategory(modelos, ['Declaração', 'Declarações']).map(renderFileRow) : 
+              <p className={styles.empty}>Sem declarações disponíveis.</p>
+            }
           </div>
         </div>
 
+        {/* COLUNA 2: COMUNICAÇÃO INSTITUCIONAL */}
         <div className={styles.listCard}>
           <h2 className={styles.cardHeader}>Comunicação Institucional</h2>
           <div className={styles.fileListContainer}>
