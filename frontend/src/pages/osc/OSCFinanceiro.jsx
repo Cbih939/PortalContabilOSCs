@@ -71,7 +71,7 @@ const OSCFinanceiro = () => {
                         <h2>Assinatura Mensal</h2>
                         <div className={styles.priceContainer}>
                             <span className={styles.currency}>R$</span>
-                            <span className={styles.price}>50,00</span>
+                            <span className={styles.price}>339,00</span>
                         </div>
                         <p className={styles.subtitle}>Gestão completa para sua OSC</p>
                     </div>
