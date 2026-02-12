@@ -162,3 +162,65 @@ export const updateAlert = async (req, res) => {
 export const deleteAlert = async (req, res) => {
     res.status(501).json({ message: "Funcionalidade em desenvolvimento" });
 };
+
+export const registerOSC = async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        const data = req.body;
+        const files = req.files;
+
+        // 1. Verificar se o e-mail já existe
+        const [existing] = await connection.execute('SELECT id FROM users WHERE email = ?', [data.coordEmail]);
+        if (existing.length > 0) {
+            return res.status(400).json({ message: 'Este e-mail de coordenador já está cadastrado.' });
+        }
+
+        // 2. Criar Usuário (Coordenador) - Nasce BLOQUEADO (is_in_debt: 1)
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(data.coordSenha, salt);
+        
+        const [userResult] = await connection.execute(
+            'INSERT INTO users (name, email, password_hash, role, status, is_in_debt) VALUES (?, ?, ?, "OSC", "Ativo", 1)',
+            [data.coordNome, data.coordEmail, hashedPassword]
+        );
+        const userId = userResult.insertId;
+
+        // 3. Processar caminhos dos arquivos
+        const logoPath = files['logotipo'] ? `uploads/public/${files['logotipo'][0].filename}` : null;
+        const ataPath = files['ata'] ? `uploads/public/${files['ata'][0].filename}` : null;
+        const estatutoPath = files['estatuto'] ? `uploads/public/${files['estatuto'][0].filename}` : null;
+
+        // 4. Inserir OSC (Atribuindo ao Contador Administrador ID: 1)
+        const sqlOSC = `
+            INSERT INTO oscs (
+                user_id, name, razao_social, cnpj, data_fundacao, email_contato, telefone, 
+                cep, endereco, numero, bairro, cidade, estado, logo_path, ata_path, estatuto_path, assigned_contador_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`;
+
+        await connection.execute(sqlOSC, [
+            userId, data.nomeFantasia, data.razaoSocial, data.cnpj, data.dataFundacao || null,
+            data.emailContato, data.telefone, data.cep, data.endereco, data.numero,
+            data.bairro, data.cidade, data.estado, logoPath, ataPath, estatutoPath
+        ]);
+
+        await connection.commit();
+
+        // 5. Gerar Token para o Frontend (incluindo is_in_debt)
+        const token = jwt.sign(
+            { id: userId, role: 'OSC', name: data.coordNome, is_in_debt: 1 },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.status(201).json({ token, message: "Cadastro realizado com sucesso." });
+
+    } catch (error) {
+        await connection.rollback();
+        console.error('[Register OSC Error]:', error);
+        res.status(500).json({ message: 'Erro ao processar o cadastro da OSC.' });
+    } finally {
+        connection.release();
+    }
+};
