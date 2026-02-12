@@ -97,6 +97,13 @@ export default function LoginPage() {
           {isLoading ? <Spinner size="sm" className="mr-2" /> : null}
           {isLoading ? 'A entrar...' : 'Entrar'}
         </Button>
+
+        <div className={styles.registerLink}>
+          <p>É uma Organização e ainda não tem conta?</p>
+            <Link to="/register-osc" className={styles.linkHighlight}>
+              Cadastre sua OSC e ative seu plano aqui
+            </Link>
+        </div>
       </form>
     </div>
   );

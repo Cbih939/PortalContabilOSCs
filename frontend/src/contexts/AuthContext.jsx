@@ -89,6 +89,19 @@ export function AuthProvider({ children }) {
     console.log('[AuthContext] Utilizador autenticado:', userData.email, 'Perfil:', userData.role);
   };
 
+  const handleLogin = async (data) => {
+  const res = await api.post('/auth/login', data);
+  const { user, token } = res.data;
+
+  // Armazena token e user...
+
+  if (user.role === 'OSC' && user.is_in_debt === 1) {
+    navigate('/dashboard/financeiro'); // Força o pagamento
+  } else {
+    navigate('/dashboard'); // Acesso liberado
+  }
+};
+
   /**
    * Função de Logout
    * Remove os dados do estado e do localStorage.

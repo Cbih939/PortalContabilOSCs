@@ -11,6 +11,7 @@ import Spinner from '../components/common/Spinner.jsx';
 
 // --- PÁGINAS PÚBLICAS ---
 import LoginPage from '../pages/Login.jsx';
+import RegisterOSC from '../pages/auth/RegisterOSC';
 import NotFoundPage from '../pages/NotFound.jsx';
 import EsqueceuSenhaPage from '../pages/EsqueceuSenha.jsx';
 import RedefinirSenhaPage from '../pages/RedefinirSenha.jsx';
@@ -127,6 +128,7 @@ export default function AppRoutes() {
           
           <Route element={<GuestLayout />}>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/register-osc" element={<RegisterOSC />} /> {/* Rota do novo ficheiro */}
             <Route path="/esqueceu-senha" element={<EsqueceuSenhaPage />} />
             <Route path="/redefinir-senha/:token" element={<RedefinirSenhaPage />} />
           </Route>
