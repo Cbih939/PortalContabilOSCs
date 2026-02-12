@@ -97,3 +97,29 @@
 .forgotPassword:hover {
   text-decoration: underline;
 }
+
+.registerContainer {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.registerText {
+    font-size: 0.95rem;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+/* DESTAQUE EM LARANJA */
+.registerLinkHighlight {
+    color: #f27405 !important; /* Cor laranja da marca */
+    font-weight: 700;
+    text-decoration: underline;
+    transition: color 0.3s ease, transform 0.2s ease;
+    display: inline-block;
+}
+
+.registerLinkHighlight:hover {
+    color: #d66304 !important; /* Laranja mais escuro no hover */
+    transform: scale(1.02);
+    text-decoration: none;
+}

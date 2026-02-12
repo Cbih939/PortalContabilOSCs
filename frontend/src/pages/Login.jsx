@@ -98,9 +98,9 @@ export default function LoginPage() {
           {isLoading ? 'A entrar...' : 'Entrar'}
         </Button>
 
-        <div className={styles.registerLink}>
-          <p>É uma Organização e ainda não tem conta?</p>
-            <Link to="/register-osc" className={styles.linkHighlight}>
+        <div className={styles.registerContainer}>
+          <p className={styles.registerText}>É uma Organização e ainda não tem conta?</p>
+            <Link to="/register-osc" className={styles.registerLinkHighlight}>
               Cadastre sua OSC e ative seu plano aqui
             </Link>
         </div>
