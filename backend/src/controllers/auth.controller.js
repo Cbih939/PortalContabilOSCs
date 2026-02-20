@@ -1,10 +1,10 @@
-// backend/src/controllers/auth.controller.js
 import pool from '../config/db.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'seusecretoseguro123jwt';
 
+// --- MIDDLEWARE DE VERIFICAÇÃO ---
 export const verifyToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -22,12 +22,12 @@ export const verifyToken = (req, res, next) => {
 
 export const protect = verifyToken;
 
+// --- LOGIN (Única Declaração) ---
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) return res.status(400).json({ message: 'Preencha todos os campos.' });
 
-        // CORREÇÃO 1: Adicionado 'is_in_debt' na consulta SQL
         const [rows] = await pool.execute(
             'SELECT id, name, email, password_hash, role, status, is_in_debt FROM users WHERE email = ?',
             [email]
@@ -47,25 +47,22 @@ export const login = async (req, res) => {
             isMatch = true;
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
-            pool.execute('UPDATE users SET password_hash = ? WHERE id = ?', [hashedPassword, user.id]);
+            await pool.execute('UPDATE users SET password_hash = ? WHERE id = ?', [hashedPassword, user.id]);
         }
 
         if (!isMatch) return res.status(401).json({ message: 'Senha incorreta.' });
 
-        // CORREÇÃO 2: Adicionado 'is_in_debt' dentro do Token JWT
-        // Isso garante que o status de débito viaje com o usuário em cada requisição
         const token = jwt.sign(
             { 
                 id: user.id, 
                 role: user.role, 
                 name: user.name, 
-                is_in_debt: user.is_in_debt // <--- Importante para as rotas protegidas
+                is_in_debt: user.is_in_debt 
             },
             JWT_SECRET,
             { expiresIn: '24h' }
         );
 
-        // CORREÇÃO 3: Enviando 'is_in_debt' na resposta para o Frontend
         return res.json({
             token: token,
             user: {
@@ -74,12 +71,76 @@ export const login = async (req, res) => {
                 email: user.email,
                 role: user.role,
                 status: user.status,
-                is_in_debt: user.is_in_debt // Agora o Frontend receberá 0 ou 1
+                is_in_debt: user.is_in_debt
             }
         });
 
     } catch (error) {
         console.error('[Auth Error]:', error);
         return res.status(500).json({ message: 'Erro interno do servidor.' });
+    }
+};
+
+// --- AUTO-REGISTRO OSC (Nova Lógica Transacional) ---
+export const registerOSC = async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        const data = req.body;
+        const files = req.files;
+
+        // 1. Verificar se e-mail já existe
+        const [existing] = await connection.execute('SELECT id FROM users WHERE email = ?', [data.coordEmail]);
+        if (existing.length > 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Este e-mail de coordenador já está cadastrado.' });
+        }
+
+        // 2. Criar Usuário (Coordenador) - nasce com is_in_debt = 1
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(data.coordSenha, salt);
+        
+        const [userResult] = await connection.execute(
+            'INSERT INTO users (name, email, password_hash, role, status, is_in_debt) VALUES (?, ?, ?, "OSC", "Ativo", 1)',
+            [data.coordNome, data.coordEmail, hashedPassword]
+        );
+        const userId = userResult.insertId;
+
+        // 3. Processar caminhos dos ficheiros para a base de dados
+        const logoPath = files['logotipo'] ? `uploads/public/${files['logotipo'][0].filename}` : null;
+        const ataPath = files['ata'] ? `uploads/public/${files['ata'][0].filename}` : null;
+        const estatutoPath = files['estatuto'] ? `uploads/public/${files['estatuto'][0].filename}` : null;
+
+        // 4. Inserir OSC (Atribuindo por defeito ao Contador ID 1)
+        const sqlOSC = `
+            INSERT INTO oscs (
+                user_id, name, razao_social, cnpj, data_fundacao, email_contato, telefone, 
+                cep, endereco, numero, bairro, cidade, estado, logo_path, ata_path, estatuto_path, assigned_contador_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`;
+
+        await connection.execute(sqlOSC, [
+            userId, data.nomeFantasia, data.razaoSocial, data.cnpj, data.dataFundacao || null,
+            data.emailContato, data.telefone, data.cep, data.endereco, data.numero,
+            data.bairro, data.cidade, data.estado, logoPath, ataPath, estatutoPath
+        ]);
+
+        await connection.commit();
+
+        // 5. Gerar Token para que o utilizador possa avançar para o Stripe
+        const token = jwt.sign(
+            { id: userId, role: 'OSC', name: data.coordNome, is_in_debt: 1 },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.status(201).json({ token, message: "Cadastro realizado com sucesso." });
+
+    } catch (error) {
+        if (connection) await connection.rollback();
+        console.error('[Register OSC Error]:', error);
+        res.status(500).json({ message: 'Erro ao processar o cadastro da OSC.' });
+    } finally {
+        if (connection) connection.release();
     }
 };
