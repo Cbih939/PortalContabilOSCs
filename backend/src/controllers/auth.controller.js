@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'seusecretoseguro123jwt';
 
-// 1. MIDDLEWARE DE VERIFICAÇÃO (PROTECT)
+// --- MIDDLEWARES ---
 export const verifyToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -22,13 +22,12 @@ export const verifyToken = (req, res, next) => {
 
 export const protect = verifyToken;
 
-// 2. LOGIN (APENAS UMA VEZ)
+// --- FUNÇÃO DE LOGIN (DECLARAÇÃO ÚNICA) ---
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) return res.status(400).json({ message: 'Preencha todos os campos.' });
 
-        // Consulta o usuário incluindo o campo is_in_debt
         const [rows] = await pool.execute(
             'SELECT id, name, email, password_hash, role, status, is_in_debt FROM users WHERE email = ?',
             [email]
@@ -39,34 +38,18 @@ export const login = async (req, res) => {
         const user = rows[0];
         if (user.status !== 'Ativo') return res.status(403).json({ message: 'Conta inativa.' });
 
-        let isMatch = false;
-        try {
-            isMatch = await bcrypt.compare(password, user.password_hash);
-        } catch (e) { isMatch = false; }
-
-        // Compatibilidade com senhas antigas em texto puro (opcional)
-        if (!isMatch && password === user.password_hash) {
-            isMatch = true;
-            const salt = await bcrypt.genSalt(10);
-            const hashedPassword = await bcrypt.hash(password, salt);
-            await pool.execute('UPDATE users SET password_hash = ? WHERE id = ?', [hashedPassword, user.id]);
-        }
+        let isMatch = await bcrypt.compare(password, user.password_hash);
 
         if (!isMatch) return res.status(401).json({ message: 'Senha incorreta.' });
 
         const token = jwt.sign(
-            { 
-                id: user.id, 
-                role: user.role, 
-                name: user.name, 
-                is_in_debt: user.is_in_debt 
-            },
+            { id: user.id, role: user.role, name: user.name, is_in_debt: user.is_in_debt },
             JWT_SECRET,
             { expiresIn: '24h' }
         );
 
         return res.json({
-            token: token,
+            token,
             user: {
                 id: user.id,
                 name: user.name,
@@ -76,14 +59,13 @@ export const login = async (req, res) => {
                 is_in_debt: user.is_in_debt
             }
         });
-
     } catch (error) {
         console.error('[Auth Error]:', error);
         return res.status(500).json({ message: 'Erro interno do servidor.' });
     }
 };
 
-// 3. AUTO-REGISTRO OSC
+// --- FUNÇÃO DE REGISTRO ---
 export const registerOSC = async (req, res) => {
     const connection = await pool.getConnection();
     try {
@@ -92,14 +74,12 @@ export const registerOSC = async (req, res) => {
         const data = req.body;
         const files = req.files;
 
-        // Verificar se e-mail já existe
         const [existing] = await connection.execute('SELECT id FROM users WHERE email = ?', [data.coordEmail]);
         if (existing.length > 0) {
             await connection.rollback();
-            return res.status(400).json({ message: 'Este e-mail já está cadastrado.' });
+            return res.status(400).json({ message: 'E-mail já cadastrado.' });
         }
 
-        // Criar Usuário (nasce com is_in_debt = 1)
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(data.coordSenha, salt);
         
@@ -109,12 +89,10 @@ export const registerOSC = async (req, res) => {
         );
         const userId = userResult.insertId;
 
-        // Processar caminhos dos ficheiros
         const logoPath = files['logotipo'] ? `uploads/public/${files['logotipo'][0].filename}` : null;
         const ataPath = files['ata'] ? `uploads/public/${files['ata'][0].filename}` : null;
         const estatutoPath = files['estatuto'] ? `uploads/public/${files['estatuto'][0].filename}` : null;
 
-        // Inserir OSC
         const sqlOSC = `
             INSERT INTO oscs (
                 user_id, name, razao_social, cnpj, data_fundacao, email_contato, telefone, 
@@ -136,7 +114,6 @@ export const registerOSC = async (req, res) => {
         );
 
         res.status(201).json({ token, message: "Cadastro realizado com sucesso." });
-
     } catch (error) {
         if (connection) await connection.rollback();
         console.error('[Register OSC Error]:', error);
