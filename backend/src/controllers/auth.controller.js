@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'seusecretoseguro123jwt';
 
-// --- MIDDLEWARE DE VERIFICAÇÃO ---
+// 1. MIDDLEWARE DE VERIFICAÇÃO (PROTECT)
 export const verifyToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -22,12 +22,13 @@ export const verifyToken = (req, res, next) => {
 
 export const protect = verifyToken;
 
-// --- LOGIN (Única Declaração) ---
+// 2. LOGIN (APENAS UMA VEZ)
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) return res.status(400).json({ message: 'Preencha todos os campos.' });
 
+        // Consulta o usuário incluindo o campo is_in_debt
         const [rows] = await pool.execute(
             'SELECT id, name, email, password_hash, role, status, is_in_debt FROM users WHERE email = ?',
             [email]
@@ -43,6 +44,7 @@ export const login = async (req, res) => {
             isMatch = await bcrypt.compare(password, user.password_hash);
         } catch (e) { isMatch = false; }
 
+        // Compatibilidade com senhas antigas em texto puro (opcional)
         if (!isMatch && password === user.password_hash) {
             isMatch = true;
             const salt = await bcrypt.genSalt(10);
@@ -81,7 +83,7 @@ export const login = async (req, res) => {
     }
 };
 
-// --- AUTO-REGISTRO OSC (Nova Lógica Transacional) ---
+// 3. AUTO-REGISTRO OSC
 export const registerOSC = async (req, res) => {
     const connection = await pool.getConnection();
     try {
@@ -90,14 +92,14 @@ export const registerOSC = async (req, res) => {
         const data = req.body;
         const files = req.files;
 
-        // 1. Verificar se e-mail já existe
+        // Verificar se e-mail já existe
         const [existing] = await connection.execute('SELECT id FROM users WHERE email = ?', [data.coordEmail]);
         if (existing.length > 0) {
             await connection.rollback();
-            return res.status(400).json({ message: 'Este e-mail de coordenador já está cadastrado.' });
+            return res.status(400).json({ message: 'Este e-mail já está cadastrado.' });
         }
 
-        // 2. Criar Usuário (Coordenador) - nasce com is_in_debt = 1
+        // Criar Usuário (nasce com is_in_debt = 1)
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(data.coordSenha, salt);
         
@@ -107,12 +109,12 @@ export const registerOSC = async (req, res) => {
         );
         const userId = userResult.insertId;
 
-        // 3. Processar caminhos dos ficheiros para a base de dados
+        // Processar caminhos dos ficheiros
         const logoPath = files['logotipo'] ? `uploads/public/${files['logotipo'][0].filename}` : null;
         const ataPath = files['ata'] ? `uploads/public/${files['ata'][0].filename}` : null;
         const estatutoPath = files['estatuto'] ? `uploads/public/${files['estatuto'][0].filename}` : null;
 
-        // 4. Inserir OSC (Atribuindo por defeito ao Contador ID 1)
+        // Inserir OSC
         const sqlOSC = `
             INSERT INTO oscs (
                 user_id, name, razao_social, cnpj, data_fundacao, email_contato, telefone, 
@@ -127,7 +129,6 @@ export const registerOSC = async (req, res) => {
 
         await connection.commit();
 
-        // 5. Gerar Token para que o utilizador possa avançar para o Stripe
         const token = jwt.sign(
             { id: userId, role: 'OSC', name: data.coordNome, is_in_debt: 1 },
             JWT_SECRET,
@@ -139,7 +140,7 @@ export const registerOSC = async (req, res) => {
     } catch (error) {
         if (connection) await connection.rollback();
         console.error('[Register OSC Error]:', error);
-        res.status(500).json({ message: 'Erro ao processar o cadastro da OSC.' });
+        res.status(500).json({ message: 'Erro ao processar o cadastro.' });
     } finally {
         if (connection) connection.release();
     }
