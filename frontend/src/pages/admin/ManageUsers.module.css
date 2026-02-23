@@ -88,6 +88,7 @@
 .roleAdmin { background-color: #fecaca; color: #b91c1c; } /* bg-red-200 text-red-900 */
 .roleContador { background-color: #dbeafe; color: #1e40af; } /* bg-blue-200 text-blue-900 */
 .roleOsc { background-color: #dcfce7; color: #166534; } /* bg-green-200 text-green-900 */
+.roleFinanceiro { background-color: #dcfce7; color: #7b1389; } /* bg-green-200 text-green-900 */
 .roleDefault { background-color: #e5e7eb; color: #1f2937; } /* bg-gray-200 text-gray-900 */
 
 /* --- Badge de Status (Estilo da Imagem 2) --- */
