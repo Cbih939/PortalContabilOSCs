@@ -1,12 +1,12 @@
-// src/services/api.js
 import axios from 'axios';
 
-const API_BASE_URL = "/api";
+// CORREÇÃO: Usar URL absoluta para evitar que o browser se perca na VPS
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://contacomigo.org.br/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  // REMOVIDO: 'Content-Type': 'application/json'
-  // Deixe que o Axios defina o Content-Type automaticamente com base nos dados enviados.
+  // Opcional: tempo limite para evitar que a requisição fique "pendurada"
+  timeout: 10000, 
 });
 
 // Interceptor para Token JWT
@@ -14,11 +14,26 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+      // Usar a sintaxe padrão de headers
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Interceptor de Resposta (Útil para debugar 404 e 401)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.warn("Sessão expirada, redirecionando...");
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      // window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );
