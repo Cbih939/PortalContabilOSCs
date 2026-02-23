@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom'; // Mudamos Navigate para useNavigate
-import { useAuth } from '../../hooks/useAuth.jsx';
+import { useAuth } from '../hooks/useAuth.jsx';
 import useApi from '../../hooks/useApi.jsx';
 import * as authService from '../../services/authService.js';
 import Button from '../../components/common/Button.jsx';
