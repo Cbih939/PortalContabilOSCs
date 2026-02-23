@@ -4,7 +4,7 @@
  * Centraliza todas as importações de ícones da biblioteca 'react-icons'.
  */
 
-import React from 'react'; // Import React para componentes funcionais simples (opcional)
+import React from 'react';
 
 import {
   FiFile,
@@ -29,6 +29,7 @@ import {
   FiPaperclip,
   FiChevronDown,
   FiCheck,
+  FiTrash2, // Adicionado para exclusão
 } from 'react-icons/fi'; // Feather Icons
 
 import {
@@ -61,13 +62,14 @@ export const AlertTriangleIcon = (props) => <FiAlertTriangle {...props} />;
 export const MegaphoneIcon = (props) => <HiOutlineMegaphone {...props} />;
 export const HomeIcon = (props) => <FiHome {...props} />;
 export const ExcelIcon = (props) => <FaFileExcel {...props} />;
+export const TrashIcon = (props) => <FiTrash2 {...props} />; // Exportação necessária para o build
 
 // Ícones bônus
 export const AttachmentIcon = (props) => <FiPaperclip {...props} />;
 export const ChevronDownIcon = (props) => <FiChevronDown {...props} />;
 export const CheckIcon = (props) => <FiCheck {...props} />;
 
-// Adicione isto ao final do seu arquivo Icons.jsx
+// Ícone de Olho Customizado (SVG Direto)
 export const EyeIcon = ({ className }) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
