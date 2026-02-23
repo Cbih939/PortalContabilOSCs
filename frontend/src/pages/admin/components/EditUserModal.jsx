@@ -1,5 +1,3 @@
-// src/pages/admin/components/EditUserModal.jsx
-
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -9,15 +7,15 @@ import Input from '../../../components/common/Input.jsx';
 import Button from '../../../components/common/Button.jsx';
 import Spinner from '../../../components/common/Spinner.jsx';
 import { ROLES } from '../../../utils/constants.js';
-// Reutiliza os estilos do modal de criação
 import styles from './CreateUserModal.module.css';
 
-// Schema de Validação (Yup) - Sem senha obrigatória
+// --- SCHEMA ATUALIZADO PARA ACEITAR FINANCEIRO ---
 const schema = yup.object().shape({
   name: yup.string().required('O nome é obrigatório.'),
   email: yup.string().email('Email inválido.').required('O email é obrigatório.'),
   role: yup.string()
-    .oneOf([ROLES.ADMIN, ROLES.CONTADOR, ROLES.OSC], 'Perfil inválido.')
+    // Adicionamos 'FINANCEIRO' explicitamente aqui
+    .oneOf([ROLES.ADMIN, ROLES.CONTADOR, ROLES.OSC, 'FINANCEIRO'], 'Perfil inválido.')
     .required('O perfil é obrigatório.'),
   status: yup.string()
     .oneOf(['Ativo', 'Inativo'], 'Status inválido.')
@@ -30,7 +28,7 @@ export default function EditUserModal({ isOpen, onClose, onSave, isLoading, user
 
   const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm({
     resolver: yupResolver(schema),
-    defaultValues: { // Define valores padrão
+    defaultValues: {
         name: '',
         email: '',
         role: ROLES.CONTADOR,
@@ -38,35 +36,31 @@ export default function EditUserModal({ isOpen, onClose, onSave, isLoading, user
     }
   });
 
-  // Efeito para popular o formulário quando 'userData' (o utilizador a editar) muda
   useEffect(() => {
     if (userData) {
-      // Preenche o formulário com os dados do utilizador
       reset({
         name: userData.name,
         email: userData.email,
-        role: userData.role,
+        // Normalizamos para maiúsculas para bater com as opções do select
+        role: userData.role?.toUpperCase(),
         status: userData.status,
       });
     }
-  }, [userData, reset]); // Roda quando userData muda
+  }, [userData, reset]);
 
-  // Limpa o formulário ao fechar (embora o useEffect acima vá repopular na próxima abertura)
   useEffect(() => {
     if (!isOpen) {
         setTimeout(() => reset(), 300);
     }
   }, [isOpen, reset]);
 
-  // Função chamada pelo RHF ao submeter com sucesso
   const onSubmit = (data) => {
     if (!isLoading) {
-      // Passa os dados do formulário E o ID do utilizador original para a função onSave
-      onSave(userData.id, data);
+      // Garantimos que a role vai em maiúsculas para o backend
+      onSave(userData.id, { ...data, role: data.role.toUpperCase() });
     }
   };
 
-  // Rodapé do modal
   const modalFooter = (
     <>
       <Button variant="secondary" onClick={onClose} disabled={isLoading}>
@@ -76,7 +70,7 @@ export default function EditUserModal({ isOpen, onClose, onSave, isLoading, user
         variant="primary"
         type="submit"
         form={FORM_ID}
-        disabled={isLoading || !isDirty} // Desabilita se estiver a carregar OU se nada mudou
+        disabled={isLoading || !isDirty}
       >
         {isLoading ? <Spinner size="sm" className="mr-2" /> : null}
         {isLoading ? 'Salvando...' : 'Salvar Alterações'}
@@ -96,7 +90,7 @@ export default function EditUserModal({ isOpen, onClose, onSave, isLoading, user
 
         <Input
           label="Nome Completo *"
-          id="edit-name" // ID único
+          id="edit-name"
           {...register('name')}
           error={errors.name?.message}
         />
@@ -109,15 +103,14 @@ export default function EditUserModal({ isOpen, onClose, onSave, isLoading, user
           error={errors.email?.message}
         />
 
-        {/* Nota: Não editamos a senha aqui. Isso deve ser uma ação separada (ex: "Resetar Senha") */}
-
         {/* Select para Perfil (Role) */}
         <div>
           <label htmlFor="edit-role" className={styles.selectLabel}>Perfil *</label>
           <select id="edit-role" {...register('role')} className={styles.selectInput}>
             <option value={ROLES.CONTADOR}>Contador</option>
             <option value={ROLES.ADMIN}>Administrador</option>
-            {/* Desabilitamos a edição de/para OSC por aqui, pois OSCs são criadas/geridas noutro local */}
+            {/* NOVA OPÇÃO FINANCEIRO */}
+            <option value="FINANCEIRO">Financeiro</option>
             <option value={ROLES.OSC} disabled>OSC (Gerido em "Gerenciar OSCs")</option>
           </select>
           {errors.role && <p className={styles.errorMessage}>{errors.role.message}</p>}
