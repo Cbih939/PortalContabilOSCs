@@ -11,8 +11,13 @@ import { useNotification } from '../../contexts/NotificationContext.jsx';
 import styles from './ManageUsers.module.css';
 import CreateUserModal from './components/CreateUserModal.jsx';
 import EditUserModal from './components/EditUserModal.jsx';
+import CreateOfficeModal from './components/CreateOfficeModal.jsx'; // Novo componente
 import useApi from '../../hooks/useApi.jsx';
+import api from '../../services/api.js';
 
+/**
+ * Página de Gerenciamento de Usuários e Escritórios
+ */
 export default function ManageUsers() {
   const [allUsers, setAllUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,9 +26,12 @@ export default function ManageUsers() {
   const [filterRole, setFilterRole] = useState('');
   const addNotification = useNotification();
   
+  // --- Estados dos Modais ---
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isOfficeModalOpen, setIsOfficeModalOpen] = useState(false); // Modal Escritório
   const [userToEdit, setUserToEdit] = useState(null);
 
+  // --- Hooks API ---
   const { request: createUserRequest, isLoading: isCreating } = useApi(
       userService.createUser, { showErrorNotification: false }
   );
@@ -31,12 +39,12 @@ export default function ManageUsers() {
       userService.updateUser, { showErrorNotification: false }
   );
 
+  // Busca lista de utilizadores
   const fetchUsers = async (showLoadingSpinner = true) => {
       if (showLoadingSpinner) setIsLoading(true);
       setError(null);
       try {
         const response = await userService.getAllUsers();
-        // O backend retorna a lista diretamente ou dentro de .data
         const data = Array.isArray(response) ? response : response.data;
         setAllUsers((data || []).sort((a, b) => a.name.localeCompare(b.name)));
       } catch (err) {
@@ -52,6 +60,7 @@ export default function ManageUsers() {
     fetchUsers(true);
   }, []);
 
+  // Filtros de busca
   const filteredUsers = useMemo(() => {
     return allUsers.filter(
       (user) =>
@@ -61,18 +70,20 @@ export default function ManageUsers() {
     );
   }, [allUsers, filterName, filterRole]);
 
+  // --- Handlers ---
   const handleEdit = (user) => setUserToEdit(user);
   const handleCreate = () => setIsCreateModalOpen(true);
+  const handleCreateOffice = () => setIsOfficeModalOpen(true);
   
   const handleCloseModals = () => {
       setIsCreateModalOpen(false);
+      setIsOfficeModalOpen(false);
       setUserToEdit(null);
   };
 
   const handleSaveCreate = async (formData) => {
       try {
           const response = await createUserRequest(formData);
-          // Suporta retorno { user } ou objeto direto
           const newUser = response.user || response;
           setAllUsers(prev => [...prev, newUser].sort((a,b) => a.name.localeCompare(b.name)));
           addNotification(`Utilizador criado com sucesso!`, 'success');
@@ -97,14 +108,23 @@ export default function ManageUsers() {
       }
   };
 
-  // HELPER DE CORES PARA ROLES (ADICIONADO FINANCEIRO)
+  const handleSaveOffice = async (officeData) => {
+    try {
+      await api.post('/admin/offices', officeData);
+      addNotification(`Escritório "${officeData.name}" cadastrado com sucesso!`, 'success');
+      handleCloseModals();
+    } catch (err) {
+      addNotification(`Erro ao criar escritório: ${err.response?.data?.message || err.message}`, 'error');
+    }
+  };
+
   const getRoleClass = (role) => {
     const r = role?.toUpperCase();
     switch (r) {
       case 'ADMIN': return styles.roleAdmin;
       case 'CONTADOR': return styles.roleContador;
       case 'OSC': return styles.roleOsc;
-      case 'FINANCEIRO': return styles.roleFinanceiro; // Nova classe CSS
+      case 'FINANCEIRO': return styles.roleFinanceiro;
       default: return styles.roleDefault;
     }
   };
@@ -117,10 +137,15 @@ export default function ManageUsers() {
     <div className={styles.pageContainer}>
       <div className={styles.header}>
         <h2 className={styles.title}>Gerenciamento de Usuários</h2>
-        <Button variant="primary" onClick={handleCreate} className={styles.createButton}>
-          <UsersIcon className="w-5 h-5 mr-2" />
-          Criar Novo Usuário
-        </Button>
+        <div className={styles.headerActions}>
+          <Button variant="secondary" onClick={handleCreateOffice} className="mr-2">
+            + Novo Escritório
+          </Button>
+          <Button variant="primary" onClick={handleCreate}>
+            <UsersIcon className="w-5 h-5 mr-2" />
+            Criar Novo Usuário
+          </Button>
+        </div>
       </div>
 
       <div className={styles.filtersContainer}>
@@ -141,7 +166,7 @@ export default function ManageUsers() {
               <option value="ADMIN">Administrador</option>
               <option value="CONTADOR">Contador</option>
               <option value="OSC">OSC</option>
-              <option value="FINANCEIRO">Financeiro</option> {/* Opção Financeiro */}
+              <option value="FINANCEIRO">Financeiro</option>
             </select>
           </div>
         </div>
@@ -202,6 +227,7 @@ export default function ManageUsers() {
         )}
       </div>
       
+      {/* --- MODAIS --- */}
       <CreateUserModal
         isOpen={isCreateModalOpen}
         onClose={handleCloseModals}
@@ -215,6 +241,12 @@ export default function ManageUsers() {
         onSave={handleSaveEdit}
         isLoading={isUpdating}
         userData={userToEdit}
+      />
+
+      <CreateOfficeModal
+        isOpen={isOfficeModalOpen}
+        onClose={handleCloseModals}
+        onSave={handleSaveOffice}
       />
     </div>
   );
