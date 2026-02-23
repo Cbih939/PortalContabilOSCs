@@ -1,14 +1,15 @@
 import { Router } from 'express';
-// Importação única e limpa do controller
 import { login, registerOSC, verifyToken } from '../controllers/auth.controller.js';
 
 const router = Router();
 
-// Define as rotas usando as funções importadas
+// Rota de Login
 router.post('/login', login);
+
+// Rota de Auto-registro para OSCs
 router.post('/register-osc', registerOSC);
 
-// Rota de verificação do token
+// Rota para validar o token (usada no carregamento da página)
 router.get('/verify', verifyToken, (req, res) => {
     res.json({ valid: true, user: req.user });
 });
