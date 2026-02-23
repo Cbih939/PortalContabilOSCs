@@ -4,13 +4,22 @@ import { verifyToken } from '../controllers/auth.controller.js';
 
 const router = Router();
 
-// Rota que está a dar erro 404 - Listar todos os utilizadores
-router.get('/', verifyToken, userController.getAllUsers);
+// Middleware de proteção para todas as rotas deste ficheiro
+router.use(verifyToken);
 
-// Rota de atualização que já corrigimos anteriormente
-router.put('/:id', verifyToken, userController.updateUser);
+// Listar todos (Onde dava erro)
+router.get('/', userController.getAllUsers);
 
-// Rota para buscar um utilizador específico
-router.get('/:id', verifyToken, userController.getUserById);
+// CRIAR NOVO (Faltava no seu ficheiro anterior!)
+router.post('/', userController.createUser);
+
+// Buscar específico
+router.get('/:id', userController.getUserById);
+
+// Atualizar
+router.put('/:id', userController.updateUser);
+
+// Eliminar
+router.delete('/:id', userController.deleteUser);
 
 export default router;
