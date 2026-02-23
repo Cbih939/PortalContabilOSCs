@@ -1,13 +1,18 @@
+// src/pages/Login.jsx
+
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // Mudamos Navigate para useNavigate
-import { useAuth } from '../hooks/useAuth.jsx';
-import useApi from '../../hooks/useApi.jsx';
-import * as authService from '../../services/authService.js';
-import Button from '../../components/common/Button.jsx';
-import Input from '../../components/common/Input.jsx';
-import Spinner from '../../components/common/Spinner.jsx';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth.jsx';        // Corrigido: um nível acima
+import useApi from '../hooks/useApi.jsx';             // Corrigido: um nível acima
+import * as authService from '../services/authService.js'; // Corrigido: um nível acima
+import Button from '../components/common/Button.jsx';     // Corrigido: um nível acima
+import Input from '../components/common/Input.jsx';       // Corrigido: um nível acima
+import Spinner from '../components/common/Spinner.jsx';   // Corrigido: um nível acima
 import styles from './Login.module.css';
 
+/**
+ * Página de Login corrigida para Build de Produção
+ */
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -30,10 +35,9 @@ export default function LoginPage() {
         localStorage.removeItem('remembered_email');
       }
 
-      // 1. O login no contexto agora retorna para onde o user deve ir
+      // O login no contexto retorna a rota de destino baseada na Role
       const destination = login(loginResponse);
       
-      // 2. Navega para o destino correto (impede o loop no /)
       if (destination) {
         navigate(destination);
       }
@@ -45,9 +49,15 @@ export default function LoginPage() {
 
   return (
     <div className={styles.loginCard}>
-      <img src="/logo_portal.png" alt="Logo" className={styles.logo} />
+      <img
+        src="/logo_portal.png" 
+        alt="Logo"
+        className={styles.logo}
+      />
 
-      <h3 className={styles.title}>Entre na sua conta</h3>
+      <h3 className={styles.title}>
+        Entre na sua conta
+      </h3>
       
       <form onSubmit={handleSubmit} className={styles.buttonContainer}>
         <Input
