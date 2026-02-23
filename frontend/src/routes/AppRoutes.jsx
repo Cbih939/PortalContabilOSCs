@@ -55,19 +55,33 @@ import OSCFinanceiro from '../pages/osc/OSCFinanceiro.jsx';
 import OSCSidebar from '../pages/osc/components/OSCSidebar.jsx';
 import OSCHeader from '../pages/osc/components/OSCHeader.jsx';
 
-// --- REDIRECIONADOR ---
+/**
+ * Redirecionador Inteligente
+ * Resolve o destino inicial do utilizador com base na Role e Status Financeiro.
+ */
 function RootRedirect() {
   const { isAuthenticated, user } = useAuth();
+  
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  const role = user?.role?.toLowerCase().trim();
-  if (role === 'admin') return <Navigate to="/admin/dashboard" replace />;
-  if (role === 'contador') return <Navigate to="/contador/dashboard" replace />;
-  if (role === 'financeiro') return <Navigate to="/financeiro/dashboard" replace />;
-  if (role === 'osc') return <Navigate to="/osc/inicio" replace />;
+
+  const role = user?.role?.toUpperCase().trim();
+  const isDebt = role === 'OSC' && Number(user?.is_in_debt) === 1;
+
+  if (role === 'ADMIN') return <Navigate to="/admin/dashboard" replace />;
+  if (role === 'CONTADOR') return <Navigate to="/contador/dashboard" replace />;
+  if (role === 'FINANCEIRO') return <Navigate to="/financeiro/dashboard" replace />;
+  
+  if (role === 'OSC') {
+    // Se tiver dívida, manda direto para a página financeira para evitar loops
+    return isDebt 
+      ? <Navigate to="/osc/financeiro" replace /> 
+      : <Navigate to="/osc/inicio" replace />;
+  }
+
   return <Navigate to="/login" replace />;
 }
 
-// --- LAYOUT WRAPPERS ---
+// --- LAYOUT WRAPPERS (Consistentes) ---
 const AdminLayoutWrapper = () => {
   const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -118,22 +132,27 @@ const OSCLayoutWrapper = () => {
 
 export default function AppRoutes() {
   const { user } = useAuth();
-  const isDebt = user?.role?.toLowerCase() === 'osc' && Number(user?.is_in_debt) === 1;
+  
+  // Normalização para as rotas internas
+  const role = user?.role?.toUpperCase().trim();
+  const isDebt = role === 'OSC' && Number(user?.is_in_debt) === 1;
 
   return (
     <BrowserRouter>
       <Suspense fallback={<Spinner text="Carregando..." />}>
         <Routes>
+          {/* Rota Raiz */}
           <Route path="/" element={<RootRedirect />} />
           
+          {/* Rotas Públicas */}
           <Route element={<GuestLayout />}>
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/register-osc" element={<RegisterOSC />} /> {/* Rota do novo ficheiro */}
+            <Route path="/register-osc" element={<RegisterOSC />} />
             <Route path="/esqueceu-senha" element={<EsqueceuSenhaPage />} />
             <Route path="/redefinir-senha/:token" element={<RedefinirSenhaPage />} />
           </Route>
 
-          {/* ADMIN */}
+          {/* ADMIN (Acesso restrito) */}
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route element={<AdminLayoutWrapper />}>
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -145,7 +164,7 @@ export default function AppRoutes() {
             </Route>
           </Route>
 
-          {/* FINANCEIRO */}
+          {/* FINANCEIRO (Acesso para financeiro e admin) */}
           <Route element={<ProtectedRoute allowedRoles={['financeiro', 'admin']} />}>
             <Route element={<FinanceiroLayoutWrapper />}>
               <Route path="/financeiro/dashboard" element={<FinanceiroDashboard />} />
@@ -168,19 +187,22 @@ export default function AppRoutes() {
             </Route>
           </Route>
 
-          {/* OSC */}
+          {/* OSC - Bloqueio de funcionalidades em caso de dívida */}
           <Route element={<ProtectedRoute allowedRoles={['osc']} />}>
             <Route element={<OSCLayoutWrapper />}>
-              <Route path="/osc/inicio" element={isDebt ? <Navigate to="/osc/financeiro" /> : <OSCDashboard />} />
-              <Route path="/osc/documentos" element={isDebt ? <Navigate to="/osc/financeiro" /> : <OSCDocumentsPage />} />
-              <Route path="/osc/modelos" element={isDebt ? <Navigate to="/osc/financeiro" /> : <OSCTemplatesPage />} />
-              <Route path="/osc/biblioteca" element={isDebt ? <Navigate to="/osc/financeiro" /> : <OSCLibraryPage />} />
+              <Route path="/osc/inicio" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCDashboard />} />
+              <Route path="/osc/documentos" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCDocumentsPage />} />
+              <Route path="/osc/modelos" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCTemplatesPage />} />
+              <Route path="/osc/biblioteca" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCLibraryPage />} />
+              
+              {/* Rotas de utilidade (Sempre abertas) */}
               <Route path="/osc/mensagens" element={<OSCMessagesPage />} />
               <Route path="/osc/perfil" element={<OSCProfilePage />} />
               <Route path="/osc/financeiro" element={<OSCFinanceiro />} />
             </Route>
           </Route>
 
+          {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
