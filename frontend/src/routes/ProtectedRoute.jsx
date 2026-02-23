@@ -1,19 +1,24 @@
 // src/routes/ProtectedRoute.jsx
-import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth.jsx'; // Importa o HOOK
+import { useAuth } from '../hooks/useAuth';
 
-export default function ProtectedRoute({ allowedRoles }) {
-  const { isAuthenticated, user } = useAuth();
+const ProtectedRoute = ({ allowedRoles }) => {
+  const { user, isAuthenticated } = useAuth();
   const location = useLocation();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  const userRole = user?.role?.toUpperCase().trim();
+  const formattedAllowedRoles = allowedRoles.map(role => role.toUpperCase().trim());
+
+  if (!formattedAllowedRoles.includes(userRole)) {
+    // Se logado mas sem permissão, manda para o RootRedirect decidir
     return <Navigate to="/" replace />;
   }
 
-  return <Outlet />; // Renderiza o conteúdo da rota (Layout ou Página)
-}
+  return <Outlet />;
+};
+
+export default ProtectedRoute;

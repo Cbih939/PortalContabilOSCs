@@ -153,7 +153,7 @@ export default function AppRoutes() {
           </Route>
 
           {/* ADMIN (Acesso restrito) */}
-          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
             <Route element={<AdminLayoutWrapper />}>
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/usuarios" element={<ManageUsers />} />
@@ -165,7 +165,7 @@ export default function AppRoutes() {
           </Route>
 
           {/* FINANCEIRO (Acesso para financeiro e admin) */}
-          <Route element={<ProtectedRoute allowedRoles={['financeiro', 'admin']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['FINANCEIRO', 'ADMIN']} />}>
             <Route element={<FinanceiroLayoutWrapper />}>
               <Route path="/financeiro/dashboard" element={<FinanceiroDashboard />} />
               <Route path="/financeiro/gestao" element={<FinanceiroPage />} />
@@ -175,7 +175,7 @@ export default function AppRoutes() {
           </Route>
 
           {/* CONTADOR */}
-          <Route element={<ProtectedRoute allowedRoles={['contador']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['CONTADOR']} />}>
             <Route element={<ContadorLayoutWrapper />}>
               <Route path="/contador/dashboard" element={<ContadorDashboard />} />
               <Route path="/contador/oscs" element={<OSCsPage />} />
@@ -188,7 +188,7 @@ export default function AppRoutes() {
           </Route>
 
           {/* OSC - Bloqueio de funcionalidades em caso de dívida */}
-          <Route element={<ProtectedRoute allowedRoles={['osc']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['OSC']} />}>
             <Route element={<OSCLayoutWrapper />}>
               <Route path="/osc/inicio" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCDashboard />} />
               <Route path="/osc/documentos" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCDocumentsPage />} />
