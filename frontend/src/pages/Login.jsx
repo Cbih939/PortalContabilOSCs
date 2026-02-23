@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
-import { Navigate, Link } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth.jsx';
-import useApi from '../hooks/useApi.jsx';
-import * as authService from '../services/authService.js';
-import Button from '../components/common/Button.jsx';
-import Input from '../components/common/Input.jsx';
-import Spinner from '../components/common/Spinner.jsx';
+import { useNavigate, Link } from 'react-router-dom'; // Mudamos Navigate para useNavigate
+import { useAuth } from '../../hooks/useAuth.jsx';
+import useApi from '../../hooks/useApi.jsx';
+import * as authService from '../../services/authService.js';
+import Button from '../../components/common/Button.jsx';
+import Input from '../../components/common/Input.jsx';
+import Spinner from '../../components/common/Spinner.jsx';
 import styles from './Login.module.css';
 
-/**
- * Página de Login Atualizada com "Lembrar-me" e "Esqueci a senha".
- */
 export default function LoginPage() {
-  const { login, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [formError, setFormError] = useState(null);
   const [rememberMe, setRememberMe] = useState(false);
   
@@ -26,36 +24,30 @@ export default function LoginPage() {
     try {
       const loginResponse = await performLogin(email.value, password.value);
       
-      // Se "Lembrar-me" estiver marcado, você pode tratar o armazenamento do email aqui ou no seu useAuth
       if (rememberMe) {
         localStorage.setItem('remembered_email', email.value);
       } else {
         localStorage.removeItem('remembered_email');
       }
 
-      login(loginResponse);
+      // 1. O login no contexto agora retorna para onde o user deve ir
+      const destination = login(loginResponse);
+      
+      // 2. Navega para o destino correto (impede o loop no /)
+      if (destination) {
+        navigate(destination);
+      }
     } catch (err) {
       setFormError("Email ou senha incorretos. Tente novamente.");
-      console.error("Falha no login (visto pela LoginPage):", err);
+      console.error("Falha no login:", err);
     }
   };
 
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-
   return (
     <div className={styles.loginCard}>
-      
-      <img
-        src="/logo_portal.png" 
-        alt="Logo Conta Comigo App"
-        className={styles.logo}
-      />
+      <img src="/logo_portal.png" alt="Logo" className={styles.logo} />
 
-      <h3 className={styles.title}>
-        Entre na sua conta
-      </h3>
+      <h3 className={styles.title}>Entre na sua conta</h3>
       
       <form onSubmit={handleSubmit} className={styles.buttonContainer}>
         <Input
@@ -76,7 +68,6 @@ export default function LoginPage() {
           error={apiError?.data?.field === 'password' ? apiError.data.message : null}
         />
 
-        {/* --- NOVAS OPÇÕES: LEMBRAR E ESQUECI SENHA --- */}
         <div className={styles.formOptions}>
           <label className={styles.rememberMe}>
             <input 
@@ -100,9 +91,9 @@ export default function LoginPage() {
 
         <div className={styles.registerContainer}>
           <p className={styles.registerText}>É uma Organização e ainda não tem conta?</p>
-            <Link to="/register-osc" className={styles.registerLinkHighlight}>
-              Cadastre sua OSC e ative seu plano aqui
-            </Link>
+          <Link to="/register-osc" className={styles.registerLinkHighlight}>
+            Cadastre sua OSC e ative seu plano aqui
+          </Link>
         </div>
       </form>
     </div>
