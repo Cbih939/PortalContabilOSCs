@@ -3,7 +3,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import * as userService from '../../services/userService.js';
 import { ROLES } from '../../utils/constants.js';
-import { EditIcon, UsersIcon, SearchIcon } from '../../components/common/Icons.jsx';
+// Adicionado TrashIcon para a exclusão
+import { EditIcon, UsersIcon, SearchIcon, TrashIcon } from '../../components/common/Icons.jsx';
 import Input from '../../components/common/Input.jsx';
 import Button from '../../components/common/Button.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
@@ -11,12 +12,12 @@ import { useNotification } from '../../contexts/NotificationContext.jsx';
 import styles from './ManageUsers.module.css';
 import CreateUserModal from './components/CreateUserModal.jsx';
 import EditUserModal from './components/EditUserModal.jsx';
-import CreateOfficeModal from './components/CreateOfficeModal.jsx'; // Novo componente
+import CreateOfficeModal from './components/CreateOfficeModal.jsx';
 import useApi from '../../hooks/useApi.jsx';
 import api from '../../services/api.js';
 
 /**
- * Página de Gerenciamento de Usuários e Escritórios
+ * Página de Gerenciamento de Usuários e Escritórios (Atualizada)
  */
 export default function ManageUsers() {
   const [allUsers, setAllUsers] = useState([]);
@@ -26,12 +27,10 @@ export default function ManageUsers() {
   const [filterRole, setFilterRole] = useState('');
   const addNotification = useNotification();
   
-  // --- Estados dos Modais ---
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isOfficeModalOpen, setIsOfficeModalOpen] = useState(false); // Modal Escritório
+  const [isOfficeModalOpen, setIsOfficeModalOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState(null);
 
-  // --- Hooks API ---
   const { request: createUserRequest, isLoading: isCreating } = useApi(
       userService.createUser, { showErrorNotification: false }
   );
@@ -39,7 +38,6 @@ export default function ManageUsers() {
       userService.updateUser, { showErrorNotification: false }
   );
 
-  // Busca lista de utilizadores
   const fetchUsers = async (showLoadingSpinner = true) => {
       if (showLoadingSpinner) setIsLoading(true);
       setError(null);
@@ -60,7 +58,6 @@ export default function ManageUsers() {
     fetchUsers(true);
   }, []);
 
-  // Filtros de busca
   const filteredUsers = useMemo(() => {
     return allUsers.filter(
       (user) =>
@@ -79,6 +76,20 @@ export default function ManageUsers() {
       setIsCreateModalOpen(false);
       setIsOfficeModalOpen(false);
       setUserToEdit(null);
+  };
+
+  // Handler para Exclusão de Usuário
+  const handleDeleteUser = async (user) => {
+    if (window.confirm(`Tem certeza que deseja excluir o usuário ${user.name}? Esta ação não pode ser desfeita.`)) {
+      try {
+        await userService.deleteUser(user.id);
+        setAllUsers(prev => prev.filter(u => u.id !== user.id));
+        addNotification(`Usuário "${user.name}" excluído com sucesso!`, 'success');
+      } catch (err) {
+        console.error("Erro ao excluir usuário:", err);
+        addNotification(`Erro ao excluir: ${err.response?.data?.message || err.message}`, 'error');
+      }
+    }
   };
 
   const handleSaveCreate = async (formData) => {
@@ -206,12 +217,22 @@ export default function ManageUsers() {
                   </td>
                   <td>
                     <div className={styles.actionsContainer}>
+                      {/* BOTÃO EDITAR - Agora habilitado para todos, incluindo OSC */}
                       <button
                         onClick={() => handleEdit(user)}
                         className={`${styles.actionButton} ${styles.editButton}`}
-                        disabled={user.role === 'OSC'} 
+                        title="Editar Usuário"
                       >
                         <EditIcon />
+                      </button>
+
+                      {/* BOTÃO EXCLUIR - Novo */}
+                      <button
+                        onClick={() => handleDeleteUser(user)}
+                        className={`${styles.actionButton} ${styles.deleteButton}`}
+                        title="Excluir Usuário"
+                      >
+                        <TrashIcon />
                       </button>
                     </div>
                   </td>
