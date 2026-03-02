@@ -1,36 +1,9 @@
 // src/contexts/NotificationContext.jsx
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-} from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
-import { clsx } from 'clsx';
-// Assumindo que Icons.jsx e Button.jsx existirão em ../components/common/
-import {
-  CheckIcon,
-  AlertTriangleIcon,
-  XIcon,
-} from '../components/common/Icons';
-import Button from '../components/common/Button'; // Importado apenas para o exemplo de uso
-
-// Mapeamento de estilos
-const notificationTypes = {
-  success: {
-    container: 'bg-green-100 border-green-500 text-green-700',
-    icon: <CheckIcon className="w-5 h-5 text-green-500" />,
-  },
-  error: {
-    container: 'bg-red-100 border-red-500 text-red-700',
-    icon: <AlertTriangleIcon className="w-5 h-5 text-red-500" />,
-  },
-  info: {
-    container: 'bg-blue-100 border-blue-500 text-blue-700',
-    icon: <AlertTriangleIcon className="w-5 h-5 text-blue-500" />,
-  },
-};
+import { CheckIcon, AlertTriangleIcon, XIcon } from '../components/common/Icons';
+import styles from './NotificationContext.module.css';
 
 // 1. Criar o Contexto
 const NotificationContext = createContext(null);
@@ -71,36 +44,31 @@ export function NotificationProvider({ children }) {
  * Componente (privado) que renderiza os toasts na tela.
  */
 function NotificationDisplay({ notifications, removeNotification }) {
-  // Adiciona animação Tailwind (requer configuração no tailwind.config.js se quiser)
-  const animationClass = 'animate-fade-in-right'; // Exemplo
+  // Se não houver notificações, não renderiza o portal
+  if (notifications.length === 0) return null;
 
   return ReactDOM.createPortal(
-    <div className="fixed top-4 right-4 z-[9999] w-full max-w-sm space-y-3">
+    <div className={styles.portalContainer}>
       {notifications.map((n) => {
-        const styles = notificationTypes[n.type] || notificationTypes.info;
+        // Define as classes corretas baseado no tipo
+        const cardClass = styles[n.type] || styles.info;
+        
         return (
-          <div
-            key={n.id}
-            className={clsx(
-              'flex items-start justify-between p-4 rounded-lg shadow-xl border',
-              animationClass, // Adiciona animação
-              styles.container
-            )}
-            role="alert"
-          >
-            <div className="flex items-center">
-              <span className="flex-shrink-0">{styles.icon}</span>
-              <p className="ml-3 font-medium">{n.message}</p>
+          <div key={n.id} className={`${styles.notificationCard} ${cardClass}`} role="alert">
+            <div className={styles.content}>
+              {/* Renderiza o ícone correto baseado no tipo */}
+              {n.type === 'success' && <CheckIcon className={`${styles.icon} ${styles.iconSuccess}`} />}
+              {n.type === 'error' && <AlertTriangleIcon className={`${styles.icon} ${styles.iconError}`} />}
+              {n.type === 'info' && <AlertTriangleIcon className={`${styles.icon} ${styles.iconInfo}`} />}
+              
+              <p className={styles.message}>{n.message}</p>
             </div>
             <button
               onClick={() => removeNotification(n.id)}
-              className={clsx(
-                'ml-4 -mr-1 -mt-1 p-1 rounded-md transition-colors',
-                'hover:bg-black hover:bg-opacity-10'
-              )}
+              className={styles.closeButton}
               aria-label="Fechar"
             >
-              <XIcon className="w-5 h-5" />
+              <XIcon className={styles.icon} />
             </button>
           </div>
         );
@@ -116,9 +84,7 @@ function NotificationDisplay({ notifications, removeNotification }) {
 export const useNotification = () => {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error(
-      'useNotification deve ser usado dentro de um NotificationProvider'
-    );
+    throw new Error('useNotification deve ser usado dentro de um NotificationProvider');
   }
   return context;
 };
