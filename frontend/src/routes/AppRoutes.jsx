@@ -24,6 +24,7 @@ import ManageLibrary from '../pages/admin/ManageLibrary.jsx';
 import AdminSidebar from '../pages/admin/components/AdminSidebar.jsx';
 import AdminHeader from '../pages/admin/components/AdminHeader.jsx';
 import AdminNoticesPage from '../pages/admin/AdminNoticesPage.jsx';
+import AdminProfile from './pages/admin/AdminProfile.jsx';
 
 // --- FINANCEIRO ---
 import FinanceiroDashboard from '../pages/financeiro/FinanceiroDashboard.jsx';
@@ -161,6 +162,7 @@ export default function AppRoutes() {
               <Route path="/admin/biblioteca" element={<ManageLibrary />} />
               <Route path="/admin/financeiro" element={<FinanceiroPage />} />
               <Route path="/admin/avisos" element={<AdminNoticesPage />} />
+              <Route path="/admin/profile" element={<AdminProfile />} />
             </Route>
           </Route>
 

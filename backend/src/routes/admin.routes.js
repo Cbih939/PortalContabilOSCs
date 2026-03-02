@@ -1,6 +1,7 @@
 import express from 'express';
 import { protect, checkRole } from '../middlewares/auth.middleware.js';
 import * as messageController from '../controllers/message.controller.js';
+import * as profileController from '../controllers/admin/profile.controller.js';
 
 // Centralizamos todas as importações do financeiro em um único controller
 import { 
@@ -19,6 +20,7 @@ const router = express.Router();
 router.use(protect);
 router.use(checkRole(['admin', 'financeiro']));
 
+router.put('/profile/password', profileController.updatePassword);
 router.get('/financeiro/stats', getFinanceiroStats);
 router.get('/financeiro/oscs', listOSCsFinanceiro);
 router.patch('/financeiro/oscs/:id/status', updateDebtStatus);
