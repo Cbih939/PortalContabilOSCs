@@ -18,11 +18,15 @@ export default function PaymentMessageModal({ isOpen, onClose, userData }) {
   const addNotification = useNotification();
 
   // Mapeia o status do utilizador (do banco de dados) para a categoria da tabela payment_messages
-const getCategoryFromStatus = (status) => {
-  // Agora o status do usuário (Ativo, Pendente, Inativo) 
-  // bate EXATAMENTE com a categoria no banco de mensagens.
-  return status; 
-};
+  const getCategoryFromStatus = (status) => {
+    if (!status) return 'Ativo';
+  
+  // Converte a primeira letra para Maiúscula e o resto para minúscula
+  // Ex: "ativo" vira "Ativo", "PENDENTE" vira "Pendente"
+  const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+  
+    return formattedStatus; 
+  };
 
   // Carrega as mensagens sempre que o modal abre ou o utilizador selecionado muda
   useEffect(() => {

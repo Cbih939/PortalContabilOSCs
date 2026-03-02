@@ -113,19 +113,22 @@ export default function ManageUsers() {
   };
 
   const handleSaveEdit = async (userId, formData) => {
-      try {
-          const response = await updateUserRequest(userId, formData);
-          const updatedUser = response.user || response;
-          setAllUsers(prev => 
-              prev.map(u => (u.id === userId ? updatedUser : u))
-                  .sort((a,b) => a.name.localeCompare(b.name))
-          );
-          addNotification(`Utilizador atualizado com sucesso!`, 'success');
-          handleCloseModals();
-      } catch (err) {
-           addNotification(`Falha ao atualizar: ${err.response?.data?.message || err.message}`, 'error');
-      }
-  };
+    try {
+        const response = await updateUserRequest(userId, formData);
+        // Garantimos que pegamos o objeto correto da resposta
+        const updatedUser = response.user || response.data || response;
+
+        setAllUsers(prev => 
+            prev.map(u => (u.id === userId ? { ...u, ...updatedUser } : u))
+                // Adicionamos uma verificação extra antes do localeCompare
+                .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+        );
+        addNotification(`Utilizador atualizado com sucesso!`, 'success');
+        handleCloseModals();
+    } catch (err) {
+         addNotification(`Falha ao atualizar: ${err.response?.data?.message || err.message}`, 'error');
+    }
+};
 
   const handleSaveOffice = async (officeData) => {
     try {

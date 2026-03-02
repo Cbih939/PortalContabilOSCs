@@ -24,5 +24,6 @@ router.patch('/financeiro/oscs/:id/status', updateDebtStatus);
 router.get('/financeiro/config', getStripeConfig);
 router.post('/financeiro/config', updateStripeConfig);
 router.get('/financeiro/historico', getHistoricoPagamentos);
+router.get('/admin/messages/:status', messageController.getMessagesByStatus);
 
 export default router;
