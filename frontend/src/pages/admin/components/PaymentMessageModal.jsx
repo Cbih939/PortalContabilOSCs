@@ -5,45 +5,55 @@ import Modal from '../../../components/common/Modal.jsx';
 import Button from '../../../components/common/Button.jsx';
 import Spinner from '../../../components/common/Spinner.jsx';
 import api from '../../../services/api.js';
-import styles from './PaymentMessageModal.module.css'; // Crie este CSS para estilizar os cards
+import styles from './PaymentMessageModal.module.css';
 import { useNotification } from '../../../contexts/NotificationContext.jsx';
 
+/**
+ * Modal para seleção e envio de mensagens padronizadas de pagamento
+ */
 export default function PaymentMessageModal({ isOpen, onClose, userData }) {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState(null);
   const addNotification = useNotification();
 
-  // Mapeamento interno para garantir que o status do usuário bata com o ENUM do SQL
+  // Mapeia o status do utilizador (do banco de dados) para a categoria da tabela payment_messages
   const getCategoryFromStatus = (status) => {
     const s = status?.toLowerCase();
     if (s === 'ativo') return 'REGULAR';
     if (s === 'pendente' || s === 'aguardando') return 'AGUARDANDO';
-    return 'INADIMPLENTE';
+    if (s === 'inativo') return 'INADIMPLENTE';
+    return 'REGULAR'; // Fallback
   };
 
+  // Carrega as mensagens sempre que o modal abre ou o utilizador selecionado muda
   useEffect(() => {
-    if (isOpen && userData) {
+    const loadMessages = async () => {
+      if (!userData?.status) return;
+      
+      setIsLoading(true);
       const category = getCategoryFromStatus(userData.status);
-      loadMessages(category);
+      
+      try {
+        // Rota que busca na tabela payment_messages filtrando por categoria
+        const response = await api.get(`/admin/messages/${category}`);
+        setMessages(response.data || []);
+      } catch (err) {
+        console.error("Erro ao carregar modelos:", err);
+        addNotification("Erro ao carregar modelos de mensagem.", "error");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isOpen && userData) {
+      loadMessages();
     } else {
+      // Limpa estados ao fechar
       setMessages([]);
       setSelectedMessage(null);
     }
-  }, [isOpen, userData]);
-
-  const loadMessages = async (category) => {
-    setIsLoading(true);
-    try {
-      // Ajuste a rota conforme seu backend (ex: GET /api/admin/messages/:category)
-      const response = await api.get(`/admin/messages/${category}`);
-      setMessages(response.data || []);
-    } catch (err) {
-      addNotification("Erro ao carregar modelos de mensagem.", "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [isOpen, userData, addNotification]);
 
   const handleSend = async () => {
     if (!selectedMessage) {
@@ -52,30 +62,44 @@ export default function PaymentMessageModal({ isOpen, onClose, userData }) {
     }
 
     try {
+      // Endpoint para processar o envio (ex: NodeMailer no backend)
       await api.post('/admin/messages/send', {
         userId: userData.id,
         email: userData.email,
         messageContent: selectedMessage.content,
         subject: selectedMessage.title
       });
+      
       addNotification("Mensagem enviada com sucesso!", "success");
       onClose();
     } catch (err) {
+      console.error("Erro ao enviar:", err);
       addNotification("Falha ao enviar e-mail.", "error");
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Enviar Mensagem de Cobrança/Status">
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      title="Comunicado de Pagamento - CONTA COMIGO"
+    >
       <div className={styles.container}>
-        <p className={styles.subtitle}>
-          Enviando para: <strong>{userData?.name}</strong> ({userData?.email})
-        </p>
+        <div className={styles.infoBox}>
+          <p className={styles.subtitle}>
+            Destinatário: <strong>{userData?.name}</strong>
+          </p>
+          <p className={styles.statusLabel}>
+            Status Atual: <span className={styles.statusValue}>{userData?.status}</span>
+          </p>
+        </div>
         
-        <label className={styles.label}>Escolha o tom da mensagem:</label>
+        <label className={styles.label}>Selecione o tom da abordagem:</label>
 
         {isLoading ? (
-          <Spinner text="Buscando modelos..." />
+          <div className={styles.loadingContainer}>
+            <Spinner text="Carregando modelos..." />
+          </div>
         ) : (
           <div className={styles.messageList}>
             {messages.length > 0 ? (
@@ -88,26 +112,38 @@ export default function PaymentMessageModal({ isOpen, onClose, userData }) {
                   <div className={styles.cardHeader}>
                     <input 
                       type="radio" 
+                      name="payment_msg"
                       checked={selectedMessage?.id === msg.id} 
-                      readOnly 
+                      onChange={() => setSelectedMessage(msg)}
                     />
-                    <strong>{msg.title}</strong>
+                    <span className={styles.messageTitle}>{msg.title}</span>
                   </div>
-                  <p className={styles.messagePreview}>{msg.content}</p>
+                  <div className={styles.messagePreview}>
+                    {msg.content}
+                  </div>
                 </div>
               ))
             ) : (
-              <p className={styles.empty}>Nenhum modelo encontrado para este status.</p>
+              <div className={styles.emptyState}>
+                <p>Nenhum modelo de mensagem configurado para o status "{userData?.status}".</p>
+              </div>
             )}
           </div>
         )}
 
         <div className={styles.actions}>
           <Button 
+            variant="secondary" 
+            onClick={onClose}
+            className={styles.cancelBtn}
+          >
+            Cancelar
+          </Button>
+          <Button 
             variant="primary" 
             onClick={handleSend} 
             disabled={!selectedMessage || isLoading}
-            fullWidth
+            className={styles.sendBtn}
           >
             Enviar para {userData?.email}
           </Button>
