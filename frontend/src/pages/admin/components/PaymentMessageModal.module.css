@@ -1,0 +1,95 @@
+/* src/pages/admin/components/PaymentMessageModal.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.5rem;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+.label {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: -0.5rem;
+}
+
+.messageList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* Scrollbar estilizada */
+.messageList::-webkit-scrollbar {
+  width: 6px;
+}
+.messageList::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 10px;
+}
+
+.messageCard {
+  border: 2px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #f9fafb;
+}
+
+.messageCard:hover {
+  border-color: #fbbf24; /* Amarelo Conta Comigo */
+  background-color: #fffbeb;
+}
+
+.messageCard.selected {
+  border-color: #f59e0b;
+  background-color: #fff7ed;
+  box-shadow: 0 0 0 1px #f59e0b;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.cardHeader strong {
+  font-size: 1rem;
+  color: #111827;
+}
+
+.messagePreview {
+  font-size: 0.875rem;
+  color: #4b5563;
+  line-height: 1.4;
+  white-space: pre-wrap; /* Mantém as quebras de linha do SQL */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.selected .messagePreview {
+  -webkit-line-clamp: unset; /* Mostra texto todo se selecionado */
+}
+
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.actions {
+  margin-top: 1rem;
+}
