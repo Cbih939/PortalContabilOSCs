@@ -18,13 +18,11 @@ export default function PaymentMessageModal({ isOpen, onClose, userData }) {
   const addNotification = useNotification();
 
   // Mapeia o status do utilizador (do banco de dados) para a categoria da tabela payment_messages
-  const getCategoryFromStatus = (status) => {
-    const s = status?.toLowerCase();
-    if (s === 'ativo') return 'REGULAR';
-    if (s === 'pendente' || s === 'aguardando') return 'AGUARDANDO';
-    if (s === 'inativo') return 'INADIMPLENTE';
-    return 'REGULAR'; // Fallback
-  };
+const getCategoryFromStatus = (status) => {
+  // Agora o status do usuário (Ativo, Pendente, Inativo) 
+  // bate EXATAMENTE com a categoria no banco de mensagens.
+  return status; 
+};
 
   // Carrega as mensagens sempre que o modal abre ou o utilizador selecionado muda
   useEffect(() => {
