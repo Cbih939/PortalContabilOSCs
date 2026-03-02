@@ -78,9 +78,7 @@ export const getMessages = async (req, res) => {
 
 // Esta função agora atende tanto pelo nome 'category' quanto 'status' para evitar erros de undefined nas rotas
 export const getMessagesByStatus = async (req, res) => {
-  // Tenta pegar de 'status' ou 'category' vindo da URL
-  const status = req.params.status || req.params.category;
-  
+  const { status } = req.params; // Captura 'Ativo', 'Pendente' ou 'Inativo'
   try {
     const [rows] = await pool.execute(
       'SELECT * FROM payment_messages WHERE category = ?', 
@@ -88,8 +86,7 @@ export const getMessagesByStatus = async (req, res) => {
     );
     res.json(rows);
   } catch (error) {
-    console.error('[Admin Message Error]:', error);
-    res.status(500).json({ message: 'Erro ao buscar modelos de mensagem.' });
+    res.status(500).json({ message: 'Erro ao buscar mensagens.' });
   }
 };
 
