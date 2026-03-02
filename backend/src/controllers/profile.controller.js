@@ -1,4 +1,4 @@
-import pool from '../../config/db.js';
+import pool from '../config/db.js';
 import bcrypt from 'bcryptjs'; // Certifique-se de que tem o bcryptjs instalado
 
 export const updatePassword = async (req, res) => {
