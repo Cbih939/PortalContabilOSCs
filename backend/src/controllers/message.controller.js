@@ -1,7 +1,10 @@
+// Localização sugerida: src/controllers/admin/message.controller.js ou onde preferir
 import pool from '../config/db.js';
 
+// --- SISTEMA DE CHAT (MANTIDO) ---
+
 export const getContacts = async (req, res) => {
-    res.setHeader('Content-Type', 'application/json'); // Força JSON
+    res.setHeader('Content-Type', 'application/json'); 
     try {
         const userId = req.user.id;
         const userRole = req.user.role;
@@ -40,7 +43,7 @@ export const getContacts = async (req, res) => {
         return res.status(200).json(contactsWithMsg);
     } catch (error) {
         console.error(error);
-        return res.status(200).json([]); // Nunca retorne erro 500 aqui para não quebrar o map
+        return res.status(200).json([]); 
     }
 };
 
@@ -71,29 +74,46 @@ export const getMessages = async (req, res) => {
     }
 };
 
-export const getMessagesByCategory = async (req, res) => {
-  const { category } = req.params;
+// --- SISTEMA DE MODELOS DE PAGAMENTO (ATUALIZADO E SINCRONIZADO) ---
+
+// Esta função agora atende tanto pelo nome 'category' quanto 'status' para evitar erros de undefined nas rotas
+export const getMessagesByStatus = async (req, res) => {
+  // Tenta pegar de 'status' ou 'category' vindo da URL
+  const status = req.params.status || req.params.category;
+  
   try {
     const [rows] = await pool.execute(
       'SELECT * FROM payment_messages WHERE category = ?', 
-      [category]
+      [status]
     );
     res.json(rows);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar mensagens.' });
+    console.error('[Admin Message Error]:', error);
+    res.status(500).json({ message: 'Erro ao buscar modelos de mensagem.' });
   }
 };
+
+// Alias para manter compatibilidade se você já usa 'getMessagesByCategory' em algum lugar
+export const getMessagesByCategory = getMessagesByStatus;
+
+// --- SISTEMA DE ENVIO (MANTIDO E MELHORADO) ---
 
 export const sendMessage = async (req, res) => {
     try {
         const sender_id = req.user.id;
-        const { receiver_id, content } = req.body;
+        const { receiver_id, content, email, subject } = req.body;
 
-        // LOG PARA DEBUG - Verifique no console do PM2 (pm2 logs)
-        console.log(`[Chat Debug] Tentando salvar mensagem: De ${sender_id} para ${receiver_id}. Conteúdo: ${content}`);
+        // Se houver um 'email' no corpo, trata-se de um envio administrativo (Cobrança)
+        if (email) {
+            console.log(`[Admin Mail] Simulação de envio para: ${email} | Assunto: ${subject}`);
+            // Aqui você pode adicionar a lógica do Nodemailer depois
+            return res.status(200).json({ success: true, message: "Mensagem administrativa processada" });
+        }
+
+        // Caso contrário, trata-se do chat comum
+        console.log(`[Chat Debug] Tentando salvar mensagem: De ${sender_id} para ${receiver_id}.`);
 
         if (!receiver_id || !content) {
-            console.error('[Chat Error] Dados ausentes no corpo da requisição:', req.body);
             return res.status(400).json({ success: false, message: "Dados incompletos" });
         }
 
@@ -102,7 +122,6 @@ export const sendMessage = async (req, res) => {
             [sender_id, receiver_id, content]
         );
 
-        console.log(`[Chat Success] Mensagem salva com ID: ${result.insertId}`);
         return res.status(201).json({ id: result.insertId, success: true });
     } catch (error) {
         console.error('[Chat Database Error]:', error);
