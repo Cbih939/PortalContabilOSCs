@@ -1,5 +1,6 @@
 import express from 'express';
 import { protect, checkRole } from '../middlewares/auth.middleware.js';
+import * as messageController from '../controllers/admin/message.controller.js';
 
 // Centralizamos todas as importações do financeiro em um único controller
 import { 
@@ -24,6 +25,7 @@ router.patch('/financeiro/oscs/:id/status', updateDebtStatus);
 router.get('/financeiro/config', getStripeConfig);
 router.post('/financeiro/config', updateStripeConfig);
 router.get('/financeiro/historico', getHistoricoPagamentos);
-router.get('/admin/messages/:status', messageController.getMessagesByStatus);
+router.get('/messages/:status', messageController.getMessagesByStatus);
+router.post('/messages/send', messageController.sendMessage);
 
 export default router;
