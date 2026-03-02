@@ -3,8 +3,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import * as userService from '../../services/userService.js';
 import { ROLES } from '../../utils/constants.js';
-// Adicionado TrashIcon para a exclusão
-import { EditIcon, UsersIcon, SearchIcon, TrashIcon } from '../../components/common/Icons.jsx';
+// Adicionado MessageIcon para as mensagens de pagamento
+import { EditIcon, UsersIcon, SearchIcon, TrashIcon, MessageIcon } from '../../components/common/Icons.jsx';
 import Input from '../../components/common/Input.jsx';
 import Button from '../../components/common/Button.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
@@ -13,11 +13,12 @@ import styles from './ManageUsers.module.css';
 import CreateUserModal from './components/CreateUserModal.jsx';
 import EditUserModal from './components/EditUserModal.jsx';
 import CreateOfficeModal from './components/CreateOfficeModal.jsx';
+import PaymentMessageModal from './components/PaymentMessageModal.jsx'; // Novo Modal
 import useApi from '../../hooks/useApi.jsx';
 import api from '../../services/api.js';
 
 /**
- * Página de Gerenciamento de Usuários e Escritórios (Atualizada)
+ * Página de Gerenciamento de Usuários e Escritórios (Atualizada com Mensagens de Pagamento)
  */
 export default function ManageUsers() {
   const [allUsers, setAllUsers] = useState([]);
@@ -27,10 +28,13 @@ export default function ManageUsers() {
   const [filterRole, setFilterRole] = useState('');
   const addNotification = useNotification();
   
+  // --- Estados dos Modais ---
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isOfficeModalOpen, setIsOfficeModalOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState(null);
+  const [userToMessage, setUserToMessage] = useState(null); // Estado para o modal de pagamento
 
+  // --- Hooks API ---
   const { request: createUserRequest, isLoading: isCreating } = useApi(
       userService.createUser, { showErrorNotification: false }
   );
@@ -38,6 +42,7 @@ export default function ManageUsers() {
       userService.updateUser, { showErrorNotification: false }
   );
 
+  // Busca lista de utilizadores
   const fetchUsers = async (showLoadingSpinner = true) => {
       if (showLoadingSpinner) setIsLoading(true);
       setError(null);
@@ -58,6 +63,7 @@ export default function ManageUsers() {
     fetchUsers(true);
   }, []);
 
+  // Filtros de busca
   const filteredUsers = useMemo(() => {
     return allUsers.filter(
       (user) =>
@@ -71,11 +77,13 @@ export default function ManageUsers() {
   const handleEdit = (user) => setUserToEdit(user);
   const handleCreate = () => setIsCreateModalOpen(true);
   const handleCreateOffice = () => setIsOfficeModalOpen(true);
+  const handleOpenMessage = (user) => setUserToMessage(user);
   
   const handleCloseModals = () => {
       setIsCreateModalOpen(false);
       setIsOfficeModalOpen(false);
       setUserToEdit(null);
+      setUserToMessage(null);
   };
 
   // Handler para Exclusão de Usuário
@@ -217,7 +225,17 @@ export default function ManageUsers() {
                   </td>
                   <td>
                     <div className={styles.actionsContainer}>
-                      {/* BOTÃO EDITAR - Agora habilitado para todos, incluindo OSC */}
+                      {/* BOTÃO MENSAGEM - Novo para Pagamentos */}
+                      <button
+                        onClick={() => handleOpenMessage(user)}
+                        className={`${styles.actionButton} ${styles.messageButton}`}
+                        title="Enviar Mensagem de Pagamento"
+                        disabled={user.role !== 'OSC'} // Geralmente focado em OSCs
+                      >
+                        <MessageIcon />
+                      </button>
+
+                      {/* BOTÃO EDITAR */}
                       <button
                         onClick={() => handleEdit(user)}
                         className={`${styles.actionButton} ${styles.editButton}`}
@@ -226,7 +244,7 @@ export default function ManageUsers() {
                         <EditIcon />
                       </button>
 
-                      {/* BOTÃO EXCLUIR - Novo */}
+                      {/* BOTÃO EXCLUIR */}
                       <button
                         onClick={() => handleDeleteUser(user)}
                         className={`${styles.actionButton} ${styles.deleteButton}`}
@@ -268,6 +286,13 @@ export default function ManageUsers() {
         isOpen={isOfficeModalOpen}
         onClose={handleCloseModals}
         onSave={handleSaveOffice}
+      />
+
+      {/* MODAL DE MENSAGENS DE PAGAMENTO */}
+      <PaymentMessageModal
+        isOpen={!!userToMessage}
+        onClose={handleCloseModals}
+        userData={userToMessage}
       />
     </div>
   );

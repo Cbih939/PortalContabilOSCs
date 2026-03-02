@@ -71,6 +71,19 @@ export const getMessages = async (req, res) => {
     }
 };
 
+export const getMessagesByCategory = async (req, res) => {
+  const { category } = req.params;
+  try {
+    const [rows] = await pool.execute(
+      'SELECT * FROM payment_messages WHERE category = ?', 
+      [category]
+    );
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao buscar mensagens.' });
+  }
+};
+
 export const sendMessage = async (req, res) => {
     try {
         const sender_id = req.user.id;
