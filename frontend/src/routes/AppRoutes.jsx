@@ -24,7 +24,7 @@ import ManageLibrary from '../pages/admin/ManageLibrary.jsx';
 import AdminSidebar from '../pages/admin/components/AdminSidebar.jsx';
 import AdminHeader from '../pages/admin/components/AdminHeader.jsx';
 import AdminNoticesPage from '../pages/admin/AdminNoticesPage.jsx';
-import AdminProfile from './pages/admin/AdminProfile.jsx';
+import AdminProfile from '../pages/admin/AdminProfile.jsx';
 
 // --- FINANCEIRO ---
 import FinanceiroDashboard from '../pages/financeiro/FinanceiroDashboard.jsx';
