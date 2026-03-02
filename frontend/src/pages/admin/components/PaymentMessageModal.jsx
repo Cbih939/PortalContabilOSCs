@@ -17,18 +17,16 @@ export default function PaymentMessageModal({ isOpen, onClose, userData }) {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const addNotification = useNotification();
 
-  // Mapeia o status do utilizador (do banco de dados) para a categoria da tabela payment_messages
+  // Mapeia o status do utilizador para a categoria exata no banco (Ativo, Pendente, Inativo)
   const getCategoryFromStatus = (status) => {
     if (!status) return 'Ativo';
-  
-  // Converte a primeira letra para Maiúscula e o resto para minúscula
-  // Ex: "ativo" vira "Ativo", "PENDENTE" vira "Pendente"
-  const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-  
-    return formattedStatus; 
+    
+    // Normaliza para Capital Case: primeira letra maiúscula, restante minúscula
+    // Ex: "ATIVO" -> "Ativo", "pendente" -> "Pendente"
+    return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
   };
 
-  // Carrega as mensagens sempre que o modal abre ou o utilizador selecionado muda
+  // Carrega as mensagens sempre que o modal abre ou o utilizador muda
   useEffect(() => {
     const loadMessages = async () => {
       if (!userData?.status) return;
@@ -37,7 +35,7 @@ export default function PaymentMessageModal({ isOpen, onClose, userData }) {
       const category = getCategoryFromStatus(userData.status);
       
       try {
-        // Rota que busca na tabela payment_messages filtrando por categoria
+        // Rota sincronizada com o backend: /api/admin/messages/Ativo
         const response = await api.get(`/admin/messages/${category}`);
         setMessages(response.data || []);
       } catch (err) {
@@ -51,7 +49,7 @@ export default function PaymentMessageModal({ isOpen, onClose, userData }) {
     if (isOpen && userData) {
       loadMessages();
     } else {
-      // Limpa estados ao fechar
+      // Limpa os estados ao fechar o modal
       setMessages([]);
       setSelectedMessage(null);
     }
@@ -59,12 +57,12 @@ export default function PaymentMessageModal({ isOpen, onClose, userData }) {
 
   const handleSend = async () => {
     if (!selectedMessage) {
-      addNotification("Por favor, selecione um tom de mensagem.", "info");
+      addNotification("Por favor, selecione um modelo de mensagem.", "info");
       return;
     }
 
     try {
-      // Endpoint para processar o envio (ex: NodeMailer no backend)
+      // Envia os dados para a rota administrativa de mensagens
       await api.post('/admin/messages/send', {
         userId: userData.id,
         email: userData.email,
@@ -76,7 +74,7 @@ export default function PaymentMessageModal({ isOpen, onClose, userData }) {
       onClose();
     } catch (err) {
       console.error("Erro ao enviar:", err);
-      addNotification("Falha ao enviar e-mail.", "error");
+      addNotification("Falha ao enviar a mensagem.", "error");
     }
   };
 
@@ -92,15 +90,15 @@ export default function PaymentMessageModal({ isOpen, onClose, userData }) {
             Destinatário: <strong>{userData?.name}</strong>
           </p>
           <p className={styles.statusLabel}>
-            Status Atual: <span className={styles.statusValue}>{userData?.status}</span>
+            Status de Pagamento: <span className={styles.statusValue}>{userData?.status}</span>
           </p>
         </div>
         
-        <label className={styles.label}>Selecione o tom da abordagem:</label>
+        <label className={styles.label}>Escolha um modelo para envio:</label>
 
         {isLoading ? (
           <div className={styles.loadingContainer}>
-            <Spinner text="Carregando modelos..." />
+            <Spinner text="Buscando modelos..." />
           </div>
         ) : (
           <div className={styles.messageList}>
@@ -127,7 +125,8 @@ export default function PaymentMessageModal({ isOpen, onClose, userData }) {
               ))
             ) : (
               <div className={styles.emptyState}>
-                <p>Nenhum modelo de mensagem configurado para o status "{userData?.status}".</p>
+                <p>Nenhum modelo encontrado para o status "<strong>{userData?.status}</strong>".</p>
+                <small>Verifique se a tabela 'payment_messages' possui dados para esta categoria.</small>
               </div>
             )}
           </div>
