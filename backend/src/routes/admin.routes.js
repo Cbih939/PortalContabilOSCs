@@ -1,6 +1,6 @@
 import express from 'express';
 import { protect, checkRole } from '../middlewares/auth.middleware.js';
-import * as messageController from '../controllers/admin/message.controller.js';
+import * as messageController from '../controllers/message.controller.js';
 
 // Centralizamos todas as importações do financeiro em um único controller
 import { 
