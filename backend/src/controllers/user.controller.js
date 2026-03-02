@@ -57,27 +57,19 @@ export const createUser = async (req, res) => {
 };
 
 // ATUALIZAR
+// Exemplo de atualização no Backend (Node.js)
 export const updateUser = async (req, res) => {
+  const { id } = req.params;
+  const { name, email, role, status, office_id } = req.body; // Recebe o status aqui
+
   try {
-    const { id } = req.params;
-    const { name, email, role, status } = req.body;
-
-    const [result] = await pool.execute(
-      'UPDATE users SET name = ?, email = ?, role = ?, status = ? WHERE id = ?',
-      [name, email, role?.toUpperCase().trim() || 'CONTADOR', status || 'Ativo', id]
+    await pool.execute(
+      'UPDATE users SET name = ?, email = ?, role = ?, status = ?, office_id = ? WHERE id = ?',
+      [name, email, role, status, office_id, id]
     );
-
-    if (result.affectedRows === 0) return res.status(404).json({ message: 'Utilizador não encontrado.' });
-
-    const [rows] = await pool.execute(
-      'SELECT id, name, email, role, status FROM users WHERE id = ?',
-      [id]
-    );
-    
-    return res.json({ success: true, user: rows[0] });
+    res.json({ message: 'Usuário atualizado com sucesso!' });
   } catch (error) {
-    console.error('[updateUser Error]:', error);
-    res.status(500).json({ message: 'Erro interno ao salvar perfil.' });
+    res.status(500).json({ error: 'Erro ao atualizar usuário' });
   }
 };
 

@@ -149,8 +149,13 @@ export default function ManageUsers() {
   };
 
   const getStatusClass = (status) => {
-    return status === 'Ativo' ? styles.statusBadgeActive : styles.statusBadgeInactive;
-  };
+  switch (status) {
+    case 'Ativo': return styles.statusBadgeActive;
+    case 'Pendente': return styles.statusBadgePending;
+    case 'Inativo': return styles.statusBadgeInactive;
+    default: return styles.statusBadgeDefault;
+  }
+};
 
   return (
     <div className={styles.pageContainer}>

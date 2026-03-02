@@ -109,15 +109,33 @@
   border-radius: 9999px; 
 }
 /* Cor do Texto e Fundo para ATIVO */
-.statusBadgeActive { 
-  color: #059669; /* text-green-900 */
+.statusBadgeActive {
+  background-color: #dcfce7;
+  color: #166534;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 .statusBadgeActive span { 
   background-color: #a7f3d0; /* bg-green-200 */
 }
+.statusBadgePending {
+  background-color: #fef9c3;
+  color: #854d0e;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
 /* Cor do Texto e Fundo para INATIVO */
-.statusBadgeInactive { 
-  color: #b91c1c; /* text-red-900 */
+.statusBadgeInactive {
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 .statusBadgeInactive span { 
   background-color: #fecaca; /* bg-red-200 */
