@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ContactList from '../../components/messaging/ContactList.jsx';
 import ChatWindow from '../../components/messaging/ChatWindow.jsx';
-import * as messageService from '../../services/messageService.js';
+import api from '../../services/api.js'; // Atualizado para usar o axios diretamente
 import { useAuth } from '../../hooks/useAuth.jsx';
 import styles from './Messages.module.css';
 
@@ -17,11 +17,12 @@ export default function Messages() {
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
+  // Busca as OSCs atribuídas a este contador
   const loadContacts = useCallback(async () => {
     try {
-      setIsLoading(true);
-      const data = await messageService.getContacts();
-      setContacts(data);
+      // Endpoint que configuramos no backend para listar contatos com as últimas mensagens
+      const response = await api.get('/messages/contacts');
+      setContacts(response.data || []);
     } catch (error) {
       console.error("Erro ao carregar contatos:", error);
     } finally {
@@ -29,8 +30,14 @@ export default function Messages() {
     }
   }, []);
 
+  // Carrega os contatos na primeira renderização e atualiza a lista a cada 10 segundos
   useEffect(() => {
     loadContacts();
+    
+    // Polling: Mantém a barra lateral atualizada caso a OSC mande mensagem enquanto o contador está online
+    const interval = setInterval(loadContacts, 10000); 
+    
+    return () => clearInterval(interval);
   }, [loadContacts]);
 
   const handleSelectContact = (contact) => {
@@ -45,20 +52,20 @@ export default function Messages() {
     if (!selectedContact || !text.trim()) return;
 
     try {
-      // Força o envio com o ID da OSC selecionada na lista lateral
-      const response = await messageService.sendMessage({
+      // Dispara diretamente para a rota do backend configurada
+      const response = await api.post('/messages/send', {
         receiver_id: selectedContact.id,
         content: text
       });
 
-      // Atualiza a visualização da última mensagem na barra lateral (UI)
+      // Atualiza otimisticamente a visualização da última mensagem na barra lateral (UI)
       setContacts(prev => prev.map(c => 
         c.id === selectedContact.id 
           ? { ...c, lastMessage: text, updatedAt: new Date().toISOString() } 
           : c
       ));
 
-      return response;
+      return response.data;
     } catch (error) {
       console.error("Erro ao persistir mensagem no banco:", error);
       throw error;
@@ -69,6 +76,7 @@ export default function Messages() {
     <div className={styles.pageContainer}>
       <div className={styles.contentContainer}>
         
+        {/* Barra lateral com a lista de OSCs */}
         <div className={styles.sidebar}>
           <ContactList 
             contacts={contacts} 
@@ -78,6 +86,7 @@ export default function Messages() {
           />
         </div>
 
+        {/* Área Principal de Chat */}
         <div className={styles.chatArea}>
           {selectedContact ? (
             <ChatWindow 
@@ -89,7 +98,7 @@ export default function Messages() {
             <div className={styles.emptyState}>
               <EmptyChatIcon className={styles.emptyIcon} />
               <h3>Selecione uma conversa</h3>
-              <p>Olá {user?.name}, escolha um contato à esquerda para começar a conversar.</p>
+              <p>Olá {user?.name}, escolha a OSC à esquerda para iniciar o atendimento e solicitar/enviar documentos.</p>
             </div>
           )}
         </div>
