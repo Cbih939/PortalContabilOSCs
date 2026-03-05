@@ -10,7 +10,7 @@ import Spinner from '../../components/common/Spinner.jsx';
 import FileUpload from '../../components/common/FileUpload.jsx';
 import api from '@/services/api';
 
-// --- Schema de Validação (Idêntico ao do Contador) ---
+// --- Schema de Validação ---
 const schema = yup.object().shape({
   nomeFantasia: yup.string().required('O nome fantasia é obrigatório.'),
   razaoSocial: yup.string().required('A razão social é obrigatória.'),
@@ -32,6 +32,11 @@ const schema = yup.object().shape({
   coordNome: yup.string().required('Nome do coordenador obrigatório.'),
   coordEmail: yup.string().email('Email inválido.').required('Email de login obrigatório.'),
   coordSenha: yup.string().required('Senha obrigatória.').min(8, 'Mínimo 8 caracteres.'),
+  
+  // NOVO: Validação dos Termos de Uso (Deve ser true)
+  aceiteTermos: yup.boolean()
+    .oneOf([true], 'Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar.')
+    .required('Aceite obrigatório.'),
 });
 
 const RHFInput = React.memo(({ label, id, error, type = "text", registerProps, placeholder }) => (
@@ -67,7 +72,7 @@ export default function RegisterOSC() {
     const [isLoading, setIsLoading] = useState(false);
     const { register, handleSubmit, control, setValue, clearErrors, formState: { errors } } = useForm({
         resolver: yupResolver(schema),
-        defaultValues: { pais: 'Brasil' }
+        defaultValues: { pais: 'Brasil', aceiteTermos: false }
     });
 
     const handleCepBlur = async (e) => {
@@ -93,6 +98,9 @@ export default function RegisterOSC() {
         
         // Append de todos os campos para o FormData
         Object.keys(data).forEach(key => {
+            // Ignorar o campo do checkbox na hora de mandar pro banco de dados (opcional)
+            if (key === 'aceiteTermos') return; 
+
             if (data[key] instanceof File) {
                 formData.append(key, data[key]);
             } else if (data[key] !== null && data[key] !== undefined) {
@@ -173,6 +181,25 @@ export default function RegisterOSC() {
                         <RHFInput label="E-mail de Login *" id="coordEmail" type="email" registerProps={register('coordEmail')} error={errors.coordEmail} />
                         <RHFInput label="Crie sua Senha *" id="coordSenha" type="password" registerProps={register('coordSenha')} error={errors.coordSenha} />
                     </div>
+                </section>
+
+                {/* Secção 5: Termos de Uso (NOVO) */}
+                <section className={styles.termsSection}>
+                    <label className={styles.termsLabel}>
+                        <input 
+                            type="checkbox" 
+                            {...register('aceiteTermos')} 
+                            className={styles.termsCheckbox} 
+                        />
+                        <span className={styles.termsText}>
+                            Li e concordo com a Política de Privacidade e autorizo o tratamento dos meus dados pessoais para as finalidades descritas, em conformidade com a LGPD. Utilizamos cookies para personalizar anúncios e melhorar a sua experiência no site. Ao continuar navegando, você concorda com a nossa <a href="/politica-privacidade" target="_blank" rel="noopener noreferrer">Política de Privacidade</a> e <a href="/termos-uso" target="_blank" rel="noopener noreferrer">Termo de Uso</a>.
+                        </span>
+                    </label>
+                    {errors.aceiteTermos && (
+                        <span className={styles.errorMessage} style={{ display: 'block', marginTop: '0.5rem', textAlign: 'center' }}>
+                            {errors.aceiteTermos.message}
+                        </span>
+                    )}
                 </section>
 
                 <div className={styles.submitContainer}>
