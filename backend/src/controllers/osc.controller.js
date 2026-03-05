@@ -38,7 +38,6 @@ export const assignContador = async (req, res) => {
     const { id } = req.params;
     const { contadorId, officeId } = req.body;
     
-    // Atualiza tanto o contador individual quanto o escritório (grupo)
     await pool.execute(
       'UPDATE oscs SET assigned_contador_id = ?, office_id = ? WHERE id = ?',
       [
@@ -66,7 +65,8 @@ export const assignContador = async (req, res) => {
 export const getMyOSCs = async (req, res) => {
   try {
     const userId = req.user.id;
-    const officeId = req.user.office_id; // Extraído do token via middleware
+    // Proteção: Se office_id vier como "0" (string), forçamos para null
+    const officeId = (req.user.office_id && req.user.office_id !== "0") ? req.user.office_id : null; 
     const userRole = req.user.role.toLowerCase();
 
     let query = `
@@ -76,11 +76,12 @@ export const getMyOSCs = async (req, res) => {
     let params = [];
 
     if (userRole === 'contador') {
-      // Se o contador pertence a um escritório, vê todos os clientes do escritório
+      // Se o contador pertence a um escritório real, vê todos os clientes do escritório
       if (officeId) {
         query += ' WHERE office_id = ?';
         params.push(officeId);
       } else {
+        // Se for contador independente, vê as OSCs vinculadas ao seu ID
         query += ' WHERE assigned_contador_id = ?';
         params.push(userId);
       }
@@ -150,8 +151,12 @@ export const getOSCById = async (req, res) => {
   }
 };
 
+/**
+ * --- BUSCAR TODAS AS OSCS (ADMIN) ---
+ */
 export const getAllOSCs = async (req, res) => {
   try {
+    // Tentativa completa (se a tabela offices existir)
     const [rows] = await pool.execute(`
       SELECT o.id, o.razao_social, o.cnpj, u.name as contadorName, off.name as officeName
       FROM oscs o
@@ -160,40 +165,47 @@ export const getAllOSCs = async (req, res) => {
     `);
     res.json(rows.map(r => ({ ...r, name: r.razao_social, status: 'Ativo' })));
   } catch (error) {
-    console.error('[OSC Controller] Erro em getAllOSCs:', error);
-    res.status(500).json({ message: 'Erro interno ao listar OSCs.' });
+    // Fallback: Se a tabela offices não existir, busca sem ela para não quebrar a tela do Admin
+    try {
+      const [rowsFallback] = await pool.execute(`
+        SELECT o.id, o.razao_social, o.cnpj, u.name as contadorName
+        FROM oscs o
+        LEFT JOIN users u ON o.assigned_contador_id = u.id
+      `);
+      res.json(rowsFallback.map(r => ({ ...r, name: r.razao_social, status: 'Ativo' })));
+    } catch (fallbackError) {
+      console.error('[OSC Controller] Erro grave em getAllOSCs:', fallbackError);
+      res.status(500).json({ message: 'Erro interno ao listar OSCs.' });
+    }
   }
 };
 
+/**
+ * --- CRIAR NOVA OSC (CONTADOR/ADMIN) ---
+ */
 export const createOSC = async (req, res) => {
   try {
-    // 1. Recebemos os dados do Frontend
-    const { name, cnpj, responsible, email, phone, status, address } = req.body;
+    const { name, cnpj, responsible, email, phone, address } = req.body;
 
-    // 2. Pegamos o ID do contador logado para vincular automaticamente
-    // E também o office_id caso ele pertença a um escritório
+    // Garante que o ID e o Office do contador são mapeados corretamente
     const contadorId = (req.user && req.user.role.toUpperCase() === 'CONTADOR') ? req.user.id : null;
-    const officeId = (req.user && req.user.office_id) ? req.user.office_id : null;
+    const officeId = (req.user && req.user.office_id && req.user.office_id !== "0") ? req.user.office_id : null;
 
-    // 3. Query SQL com os nomes EXATOS da sua tabela 'oscs'
     const query = `
       INSERT INTO oscs 
       (razao_social, cnpj, responsible, email, phone, address, assigned_contador_id, office_id) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
     
-    // Obs: A coluna 'status' não existe na sua tabela oscs (pelo DESCRIBE que enviou), 
-    // então eu removi para não dar o erro "Unknown column 'status'".
-    
     const [result] = await pool.execute(query, [
-      name,           // vai para razao_social
-      cnpj,           // vai para cnpj
-      responsible,    // vai para responsible
-      email,          // vai para email
-      phone,          // vai para phone
-      address,        // vai para address
-      contadorId,     // vai para assigned_contador_id
-      officeId        // vai para office_id (se aplicável)
+      name || '',           
+      cnpj || '',           
+      responsible || '',    
+      email || '',          
+      phone || '',          
+      address || '',        
+      contadorId,     
+      officeId        
     ]);
 
     return res.status(201).json({ 
@@ -204,7 +216,6 @@ export const createOSC = async (req, res) => {
 
   } catch (error) {
     console.error('[createOSC Error]:', error);
-    // Erro 1062 é o código do MySQL para "Entrada Duplicada" (CNPJ já existe)
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(400).json({ message: 'Já existe uma OSC cadastrada com este CNPJ.' });
     }
