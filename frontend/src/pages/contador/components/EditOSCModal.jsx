@@ -16,16 +16,32 @@ const FORM_ID = 'edit-osc-form';
 export default function EditOSCModal({
   isOpen,
   onClose,
-  oscData, // Dados da OSC a editar
+  oscData, // Dados da OSC a editar ou {} para nova
   onSave, // Função chamada ao salvar
   isLoading = false, // Estado de carregamento do salvamento
 }) {
-  const [formData, setFormData] = useState(oscData);
+  // IDENTIFICA SE É CRIAÇÃO OU EDIÇÃO: Se não tem ID, é cadastro novo!
+  const isNew = !oscData?.id;
 
-  // Atualiza o formData se a oscData mudar
+  const [formData, setFormData] = useState(null);
+
+  // Atualiza o formData se a oscData mudar (Garante que os campos iniciam vazios na Criação)
   useEffect(() => {
-    setFormData(oscData || null); // Usa null se oscData for null/undefined
-  }, [oscData]);
+    if (isOpen && oscData) {
+      setFormData({
+        id: oscData.id || null,
+        name: oscData.name || '',
+        cnpj: oscData.cnpj || '',
+        responsible: oscData.responsible || '',
+        email: oscData.email || '',
+        phone: oscData.phone || '',
+        status: oscData.status || 'Ativo',
+        address: oscData.address || ''
+      });
+    } else if (!isOpen) {
+      setFormData(null);
+    }
+  }, [isOpen, oscData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,7 +55,7 @@ export default function EditOSCModal({
     }
   };
 
-  // Define o rodapé do modal
+  // Define o rodapé do modal com textos dinâmicos
   const modalFooter = (
     <>
       <Button variant="secondary" onClick={onClose} disabled={isLoading}>
@@ -52,19 +68,20 @@ export default function EditOSCModal({
         disabled={isLoading}
       >
         {isLoading ? <Spinner size="sm" className="mr-2" /> : null} {/* mr-2 pode precisar de CSS global */}
-        {isLoading ? 'Salvando...' : 'Salvar Alterações'}
+        {isLoading ? (isNew ? 'Cadastrando...' : 'Salvando...') : (isNew ? 'Cadastrar Nova OSC' : 'Salvar Alterações')}
       </Button>
     </>
   );
 
-  // Não renderiza se não houver dados
+  // Não renderiza se não houver dados no state local
   if (!formData) return null;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Editar OSC: ${oscData?.name || ''}`} // Título dinâmico
+      // Título dinâmico
+      title={isNew ? 'Cadastrar Nova OSC' : `Editar OSC: ${oscData?.name || ''}`}
       footer={modalFooter}
       size="2xl" // Tamanho grande
     >
@@ -91,22 +108,21 @@ export default function EditOSCModal({
             label="Telefone" id="phone" name="phone"
             value={formData.phone} onChange={handleChange}
           />
-{/* Select para Status (estilo básico) */}
-<div>
-  <label htmlFor="status" className={styles.selectLabel}>
-    Status
-  </label>
-  {/* Comentário movido para cima */}
-  {/* Classe do CSS Module aplicada abaixo */}
-  <select
-    id="status" name="status"
-    value={formData.status} onChange={handleChange}
-    className={styles.selectInput} // Sem comentário na linha
-  >
-    <option>Ativo</option>
-    <option>Inativo</option>
-  </select>
-</div>
+          {/* Select para Status (estilo básico) */}
+          <div>
+            <label htmlFor="status" className={styles.selectLabel}>
+              Status
+            </label>
+            {/* Classe do CSS Module aplicada abaixo */}
+            <select
+              id="status" name="status"
+              value={formData.status} onChange={handleChange}
+              className={styles.selectInput}
+            >
+              <option value="Ativo">Ativo</option>
+              <option value="Inativo">Inativo</option>
+            </select>
+          </div>
           <div className={styles.span2}> {/* Ocupa 2 colunas */}
             <Input
               label="Endereço" id="address" name="address"
