@@ -11,7 +11,7 @@ import Spinner from '../components/common/Spinner.jsx';
 
 // --- PÁGINAS PÚBLICAS ---
 import LoginPage from '../pages/Login.jsx';
-import RegisterOSC from '../pages/auth/RegisterOSC';
+import RegisterOSC from '../pages/auth/RegisterOSC.jsx'; // Adicionado .jsx para consistência no Vite
 import NotFoundPage from '../pages/NotFound.jsx';
 import EsqueceuSenhaPage from '../pages/EsqueceuSenha.jsx';
 import RedefinirSenhaPage from '../pages/RedefinirSenha.jsx';
