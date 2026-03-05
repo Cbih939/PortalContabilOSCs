@@ -167,27 +167,29 @@ export const getAllOSCs = async (req, res) => {
 
 export const createOSC = async (req, res) => {
   try {
+    // 1. Recebemos os dados do Frontend (em inglês, como configurámos no formulário)
     const { name, cnpj, responsible, email, phone, status, address } = req.body;
 
-    // Se quem está a criar é um contador, pegamos o ID dele para vincular automaticamente!
+    // 2. Pegamos o ID do contador logado
     const contadorId = (req.user && req.user.role.toUpperCase() === 'CONTADOR') ? req.user.id : null;
 
-    // Query para inserir na tabela (NOTA: Se as suas colunas no banco estiverem em português 
-    // como 'razao_social' ou 'endereco', basta trocar os nomes abaixo)
+    // 3. Query SQL com os nomes corretos da sua tabela no banco de dados!
     const query = `
       INSERT INTO oscs 
-      (name, cnpj, responsible, email, phone, status, address, contador_id) 
+      (razao_social, cnpj, responsavel, email_contato, telefone, status, endereco, contador_id) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
+    // Se a sua coluna de email se chamar apenas 'email' no banco, troque 'email_contato' por 'email' acima.
+    
     const [result] = await pool.execute(query, [
-      name, 
-      cnpj, 
-      responsible, 
-      email, 
-      phone, 
+      name,           // vai para razao_social
+      cnpj,           // vai para cnpj
+      responsible,    // vai para responsavel
+      email,          // vai para email_contato
+      phone,          // vai para telefone
       status || 'ATIVO', 
-      address, 
+      address,        // vai para endereco
       contadorId
     ]);
 
@@ -199,7 +201,7 @@ export const createOSC = async (req, res) => {
 
   } catch (error) {
     console.error('[createOSC Error]:', error);
-    // Se der erro de CNPJ duplicado (código 1062 do MySQL), avisamos o usuário
+    // Verifica se é erro de duplicação (CNPJ já existe)
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(400).json({ message: 'Já existe uma OSC cadastrada com este CNPJ ou Email.' });
     }
