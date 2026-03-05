@@ -29,7 +29,7 @@ const schema = yup.object().shape({
   estado: yup.string().required('Estado obrigatório.'),
   respNome: yup.string().required('Nome do responsável obrigatório.'),
   respCpf: yup.string().required('CPF do responsável obrigatório.').matches(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'CPF inválido.'),
-  coordNome: yup.string().required('Nome do coordenador obrigatório.'),
+  coordNome: yup.string().required('Nome do responsável obrigatório.'),
   coordEmail: yup.string().email('Email inválido.').required('Email de login obrigatório.'),
   coordSenha: yup.string().required('Senha obrigatória.').min(8, 'Mínimo 8 caracteres.'),
   
@@ -171,7 +171,7 @@ export default function RegisterOSC() {
                 <section className={styles.formSection}>
                     <h2 className={styles.sectionTitle}>4. Dados de Acesso (Login)</h2>
                     <div className={styles.grid}>
-                        <RHFInput label="Nome do Coordenador *" id="coordNome" registerProps={register('coordNome')} error={errors.coordNome} />
+                        <RHFInput label="Nome do Responsável *" id="coordNome" registerProps={register('coordNome')} error={errors.coordNome} />
                         <RHFInput label="E-mail de Login *" id="coordEmail" type="email" registerProps={register('coordEmail')} error={errors.coordEmail} />
                         <RHFInput label="Crie sua Senha *" id="coordSenha" type="password" registerProps={register('coordSenha')} error={errors.coordSenha} />
                     </div>
