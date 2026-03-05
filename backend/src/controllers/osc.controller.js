@@ -187,9 +187,12 @@ export const createOSC = async (req, res) => {
   try {
     const { name, cnpj, responsible, email, phone, address } = req.body;
 
-    // Garante que o ID e o Office do contador são mapeados corretamente
-    const contadorId = (req.user && req.user.role.toUpperCase() === 'CONTADOR') ? req.user.id : null;
-    const officeId = (req.user && req.user.office_id && req.user.office_id !== "0") ? req.user.office_id : null;
+    // IMPORTANTE: Verifique se o middleware de autenticação está a preencher o req.user
+    // Se req.user.id não existir, a OSC ficará "órfã"
+    const contadorId = req.user ? req.user.id : null;
+    const officeId = req.user ? req.user.office_id : null;
+
+    console.log("Criando OSC para o Contador ID:", contadorId); // Adicione este log para debugar no PM2
 
     const query = `
       INSERT INTO oscs 
@@ -198,27 +201,14 @@ export const createOSC = async (req, res) => {
     `;
     
     const [result] = await pool.execute(query, [
-      name || '',           
-      cnpj || '',           
-      responsible || '',    
-      email || '',          
-      phone || '',          
-      address || '',        
-      contadorId,     
-      officeId        
+      name, cnpj, responsible, email, phone, address, 
+      contadorId, // Aqui é onde o 18 deve entrar
+      officeId
     ]);
 
-    return res.status(201).json({ 
-      success: true, 
-      message: 'OSC criada com sucesso!', 
-      id: result.insertId 
-    });
-
+    return res.status(201).json({ success: true, message: 'OSC criada com sucesso!', id: result.insertId });
   } catch (error) {
     console.error('[createOSC Error]:', error);
-    if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(400).json({ message: 'Já existe uma OSC cadastrada com este CNPJ.' });
-    }
-    return res.status(500).json({ message: 'Erro interno ao criar OSC no banco de dados.' });
+    return res.status(500).json({ message: 'Erro ao criar OSC.' });
   }
 };
