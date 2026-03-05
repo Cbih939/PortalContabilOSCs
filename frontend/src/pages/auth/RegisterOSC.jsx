@@ -4,7 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { IMaskInput } from 'react-imask';
-import styles from './RegisterOSC.module.css'; // Usaremos um estilo similar à CreateOSC
+import styles from './RegisterOSC.module.css';
 import Button from '../../components/common/Button.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
 import FileUpload from '../../components/common/FileUpload.jsx';
@@ -17,7 +17,7 @@ const schema = yup.object().shape({
   cnpj: yup.string().required('O CNPJ é obrigatório.').matches(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, 'CNPJ inválido.'),
   dataFundacao: yup.date().nullable().transform((curr, orig) => orig === '' ? null : curr),
   logotipo: yup.mixed().nullable(),
-  ata: yup.mixed().nullable(),
+  // O campo 'ata' foi removido daqui
   estatuto: yup.mixed().nullable(),
   emailContato: yup.string().email('Email inválido.').required('O email de contato é obrigatório.'),
   telefone: yup.string().required('O telefone é obrigatório.'),
@@ -33,7 +33,7 @@ const schema = yup.object().shape({
   coordEmail: yup.string().email('Email inválido.').required('Email de login obrigatório.'),
   coordSenha: yup.string().required('Senha obrigatória.').min(8, 'Mínimo 8 caracteres.'),
   
-  // NOVO: Validação dos Termos de Uso (Deve ser true)
+  // Validação dos Termos de Uso (Deve ser true obrigatoriamente)
   aceiteTermos: yup.boolean()
     .oneOf([true], 'Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar.')
     .required('Aceite obrigatório.'),
@@ -96,9 +96,7 @@ export default function RegisterOSC() {
         setIsLoading(true);
         const formData = new FormData();
         
-        // Append de todos os campos para o FormData
         Object.keys(data).forEach(key => {
-            // Ignorar o campo do checkbox na hora de mandar pro banco de dados (opcional)
             if (key === 'aceiteTermos') return; 
 
             if (data[key] instanceof File) {
@@ -109,11 +107,9 @@ export default function RegisterOSC() {
         });
 
         try {
-            // 1. Criar a conta (Backend deve retornar o token do novo usuário)
             const response = await api.post('/auth/register-osc', formData);
             const { token } = response.data;
 
-            // 2. Gerar link do Stripe usando o Token recém criado
             const paymentRes = await api.post('/webhooks/create-checkout-session', {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -154,9 +150,7 @@ export default function RegisterOSC() {
                         <Controller name="logotipo" control={control} render={({ field: { onChange } }) => (
                             <FileUpload label="Logotipo" onFileSelect={onChange} acceptedTypes={{'image/*': []}} />
                         )} />
-                        <Controller name="ata" control={control} render={({ field: { onChange } }) => (
-                            <FileUpload label="Última ATA (.pdf)" onFileSelect={onChange} acceptedTypes={{'application/pdf': []}} />
-                        )} />
+                        {/* Campo ATA foi removido daqui */}
                     </div>
                 </section>
 
@@ -183,7 +177,7 @@ export default function RegisterOSC() {
                     </div>
                 </section>
 
-                {/* Secção 5: Termos de Uso (NOVO) */}
+                {/* Secção 5: Termos de Uso */}
                 <section className={styles.termsSection}>
                     <label className={styles.termsLabel}>
                         <input 
