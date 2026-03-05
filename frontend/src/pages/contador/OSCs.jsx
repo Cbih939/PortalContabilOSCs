@@ -151,29 +151,20 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     }
   };
 
-  /**
-   * FUNÇÃO TOTALMENTE FLEXÍVEL PARA ABRIR DOCUMENTOS
-   * Esta versão tenta todas as propriedades possíveis (saved_filename, file_path, filename)
-   */
-  // Substitua apenas a função openDocument dentro do seu componente
-const openDocument = (doc) => {
-  if (!doc) return;
-  
-  const apiUrl = import.meta.env.VITE_API_URL || 'https://contacomigo.org.br';
-  
-  // Mapeia todas as possibilidades para evitar nulo
-  const rawPath = doc.saved_filename || doc.file_path || doc.filename || "";
-  
-  if (!rawPath) {
+  const openDocument = (doc) => {
+    if (!doc) return;
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://contacomigo.org.br';
+    const rawPath = doc.saved_filename || doc.file_path || doc.filename || "";
+    
+    if (!rawPath) {
       alert("Caminho do arquivo não encontrado.");
       return;
-  }
+    }
 
-  const cleanFileName = rawPath.replace('uploads/', '');
-  const fileUrl = `${apiUrl}/uploads/${cleanFileName}`;
-  
-  window.open(fileUrl, '_blank');
-};
+    const cleanFileName = rawPath.replace('uploads/', '');
+    const fileUrl = `${apiUrl}/uploads/${cleanFileName}`;
+    window.open(fileUrl, '_blank');
+  };
 
   const getMonthStatus = (monthIndex) => {
     const monthNum = monthIndex + 1;
@@ -194,7 +185,7 @@ const openDocument = (doc) => {
     switch (status) {
       case 'late': return ['#fee2e2', '#b91c1c', '#fecaca'];
       case 'pending': return ['#fef9c3', '#a16207', '#fde047'];
-      case 'sent': return ['#dbeafe', '#1d4ed8', '#bfdbfe'];
+      case 'sent': return '#dbeafe', '#1d4ed8', '#bfdbfe';
       case 'concluded': return ['#dcfce7', '#15803d', '#86efac'];
       default: return ['#f3f4f6', '#9ca3af', '#e5e7eb'];
     }
@@ -233,6 +224,7 @@ const openDocument = (doc) => {
 
       {isExpanded && (
         <div style={styles.accordionBody}>
+          {/* ... (Conteúdo do corpo do acordeão permanece idêntico) ... */}
           <div style={styles.actionPanel}>
             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
               <span style={{fontSize: '13px', fontWeight: 'bold', color: '#374151'}}>Ação para Competência:</span>
@@ -321,14 +313,26 @@ export default function OSCsPage() {
   const [oscToSendAlert, setOscToSendAlert] = useState(null);
 
   const addNotification = useNotification();
+  // Hooks para as duas requisições
   const { request: updateOSC, isLoading: isUpdating } = useApi(oscService.updateOSC);
+  const { request: createOSC, isLoading: isCreating } = useApi(oscService.createOSC);
   const { request: sendAlert, isLoading: isSendingAlert } = useApi(alertService.sendAlertToOSC);
 
   const fetchOSCs = async () => {
     setIsLoadingData(true);
     try {
+      // Ajuste para garantir que chamamos a função correta do service
       const response = await oscService.getMyOSCs();
-      let data = Array.isArray(response) ? response : (response?.data || []);
+      // O endpoint geralmente devolve os dados em response.data
+      let data = [];
+      if (Array.isArray(response)) {
+        data = response;
+      } else if (response && response.data) {
+        data = response.data;
+      } else {
+        data = response; // Fallback final
+      }
+      
       const sortedData = data.map(osc => ({
         ...osc,
         documents: osc.documents ? [...osc.documents].sort((a, b) => 
@@ -337,13 +341,15 @@ export default function OSCsPage() {
       }));
       setOscs(sortedData.sort((a, b) => (a.name || a.razao_social || '').localeCompare(b.name || b.razao_social || '')));
     } catch (err) {
-      addNotification("Erro ao carregar OSCs.", "error");
+      console.error("Erro ao buscar OSCs:", err);
+      addNotification("Erro ao carregar OSCs. Verifique sua conexão.", "error");
+      setOscs([]); // Evita tela quebrada
     } finally {
       setIsLoadingData(false);
     }
   };
 
-  useEffect(() => { fetchOSCs(); }, [addNotification]);
+  useEffect(() => { fetchOSCs(); }, []);
 
   const filteredOscs = oscs.filter(osc => {
     const name = osc.name || osc.razao_social || '';
@@ -357,18 +363,23 @@ export default function OSCsPage() {
 
   const handleSaveEdit = async (formData) => {
     const oscId = formData.id;
-    if (!oscId) {
-      addNotification("Erro: ID da OSC não identificado.", "error");
-      return;
-    }
     const payload = { ...formData, responsavel: formData.responsible || formData.responsavel };
+    
     try {
-      await updateOSC(oscId, payload);
-      addNotification(`Organização atualizada com sucesso!`, 'success');
+      if (oscId) {
+        // MODO EDIÇÃO
+        await updateOSC(oscId, payload);
+        addNotification(`Organização atualizada com sucesso!`, 'success');
+      } else {
+        // MODO CRIAÇÃO (Se não tem ID)
+        await createOSC(payload);
+        addNotification(`Nova Organização cadastrada com sucesso!`, 'success');
+      }
       fetchOSCs();
       handleCloseModals();
     } catch (err) { 
-      addNotification('Erro ao salvar no servidor. Verifique os dados.', 'error'); 
+      console.error("Erro na API:", err);
+      addNotification(err.response?.data?.message || 'Erro ao salvar no servidor. Verifique os dados.', 'error'); 
     }
   };
 
@@ -432,7 +443,18 @@ export default function OSCsPage() {
       </div>
 
       {oscToView && <ViewOSCModal isOpen={!!oscToView} onClose={handleCloseModals} osc={oscToView} />}
-      {oscToEdit && <EditOSCModal isOpen={!!oscToEdit} onClose={handleCloseModals} oscData={oscToEdit} onSave={handleSaveEdit} isLoading={isUpdating} />}
+      
+      {/* O mesmo modal serve para criar e editar, baseando-se no que é passado em oscData */}
+      {oscToEdit && (
+        <EditOSCModal 
+          isOpen={!!oscToEdit} 
+          onClose={handleCloseModals} 
+          oscData={oscToEdit} 
+          onSave={handleSaveEdit} 
+          isLoading={isUpdating || isCreating} 
+        />
+      )}
+      
       {oscToSendAlert && <SendAlertModal isOpen={!!oscToSendAlert} onClose={handleCloseModals} osc={oscToSendAlert} onSend={handleSendAlertSubmit} isLoading={isSendingAlert} />}
     </div>
   );
