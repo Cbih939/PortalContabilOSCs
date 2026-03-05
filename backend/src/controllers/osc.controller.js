@@ -164,3 +164,45 @@ export const getAllOSCs = async (req, res) => {
     res.status(500).json({ message: 'Erro interno ao listar OSCs.' });
   }
 };
+
+export const createOSC = async (req, res) => {
+  try {
+    const { name, cnpj, responsible, email, phone, status, address } = req.body;
+
+    // Se quem está a criar é um contador, pegamos o ID dele para vincular automaticamente!
+    const contadorId = (req.user && req.user.role.toUpperCase() === 'CONTADOR') ? req.user.id : null;
+
+    // Query para inserir na tabela (NOTA: Se as suas colunas no banco estiverem em português 
+    // como 'razao_social' ou 'endereco', basta trocar os nomes abaixo)
+    const query = `
+      INSERT INTO oscs 
+      (name, cnpj, responsible, email, phone, status, address, contador_id) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const [result] = await pool.execute(query, [
+      name, 
+      cnpj, 
+      responsible, 
+      email, 
+      phone, 
+      status || 'ATIVO', 
+      address, 
+      contadorId
+    ]);
+
+    return res.status(201).json({ 
+      success: true, 
+      message: 'OSC criada com sucesso!', 
+      id: result.insertId 
+    });
+
+  } catch (error) {
+    console.error('[createOSC Error]:', error);
+    // Se der erro de CNPJ duplicado (código 1062 do MySQL), avisamos o usuário
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ message: 'Já existe uma OSC cadastrada com este CNPJ ou Email.' });
+    }
+    return res.status(500).json({ message: 'Erro interno ao criar OSC.' });
+  }
+};
