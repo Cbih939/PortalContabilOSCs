@@ -185,7 +185,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     switch (status) {
       case 'late': return ['#fee2e2', '#b91c1c', '#fecaca'];
       case 'pending': return ['#fef9c3', '#a16207', '#fde047'];
-      case 'sent': return '#dbeafe', '#1d4ed8', '#bfdbfe';
+      case 'sent': return ['#dbeafe', '#1d4ed8', '#bfdbfe'];
       case 'concluded': return ['#dcfce7', '#15803d', '#86efac'];
       default: return ['#f3f4f6', '#9ca3af', '#e5e7eb'];
     }
@@ -224,7 +224,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
 
       {isExpanded && (
         <div style={styles.accordionBody}>
-          {/* ... (Conteúdo do corpo do acordeão permanece idêntico) ... */}
           <div style={styles.actionPanel}>
             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
               <span style={{fontSize: '13px', fontWeight: 'bold', color: '#374151'}}>Ação para Competência:</span>
@@ -313,7 +312,7 @@ export default function OSCsPage() {
   const [oscToSendAlert, setOscToSendAlert] = useState(null);
 
   const addNotification = useNotification();
-  // Hooks para as duas requisições
+  // Hooks para as requisições
   const { request: updateOSC, isLoading: isUpdating } = useApi(oscService.updateOSC);
   const { request: createOSC, isLoading: isCreating } = useApi(oscService.createOSC);
   const { request: sendAlert, isLoading: isSendingAlert } = useApi(alertService.sendAlertToOSC);
@@ -321,16 +320,14 @@ export default function OSCsPage() {
   const fetchOSCs = async () => {
     setIsLoadingData(true);
     try {
-      // Ajuste para garantir que chamamos a função correta do service
       const response = await oscService.getMyOSCs();
-      // O endpoint geralmente devolve os dados em response.data
       let data = [];
       if (Array.isArray(response)) {
         data = response;
       } else if (response && response.data) {
         data = response.data;
       } else {
-        data = response; // Fallback final
+        data = response;
       }
       
       const sortedData = data.map(osc => ({
@@ -343,7 +340,7 @@ export default function OSCsPage() {
     } catch (err) {
       console.error("Erro ao buscar OSCs:", err);
       addNotification("Erro ao carregar OSCs. Verifique sua conexão.", "error");
-      setOscs([]); // Evita tela quebrada
+      setOscs([]); 
     } finally {
       setIsLoadingData(false);
     }
