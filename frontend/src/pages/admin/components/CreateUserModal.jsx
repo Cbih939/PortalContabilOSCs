@@ -8,39 +8,46 @@ import Modal from '../../../components/common/Modal.jsx';
 import Input from '../../../components/common/Input.jsx';
 import Button from '../../../components/common/Button.jsx';
 import Spinner from '../../../components/common/Spinner.jsx';
-import { ROLES } from '../../../utils/constants.js'; 
 import styles from './CreateUserModal.module.css';
-import api from '../../../services/api.js'; // Para buscar escritórios
-
-const schema = yup.object().shape({
-  name: yup.string().required('O nome é obrigatório.'),
-  email: yup.string().email('Email inválido.').required('O email é obrigatório.'),
-  password: yup.string().required('A senha é obrigatória.').min(8, 'A senha deve ter no mínimo 8 caracteres.'),
-  role: yup.string()
-    .oneOf([ROLES.ADMIN, ROLES.CONTADOR, 'FINANCEIRO'], 'Perfil inválido.') 
-    .required('O perfil é obrigatório.'),
-  office_id: yup.string().nullable(), // Novo campo para escritório
-});
+import api from '../../../services/api.js';
 
 const FORM_ID = 'create-user-form';
 
 export default function CreateUserModal({ isOpen, onClose, onSave, isLoading }) {
   const [offices, setOffices] = useState([]);
 
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
+  // 1. Movemos o schema para dentro para garantir consistência
+  const schema = yup.object().shape({
+    name: yup.string().required('O nome é obrigatório.'),
+    email: yup.string().email('Email inválido.').required('O email é obrigatório.'),
+    password: yup.string().required('A senha é obrigatória.').min(8, 'A senha deve ter no mínimo 8 caracteres.'),
+    // 2. Usamos strings exatas que batem com o banco de dados
+    role: yup.string()
+      .oneOf(['ADMIN', 'CONTADOR', 'FINANCEIRO'], 'Perfil inválido.') 
+      .required('O perfil é obrigatório.'),
+    office_id: yup.string().nullable(),
+  });
+
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
         name: '',
         email: '',
         password: '',
-        role: ROLES.CONTADOR,
+        role: 'CONTADOR',
         office_id: ''
     }
   });
 
   const selectedRole = watch('role');
 
-  // Busca escritórios cadastrados ao abrir o modal
+  // Limpa o office_id caso o usuário troque o select para Administrador
+  useEffect(() => {
+    if (selectedRole === 'ADMIN') {
+      setValue('office_id', '');
+    }
+  }, [selectedRole, setValue]);
+
   useEffect(() => {
     if (isOpen) {
       api.get('/admin/offices')
@@ -60,7 +67,8 @@ export default function CreateUserModal({ isOpen, onClose, onSave, isLoading }) 
       onSave({ 
         ...data, 
         role: data.role.toUpperCase(),
-        office_id: data.office_id === "" ? null : data.office_id 
+        // 3. Garante que se for ADMIN, o office_id é forçado a null
+        office_id: (data.role === 'ADMIN' || data.office_id === "") ? null : data.office_id 
       }); 
     }
   };
@@ -118,15 +126,15 @@ export default function CreateUserModal({ isOpen, onClose, onSave, isLoading }) 
         <div className={styles.formField}>
           <label htmlFor="role" className={styles.selectLabel}>Perfil *</label>
           <select id="role" {...register('role')} className={styles.selectInput}>
-            <option value={ROLES.CONTADOR}>Contador</option>
-            <option value={ROLES.ADMIN}>Administrador</option>
+            {/* O value de cada option deve ser exatamente o ENUM do MySQL */}
+            <option value="CONTADOR">Contador</option>
+            <option value="ADMIN">Administrador</option>
             <option value="FINANCEIRO">Financeiro</option>
           </select>
           {errors.role && <p className={styles.errorMessage}>{errors.role.message}</p>}
         </div>
 
-        {/* Campo de Escritório - Aparece apenas se for Contador ou Financeiro */}
-        {(selectedRole === ROLES.CONTADOR || selectedRole === 'FINANCEIRO') && (
+        {(selectedRole === 'CONTADOR' || selectedRole === 'FINANCEIRO') && (
           <div className={styles.formField}>
             <label htmlFor="office_id" className={styles.selectLabel}>Escritório / Grupo</label>
             <select id="office_id" {...register('office_id')} className={styles.selectInput}>
