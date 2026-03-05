@@ -167,30 +167,33 @@ export const getAllOSCs = async (req, res) => {
 
 export const createOSC = async (req, res) => {
   try {
-    // 1. Recebemos os dados do Frontend (em inglês, como configurámos no formulário)
+    // 1. Recebemos os dados do Frontend
     const { name, cnpj, responsible, email, phone, status, address } = req.body;
 
-    // 2. Pegamos o ID do contador logado
+    // 2. Pegamos o ID do contador logado para vincular automaticamente
+    // E também o office_id caso ele pertença a um escritório
     const contadorId = (req.user && req.user.role.toUpperCase() === 'CONTADOR') ? req.user.id : null;
+    const officeId = (req.user && req.user.office_id) ? req.user.office_id : null;
 
-    // 3. Query SQL com os nomes corretos da sua tabela no banco de dados!
+    // 3. Query SQL com os nomes EXATOS da sua tabela 'oscs'
     const query = `
       INSERT INTO oscs 
-      (razao_social, cnpj, responsavel, email_contato, telefone, status, endereco, contador_id) 
+      (razao_social, cnpj, responsible, email, phone, address, assigned_contador_id, office_id) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
-
-    // Se a sua coluna de email se chamar apenas 'email' no banco, troque 'email_contato' por 'email' acima.
+    
+    // Obs: A coluna 'status' não existe na sua tabela oscs (pelo DESCRIBE que enviou), 
+    // então eu removi para não dar o erro "Unknown column 'status'".
     
     const [result] = await pool.execute(query, [
       name,           // vai para razao_social
       cnpj,           // vai para cnpj
-      responsible,    // vai para responsavel
-      email,          // vai para email_contato
-      phone,          // vai para telefone
-      status || 'ATIVO', 
-      address,        // vai para endereco
-      contadorId
+      responsible,    // vai para responsible
+      email,          // vai para email
+      phone,          // vai para phone
+      address,        // vai para address
+      contadorId,     // vai para assigned_contador_id
+      officeId        // vai para office_id (se aplicável)
     ]);
 
     return res.status(201).json({ 
@@ -201,10 +204,10 @@ export const createOSC = async (req, res) => {
 
   } catch (error) {
     console.error('[createOSC Error]:', error);
-    // Verifica se é erro de duplicação (CNPJ já existe)
+    // Erro 1062 é o código do MySQL para "Entrada Duplicada" (CNPJ já existe)
     if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(400).json({ message: 'Já existe uma OSC cadastrada com este CNPJ ou Email.' });
+      return res.status(400).json({ message: 'Já existe uma OSC cadastrada com este CNPJ.' });
     }
-    return res.status(500).json({ message: 'Erro interno ao criar OSC.' });
+    return res.status(500).json({ message: 'Erro interno ao criar OSC no banco de dados.' });
   }
 };
