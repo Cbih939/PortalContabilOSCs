@@ -12,7 +12,7 @@ import {
 import Input from '../../../components/common/Input.jsx';
 import Button from '../../../components/common/Button.jsx';
 import styles from './OSCListView.module.css';
-import { formatDate } from '../../../utils/formatDate.js'; // (Embora não usado aqui, é útil para datas)
+import { formatDate } from '../../../utils/formatDate.js'; 
 
 /**
  * Componente "burro" OSCListView (CSS Modules).
@@ -22,18 +22,38 @@ export default function OSCListView({
   onView,
   onEdit,
   onSendAlert,
-  // onCreate não é mais necessário como função
 }) {
   const [filterName, setFilterName] = useState('');
   const [filterCnpj, setFilterCnpj] = useState('');
   const [filterResponsible, setFilterResponsible] = useState('');
+  
+  // NOVO: Estado para o filtro de pendências
+  const [filterPendentes, setFilterPendentes] = useState(false);
 
-  const filteredOSCs = oscs.filter(
-    (osc) =>
+  // Lógica de filtragem combinada
+  const filteredOSCs = oscs.filter((osc) => {
+    // 1. Filtros de texto (Nome, CNPJ, Responsável)
+    const matchesSearch = 
       (osc.name || '').toLowerCase().includes(filterName.toLowerCase()) &&
       (osc.cnpj || '').replace(/[^\d]/g, '').includes(filterCnpj.replace(/[^\d]/g, '')) &&
-      (osc.responsible || '').toLowerCase().includes(filterResponsible.toLowerCase())
-  );
+      (osc.responsible || '').toLowerCase().includes(filterResponsible.toLowerCase());
+
+    // 2. Filtro de Pendências
+    if (filterPendentes) {
+      const mesAtual = new Date().getMonth() + 1;
+      const anoAtual = new Date().getFullYear();
+      
+      // Verifica se a OSC possui algum documento enviado neste mês/ano
+      const temDocMes = osc.documents?.some(
+        doc => doc.ref_month === mesAtual && doc.ref_year === anoAtual
+      );
+      
+      // Retorna a OSC apenas se bater com a busca de texto E NÃO tiver documento no mês
+      return matchesSearch && !temDocMes;
+    }
+
+    return matchesSearch;
+  });
 
   return (
     <div className={styles.pageContainer}>
@@ -44,8 +64,8 @@ export default function OSCListView({
         </h2>
         {/* --- BOTÃO MODIFICADO PARA LINK --- */}
         <Button
-          as={Link} // Usa 'as={Link}' do Button.jsx
-          to="/contador/oscs/novo" // Aponta para a nova rota
+          as={Link} 
+          to="/contador/oscs/novo" 
           variant="primary"
           className={styles.createButton}
         >
@@ -56,25 +76,54 @@ export default function OSCListView({
 
       {/* Filtros */}
       <div className={styles.filtersContainer}>
-        <div className={styles.filtersGrid}>
-          <Input
-            icon={SearchIcon}
-            placeholder="Buscar por Nome da OSC..."
-            value={filterName}
-            onChange={(e) => setFilterName(e.target.value)}
-          />
-          <Input
-            icon={SearchIcon}
-            placeholder="Buscar por CNPJ..."
-            value={filterCnpj}
-            onChange={(e) => setFilterCnpj(e.target.value)}
-          />
-          <Input
-            icon={SearchIcon}
-            placeholder="Buscar por Responsável..."
-            value={filterResponsible}
-            onChange={(e) => setFilterResponsible(e.target.value)}
-          />
+        <div className={styles.filtersGrid} style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <Input
+              icon={SearchIcon}
+              placeholder="Buscar por Nome..."
+              value={filterName}
+              onChange={(e) => setFilterName(e.target.value)}
+            />
+          </div>
+          <div style={{ flex: 1, minWidth: '180px' }}>
+            <Input
+              icon={SearchIcon}
+              placeholder="Buscar por CNPJ..."
+              value={filterCnpj}
+              onChange={(e) => setFilterCnpj(e.target.value)}
+            />
+          </div>
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <Input
+              icon={SearchIcon}
+              placeholder="Buscar por Responsável..."
+              value={filterResponsible}
+              onChange={(e) => setFilterResponsible(e.target.value)}
+            />
+          </div>
+          
+          {/* NOVO BOTÃO DE PENDÊNCIAS */}
+          <div>
+            <button 
+              onClick={() => setFilterPendentes(!filterPendentes)}
+              style={{ 
+                backgroundColor: filterPendentes ? '#f59e0b' : '#f8fafc', 
+                color: filterPendentes ? 'white' : '#64748b',
+                border: '1px solid #cbd5e1',
+                padding: '0 15px', 
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                height: '42px', // Altura alinhada com os Inputs
+                display: 'flex',
+                alignItems: 'center',
+                transition: 'all 0.2s'
+              }}
+              title="Filtrar OSCs sem documentos enviados este mês"
+            >
+              {filterPendentes ? "✖ Exibir Todas" : "🔍 Pendentes de Análise"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -103,7 +152,7 @@ export default function OSCListView({
                       ${osc.status === 'Ativo' ? styles.statusBadgeActive : styles.statusBadgeInactive}
                     `}>
                       <span></span>
-                      <span className={styles.statusText}>{osc.status}</span>
+                      <span className={styles.statusText}>{osc.status || 'Ativo'}</span>
                     </span>
                   </td>
                   <td>
@@ -123,8 +172,10 @@ export default function OSCListView({
               ))
             ) : (
               <tr className={styles.emptyRow}>
-                <td colSpan="5">
-                  Nenhuma OSC encontrada com os filtros aplicados.
+                <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
+                  {filterPendentes 
+                    ? "Nenhuma OSC com documentação pendente para este mês! 🎉" 
+                    : "Nenhuma OSC encontrada com os filtros aplicados."}
                 </td>
               </tr>
             )}

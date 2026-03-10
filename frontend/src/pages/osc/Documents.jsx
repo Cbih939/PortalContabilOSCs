@@ -1,3 +1,4 @@
+// frontend/src/pages/osc/Documents.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.jsx';
@@ -186,6 +187,8 @@ export default function OSCDocumentsPage() {
                     >
                         <option value="MENSAL">Mensal (Contábil / Fiscal)</option>
                         <option value="FIXO">Fixo (Atas, Estatutos, Cartão CNPJ)</option>
+                        {/* CATEGORIA ADICIONADA AQUI */}
+                        <option value="CONCLUSO TEC">CONCLUSO TEC (Transf. Escritório)</option>
                     </select>
                 </div>
 
@@ -231,6 +234,16 @@ export default function OSCDocumentsPage() {
               </select>
             </div>
           </div>
+
+          {/* MARCAÇÃO DE INÍCIO DO CONTRATO */}
+          {user?.data_contrato_conta_comigo && (
+            <div style={{
+              backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', color: '#0369a1',
+              padding: '10px 15px', borderRadius: '8px', marginBottom: '20px', fontSize: '13px', fontWeight: '500'
+            }}>
+              🤝 Início da relação contratual com CONTA COMIGO: <strong>{new Date(user.data_contrato_conta_comigo).toLocaleDateString('pt-BR')}</strong>
+            </div>
+          )}
 
           <div style={{marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '20px'}}>
             <h4 style={calStyles.sectionTitle}>Situação em {viewYear}</h4>

@@ -83,52 +83,35 @@ export const getReceivedDocuments = async (req, res) => {
  */
 export const uploadDocument = async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ message: 'Arquivo não enviado.' });
+    const { osc_id, doc_type, ref_month, ref_year } = req.body;
+    const file = req.file;
 
-    const userId = req.user.id;
-    const userRole = req.user.role;
-    const { doc_type, osc_id: bodyOscId, ref_month, ref_year } = req.body; 
-
-    let finalOscId;
-    let targetContadorId;
-
-    if (userRole === 'Contador' && bodyOscId) {
-      finalOscId = bodyOscId;
-      const [oscRows] = await pool.execute('SELECT assigned_contador_id FROM oscs WHERE id = ?', [finalOscId]);
-      targetContadorId = userId; 
-    } else {
-      const [oscRows] = await pool.execute('SELECT id, assigned_contador_id FROM oscs WHERE user_id = ?', [userId]);
-      if (oscRows.length === 0) return res.status(403).json({ message: 'OSC não encontrada.' });
-      finalOscId = oscRows[0].id;
-      targetContadorId = oscRows[0].assigned_contador_id;
+    if (!file) {
+      return res.status(400).json({ message: 'Nenhum arquivo enviado.' });
     }
 
-    const monthRef = ref_month || (new Date().getMonth() + 1);
-    const yearRef = ref_year || new Date().getFullYear();
+    // Grava no banco com o novo doc_type (aceita CONCLUSO TEC, etc.)
+    const query = `
+      INSERT INTO documents 
+      (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
-    const [result] = await pool.execute(
-      `INSERT INTO documents 
-        (osc_id, uploaded_by_user_id, doc_type, ref_month, ref_year, original_name, saved_filename, file_path, file_size_bytes, mime_type, to_contador_id, status) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ENVIADO')`,
-      [
-        finalOscId, 
-        userId, 
-        doc_type || 'MENSAL',
-        monthRef,
-        yearRef,
-        req.file.originalname, 
-        req.file.filename, 
-        req.file.filename, // Guardamos apenas o nome do arquivo aqui para simplificar
-        req.file.size, 
-        req.file.mimetype, 
-        targetContadorId
-      ]
-    );
+    await pool.execute(query, [
+      osc_id,
+      file.originalname,
+      file.filename,
+      file.path,
+      doc_type, // Ex: 'CONCLUSO TEC'
+      ref_month,
+      ref_year,
+      'PENDENTE'
+    ]);
 
-    res.status(201).json({ message: 'Enviado com sucesso!', id: result.insertId });
+    res.status(201).json({ message: 'Documento enviado com sucesso!' });
   } catch (error) {
-    console.error('[Upload Error]:', error);
-    res.status(500).json({ message: 'Erro interno ao processar upload.' });
+    console.error('[Document Upload Error]:', error);
+    res.status(500).json({ message: 'Erro interno ao salvar documento no banco.' });
   }
 };
 

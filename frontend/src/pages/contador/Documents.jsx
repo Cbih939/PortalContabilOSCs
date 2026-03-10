@@ -1,3 +1,4 @@
+// frontend/src/pages/contador/Documents.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import * as docService from '../../services/documentService.js';
