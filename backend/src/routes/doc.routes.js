@@ -2,11 +2,15 @@ import { Router } from 'express';
 import * as controller from '../controllers/doc.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 import { upload } from '../middlewares/upload.middleware.js'; 
+import { uploadDocument, getMyDocuments, getReceivedDocuments, markAsConcluded, downloadDocument, markConclusoTec } from '../controllers/doc.controller.js';
 
 const router = Router();
 
 // Listar documentos (OSC vê os dela, Contador vê das OSCs dele)
 router.get('/my', protect, controller.getDocuments); 
+
+// Marcar TEC como concluído
+router.post('/concluso-tec', protect, controller.markConclusoTec);
 
 // Documentos recebidos para o carrossel do Contador
 router.get('/received', protect, controller.getReceivedDocuments);

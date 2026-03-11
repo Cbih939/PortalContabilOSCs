@@ -123,3 +123,9 @@ export const markAsConcluded = async (data) => {
   // data deve ser { oscId: 123 }
   return await api.post('/documents/conclude', data); 
 };
+
+// Marca como Concluso TEC (Mensal ou Anual)
+export const markConclusoTec = async (data) => {
+  const response = await api.post('/documents/mark-tec', data);
+  return response.data;
+};

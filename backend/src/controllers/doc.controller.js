@@ -195,3 +195,41 @@ export const updateDocumentStatus = async (req, res) => {
         res.status(500).json({ message: 'Erro ao atualizar status.' });
     }
 };
+
+// --- MARCAR COMO CONCLUSO TEC (MENSAL OU ANUAL) ---
+export const markConclusoTec = async (req, res) => {
+  try {
+    const { osc_id, month, year } = req.body;
+    
+    if (!osc_id || !year) {
+      return res.status(400).json({ message: "OSC e Ano são obrigatórios." });
+    }
+
+    const fileName = 'Histórico TEC - Transferência de Escritório';
+    const docType = 'CONCLUSO TEC';
+    const status = 'CONCLUIDO';
+
+    if (month === 'ALL') {
+      // Marca o ANO TODO (insere 12 registos)
+      for (let m = 1; m <= 12; m++) {
+        await pool.execute(
+          `INSERT INTO documents (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [osc_id, fileName, 'none', 'none', docType, m, year, status]
+        );
+      }
+    } else {
+      // Marca apenas o MÊS SELECIONADO
+      await pool.execute(
+        `INSERT INTO documents (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [osc_id, fileName, 'none', 'none', docType, month, year, status]
+      );
+    }
+
+    res.json({ message: 'Histórico TEC registrado com sucesso!' });
+  } catch (error) {
+    console.error('[markConclusoTec Error]:', error);
+    res.status(500).json({ message: 'Erro interno ao marcar TEC.' });
+  }
+};

@@ -129,6 +129,27 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     }
   };
 
+  const handleMarkTec = async (type) => {
+    const isYearly = type === 'year';
+    const confirmMsg = isYearly
+      ? `Deseja marcar TODO O ANO de ${actionYear} como CONCLUSO TEC?`
+      : `Deseja marcar o mês ${months[actionMonth-1]}/${actionYear} como CONCLUSO TEC?`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      await docService.markConclusoTec({ 
+        osc_id: osc.id, 
+        month: isYearly ? 'ALL' : actionMonth, 
+        year: actionYear 
+      });
+      addNotification(`TEC marcado com sucesso!`, "success");
+      onRefresh();
+    } catch (err) {
+      addNotification("Erro ao registrar TEC.", "error");
+    }
+  };
+
   const handleCounterUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -153,17 +174,14 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
 
   const openDocument = (doc) => {
     if (!doc) return;
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://contacomigo.org.br';
-    const rawPath = doc.saved_filename || doc.file_path || doc.filename || "";
-    
-    if (!rawPath) {
-      alert("Caminho do arquivo não encontrado.");
+    if (doc.doc_type === 'CONCLUSO TEC' && (!doc.file_path || doc.file_path === 'none')) {
+      alert("Este é um registro de Histórico (TEC). Não há arquivo PDF associado para download.");
       return;
     }
-
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://contacomigo.org.br';
+    const rawPath = doc.saved_filename || doc.file_path || doc.filename || "";
     const cleanFileName = rawPath.replace('uploads/', '');
-    const fileUrl = `${apiUrl}/uploads/${cleanFileName}`;
-    window.open(fileUrl, '_blank');
+    window.open(`${apiUrl}/uploads/${cleanFileName}`, '_blank');
   };
 
   // --- NOVA LÓGICA DE STATUS COM 'CONCLUSO TEC' ---
@@ -204,8 +222,8 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
       case 'late': return 'Atraso';
       case 'pending': return 'Aberto';
       case 'sent': return 'Enviado';
-      case 'concluded': return 'Concluso'; // Mudado de 'OK' para 'Concluso' como na imagem
-      case 'concluso_tec': return 'Concluso TEC'; // NOVA LEGENDA
+      case 'concluded': return 'Concluso'; 
+      case 'concluso_tec': return 'Concluso TEC'; 
       default: return '-';
     }
   };
@@ -255,13 +273,34 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
               </select>
             </div>
             <div style={{borderLeft: '1px solid #ddd', height: '24px', margin: '0 10px'}}></div>
-            <div style={{display: 'flex', gap: '10px', flex: 1}}>
-              <button style={styles.checkBtn} onClick={handleConcludeMonth}><IconCheck /> Concluir Este Mês</button>
+            
+            <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', flex: 1}}>
+              <button style={{...styles.checkBtn, flex: 1, justifyContent: 'center'}} onClick={handleConcludeMonth}>
+                <IconCheck /> Concluir
+              </button>
+              
+              {/* NOVOS BOTÕES TEC */}
+              <button 
+                style={{...styles.checkBtn, backgroundColor: '#7e22ce', flex: 1, justifyContent: 'center'}} 
+                onClick={() => handleMarkTec('month')} 
+                title="Marcar mês como Transferência (TEC)"
+              >
+                🟣 TEC (Mês)
+              </button>
+              <button 
+                style={{...styles.checkBtn, backgroundColor: '#581c87', flex: 1, justifyContent: 'center'}} 
+                onClick={() => handleMarkTec('year')} 
+                title="Marcar ano todo como Transferência (TEC)"
+              >
+                🟣 TEC (Ano)
+              </button>
+
               <label style={{...styles.counterUploadBtn, flex: 1, justifyContent: 'center'}}>
-                {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar p/ esta Ref.</>}
+                {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar</>}
                 <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleCounterUpload} disabled={isUploading} />
               </label>
             </div>
+
           </div>
 
           <div style={styles.legend}>
