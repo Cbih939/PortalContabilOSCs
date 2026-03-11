@@ -51,28 +51,12 @@ export const uploadDocument = (formData) => {
 /**
  * Faz o download de um ficheiro específico e aciona o 'save' no browser.
  */
-export const downloadDocument = async (fileId, fileName) => {
-  if (!fileId || !fileName) {
-      throw new Error("ID do ficheiro ou nome do ficheiro em falta para o download.");
-  }
-  try {
-    const response = await api.get(`/documents/download/${fileId}`, {
-      responseType: 'blob',
-    });
-    triggerDownload(response.data, fileName);
-  } catch (error) {
-    console.error('Erro ao fazer o download do ficheiro (API):', error);
-    if (error.response?.data?.constructor === Blob) {
-        try {
-            const errText = await error.response.data.text();
-            const errJson = JSON.parse(errText);
-            throw new Error(errJson.message || 'Não foi possível fazer o download do ficheiro.');
-        } catch(e) {
-             throw new Error('Não foi possível fazer o download do ficheiro.');
-        }
-    }
-    throw new Error(error.response?.data?.message || 'Não foi possível fazer o download do ficheiro.');
-  }
+// Descarregar / Ler documento com segurança (Adicione no final)
+export const downloadDocument = async (id) => {
+  const response = await api.get(`/documents/download/${id}`, { 
+    responseType: 'blob' 
+  });
+  return response.data;
 };
 
 /**

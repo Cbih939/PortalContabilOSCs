@@ -187,24 +187,39 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     }
   };
 
-  const openDocument = (doc) => {
+  const openDocument = async (doc) => {
     if (!doc) return;
     if (doc.doc_type === 'CONCLUSO TEC' && (!doc.file_path || doc.file_path === 'none' || doc.file_path.startsWith('tec_virtual'))) {
-      alert("Este é um registro de Histórico (TEC) sem arquivo físico do sistema antigo. Os novos envios já possuem o documento associado para visualizar.");
+      alert("Este é um registro de Histórico (TEC) sem arquivo físico. Os novos envios já possuem o documento associado para visualizar.");
       return;
     }
-    
-    // Pega a URL da API (ex: https://contacomigo.org.br/api)
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://contacomigo.org.br/api';
-    
-    // Remove o "/api" do final para acessar a pasta estática corretamente na raiz
-    const baseUrl = apiUrl.endsWith('/api') ? apiUrl.slice(0, -4) : apiUrl;
-    
-    const rawPath = doc.saved_filename || doc.file_path || doc.filename || "";
-    const cleanFileName = rawPath.replace('uploads/', '').replace(/^\/+/, '');
-    
-    // Abre o documento na aba ao lado usando o caminho correto
-    window.open(`${baseUrl}/uploads/${cleanFileName}`, '_blank');
+
+    try {
+      // 1. Usa a API segura para buscar o arquivo binário (Blob)
+      const fileBlob = await docService.downloadDocument(doc.id);
+      
+      // 2. Cria uma URL temporária local na memória do navegador
+      const fileURL = window.URL.createObjectURL(new Blob([fileBlob], { type: doc.mime_type || 'application/pdf' }));
+      
+      // 3. Abre numa nova aba (com segurança e sem ser bloqueado pelo Nginx)
+      const link = document.createElement('a');
+      link.href = fileURL;
+      link.target = '_blank';
+      
+      // Se preferir forçar o download automático em vez de abrir, descomente a linha abaixo:
+      // link.download = doc.original_name;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // 4. Limpa a memória após 10 segundos
+      setTimeout(() => window.URL.revokeObjectURL(fileURL), 10000);
+
+    } catch (error) {
+      console.error("Erro ao abrir arquivo:", error);
+      alert("Não foi possível carregar o arquivo. O documento não foi encontrado no servidor.");
+    }
   };
 
   const getMonthStatus = (monthIndex) => {
