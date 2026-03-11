@@ -193,10 +193,18 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
       alert("Este é um registro de Histórico (TEC) sem arquivo físico do sistema antigo. Os novos envios já possuem o documento associado para visualizar.");
       return;
     }
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://contacomigo.org.br';
+    
+    // Pega a URL da API (ex: https://contacomigo.org.br/api)
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://contacomigo.org.br/api';
+    
+    // Remove o "/api" do final para acessar a pasta estática corretamente na raiz
+    const baseUrl = apiUrl.endsWith('/api') ? apiUrl.slice(0, -4) : apiUrl;
+    
     const rawPath = doc.saved_filename || doc.file_path || doc.filename || "";
-    const cleanFileName = rawPath.replace('uploads/', '');
-    window.open(`${apiUrl}/uploads/${cleanFileName}`, '_blank');
+    const cleanFileName = rawPath.replace('uploads/', '').replace(/^\/+/, '');
+    
+    // Abre o documento na aba ao lado usando o caminho correto
+    window.open(`${baseUrl}/uploads/${cleanFileName}`, '_blank');
   };
 
   const getMonthStatus = (monthIndex) => {
