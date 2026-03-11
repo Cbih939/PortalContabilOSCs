@@ -1,6 +1,6 @@
 // src/pages/contador/OSCs.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import * as oscService from '../../services/oscService.js';
 import * as alertService from '../../services/alertService.js';
 import * as docService from '../../services/documentService.js'; 
@@ -15,39 +15,19 @@ import useApi from '../../hooks/useApi.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 
 // --- ÍCONES SVG NATIVOS ---
-const IconChevronDown = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-);
-const IconChevronUp = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-);
-const IconEdit = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-);
-const IconEye = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-);
-const IconBell = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-);
-const IconFileText = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
-);
-const IconCheck = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-);
-const IconSearch = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-);
-const IconPlus = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-);
-const IconInfo = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EC6D12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{cursor: 'help'}}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-);
-const IconUpload = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-);
+const IconChevronDown = () => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>);
+const IconChevronUp = () => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>);
+const IconEdit = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>);
+const IconEye = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>);
+const IconBell = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>);
+const IconFileText = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>);
+const IconCheck = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>);
+const IconSearch = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>);
+const IconPlus = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>);
+const IconInfo = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EC6D12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{cursor: 'help'}}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>);
+const IconUpload = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>);
+const IconTrash = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>);
+const IconUndo = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg>);
 
 // --- ESTILOS ---
 const styles = {
@@ -98,6 +78,8 @@ const injectStyles = () => {
     .tooltip-container:hover .tooltip-box { visibility: visible !important; opacity: 1 !important; }
     .accordion-header:hover { background-color: #f9fafb !important; }
     .doc-item-row:hover { background-color: #eff6ff !important; }
+    .delete-btn { color: #9ca3af; transition: color 0.2s; padding: 4px; }
+    .delete-btn:hover { color: #dc2626; }
   `;
   document.head.appendChild(styleTag);
 };
@@ -108,14 +90,12 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
   const [isUploading, setIsUploading] = useState(false);
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
   
-  // MODIFICAÇÃO: Estado para múltiplos meses
   const [actionMonths, setActionMonths] = useState([new Date().getMonth() + 1]);
   const [actionYear, setActionYear] = useState(new Date().getFullYear());
 
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const years = [2024, 2025, 2026];
 
-  // Lógica de seleção de múltiplos meses
   const toggleMonth = (m) => {
     setActionMonths(prev => 
       prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]
@@ -127,7 +107,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     else setActionMonths([1,2,3,4,5,6,7,8,9,10,11,12]);
   };
 
-  // Função para conclusão simples sem arquivo para múltiplos meses
   const handleConcludeMonths = async () => {
     if (actionMonths.length === 0) return addNotification("Selecione pelo menos um mês.", "error");
     if (!window.confirm(`Deseja marcar os ${actionMonths.length} meses selecionados do ano ${actionYear} como CONCLUÍDOS?`)) return;
@@ -146,7 +125,25 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     }
   };
 
-  // Função de upload que envia o mesmo arquivo para todos os meses selecionados (Contábil, Governança ou TEC)
+  // NOVO: Desfazer conclusão e marcar como PENDENTE
+  const handlePendingMonths = async () => {
+    if (actionMonths.length === 0) return addNotification("Selecione pelo menos um mês.", "error");
+    if (!window.confirm(`Deseja reverter os ${actionMonths.length} meses selecionados para PENDENTE?\nIsto anula a marcação de Concluído e apaga os históricos de TEC desse período.`)) return;
+    
+    setIsUploading(true);
+    try {
+      await Promise.all(actionMonths.map(month => 
+        docService.markAsPending({ oscId: osc.id, month, year: actionYear })
+      ));
+      addNotification(`Meses revertidos para PENDENTE com sucesso!`, "success");
+      onRefresh();
+    } catch (err) {
+      addNotification("Erro ao reverter para pendente.", "error");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleUpload = async (e, docType) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -173,6 +170,20 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     } finally {
       setIsUploading(false);
       e.target.value = "";
+    }
+  };
+
+  // NOVO: Excluir documento
+  const handleDeleteDocument = async (e, docId, docName) => {
+    e.stopPropagation(); // Evita abrir o arquivo ao clicar na lixeira
+    if (!window.confirm(`Tem certeza que deseja excluir o documento:\n"${docName}"?\n\nEsta ação não pode ser desfeita.`)) return;
+    
+    try {
+      await docService.deleteDocument(docId);
+      addNotification("Documento excluído com sucesso.", "success");
+      onRefresh();
+    } catch (err) {
+      addNotification("Erro ao excluir o documento.", "error");
     }
   };
 
@@ -214,7 +225,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
       case 'pending': return ['#fef9c3', '#a16207', '#fde047'];
       case 'sent': return ['#dbeafe', '#1d4ed8', '#bfdbfe'];
       case 'concluded': return ['#dcfce7', '#15803d', '#86efac'];
-      case 'concluso_tec': return ['#f3e8ff', '#7e22ce', '#e9d5ff']; // ROXO para Concluso TEC
+      case 'concluso_tec': return ['#f3e8ff', '#7e22ce', '#e9d5ff'];
       default: return ['#f3f4f6', '#9ca3af', '#e5e7eb'];
     }
   };
@@ -230,7 +241,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     }
   };
 
-  // Separação de Documentos (Contábil, Governança e TEC)
   const docsInViewYear = osc.documents ? osc.documents.filter(d => parseInt(d.ref_year) === viewYear) : [];
   const docsContabil = docsInViewYear.filter(d => d.doc_type === 'MENSAL');
   const docsGov = docsInViewYear.filter(d => d.doc_type === 'FIXO');
@@ -260,7 +270,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
       {isExpanded && (
         <div style={styles.accordionBody}>
           
-          {/* FAIXA DE CONTRATO */}
           {osc.data_contrato_conta_comigo && (
             <div style={{
               backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', color: '#0369a1',
@@ -270,7 +279,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             </div>
           )}
 
-          {/* NOVO PAINEL DE ACÃO (MÚLTIPLOS MESES + TEC UPLOAD) */}
           <div style={styles.actionPanel}>
             <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px'}}>
               <span style={{fontSize: '13px', fontWeight: 'bold', color: '#374151'}}>Ano de Referência:</span>
@@ -309,6 +317,11 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
               <button style={{...styles.checkBtn, flex: 1, minWidth: '160px', justifyContent: 'center'}} onClick={handleConcludeMonths}>
                 <IconCheck /> Concluir Manualmente
               </button>
+
+              {/* BOTÃO DESFAZER/PENDENTE */}
+              <button style={{...styles.checkBtn, backgroundColor: '#f97316', flex: 1, minWidth: '160px', justifyContent: 'center'}} onClick={handlePendingMonths} title="Anular o 'Concluído' e apagar o histórico de TEC para voltar a Pendente.">
+                <IconUndo /> Voltar para Pendente
+              </button>
               
               <label style={{...styles.counterUploadBtn, backgroundColor: '#2563eb', flex: 1, minWidth: '160px', justifyContent: 'center'}}>
                 {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar Doc. Contábil</>}
@@ -320,7 +333,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
                 <input type="file" style={{ display: 'none' }} onChange={(e) => handleUpload(e, 'FIXO')} disabled={isUploading} />
               </label>
 
-              <label style={{...styles.counterUploadBtn, backgroundColor: '#7e22ce', flex: 1, minWidth: '160px', justifyContent: 'center'}} title="Submeta o documento histórico TEC.">
+              <label style={{...styles.counterUploadBtn, backgroundColor: '#7e22ce', flex: 1, minWidth: '160px', justifyContent: 'center'}}>
                 {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar Histórico TEC</>}
                 <input type="file" style={{ display: 'none' }} onChange={(e) => handleUpload(e, 'CONCLUSO TEC')} disabled={isUploading} />
               </label>
@@ -356,8 +369,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             })}
           </div>
 
-          {/* LISTA DE DOCUMENTOS - DIVIDIDA */}
-          
           {/* SECÇÃO CONTÁBIL */}
           <h4 style={styles.sectionTitle}><IconFileText /> DOCUMENTAÇÃO | CONTÁBIL (Mensal)</h4>
           <div style={styles.docList}>
@@ -374,6 +385,9 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
                     </span>
                     <span style={styles.typeBadge(true)}>CONTÁBIL</span>
                     <span style={styles.docDate}>Postado: {new Date(doc.createdAt || doc.created_at).toLocaleDateString('pt-BR')}</span>
+                    <button className="delete-btn" onClick={(e) => handleDeleteDocument(e, doc.id, doc.original_name)} title="Excluir documento" style={{background: 'none', border: 'none', cursor: 'pointer', marginLeft: '5px'}}>
+                      <IconTrash />
+                    </button>
                   </div>
                 </div>
               ))
@@ -398,6 +412,9 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
                     </span>
                     <span style={styles.typeBadge(false)}>GOVERNANÇA</span>
                     <span style={styles.docDate}>Postado: {new Date(doc.createdAt || doc.created_at).toLocaleDateString('pt-BR')}</span>
+                    <button className="delete-btn" onClick={(e) => handleDeleteDocument(e, doc.id, doc.original_name)} title="Excluir documento" style={{background: 'none', border: 'none', cursor: 'pointer', marginLeft: '5px'}}>
+                      <IconTrash />
+                    </button>
                   </div>
                 </div>
               ))
@@ -406,7 +423,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             )}
           </div>
 
-          {/* SECÇÃO TEC (SÓ APARECE SE HOUVER DOCUMENTOS TEC) */}
+          {/* SECÇÃO TEC */}
           {docsTec.length > 0 && (
             <>
               <h4 style={{...styles.sectionTitle, marginTop: '25px'}}><IconFileText /> DOCUMENTAÇÃO | HISTÓRICO TEC</h4>
@@ -423,6 +440,9 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
                       </span>
                       <span style={{fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#f3e8ff', color: '#7e22ce', fontWeight: 'bold'}}>CONCLUSO TEC</span>
                       <span style={styles.docDate}>Postado: {new Date(doc.createdAt || doc.created_at).toLocaleDateString('pt-BR')}</span>
+                      <button className="delete-btn" onClick={(e) => handleDeleteDocument(e, doc.id, doc.original_name)} title="Excluir documento" style={{background: 'none', border: 'none', cursor: 'pointer', marginLeft: '5px'}}>
+                        <IconTrash />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -447,7 +467,6 @@ export default function OSCsPage() {
   const [oscToSendAlert, setOscToSendAlert] = useState(null);
 
   const addNotification = useNotification();
-  // Hooks para as requisições
   const { request: updateOSC, isLoading: isUpdating } = useApi(oscService.updateOSC);
   const { request: createOSC, isLoading: isCreating } = useApi(oscService.createOSC);
   const { request: sendAlert, isLoading: isSendingAlert } = useApi(alertService.sendAlertToOSC);
@@ -573,17 +592,7 @@ export default function OSCsPage() {
       </div>
 
       {oscToView && <ViewOSCModal isOpen={!!oscToView} onClose={handleCloseModals} osc={oscToView} />}
-      
-      {oscToEdit && (
-        <EditOSCModal 
-          isOpen={!!oscToEdit} 
-          onClose={handleCloseModals} 
-          oscData={oscToEdit} 
-          onSave={handleSaveEdit} 
-          isLoading={isUpdating || isCreating} 
-        />
-      )}
-      
+      {oscToEdit && <EditOSCModal isOpen={!!oscToEdit} onClose={handleCloseModals} oscData={oscToEdit} onSave={handleSaveEdit} isLoading={isUpdating || isCreating} />}
       {oscToSendAlert && <SendAlertModal isOpen={!!oscToSendAlert} onClose={handleCloseModals} osc={oscToSendAlert} onSend={handleSendAlertSubmit} isLoading={isSendingAlert} />}
     </div>
   );

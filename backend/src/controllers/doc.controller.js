@@ -212,3 +212,61 @@ export const markConclusoTec = async (req, res) => {
     res.status(500).json({ message: 'Erro interno ao marcar TEC.' });
   }
 };
+
+// --- MARCAR COMO PENDENTE (Desfazer Conclusão) ---
+export const markMonthAsPending = async (req, res) => {
+  try {
+    const { oscId, month, year } = req.body;
+    if (!oscId || !month || !year) {
+      return res.status(400).json({ message: 'OSC, Mês e Ano são obrigatórios.' });
+    }
+
+    // Se houver um TEC (que não tem ficheiro físico) para esse mês/ano, apagamos o registo do TEC.
+    await pool.execute(
+      `DELETE FROM documents 
+       WHERE osc_id = ? AND doc_type = 'CONCLUSO TEC' AND ref_month = ? AND ref_year = ?`,
+      [oscId, month, year]
+    );
+
+    // Se houver documentos normais enviados, passamos o status de volta para 'PENDENTE'.
+    const [result] = await pool.execute(
+      `UPDATE documents SET status = 'PENDENTE' 
+       WHERE osc_id = ? AND ref_month = ? AND ref_year = ? AND doc_type != 'CONCLUSO TEC'`,
+      [oscId, month, year]
+    );
+
+    res.json({ 
+      message: `Mês ${month}/${year} marcado como PENDENTE com sucesso.`, 
+      updatedRows: result.affectedRows 
+    });
+  } catch (error) {
+    console.error('[ERROR Pending]:', error);
+    res.status(500).json({ message: 'Erro interno ao reverter status.' });
+  }
+};
+
+// --- EXCLUIR UM DOCUMENTO ESPECÍFICO ---
+export const deleteDocument = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Busca o nome físico do ficheiro antes de o apagar do banco de dados
+    const [rows] = await pool.execute('SELECT saved_filename FROM documents WHERE id = ?', [id]);
+    
+    if (rows.length > 0 && rows[0].saved_filename !== 'none' && !rows[0].saved_filename.startsWith('tec_virtual')) {
+      const filePath = path.resolve(__dirname, '../../uploads', rows[0].saved_filename);
+      // Apaga o ficheiro do disco, se existir
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    // Apaga o registo do banco de dados
+    await pool.execute('DELETE FROM documents WHERE id = ?', [id]);
+    
+    res.json({ message: 'Documento excluído com sucesso.' });
+  } catch (error) {
+    console.error('[Delete Error]:', error);
+    res.status(500).json({ message: 'Erro ao excluir o documento.' });
+  }
+};

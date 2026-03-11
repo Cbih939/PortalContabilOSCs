@@ -129,3 +129,15 @@ export const markConclusoTec = async (data) => {
   const response = await api.post('/documents/mark-tec', data);
   return response.data;
 };
+
+// Marcar mês como Pendente
+export const markAsPending = async (data) => {
+  const response = await api.post('/documents/pending', data);
+  return response.data;
+};
+
+// Excluir um documento
+export const deleteDocument = async (id) => {
+  const response = await api.delete(`/documents/${id}`);
+  return response.data;
+};
