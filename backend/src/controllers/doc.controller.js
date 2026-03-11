@@ -142,6 +142,7 @@ export const markMonthAsConcluded = async (req, res) => {
 };
 
 // --- DOWNLOAD / VISUALIZAÇÃO ---
+// --- DOWNLOAD / VISUALIZAÇÃO ---
 export const downloadDocument = async (req, res) => {
   try {
     const { id } = req.params;
@@ -156,15 +157,21 @@ export const downloadDocument = async (req, res) => {
     }
 
     const { saved_filename, original_name, mime_type } = rows[0];
-    const filePath = path.resolve(__dirname, '../../uploads', saved_filename);
+    
+    // CORREÇÃO: Limpa qualquer "uploads/" que tenha ficado gravado no banco de dados antigo
+    // Assim evitamos que ele procure na pasta errada (uploads/uploads/...)
+    const cleanFileName = saved_filename.replace('uploads/', '').replace(/^\/+/, '');
+    
+    // Constrói o caminho correto para o ficheiro físico
+    const filePath = path.resolve(__dirname, '../../uploads', cleanFileName);
 
     if (fs.existsSync(filePath)) {
       res.setHeader('Content-Type', mime_type || 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="${original_name}"`);
       return res.sendFile(filePath);
     } else {
-      console.error('Arquivo físico não encontrado:', filePath);
-      return res.status(404).json({ message: 'Arquivo físico não encontrado.' });
+      console.error('Arquivo físico não encontrado no caminho:', filePath);
+      return res.status(404).json({ message: 'Arquivo físico não encontrado no disco.' });
     }
   } catch (error) {
     console.error('[Download Error]:', error);
