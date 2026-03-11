@@ -1,25 +1,32 @@
 import { Router } from 'express';
-import * as controller from '../controllers/osc.controller.js';
+import { 
+  createOSC, 
+  getMyOSCs, 
+  getAllOSCs, 
+  updateOSC, 
+  getOSCById, 
+  getMyPayments, 
+  assignContador 
+} from '../controllers/osc.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
-import { createOSC, getMyOSCs, getAllOSCs, updateOSC } from '../controllers/osc.controller.js'; // Ajuste conforme os seus imports
 
 const router = Router();
 
 router.post('/', createOSC);
 
 // Listagem e detalhes
-router.get('/', protect, controller.getAllOSCs);
-router.get('/my', protect, controller.getMyOSCs);
+router.get('/', protect, getAllOSCs);
+router.get('/my', protect, getMyOSCs);
 
-// CORREÇÃO: Adicionado o prefixo 'controller.' para encontrar a função
-router.get('/financeiro/meus-pagamentos', protect, controller.getMyPayments);
+// Pagamentos
+router.get('/financeiro/meus-pagamentos', protect, getMyPayments);
 
-router.get('/:id', protect, controller.getOSCById);
+router.get('/:id', protect, getOSCById);
 
 // ROTA DE ATUALIZAÇÃO
-router.put('/:id', protect, controller.updateOSC);
+router.put('/:id', protect, updateOSC);
 
 // Associação (PATCH)
-router.patch('/:id/assign', protect, controller.assignContador);
+router.patch('/:id/assign', protect, assignContador);
 
 export default router;
