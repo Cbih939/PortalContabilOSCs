@@ -13,7 +13,6 @@ export const getDocuments = async (req, res) => {
     const userId = req.user.id;
     const userRole = req.user.role;
 
-    // INNER JOIN garante que apenas documentos de OSCs vinculadas ao contador apareçam
     let query = `
       SELECT d.*, 
              d.created_at as createdAt, 
@@ -25,7 +24,6 @@ export const getDocuments = async (req, res) => {
     const params = [];
     const conditions = [];
 
-    // Filtro de Segurança: Contador vê suas OSCs vinculadas, OSC vê seus próprios docs
     if (userRole === 'Contador') {
       conditions.push('o.assigned_contador_id = ?');
       params.push(userId);
@@ -66,7 +64,6 @@ export const getReceivedDocuments = async (req, res) => {
       original_name: doc.original_name,
       sender_name: doc.razao_social || doc.sender_name,
       created_at: doc.created_at,
-      // IMPORTANTE: Retornamos apenas o saved_filename para evitar duplicidade de "uploads/uploads/"
       file_path: doc.saved_filename 
     }));
     
@@ -79,22 +76,21 @@ export const getReceivedDocuments = async (req, res) => {
 
 /**
  * --- UPLOAD DE DOCUMENTO ---
- * CORREÇÃO: Salva caminhos consistentes
  */
 export const uploadDocument = async (req, res) => {
   try {
     const { osc_id, doc_type, ref_month, ref_year } = req.body;
     const file = req.file;
+    const userId = req.user.id; // Pega quem fez o envio
 
     if (!file) {
       return res.status(400).json({ message: 'Nenhum arquivo enviado.' });
     }
 
-    // Grava no banco com o novo doc_type (aceita CONCLUSO TEC, etc.)
     const query = `
       INSERT INTO documents 
-      (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status, uploaded_by_user_id) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     await pool.execute(query, [
@@ -102,10 +98,11 @@ export const uploadDocument = async (req, res) => {
       file.originalname,
       file.filename,
       file.path,
-      doc_type, // Ex: 'CONCLUSO TEC'
+      doc_type,
       ref_month,
       ref_year,
-      'PENDENTE'
+      'PENDENTE',
+      userId
     ]);
 
     res.status(201).json({ message: 'Documento enviado com sucesso!' });
@@ -141,65 +138,42 @@ export const markMonthAsConcluded = async (req, res) => {
   }
 };
 
-/**
- * --- DOWNLOAD ---
- * CORREÇÃO: Usa caminho absoluto baseado na raiz do projeto
- */
 // --- DOWNLOAD / VISUALIZAÇÃO ---
 export const downloadDocument = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Buscamos os dados do documento
     const [rows] = await pool.execute(
       'SELECT saved_filename, original_name, mime_type FROM documents WHERE id = ?', 
       [id]
     );
     
     if (rows.length === 0) {
-      return res.status(404).json({ message: 'Documento não encontrado no banco de dados.' });
+      return res.status(404).json({ message: 'Documento não encontrado.' });
     }
 
     const { saved_filename, original_name, mime_type } = rows[0];
-    
-    // Caminho absoluto para a pasta uploads na raiz do projeto
     const filePath = path.resolve(__dirname, '../../uploads', saved_filename);
 
     if (fs.existsSync(filePath)) {
-      // Configuramos o Content-Type para o navegador saber o que está abrindo (PDF, JPG, etc)
       res.setHeader('Content-Type', mime_type || 'application/pdf');
-      
-      // 'inline' abre no navegador, 'attachment' força o download
       res.setHeader('Content-Disposition', `inline; filename="${original_name}"`);
-
-      // Enviamos o arquivo físico
       return res.sendFile(filePath);
     } else {
       console.error('Arquivo físico não encontrado:', filePath);
-      return res.status(404).json({ message: 'Arquivo físico não encontrado no servidor.' });
+      return res.status(404).json({ message: 'Arquivo físico não encontrado.' });
     }
   } catch (error) {
     console.error('[Download Error]:', error);
-    res.status(500).json({ message: 'Erro ao processar a solicitação do documento.' });
+    res.status(500).json({ message: 'Erro ao processar o documento.' });
   }
-};
-
-// --- ATUALIZAR STATUS MANUAL ---
-export const updateDocumentStatus = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { status } = req.body; 
-        await pool.execute('UPDATE documents SET status = ? WHERE id = ?', [status, id]);
-        res.json({ message: `Status atualizado para ${status}.` });
-    } catch (error) {
-        res.status(500).json({ message: 'Erro ao atualizar status.' });
-    }
 };
 
 // --- MARCAR COMO CONCLUSO TEC (MENSAL OU ANUAL) ---
 export const markConclusoTec = async (req, res) => {
   try {
     const { osc_id, month, year } = req.body;
+    const userId = req.user.id; // Adicionado ID do usuário
     
     if (!osc_id || !year) {
       return res.status(400).json({ message: "OSC e Ano são obrigatórios." });
@@ -213,17 +187,17 @@ export const markConclusoTec = async (req, res) => {
       // Marca o ANO TODO (insere 12 registos)
       for (let m = 1; m <= 12; m++) {
         await pool.execute(
-          `INSERT INTO documents (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [osc_id, fileName, 'none', 'none', docType, m, year, status]
+          `INSERT INTO documents (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status, uploaded_by_user_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [osc_id, fileName, 'none', 'none', docType, m, year, status, userId]
         );
       }
     } else {
       // Marca apenas o MÊS SELECIONADO
       await pool.execute(
-        `INSERT INTO documents (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [osc_id, fileName, 'none', 'none', docType, month, year, status]
+        `INSERT INTO documents (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status, uploaded_by_user_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [osc_id, fileName, 'none', 'none', docType, month, year, status, userId]
       );
     }
 
