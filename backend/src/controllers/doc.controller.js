@@ -187,20 +187,22 @@ export const markConclusoTec = async (req, res) => {
     const status = 'CONCLUIDO';
 
     if (month === 'ALL') {
-      // Marca o ANO TODO (insere 12 registos) com tamanho 0 e mime_type text/plain
+      // Marca o ANO TODO (insere 12 registos gerando nomes virtuais únicos)
       for (let m = 1; m <= 12; m++) {
+        const uniqueName = `tec_virtual_${osc_id}_${year}_${m}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
         await pool.execute(
           `INSERT INTO documents (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status, uploaded_by_user_id, file_size_bytes, mime_type)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [osc_id, fileName, 'none', 'none', docType, m, year, status, userId, 0, 'text/plain']
+          [osc_id, fileName, uniqueName, uniqueName, docType, m, year, status, userId, 0, 'text/plain']
         );
       }
     } else {
-      // Marca apenas o MÊS SELECIONADO
+      // Marca apenas o MÊS SELECIONADO gerando um nome virtual único
+      const uniqueName = `tec_virtual_${osc_id}_${year}_${month}_${Date.now()}`;
       await pool.execute(
         `INSERT INTO documents (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status, uploaded_by_user_id, file_size_bytes, mime_type)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [osc_id, fileName, 'none', 'none', docType, month, year, status, userId, 0, 'text/plain']
+        [osc_id, fileName, uniqueName, uniqueName, docType, month, year, status, userId, 0, 'text/plain']
       );
     }
 
