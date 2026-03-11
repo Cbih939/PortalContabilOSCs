@@ -324,7 +324,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
   );
 };
 
-export function OSCsPage() {
+export default function OSCsPage() {
   const [oscs, setOscs] = useState([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [expandedOscId, setExpandedOscId] = useState(null);
