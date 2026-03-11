@@ -81,7 +81,7 @@ export const uploadDocument = async (req, res) => {
   try {
     const { osc_id, doc_type, ref_month, ref_year } = req.body;
     const file = req.file;
-    const userId = req.user.id; // Pega quem fez o envio
+    const userId = req.user.id;
 
     if (!file) {
       return res.status(400).json({ message: 'Nenhum arquivo enviado.' });
@@ -89,10 +89,11 @@ export const uploadDocument = async (req, res) => {
 
     const query = `
       INSERT INTO documents 
-      (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status, uploaded_by_user_id) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status, uploaded_by_user_id, file_size_bytes, mime_type) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
+    // Agora passamos também o tamanho e o tipo de ficheiro!
     await pool.execute(query, [
       osc_id,
       file.originalname,
@@ -102,7 +103,9 @@ export const uploadDocument = async (req, res) => {
       ref_month,
       ref_year,
       'PENDENTE',
-      userId
+      userId,
+      file.size || 0,
+      file.mimetype || 'application/pdf'
     ]);
 
     res.status(201).json({ message: 'Documento enviado com sucesso!' });
@@ -173,7 +176,7 @@ export const downloadDocument = async (req, res) => {
 export const markConclusoTec = async (req, res) => {
   try {
     const { osc_id, month, year } = req.body;
-    const userId = req.user.id; // Adicionado ID do usuário
+    const userId = req.user.id;
     
     if (!osc_id || !year) {
       return res.status(400).json({ message: "OSC e Ano são obrigatórios." });
@@ -184,20 +187,20 @@ export const markConclusoTec = async (req, res) => {
     const status = 'CONCLUIDO';
 
     if (month === 'ALL') {
-      // Marca o ANO TODO (insere 12 registos)
+      // Marca o ANO TODO (insere 12 registos) com tamanho 0 e mime_type text/plain
       for (let m = 1; m <= 12; m++) {
         await pool.execute(
-          `INSERT INTO documents (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status, uploaded_by_user_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [osc_id, fileName, 'none', 'none', docType, m, year, status, userId]
+          `INSERT INTO documents (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status, uploaded_by_user_id, file_size_bytes, mime_type)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [osc_id, fileName, 'none', 'none', docType, m, year, status, userId, 0, 'text/plain']
         );
       }
     } else {
       // Marca apenas o MÊS SELECIONADO
       await pool.execute(
-        `INSERT INTO documents (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status, uploaded_by_user_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [osc_id, fileName, 'none', 'none', docType, month, year, status, userId]
+        `INSERT INTO documents (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status, uploaded_by_user_id, file_size_bytes, mime_type)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [osc_id, fileName, 'none', 'none', docType, month, year, status, userId, 0, 'text/plain']
       );
     }
 
