@@ -1,6 +1,6 @@
 // src/pages/contador/OSCs.jsx
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as oscService from '../../services/oscService.js';
 import * as alertService from '../../services/alertService.js';
 import * as docService from '../../services/documentService.js'; 
@@ -79,13 +79,13 @@ const styles = {
   docItem: { padding: '12px 16px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', cursor: 'pointer', transition: 'background 0.2s' },
   docMain: { display: 'flex', alignItems: 'center', gap: '10px', color: '#2563eb', fontWeight: '500' },
   docMeta: { display: 'flex', alignItems: 'center', gap: '12px' },
-  typeBadge: (isMensal) => ({ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: isMensal ? '#fef3c7' : '#e0e7ff', color: isMensal ? '#92400e' : '#3730a3', fontWeight: 'bold' }),
+  typeBadge: (isMensal) => ({ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: isMensal ? '#e0e7ff' : '#fef3c7', color: isMensal ? '#3730a3' : '#92400e', fontWeight: 'bold' }),
   docDate: { fontSize: '12px', color: '#9ca3af' },
-  checkBtn: { backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' },
-  counterUploadBtn: { backgroundColor: '#3b82f6', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' },
-  actionPanel: { display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center', background: '#ffffff', padding: '15px', borderRadius: '8px', border: '1px solid #e5e7eb', flexWrap: 'wrap' },
+  checkBtn: { backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' },
+  counterUploadBtn: { backgroundColor: '#3b82f6', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' },
+  actionPanel: { display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', alignItems: 'flex-start', background: '#ffffff', padding: '15px', borderRadius: '8px', border: '1px solid #e5e7eb' },
   selectInput: { padding: '6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px' },
-  emptyState: { textAlign: 'center', padding: '40px', color: '#9ca3af', backgroundColor: '#f9fafb', borderRadius: '8px', border: '2px dashed #e5e7eb' },
+  emptyState: { textAlign: 'center', padding: '30px', color: '#9ca3af', backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' },
   tooltipWrapper: { position: 'relative', display: 'inline-flex', alignItems: 'center' },
   tooltipBox: { visibility: 'hidden', width: '240px', backgroundColor: '#1e2937', color: '#fff', textAlign: 'left', borderRadius: '6px', padding: '10px', position: 'absolute', zIndex: 10, bottom: '125%', left: '50%', marginLeft: '-120px', opacity: 0, transition: 'opacity 0.3s', fontSize: '12px', lineHeight: '1.4', fontWeight: 'normal', pointerEvents: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }
 };
@@ -105,77 +105,81 @@ injectStyles();
 
 const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAlert, onRefresh }) => {
   const addNotification = useNotification();
-  const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
-  const [actionMonth, setActionMonth] = useState(new Date().getMonth() + 1);
+  
+  // MODIFICAÇÃO: Estado para múltiplos meses
+  const [actionMonths, setActionMonths] = useState([new Date().getMonth() + 1]);
   const [actionYear, setActionYear] = useState(new Date().getFullYear());
 
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const years = [2024, 2025, 2026];
 
-  const handleConcludeMonth = async () => {
-    if (!window.confirm(`Deseja marcar ${months[actionMonth-1]}/${actionYear} como CONCLUÍDO para esta OSC?`)) return;
+  // Lógica de seleção de múltiplos meses
+  const toggleMonth = (m) => {
+    setActionMonths(prev => 
+      prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]
+    );
+  };
+
+  const toggleAllMonths = () => {
+    if (actionMonths.length === 12) setActionMonths([]);
+    else setActionMonths([1,2,3,4,5,6,7,8,9,10,11,12]);
+  };
+
+  // Função para conclusão simples sem arquivo para múltiplos meses
+  const handleConcludeMonths = async () => {
+    if (actionMonths.length === 0) return addNotification("Selecione pelo menos um mês.", "error");
+    if (!window.confirm(`Deseja marcar os ${actionMonths.length} meses selecionados do ano ${actionYear} como CONCLUÍDOS?`)) return;
+    
+    setIsUploading(true);
     try {
-      await docService.markAsConcluded({ 
-        oscId: osc.id,
-        month: actionMonth,
-        year: actionYear
-      });
-      addNotification(`Período ${actionMonth}/${actionYear} concluído com sucesso!`, "success");
+      await Promise.all(actionMonths.map(month => 
+        docService.markAsConcluded({ oscId: osc.id, month, year: actionYear })
+      ));
+      addNotification(`Meses concluídos com sucesso!`, "success");
       onRefresh();
     } catch (err) {
       addNotification("Erro ao concluir período.", "error");
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  const handleMarkTec = async (type) => {
-    const isYearly = type === 'year';
-    const confirmMsg = isYearly
-      ? `Deseja marcar TODO O ANO de ${actionYear} como CONCLUSO TEC?`
-      : `Deseja marcar o mês ${months[actionMonth-1]}/${actionYear} como CONCLUSO TEC?`;
-
-    if (!window.confirm(confirmMsg)) return;
-
-    try {
-      await docService.markConclusoTec({ 
-        osc_id: osc.id, 
-        month: isYearly ? 'ALL' : actionMonth, 
-        year: actionYear 
-      });
-      addNotification(`TEC marcado com sucesso!`, "success");
-      onRefresh();
-    } catch (err) {
-      addNotification("Erro ao registrar TEC.", "error");
-    }
-  };
-
-  const handleCounterUpload = async (e) => {
+  // Função de upload que envia o mesmo arquivo para todos os meses selecionados (Contábil, Governança ou TEC)
+  const handleUpload = async (e, docType) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (actionMonths.length === 0) {
+      e.target.value = "";
+      return addNotification("Selecione pelo menos um mês no painel de ações antes de enviar o arquivo.", "error");
+    }
+    
     setIsUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('osc_id', osc.id);
-      formData.append('doc_type', 'FIXO'); 
-      formData.append('ref_month', actionMonth);
-      formData.append('ref_year', actionYear);
-      await docService.uploadDocument(formData);
-      addNotification(`Documento enviado (${actionMonth}/${actionYear})!`, "success");
+      await Promise.all(actionMonths.map(month => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('osc_id', osc.id);
+        formData.append('doc_type', docType); 
+        formData.append('ref_month', month);
+        formData.append('ref_year', actionYear);
+        return docService.uploadDocument(formData);
+      }));
+      addNotification(`Documento enviado com sucesso para ${actionMonths.length} meses!`, "success");
       onRefresh();
     } catch (err) {
       addNotification("Erro ao enviar documento.", "error");
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      e.target.value = "";
     }
   };
 
   const openDocument = (doc) => {
     if (!doc) return;
-    if (doc.doc_type === 'CONCLUSO TEC' && (!doc.file_path || doc.file_path === 'none')) {
-      alert("Este é um registro de Histórico (TEC). Não há arquivo PDF associado para download.");
+    if (doc.doc_type === 'CONCLUSO TEC' && (!doc.file_path || doc.file_path === 'none' || doc.file_path.startsWith('tec_virtual'))) {
+      alert("Este é um registro de Histórico (TEC) sem arquivo físico do sistema antigo. Os novos envios já possuem o documento associado para visualizar.");
       return;
     }
     const apiUrl = import.meta.env.VITE_API_URL || 'https://contacomigo.org.br';
@@ -184,7 +188,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     window.open(`${apiUrl}/uploads/${cleanFileName}`, '_blank');
   };
 
-  // --- NOVA LÓGICA DE STATUS COM 'CONCLUSO TEC' ---
   const getMonthStatus = (monthIndex) => {
     const monthNum = monthIndex + 1;
     const docsInMonth = osc.documents ? osc.documents.filter(d => {
@@ -192,11 +195,10 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     }) : [];
     const hasDoc = docsInMonth.length > 0;
     
-    // Verifica a nova categoria
     const hasConclusoTec = hasDoc && docsInMonth.some(d => d.doc_type === 'CONCLUSO TEC');
     const isVerified = hasDoc && docsInMonth.some(d => d.status === 'CONCLUIDO');
     
-    if (hasConclusoTec) return 'concluso_tec'; // Retorna o status especial Roxo
+    if (hasConclusoTec) return 'concluso_tec'; 
     if (isVerified) return 'concluded'; 
     if (hasDoc) return 'sent';           
     
@@ -227,6 +229,12 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
       default: return '-';
     }
   };
+
+  // Separação de Documentos (Contábil, Governança e TEC)
+  const docsInViewYear = osc.documents ? osc.documents.filter(d => parseInt(d.ref_year) === viewYear) : [];
+  const docsContabil = docsInViewYear.filter(d => d.doc_type === 'MENSAL');
+  const docsGov = docsInViewYear.filter(d => d.doc_type === 'FIXO');
+  const docsTec = docsInViewYear.filter(d => d.doc_type === 'CONCLUSO TEC');
 
   return (
     <div style={{
@@ -262,45 +270,62 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             </div>
           )}
 
+          {/* NOVO PAINEL DE ACÃO (MÚLTIPLOS MESES + TEC UPLOAD) */}
           <div style={styles.actionPanel}>
-            <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-              <span style={{fontSize: '13px', fontWeight: 'bold', color: '#374151'}}>Ação para Competência:</span>
-              <select style={styles.selectInput} value={actionMonth} onChange={(e) => setActionMonth(parseInt(e.target.value))}>
-                {months.map((m, i) => <option key={i} value={i+1}>{m}</option>)}
-              </select>
+            <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px'}}>
+              <span style={{fontSize: '13px', fontWeight: 'bold', color: '#374151'}}>Ano de Referência:</span>
               <select style={styles.selectInput} value={actionYear} onChange={(e) => setActionYear(parseInt(e.target.value))}>
                 {years.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
-            <div style={{borderLeft: '1px solid #ddd', height: '24px', margin: '0 10px'}}></div>
-            
-            <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', flex: 1}}>
-              <button style={{...styles.checkBtn, flex: 1, justifyContent: 'center'}} onClick={handleConcludeMonth}>
-                <IconCheck /> Concluir
-              </button>
-              
-              {/* NOVOS BOTÕES TEC */}
-              <button 
-                style={{...styles.checkBtn, backgroundColor: '#7e22ce', flex: 1, justifyContent: 'center'}} 
-                onClick={() => handleMarkTec('month')} 
-                title="Marcar mês como Transferência (TEC)"
-              >
-                🟣 TEC (Mês)
-              </button>
-              <button 
-                style={{...styles.checkBtn, backgroundColor: '#581c87', flex: 1, justifyContent: 'center'}} 
-                onClick={() => handleMarkTec('year')} 
-                title="Marcar ano todo como Transferência (TEC)"
-              >
-                🟣 TEC (Ano)
-              </button>
 
-              <label style={{...styles.counterUploadBtn, flex: 1, justifyContent: 'center'}}>
-                {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar</>}
-                <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleCounterUpload} disabled={isUploading} />
-              </label>
+            <div style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: '10px' }}>
+              <span style={{fontSize: '13px', fontWeight: 'bold', color: '#374151', marginBottom: '8px'}}>1. Selecione os Meses:</span>
+              <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                <button onClick={toggleAllMonths} style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: '1px solid #94a3b8', cursor: 'pointer', background: actionMonths.length === 12 ? '#3b82f6' : '#f8fafc', color: actionMonths.length === 12 ? '#fff' : '#475569', fontWeight: 'bold' }}>Todos</button>
+                {months.map((m, i) => (
+                  <button 
+                    key={m} 
+                    onClick={() => toggleMonth(i+1)}
+                    style={{
+                      padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: '1px solid #cbd5e1', cursor: 'pointer',
+                      backgroundColor: actionMonths.includes(i+1) ? '#ea580c' : '#f8fafc',
+                      color: actionMonths.includes(i+1) ? '#fff' : '#334155',
+                      fontWeight: actionMonths.includes(i+1) ? 'bold' : 'normal',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
             </div>
 
+            <div style={{borderTop: '1px solid #e5e7eb', width: '100%', margin: '5px 0 10px 0'}}></div>
+            
+            <span style={{fontSize: '13px', fontWeight: 'bold', color: '#374151', marginBottom: '4px'}}>2. Escolha a ação para os meses selecionados:</span>
+            <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', width: '100%'}}>
+              
+              <button style={{...styles.checkBtn, flex: 1, minWidth: '160px', justifyContent: 'center'}} onClick={handleConcludeMonths}>
+                <IconCheck /> Concluir Manualmente
+              </button>
+              
+              <label style={{...styles.counterUploadBtn, backgroundColor: '#2563eb', flex: 1, minWidth: '160px', justifyContent: 'center'}}>
+                {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar Doc. Contábil</>}
+                <input type="file" style={{ display: 'none' }} onChange={(e) => handleUpload(e, 'MENSAL')} disabled={isUploading} />
+              </label>
+
+              <label style={{...styles.counterUploadBtn, backgroundColor: '#059669', flex: 1, minWidth: '160px', justifyContent: 'center'}}>
+                {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar Doc. Governança</>}
+                <input type="file" style={{ display: 'none' }} onChange={(e) => handleUpload(e, 'FIXO')} disabled={isUploading} />
+              </label>
+
+              <label style={{...styles.counterUploadBtn, backgroundColor: '#7e22ce', flex: 1, minWidth: '160px', justifyContent: 'center'}} title="Submeta o documento histórico TEC.">
+                {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar Histórico TEC</>}
+                <input type="file" style={{ display: 'none' }} onChange={(e) => handleUpload(e, 'CONCLUSO TEC')} disabled={isUploading} />
+              </label>
+
+            </div>
           </div>
 
           <div style={styles.legend}>
@@ -308,7 +333,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             <div style={styles.legendItem}><div style={styles.colorBox('#fef9c3', '#fde047')}></div> Pendente</div>
             <div style={styles.legendItem}><div style={styles.colorBox('#dbeafe', '#bfdbfe')}></div> Enviado</div>
             <div style={styles.legendItem}><div style={styles.colorBox('#dcfce7', '#86efac')}></div> Concluso</div>
-            {/* NOVA LEGENDA AQUI */}
             <div style={styles.legendItem}><div style={styles.colorBox('#f3e8ff', '#e9d5ff')}></div> Concluso TEC</div>
           </div>
 
@@ -332,31 +356,80 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             })}
           </div>
 
-          {/* O TÍTULO AGORA ESTÁ SEM O "2025" */}
-          <h4 style={styles.sectionTitle}><IconFileText /> DOCUMENTAÇÃO | GOVERNANÇA</h4>
+          {/* LISTA DE DOCUMENTOS - DIVIDIDA */}
+          
+          {/* SECÇÃO CONTÁBIL */}
+          <h4 style={styles.sectionTitle}><IconFileText /> DOCUMENTAÇÃO | CONTÁBIL (Mensal)</h4>
           <div style={styles.docList}>
-            {osc.documents && osc.documents.filter(d => parseInt(d.ref_year) === viewYear).length > 0 ? (
-              osc.documents
-                .filter(d => parseInt(d.ref_year) === viewYear)
-                .map((doc, i) => (
+            {docsContabil.length > 0 ? (
+              docsContabil.map((doc, i) => (
+                <div key={i} className="doc-item-row" style={styles.docItem} onClick={() => openDocument(doc)}>
+                  <div style={styles.docMain}>
+                    <IconFileText />
+                    <span>{doc.original_name}</span>
+                  </div>
+                  <div style={styles.docMeta}>
+                    <span style={{fontSize: '11px', color: '#6b7280', fontWeight: '600'}}>
+                      Ref: {months[(doc.ref_month || 1) - 1]}/{doc.ref_year}
+                    </span>
+                    <span style={styles.typeBadge(true)}>CONTÁBIL</span>
+                    <span style={styles.docDate}>Postado: {new Date(doc.createdAt || doc.created_at).toLocaleDateString('pt-BR')}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={styles.emptyState}>Sem registros contábeis enviados no ano de {viewYear}.</div>
+            )}
+          </div>
+
+          {/* SECÇÃO GOVERNANÇA */}
+          <h4 style={{...styles.sectionTitle, marginTop: '25px'}}><IconFileText /> DOCUMENTAÇÃO | GOVERNANÇA (Fixo/Fiscal)</h4>
+          <div style={styles.docList}>
+            {docsGov.length > 0 ? (
+              docsGov.map((doc, i) => (
+                <div key={i} className="doc-item-row" style={styles.docItem} onClick={() => openDocument(doc)}>
+                  <div style={styles.docMain}>
+                    <IconFileText />
+                    <span>{doc.original_name}</span>
+                  </div>
+                  <div style={styles.docMeta}>
+                    <span style={{fontSize: '11px', color: '#6b7280', fontWeight: '600'}}>
+                      Ref: {months[(doc.ref_month || 1) - 1]}/{doc.ref_year}
+                    </span>
+                    <span style={styles.typeBadge(false)}>GOVERNANÇA</span>
+                    <span style={styles.docDate}>Postado: {new Date(doc.createdAt || doc.created_at).toLocaleDateString('pt-BR')}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={styles.emptyState}>Sem registros de governança enviados no ano de {viewYear}.</div>
+            )}
+          </div>
+
+          {/* SECÇÃO TEC (SÓ APARECE SE HOUVER DOCUMENTOS TEC) */}
+          {docsTec.length > 0 && (
+            <>
+              <h4 style={{...styles.sectionTitle, marginTop: '25px'}}><IconFileText /> DOCUMENTAÇÃO | HISTÓRICO TEC</h4>
+              <div style={styles.docList}>
+                {docsTec.map((doc, i) => (
                   <div key={i} className="doc-item-row" style={styles.docItem} onClick={() => openDocument(doc)}>
                     <div style={styles.docMain}>
                       <IconFileText />
-                      <span>{doc.original_name}</span>
+                      <span style={{color: '#7e22ce'}}>{doc.original_name}</span>
                     </div>
                     <div style={styles.docMeta}>
                       <span style={{fontSize: '11px', color: '#6b7280', fontWeight: '600'}}>
                         Ref: {months[(doc.ref_month || 1) - 1]}/{doc.ref_year}
                       </span>
-                      <span style={styles.typeBadge(doc.doc_type === 'MENSAL')}>{doc.doc_type || 'MENSAL'}</span>
+                      <span style={{fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#f3e8ff', color: '#7e22ce', fontWeight: 'bold'}}>CONCLUSO TEC</span>
                       <span style={styles.docDate}>Postado: {new Date(doc.createdAt || doc.created_at).toLocaleDateString('pt-BR')}</span>
                     </div>
                   </div>
-                ))
-            ) : (
-              <div style={styles.emptyState}>Sem registros para o ano de {viewYear}.</div>
-            )}
-          </div>
+                ))}
+              </div>
+            </>
+          )}
+
         </div>
       )}
     </div>
