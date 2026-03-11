@@ -166,15 +166,22 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     window.open(fileUrl, '_blank');
   };
 
+  // --- NOVA LÓGICA DE STATUS COM 'CONCLUSO TEC' ---
   const getMonthStatus = (monthIndex) => {
     const monthNum = monthIndex + 1;
     const docsInMonth = osc.documents ? osc.documents.filter(d => {
         return parseInt(d.ref_month) === monthNum && parseInt(d.ref_year) === viewYear;
     }) : [];
     const hasDoc = docsInMonth.length > 0;
+    
+    // Verifica a nova categoria
+    const hasConclusoTec = hasDoc && docsInMonth.some(d => d.doc_type === 'CONCLUSO TEC');
     const isVerified = hasDoc && docsInMonth.some(d => d.status === 'CONCLUIDO');
+    
+    if (hasConclusoTec) return 'concluso_tec'; // Retorna o status especial Roxo
     if (isVerified) return 'concluded'; 
     if (hasDoc) return 'sent';           
+    
     const now = new Date();
     if (viewYear === now.getFullYear() && monthIndex === now.getMonth()) return 'pending';
     if (viewYear < now.getFullYear() || (viewYear === now.getFullYear() && monthIndex < now.getMonth())) return 'late';
@@ -187,6 +194,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
       case 'pending': return ['#fef9c3', '#a16207', '#fde047'];
       case 'sent': return ['#dbeafe', '#1d4ed8', '#bfdbfe'];
       case 'concluded': return ['#dcfce7', '#15803d', '#86efac'];
+      case 'concluso_tec': return ['#f3e8ff', '#7e22ce', '#e9d5ff']; // ROXO para Concluso TEC
       default: return ['#f3f4f6', '#9ca3af', '#e5e7eb'];
     }
   };
@@ -196,7 +204,8 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
       case 'late': return 'Atraso';
       case 'pending': return 'Aberto';
       case 'sent': return 'Enviado';
-      case 'concluded': return 'OK';
+      case 'concluded': return 'Concluso'; // Mudado de 'OK' para 'Concluso' como na imagem
+      case 'concluso_tec': return 'Concluso TEC'; // NOVA LEGENDA
       default: return '-';
     }
   };
@@ -224,6 +233,17 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
 
       {isExpanded && (
         <div style={styles.accordionBody}>
+          
+          {/* FAIXA DE CONTRATO */}
+          {osc.data_contrato_conta_comigo && (
+            <div style={{
+              backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', color: '#0369a1',
+              padding: '10px 15px', borderRadius: '8px', marginBottom: '20px', fontSize: '13px', fontWeight: '500'
+            }}>
+              🤝 Início da relação contratual com CONTA COMIGO: <strong>{new Date(osc.data_contrato_conta_comigo).toLocaleDateString('pt-BR')}</strong>
+            </div>
+          )}
+
           <div style={styles.actionPanel}>
             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
               <span style={{fontSize: '13px', fontWeight: 'bold', color: '#374151'}}>Ação para Competência:</span>
@@ -249,6 +269,8 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             <div style={styles.legendItem}><div style={styles.colorBox('#fef9c3', '#fde047')}></div> Pendente</div>
             <div style={styles.legendItem}><div style={styles.colorBox('#dbeafe', '#bfdbfe')}></div> Enviado</div>
             <div style={styles.legendItem}><div style={styles.colorBox('#dcfce7', '#86efac')}></div> Concluso</div>
+            {/* NOVA LEGENDA AQUI */}
+            <div style={styles.legendItem}><div style={styles.colorBox('#f3e8ff', '#e9d5ff')}></div> Concluso TEC</div>
           </div>
 
           <h4 style={styles.sectionTitle}>
@@ -271,7 +293,8 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             })}
           </div>
 
-          <h4 style={styles.sectionTitle}><IconFileText /> DOCUMENTAÇÃO | GOVERNANÇA {viewYear}</h4>
+          {/* O TÍTULO AGORA ESTÁ SEM O "2025" */}
+          <h4 style={styles.sectionTitle}><IconFileText /> DOCUMENTAÇÃO | GOVERNANÇA</h4>
           <div style={styles.docList}>
             {osc.documents && osc.documents.filter(d => parseInt(d.ref_year) === viewYear).length > 0 ? (
               osc.documents
@@ -301,7 +324,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
   );
 };
 
-export default function OSCsPage() {
+export function OSCsPage() {
   const [oscs, setOscs] = useState([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [expandedOscId, setExpandedOscId] = useState(null);
@@ -364,11 +387,9 @@ export default function OSCsPage() {
     
     try {
       if (oscId) {
-        // MODO EDIÇÃO
         await updateOSC(oscId, payload);
         addNotification(`Organização atualizada com sucesso!`, 'success');
       } else {
-        // MODO CRIAÇÃO (Se não tem ID)
         await createOSC(payload);
         addNotification(`Nova Organização cadastrada com sucesso!`, 'success');
       }
@@ -441,7 +462,6 @@ export default function OSCsPage() {
 
       {oscToView && <ViewOSCModal isOpen={!!oscToView} onClose={handleCloseModals} osc={oscToView} />}
       
-      {/* O mesmo modal serve para criar e editar, baseando-se no que é passado em oscData */}
       {oscToEdit && (
         <EditOSCModal 
           isOpen={!!oscToEdit} 
