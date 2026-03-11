@@ -1,29 +1,27 @@
+// backend/src/routes/doc.routes.js
 import { Router } from 'express';
 import * as controller from '../controllers/doc.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 import { upload } from '../middlewares/upload.middleware.js'; 
-import { uploadDocument, getMyDocuments, getReceivedDocuments, markAsConcluded, downloadDocument, markConclusoTec } from '../controllers/doc.controller.js';
 
 const router = Router();
 
 // Listar documentos (OSC vê os dela, Contador vê das OSCs dele)
-router.get('/my', protect, controller.getDocuments); 
+router.get('/my', protect, controller.getMyDocuments);
 
-// Marcar TEC como concluído
-router.post('/concluso-tec', protect, controller.markConclusoTec);
-
-// Documentos recebidos para o carrossel do Contador
+// Listar documentos recebidos (Para o painel central do Contador)
 router.get('/received', protect, controller.getReceivedDocuments);
 
-// ROTA DE UPLOAD: Note o uso de upload.single('file') 
-// Certifique-se que no Frontend o FormData usa o nome 'file'
-router.post('/upload', protect, upload.single('file'), controller.uploadDocument); 
+// Upload de documento (OSC e Contador)
+router.post('/upload', protect, upload.single('file'), controller.uploadDocument);
 
-// ROTA DE CONCLUSÃO: Estava faltando esta linha para o botão do contador funcionar
-router.post('/conclude', protect, controller.markMonthAsConcluded);
-
-// Download e Status
+// Descarregar documento
 router.get('/download/:id', protect, controller.downloadDocument);
-router.patch('/:id/status', protect, controller.updateDocumentStatus);
+
+// Marcar mês/ano como concluído
+router.post('/conclude', protect, controller.markAsConcluded);
+
+// NOVO: Marcar mês/ano inteiro como CONCLUSO TEC
+router.post('/mark-tec', protect, controller.markConclusoTec);
 
 export default router;
