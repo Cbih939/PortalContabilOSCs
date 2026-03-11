@@ -60,7 +60,7 @@ export const getMyOSCs = async (req, res) => {
 };
 
 /**
- * --- CRIAR NOVA OSC (COM NOVOS CAMPOS E VÍNCULO CORRETO) ---
+ * --- CRIAR NOVA OSC ---
  */
 export const createOSC = async (req, res) => {
   try {
@@ -69,7 +69,7 @@ export const createOSC = async (req, res) => {
       data_origem_estatuto, data_contrato_conta_comigo, tipo_plano 
     } = req.body;
 
-    // Pega o ID do usuário logado (ex: Flora Rabelo ID 18)
+    // Pega o ID do usuário logado
     const contadorId = (req.user && req.user.role.toUpperCase() === 'CONTADOR') ? req.user.id : null;
     const officeId = (req.user && req.user.office_id && req.user.office_id !== "0") ? req.user.office_id : null;
 
@@ -85,7 +85,7 @@ export const createOSC = async (req, res) => {
       name, cnpj, responsible, email, phone, address, 
       contadorId, officeId,
       data_origem_estatuto || null, 
-      data_contrato_conta_comigo || null, 
+      data_contrato_conta_comigo || null, // <--- O erro de digitação estava aqui!
       tipo_plano || 'PRATA'
     ]);
 
