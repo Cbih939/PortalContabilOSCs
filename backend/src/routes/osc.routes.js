@@ -10,8 +10,6 @@ router.post('/', createOSC);
 // Listagem e detalhes
 router.get('/', protect, controller.getAllOSCs);
 router.get('/my', protect, controller.getMyOSCs);
-router.get('/pendencias', getOscsComPendencias);
-
 
 // CORREÇÃO: Adicionado o prefixo 'controller.' para encontrar a função
 router.get('/financeiro/meus-pagamentos', protect, controller.getMyPayments);
