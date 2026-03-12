@@ -420,7 +420,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
           </div>
 
           {/* SECÇÃO GOVERNANÇA */}
-          <h4 style={{...styles.sectionTitle, marginTop: '25px'}}><IconFileText /> DOCUMENTAÇÃO | GOVERNANÇA (Fixo/Fiscal)</h4>
+          <h4 style={{...styles.sectionTitle, marginTop: '25px'}}><IconFileText /> DOCUMENTAÇÃO | GOVERNANÇA (Fixo)</h4>
           <div style={styles.docList}>
             {docsGov.length > 0 ? (
               docsGov.map((doc, i) => (

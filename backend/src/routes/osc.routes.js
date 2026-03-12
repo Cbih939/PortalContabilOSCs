@@ -6,7 +6,8 @@ import {
   updateOSC, 
   getOSCById, 
   getMyPayments, 
-  assignContador 
+  assignContador,
+  transferOSCOffice // <--- IMPORTAMOS A NOVA FUNÇÃO AQUI
 } from '../controllers/osc.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 
@@ -28,5 +29,8 @@ router.put('/:id', protect, updateOSC);
 
 // Associação (PATCH)
 router.patch('/:id/assign', protect, assignContador);
+
+// ROTA DE TRANSFERÊNCIA DE ESCRITÓRIO (REGRA 1)
+router.put('/:id/transfer', protect, transferOSCOffice); // <--- NOVA ROTA AQUI
 
 export default router;

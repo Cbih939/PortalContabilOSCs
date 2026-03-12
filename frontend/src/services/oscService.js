@@ -69,3 +69,15 @@ export const deleteOSC = async (oscId) => {
 export const getMeusPagamentos = () => {
   return api.get('/oscs/financeiro/meus-pagamentos');
 };
+
+// Transferir OSC para outro escritório
+export const transferOSCOffice = async (id, newOfficeId) => {
+  const response = await api.put(`/oscs/${id}/transfer`, { newOfficeId });
+  return response.data;
+};
+
+// Buscar todos os escritórios (vamos aproveitar o mesmo ficheiro para simplificar)
+export const getAllOffices = async () => {
+  const response = await api.get('/offices');
+  return response.data;
+};

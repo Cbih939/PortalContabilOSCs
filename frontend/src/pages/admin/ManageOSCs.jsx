@@ -1,5 +1,3 @@
-// src/pages/admin/ManageOSCs.jsx
-
 import React, { useState, useMemo, useEffect } from 'react';
 // Serviços API
 import * as oscService from '../../services/oscService.js';
@@ -18,76 +16,78 @@ import useApi from '../../hooks/useApi.jsx';
 import styles from './ManageOSCs.module.css';
 // Modais
 import AssignContadorModal from './components/AssignContadorModal.jsx';
-// import ViewOSCModal from '../../contador/components/ViewOSCModal.jsx'; // (Pode reutilizar o modal do contador)
+import TransferOfficeModal from './components/TransferOfficeModal.jsx'; // NOVO MODAL
 
-/**
- * Página de Gerenciamento de OSCs do Admin (Conectada à API).
- */
+// Ícone de Transferência (Setas)
+const TransferIcon = () => (
+  <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+  </svg>
+);
+
 export default function ManageOSCs() {
   // --- Estados ---
-  const [oscs, setOscs] = useState([]); // Lista de OSCs
-  const [contadores, setContadores] = useState([]); // Lista de Contadores para o modal
-  const [isLoading, setIsLoading] = useState(true); // Loading inicial da página
-  const [error, setError] = useState(null); // Erro de busca
+  const [oscs, setOscs] = useState([]); 
+  const [contadores, setContadores] = useState([]); 
+  const [offices, setOffices] = useState([]); // NOVO ESTADO PARA ESCRITÓRIOS
+  const [isLoading, setIsLoading] = useState(true); 
+  const [error, setError] = useState(null); 
   const [filterName, setFilterName] = useState('');
   const [filterContador, setFilterContador] = useState('');
   const addNotification = useNotification();
   
   // --- Estados Modais ---
-  const [oscToAssign, setOscToAssign] = useState(null); // Controla modal de associação
-  // const [oscToView, setOscToView] = useState(null); // (Para modal de View futuro)
+  const [oscToAssign, setOscToAssign] = useState(null); 
+  const [oscToTransfer, setOscToTransfer] = useState(null); // ESTADO DA TRANSFERÊNCIA
 
   // --- Hooks API ---
   const { request: assignContadorRequest, isLoading: isAssigning } = useApi(
-      oscService.assignContador, { showErrorNotification: false } // Desabilita notif padrão
+      oscService.assignContador, { showErrorNotification: false }
   );
 
-  // --- Efeito para Buscar Dados (OSCs e Contadores) ---
+  // --- Efeito para Buscar Dados ---
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        // Busca OSCs e Utilizadores em paralelo
-        const [oscsResponse, usersResponse] = await Promise.all([
+        // Agora busca OSCs, Utilizadores E Escritórios em paralelo!
+        const [oscsResponse, usersResponse, officesResponse] = await Promise.all([
           oscService.getAllOSCs(),
-          userService.getAllUsers()
+          userService.getAllUsers(),
+          oscService.getAllOffices() // Busca escritórios
         ]);
 
         const allUsers = usersResponse.data || [];
+        setOffices(officesResponse || []); // Guarda escritórios
         
-        // Filtra apenas os contadores para o dropdown do modal
         const contadoresList = allUsers
           .filter(u => u.role === ROLES.CONTADOR && u.status === 'Ativo')
           .sort((a, b) => a.name.localeCompare(b.name));
         setContadores(contadoresList);
         
-        // Formata OSCs (adiciona 'assigned_contador_id' se não vier da query principal)
-        // A nossa query findAllWithContador já inclui 'contadorName' e 'status'
         const formattedOscs = (oscsResponse.data || []).map(osc => {
             const contador = allUsers.find(u => u.name === osc.contadorName);
             return {
                 ...osc,
-                // Garante que temos o ID do contador para o modal
                 assigned_contador_id: contador ? contador.id : null
             };
-        }).sort((a, b) => a.name.localeCompare(b.name)); // Ordena
+        }).sort((a, b) => a.name.localeCompare(b.name)); 
         
         setOscs(formattedOscs);
         
       } catch (err) {
-        console.error("Erro ao buscar dados (OSCs/Contadores):", err);
-        const errorMsg = err.response?.data?.message || "Não foi possível carregar os dados.";
-        setError(errorMsg);
+        console.error("Erro ao buscar dados:", err);
+        setError("Não foi possível carregar os dados. Verifique a consola.");
         addNotification("Erro ao carregar dados.", "error");
       } finally {
         setIsLoading(false);
       }
     };
     fetchData();
-  }, [addNotification]); // addNotification é estável
+  }, [addNotification]);
 
-  // --- Filtros (usa useMemo) ---
+  // --- Filtros ---
   const filteredOSCs = useMemo(() => {
       return oscs.filter(
         (osc) =>
@@ -97,91 +97,88 @@ export default function ManageOSCs() {
   }, [oscs, filterName, filterContador]);
 
 
-  // --- Handlers Modais ---
-  const handleView = (osc) => alert(`(Admin) Visualizando: ${osc.name}. (Implementar ViewOSCModal)`);
-  const handleAssign = (osc) => setOscToAssign(osc); // Abre modal de associação
-  const handleCloseModals = () => setOscToAssign(null);
+  // --- Handlers ---
+  const handleView = (osc) => alert(`(Admin) Visualizando: ${osc.name}.`);
+  const handleAssign = (osc) => setOscToAssign(osc); 
+  const handleTransfer = (osc) => setOscToTransfer(osc); // Abre o novo modal
   
-  // Placeholder para o botão principal (poderia abrir um modal diferente)
-  const handleOpenAssignModal = () => alert('(Admin) Modal geral ainda não implementado. Clique no ícone de editar na linha da OSC.');
+  const handleCloseModals = () => {
+    setOscToAssign(null);
+    setOscToTransfer(null);
+  };
+  
+  const handleOpenAssignModal = () => alert('(Admin) Clique no ícone de editar na linha da OSC.');
 
-  // Handler para Salvar Associação
   const handleSaveAssignment = async (oscId, contadorId) => {
-      // Converte "null" (string do select) para null (JS)
       const finalContadorId = contadorId === "null" ? null : Number(contadorId);
-      
       try {
-          // Chama API (PATCH /api/oscs/:id/assign)
           const response = await assignContadorRequest(oscId, finalContadorId);
-          const updatedOscData = response.osc; // API retorna { message, osc }
-          
-          // Busca o nome do contador (ou "Nenhum")
+          const updatedOscData = response.osc; 
           const contadorName = contadores.find(c => c.id === finalContadorId)?.name || 'Nenhum';
 
-          // Atualiza a lista local
           setOscs(prev => prev.map(o =>
-              o.id === oscId
-                ? { ...o, ...updatedOscData, contadorName: contadorName, assigned_contador_id: finalContadorId } // Atualiza a linha
-                : o
-          ).sort((a, b) => a.name.localeCompare(b.name))); // Reordena
+              o.id === oscId ? { ...o, ...updatedOscData, contadorName: contadorName, assigned_contador_id: finalContadorId } : o
+          ).sort((a, b) => a.name.localeCompare(b.name))); 
 
-          addNotification(`OSC "${updatedOscData.name || oscId}" associada a "${contadorName}" com sucesso!`, 'success');
+          addNotification(`OSC associada com sucesso!`, 'success');
           handleCloseModals();
       } catch (err) {
-          console.error('Falha ao associar contador:', err);
-          addNotification(`Falha ao associar: ${err.response?.data?.message || err.message}`, 'error');
+          addNotification(`Falha ao associar.`, 'error');
       }
   };
 
-  // --- Renderização ---
-  if (isLoading) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-          <Spinner text="Carregando OSCs e Contadores..." />
-      </div>
-    );
-  }
-  if (error) {
-     return <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>{error}</div>;
-  }
+  // NOVO: Função para salvar a transferência de escritório
+  const [isTransferring, setIsTransferring] = useState(false);
+  const handleSaveTransfer = async (oscId, newOfficeId) => {
+    setIsTransferring(true);
+    try {
+      await oscService.transferOSCOffice(oscId, newOfficeId);
+      
+      const officeName = offices.find(o => o.id === Number(newOfficeId))?.name || 'Desconhecido';
+      
+      // Atualiza a lista removendo o contador e mudando o officeName (se tiver)
+      setOscs(prev => prev.map(o => 
+        o.id === oscId ? { ...o, office_id: newOfficeId, officeName: officeName, contadorName: 'Nenhum', assigned_contador_id: null } : o
+      ));
+
+      addNotification(`OSC transferida com sucesso para o escritório ${officeName}!`, 'success');
+      handleCloseModals();
+    } catch (err) {
+      console.error(err);
+      addNotification("Erro ao transferir OSC. Tente novamente.", "error");
+    } finally {
+      setIsTransferring(false);
+    }
+  };
+
+  if (isLoading) return <div style={{ padding: '2rem', textAlign: 'center' }}><Spinner text="Carregando dados..." /></div>;
+  if (error) return <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>{error}</div>;
 
   return (
     <div className={styles.pageContainer}>
       <div className={styles.header}>
         <h2 className={styles.title}>Gerenciamento de OSCs</h2>
         <Button variant="primary" onClick={handleOpenAssignModal} className={styles.assignButton}>
-          <UsersIcon className="w-5 h-5 mr-2" /> {/* Ajuste CSS se 'mr-2' não funcionar */}
+          <UsersIcon className="w-5 h-5 mr-2" />
           Associar OSC a um Contador
         </Button>
       </div>
 
-      {/* Filtros */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
-          <Input
-            icon={SearchIcon}
-            placeholder="Buscar por Nome da OSC..."
-            value={filterName}
-            onChange={(e) => setFilterName(e.target.value)}
-          />
-          <Input
-            icon={SearchIcon}
-            placeholder="Buscar por Contador..."
-            value={filterContador}
-            onChange={(e) => setFilterContador(e.target.value)}
-          />
+          <Input icon={SearchIcon} placeholder="Buscar por Nome..." value={filterName} onChange={(e) => setFilterName(e.target.value)} />
+          <Input icon={SearchIcon} placeholder="Buscar por Contador..." value={filterContador} onChange={(e) => setFilterContador(e.target.value)} />
         </div>
       </div>
 
-      {/* Tabela */}
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
             <tr>
               <th>Nome da OSC</th>
               <th>CNPJ</th>
+              <th>Escritório Atual</th>
               <th>Contador Associado</th>
-              <th>Status</th>
               <th>Ações</th>
             </tr>
           </thead>
@@ -191,34 +188,28 @@ export default function ManageOSCs() {
                 <tr key={osc.id}>
                   <td>{osc.name}</td>
                   <td>{osc.cnpj}</td>
+                  <td><strong>{osc.officeName || 'Sem Escritório'}</strong></td>
                   <td className={!osc.contadorName || osc.contadorName === 'Nenhum' ? styles.contadorNameNone : ''}>
                     {osc.contadorName || 'Nenhum'}
                   </td>
                   <td>
-                    {/* Badge de Status */}
-                    <span className={`
-                      ${styles.statusBadge}
-                      ${osc.status === 'Ativo' ? styles.statusBadgeActive : styles.statusBadgeInactive}
-                    `}>
-                      <span></span>
-                      <span className={styles.statusText}>{osc.status}</span>
-                    </span>
-                  </td>
-                  <td>
-                    <div className={styles.actionsContainer}>
-                      <button
-                        onClick={() => handleView(osc)}
-                        className={`${styles.actionButton} ${styles.viewButton}`}
-                        title="Visualizar Detalhes"
-                      >
+                    <div className={styles.actionsContainer} style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={() => handleView(osc)} className={`${styles.actionButton} ${styles.viewButton}`} title="Visualizar">
                         <ViewIcon />
                       </button>
-                      <button
-                        onClick={() => handleAssign(osc)}
-                        className={`${styles.actionButton} ${styles.assignButtonAction}`}
-                        title="Associar / Trocar Contador"
-                      >
+                      
+                      <button onClick={() => handleAssign(osc)} className={`${styles.actionButton} ${styles.assignButtonAction}`} title="Associar / Trocar Contador">
                         <EditIcon />
+                      </button>
+                      
+                      {/* NOVO BOTÃO DE TRANSFERÊNCIA */}
+                      <button 
+                        onClick={() => handleTransfer(osc)} 
+                        className={styles.actionButton} 
+                        style={{ color: '#ea580c', backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '4px', padding: '4px' }}
+                        title="Transferir para outro Escritório"
+                      >
+                        <TransferIcon />
                       </button>
                     </div>
                   </td>
@@ -226,24 +217,31 @@ export default function ManageOSCs() {
               ))
              ) : (
                 <tr className={styles.emptyRow}>
-                  <td colSpan="5">Nenhuma OSC encontrada com os filtros aplicados.</td>
+                  <td colSpan="5">Nenhuma OSC encontrada.</td>
                 </tr>
              )}
           </tbody>
         </table>
       </div>
       
-      {/* --- Modal de Associação --- */}
       <AssignContadorModal
         isOpen={!!oscToAssign}
         onClose={handleCloseModals}
         onSave={handleSaveAssignment}
         isLoading={isAssigning}
-        osc={oscToAssign} // Passa a OSC selecionada
-        contadores={contadores} // Passa a lista de contadores
+        osc={oscToAssign} 
+        contadores={contadores} 
       />
 
-      {/* (Adicionar ViewOSCModal se desejar) */}
+      {/* NOVO MODAL DE TRANSFERÊNCIA RENDEREIZADO AQUI */}
+      <TransferOfficeModal
+        isOpen={!!oscToTransfer}
+        onClose={handleCloseModals}
+        onSave={handleSaveTransfer}
+        isLoading={isTransferring}
+        osc={oscToTransfer}
+        offices={offices}
+      />
 
     </div>
   );
