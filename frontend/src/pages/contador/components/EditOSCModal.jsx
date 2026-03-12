@@ -1,136 +1,140 @@
 // src/pages/contador/components/EditOSCModal.jsx
 
 import React, { useState, useEffect } from 'react';
-import Modal from '../../../components/common/Modal.jsx'; // Importa Modal genérico
-import Input from '../../../components/common/Input.jsx';   // Importa Input refatorado
-import Button from '../../../components/common/Button.jsx'; // Importa Button refatorado
-import Spinner from '../../../components/common/Spinner.jsx'; // Importa Spinner refatorado
-import styles from './EditOSCModal.module.css'; // Importa CSS Module específico
+import Modal from '../../../components/common/Modal.jsx';
+import Input from '../../../components/common/Input.jsx';
+import Select from '../../../components/common/Select.jsx';
+import Button from '../../../components/common/Button.jsx';
 
-// ID do formulário
-const FORM_ID = 'edit-osc-form';
+export default function EditOSCModal({ isOpen, onClose, oscData, onSave, isLoading }) {
+  const [formData, setFormData] = useState({
+    id: '',
+    name: '',
+    cnpj: '',
+    responsible: '',
+    email: '',
+    phone: '',
+    address: '',
+    status: 'Ativo',
+    data_origem_estatuto: '', // Novo Campo
+    data_contrato_conta_comigo: '' // Novo Campo
+  });
 
-/**
- * Modal para Editar os detalhes de uma OSC (CSS Modules).
- */
-export default function EditOSCModal({
-  isOpen,
-  onClose,
-  oscData, // Dados da OSC a editar ou {} para nova
-  onSave, // Função chamada ao salvar
-  isLoading = false, // Estado de carregamento do salvamento
-}) {
-  // IDENTIFICA SE É CRIAÇÃO OU EDIÇÃO: Se não tem ID, é cadastro novo!
-  const isNew = !oscData?.id;
-
-  const [formData, setFormData] = useState(null);
-
-  // Atualiza o formData se a oscData mudar (Garante que os campos iniciam vazios na Criação)
   useEffect(() => {
-    if (isOpen && oscData) {
+    if (oscData) {
       setFormData({
-        id: oscData.id || null,
-        name: oscData.name || '',
+        id: oscData.id || '',
+        name: oscData.name || oscData.razao_social || '',
         cnpj: oscData.cnpj || '',
-        responsible: oscData.responsible || '',
+        responsible: oscData.responsible || oscData.responsavel || '',
         email: oscData.email || '',
         phone: oscData.phone || '',
+        address: oscData.address || '',
         status: oscData.status || 'Ativo',
-        address: oscData.address || ''
+        
+        // Puxar as datas do banco (convertendo para formato YYYY-MM-DD para o input type="date")
+        data_origem_estatuto: oscData.data_origem_estatuto ? new Date(oscData.data_origem_estatuto).toISOString().split('T')[0] : '',
+        data_contrato_conta_comigo: oscData.data_contrato_conta_comigo ? new Date(oscData.data_contrato_conta_comigo).toISOString().split('T')[0] : ''
       });
-    } else if (!isOpen) {
-      setFormData(null);
+    } else {
+      // Limpa o formulário se for "Criar Nova"
+      setFormData({
+        id: '',
+        name: '',
+        cnpj: '',
+        responsible: '',
+        email: '',
+        phone: '',
+        address: '',
+        status: 'Ativo',
+        data_origem_estatuto: '',
+        data_contrato_conta_comigo: ''
+      });
     }
-  }, [isOpen, oscData]);
+  }, [oscData]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!isLoading) {
-      onSave(formData); // Chama a função onSave passada pelo pai
-    }
+    onSave(formData);
   };
 
-  // Define o rodapé do modal com textos dinâmicos
-  const modalFooter = (
-    <>
-      <Button variant="secondary" onClick={onClose} disabled={isLoading}>
-        Cancelar
-      </Button>
-      <Button
-        variant="primary"
-        type="submit"
-        form={FORM_ID} // Liga ao formulário
-        disabled={isLoading}
-      >
-        {isLoading ? <Spinner size="sm" className="mr-2" /> : null} {/* mr-2 pode precisar de CSS global */}
-        {isLoading ? (isNew ? 'Cadastrando...' : 'Salvando...') : (isNew ? 'Cadastrar Nova OSC' : 'Salvar Alterações')}
-      </Button>
-    </>
-  );
+  if (!isOpen) return null;
 
-  // Não renderiza se não houver dados no state local
-  if (!formData) return null;
+  const isEditing = !!formData.id;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      // Título dinâmico
-      title={isNew ? 'Cadastrar Nova OSC' : `Editar OSC: ${oscData?.name || ''}`}
-      footer={modalFooter}
-      size="2xl" // Tamanho grande
-    >
-      {/* Formulário */}
-      <form id={FORM_ID} onSubmit={handleSubmit}>
-        <div className={styles.formGrid}> {/* Usa grid do CSS Module */}
-          <Input
-            label="Nome da OSC" id="name" name="name"
-            value={formData.name} onChange={handleChange} required
+    <Modal title={isEditing ? "Editar Organização (OSC)" : "Cadastrar Nova OSC"} onClose={onClose}>
+      <form onSubmit={handleSubmit}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+          
+          {/* CAMPOS EXISTENTES */}
+          <Input label="Nome da OSC" name="name" value={formData.name} onChange={handleChange} required />
+          <Input label="CNPJ" name="cnpj" value={formData.cnpj} onChange={handleChange} required />
+          <Input label="Responsável" name="responsible" value={formData.responsible} onChange={handleChange} required />
+          <Input label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required />
+          <Input label="Telefone" name="phone" value={formData.phone} onChange={handleChange} />
+          
+          <Select 
+            label="Status" 
+            name="status" 
+            value={formData.status} 
+            onChange={handleChange} 
+            options={[
+              { value: 'Ativo', label: 'Ativo' },
+              { value: 'Inativo', label: 'Inativo' }
+            ]} 
           />
-          <Input
-            label="CNPJ" id="cnpj" name="cnpj"
-            value={formData.cnpj} onChange={handleChange} required
-          />
-          <Input
-            label="Responsável" id="responsible" name="responsible"
-            value={formData.responsible} onChange={handleChange}
-          />
-          <Input
-            label="Email" id="email" name="email" type="email"
-            value={formData.email} onChange={handleChange}
-          />
-          <Input
-            label="Telefone" id="phone" name="phone"
-            value={formData.phone} onChange={handleChange}
-          />
-          {/* Select para Status (estilo básico) */}
-          <div>
-            <label htmlFor="status" className={styles.selectLabel}>
-              Status
-            </label>
-            {/* Classe do CSS Module aplicada abaixo */}
-            <select
-              id="status" name="status"
-              value={formData.status} onChange={handleChange}
-              className={styles.selectInput}
-            >
-              <option value="Ativo">Ativo</option>
-              <option value="Inativo">Inativo</option>
-            </select>
+
+          {/* NOVOS CAMPOS DE DATA PARA O CÁLCULO DO TEC */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+             <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#374151', marginBottom: '4px' }}>
+               Data do Estatuto Social *
+             </label>
+             <input 
+               type="date" 
+               name="data_origem_estatuto" 
+               value={formData.data_origem_estatuto} 
+               onChange={handleChange} 
+               required
+               style={{ padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db' }}
+             />
+             <span style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>Base para histórico contábil</span>
           </div>
-          <div className={styles.span2}> {/* Ocupa 2 colunas */}
-            <Input
-              label="Endereço" id="address" name="address"
-              value={formData.address} onChange={handleChange}
-            />
+
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+             <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#374151', marginBottom: '4px' }}>
+               Início Contrato Conta Comigo *
+             </label>
+             <input 
+               type="date" 
+               name="data_contrato_conta_comigo" 
+               value={formData.data_contrato_conta_comigo} 
+               onChange={handleChange} 
+               required
+               style={{ padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db' }}
+             />
+             <span style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>Define quando começam os envios mensais</span>
           </div>
+
+          {/* ENDEREÇO */}
+          <div style={{ gridColumn: 'span 2' }}>
+            <Input label="Endereço" name="address" value={formData.address} onChange={handleChange} />
+          </div>
+
         </div>
-        {/* O botão de submit está no footer do Modal */}
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>
+            Cancelar
+          </Button>
+          <Button type="submit" variant="primary" disabled={isLoading}>
+            {isLoading ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Cadastrar Nova OSC')}
+          </Button>
+        </div>
       </form>
     </Modal>
   );
