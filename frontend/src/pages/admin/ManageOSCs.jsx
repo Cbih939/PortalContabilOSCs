@@ -16,7 +16,7 @@ import useApi from '../../hooks/useApi.jsx';
 import styles from './ManageOSCs.module.css';
 // Modais
 import AssignContadorModal from './components/AssignContadorModal.jsx';
-import TransferOfficeModal from './components/TransferOfficeModal.jsx'; // NOVO MODAL
+import TransferOfficeModal from './components/TransferOfficeModal.jsx';
 
 // Ícone de Transferência (Setas)
 const TransferIcon = () => (
@@ -29,7 +29,7 @@ export default function ManageOSCs() {
   // --- Estados ---
   const [oscs, setOscs] = useState([]); 
   const [contadores, setContadores] = useState([]); 
-  const [offices, setOffices] = useState([]); // NOVO ESTADO PARA ESCRITÓRIOS
+  const [offices, setOffices] = useState([]); 
   const [isLoading, setIsLoading] = useState(true); 
   const [error, setError] = useState(null); 
   const [filterName, setFilterName] = useState('');
@@ -38,7 +38,7 @@ export default function ManageOSCs() {
   
   // --- Estados Modais ---
   const [oscToAssign, setOscToAssign] = useState(null); 
-  const [oscToTransfer, setOscToTransfer] = useState(null); // ESTADO DA TRANSFERÊNCIA
+  const [oscToTransfer, setOscToTransfer] = useState(null);
 
   // --- Hooks API ---
   const { request: assignContadorRequest, isLoading: isAssigning } = useApi(
@@ -51,28 +51,31 @@ export default function ManageOSCs() {
       setIsLoading(true);
       setError(null);
       try {
-        // Agora busca OSCs, Utilizadores E Escritórios em paralelo!
         const [oscsResponse, usersResponse, officesResponse] = await Promise.all([
           oscService.getAllOSCs(),
           userService.getAllUsers(),
-          oscService.getAllOffices() // Busca escritórios
+          oscService.getAllOffices() 
         ]);
 
-        const allUsers = usersResponse.data || [];
-        setOffices(officesResponse || []); // Guarda escritórios
+        // Proteção de dados: desempacota arrays quer venham direto ou via .data
+        const rawOscs = Array.isArray(oscsResponse) ? oscsResponse : (oscsResponse?.data || []);
+        const allUsers = Array.isArray(usersResponse) ? usersResponse : (usersResponse?.data || []);
+        const allOffices = Array.isArray(officesResponse) ? officesResponse : (officesResponse?.data || []);
+
+        setOffices(allOffices); 
         
         const contadoresList = allUsers
           .filter(u => u.role === ROLES.CONTADOR && u.status === 'Ativo')
-          .sort((a, b) => a.name.localeCompare(b.name));
+          .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
         setContadores(contadoresList);
         
-        const formattedOscs = (oscsResponse.data || []).map(osc => {
+        const formattedOscs = rawOscs.map(osc => {
             const contador = allUsers.find(u => u.name === osc.contadorName);
             return {
                 ...osc,
                 assigned_contador_id: contador ? contador.id : null
             };
-        }).sort((a, b) => a.name.localeCompare(b.name)); 
+        }).sort((a, b) => (a.name || '').localeCompare(b.name || '')); 
         
         setOscs(formattedOscs);
         
@@ -96,11 +99,10 @@ export default function ManageOSCs() {
       );
   }, [oscs, filterName, filterContador]);
 
-
   // --- Handlers ---
   const handleView = (osc) => alert(`(Admin) Visualizando: ${osc.name}.`);
   const handleAssign = (osc) => setOscToAssign(osc); 
-  const handleTransfer = (osc) => setOscToTransfer(osc); // Abre o novo modal
+  const handleTransfer = (osc) => setOscToTransfer(osc); 
   
   const handleCloseModals = () => {
     setOscToAssign(null);
@@ -118,7 +120,7 @@ export default function ManageOSCs() {
 
           setOscs(prev => prev.map(o =>
               o.id === oscId ? { ...o, ...updatedOscData, contadorName: contadorName, assigned_contador_id: finalContadorId } : o
-          ).sort((a, b) => a.name.localeCompare(b.name))); 
+          ).sort((a, b) => (a.name || '').localeCompare(b.name || ''))); 
 
           addNotification(`OSC associada com sucesso!`, 'success');
           handleCloseModals();
@@ -127,7 +129,6 @@ export default function ManageOSCs() {
       }
   };
 
-  // NOVO: Função para salvar a transferência de escritório
   const [isTransferring, setIsTransferring] = useState(false);
   const handleSaveTransfer = async (oscId, newOfficeId) => {
     setIsTransferring(true);
@@ -136,7 +137,6 @@ export default function ManageOSCs() {
       
       const officeName = offices.find(o => o.id === Number(newOfficeId))?.name || 'Desconhecido';
       
-      // Atualiza a lista removendo o contador e mudando o officeName (se tiver)
       setOscs(prev => prev.map(o => 
         o.id === oscId ? { ...o, office_id: newOfficeId, officeName: officeName, contadorName: 'Nenhum', assigned_contador_id: null } : o
       ));
@@ -202,7 +202,6 @@ export default function ManageOSCs() {
                         <EditIcon />
                       </button>
                       
-                      {/* NOVO BOTÃO DE TRANSFERÊNCIA */}
                       <button 
                         onClick={() => handleTransfer(osc)} 
                         className={styles.actionButton} 
@@ -233,7 +232,6 @@ export default function ManageOSCs() {
         contadores={contadores} 
       />
 
-      {/* NOVO MODAL DE TRANSFERÊNCIA RENDEREIZADO AQUI */}
       <TransferOfficeModal
         isOpen={!!oscToTransfer}
         onClose={handleCloseModals}
