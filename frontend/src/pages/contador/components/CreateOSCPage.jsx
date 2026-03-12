@@ -96,6 +96,24 @@ export default function CreateOSCPage() {
                             <label htmlFor="dataFundacao" className={getLabelClass()}>Data de Fundação</label>
                             <input id="dataFundacao" name="dataFundacao" type="date" onChange={handleChange} className={getInputClass()} />
                         </div>
+                        
+                        {/* NOVO CAMPO: DATA DO ESTATUTO SOCIAL */}
+                        <div className={styles.field}>
+                            <label htmlFor="dataEstatuto" className={getLabelClass()}>
+                                Data do Estatuto Social
+                                <span style={{display: 'block', fontSize: '11px', color: '#64748b', fontWeight: 'normal', marginTop: '2px'}}>
+                                    Necessário para o histórico contábil (TEC).
+                                </span>
+                            </label>
+                            <input 
+                                id="dataEstatuto" 
+                                name="data_origem_estatuto" 
+                                type="date" 
+                                onChange={handleChange} 
+                                className={getInputClass()} 
+                                required
+                            />
+                        </div>
                     </div>
                 </section>
 
@@ -228,8 +246,3 @@ export default function CreateOSCPage() {
         </div>
     );
 }
-
-// TODO: Adicionar o CSS Module 'CreateOSCPage.module.css' com os estilos .pageContainer, .formHeader, .formSection, .grid, .field, .formInput, etc.
-// TODO: Adicionar a rota /contador/oscs/novo em AppRoutes.jsx
-// TODO: Atualizar o botão "+ Cadastrar Nova OSC" em OSCsPage.jsx para usar <Link to="/contador/oscs/novo">
-// TODO: Atualizar o backend (migrações e controlador) para aceitar TODOS estes novos campos.
