@@ -1,9 +1,6 @@
-// src/pages/contador/components/EditOSCModal.jsx
-
 import React, { useState, useEffect } from 'react';
 import Modal from '../../../components/common/Modal.jsx';
 import Input from '../../../components/common/Input.jsx';
-import Button from '../../../components/common/Button.jsx';
 
 export default function EditOSCModal({ isOpen, onClose, oscData, onSave, isLoading }) {
   const [formData, setFormData] = useState({
@@ -37,17 +34,12 @@ export default function EditOSCModal({ isOpen, onClose, oscData, onSave, isLoadi
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Esta função agora é chamada diretamente pelo clique do botão
   const handleDirectSubmit = (e) => {
     e.preventDefault();
-    
-    // Validação rígida
     if (!formData.name || !formData.cnpj || !formData.email || !formData.data_origem_estatuto || !formData.data_contrato_conta_comigo) {
         alert("Por favor, preencha todos os campos obrigatórios (*), incluindo as datas do estatuto e do contrato.");
         return;
     }
-    
-    // Dispara a função de salvar do painel principal
     onSave(formData);
   };
 
@@ -55,8 +47,7 @@ export default function EditOSCModal({ isOpen, onClose, oscData, onSave, isLoadi
   const isEditing = !!formData.id;
 
   return (
-    <Modal title={isEditing ? "Editar Organização (OSC)" : "Cadastrar Nova OSC"} onClose={onClose}>
-      {/* Removemos o onSubmit do form, quem manda agora é o botão */}
+    <Modal isOpen={isOpen} title={isEditing ? "Editar Organização (OSC)" : "Cadastrar Nova OSC"} onClose={onClose}>
       <form>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
           
@@ -77,11 +68,11 @@ export default function EditOSCModal({ isOpen, onClose, oscData, onSave, isLoadi
           <div style={{ display: 'flex', flexDirection: 'column' }}>
              <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#374151', marginBottom: '4px' }}>Data do Estatuto Social *</label>
              <input type="date" name="data_origem_estatuto" value={formData.data_origem_estatuto} onChange={handleChange} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', backgroundColor: '#fff', outline: 'none' }} />
-             <span style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>Base para histórico contábil</span>
+             <span style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>Base para histórico</span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-             <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#374151', marginBottom: '4px' }}>Início Contrato Conta Comigo *</label>
+             <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#374151', marginBottom: '4px' }}>Início Contrato *</label>
              <input type="date" name="data_contrato_conta_comigo" value={formData.data_contrato_conta_comigo} onChange={handleChange} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', backgroundColor: '#fff', outline: 'none' }} />
              <span style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>Define os envios mensais</span>
           </div>
@@ -93,12 +84,15 @@ export default function EditOSCModal({ isOpen, onClose, oscData, onSave, isLoadi
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
-          <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>Cancelar</Button>
           
-          {/* MUDANÇA AQUI: type="button" e onClick="handleDirectSubmit" */}
-          <Button type="button" variant="primary" disabled={isLoading} onClick={handleDirectSubmit}>
+          <button type="button" onClick={onClose} disabled={isLoading} style={{ padding: '10px 16px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', color: '#374151', cursor: 'pointer', fontWeight: '500' }}>
+            Cancelar
+          </button>
+          
+          <button type="button" disabled={isLoading} onClick={handleDirectSubmit} style={{ padding: '10px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#ea580c', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>
             {isLoading ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Cadastrar Nova OSC')}
-          </Button>
+          </button>
+          
         </div>
       </form>
     </Modal>
