@@ -157,19 +157,23 @@ export const downloadDocument = async (req, res) => {
 
     const { saved_filename, original_name, mime_type } = rows[0];
     
-    // CORREÇÃO: Limpa qualquer "uploads/" que tenha ficado gravado no banco de dados antigo
-    // Assim evitamos que ele procure na pasta errada (uploads/uploads/...)
-    const cleanFileName = saved_filename.replace('uploads/', '').replace(/^\/+/, '');
+    // Limpa qualquer vestígio de pastas que tenha ficado no banco de dados antigo
+    const cleanFileName = saved_filename.replace('uploads/', '').replace('public/', '').replace(/^\/+/, '');
     
-    // Constrói o caminho correto para o ficheiro físico
-    const filePath = path.resolve(__dirname, '../../uploads', cleanFileName);
+    // 1. Tenta procurar na pasta NOVA (segura)
+    let filePath = path.resolve(__dirname, '../../uploads', cleanFileName);
+
+    // 2. Se não encontrar na nova, procura na pasta ANTIGA (public) para não perder os históricos
+    if (!fs.existsSync(filePath)) {
+      filePath = path.resolve(__dirname, '../../uploads/public', cleanFileName);
+    }
 
     if (fs.existsSync(filePath)) {
       res.setHeader('Content-Type', mime_type || 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="${original_name}"`);
       return res.sendFile(filePath);
     } else {
-      console.error('Arquivo físico não encontrado no caminho:', filePath);
+      console.error(`Arquivo físico não encontrado em nenhuma das pastas: ${cleanFileName}`);
       return res.status(404).json({ message: 'Arquivo físico não encontrado no disco.' });
     }
   } catch (error) {
