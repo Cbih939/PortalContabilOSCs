@@ -142,7 +142,6 @@ export const markMonthAsConcluded = async (req, res) => {
 };
 
 // --- DOWNLOAD / VISUALIZAÇÃO ---
-// --- DOWNLOAD / VISUALIZAÇÃO ---
 export const downloadDocument = async (req, res) => {
   try {
     const { id } = req.params;
