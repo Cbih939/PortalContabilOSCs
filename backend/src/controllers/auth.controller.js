@@ -28,8 +28,9 @@ export const login = async (req, res) => {
         const { email, password } = req.body;
         if (!email || !password) return res.status(400).json({ message: 'Preencha todos os campos.' });
 
+        // CORREÇÃO 1: Adicionado o office_id na busca do banco de dados
         const [rows] = await pool.execute(
-            'SELECT id, name, email, password_hash, role, status, is_in_debt FROM users WHERE email = ?',
+            'SELECT id, name, email, password_hash, role, status, is_in_debt, office_id FROM users WHERE email = ?',
             [email]
         );
 
@@ -42,8 +43,15 @@ export const login = async (req, res) => {
 
         if (!isMatch) return res.status(401).json({ message: 'Senha incorreta.' });
 
+        // CORREÇÃO 2: Adicionado o office_id dentro do Crachá (Token JWT)
         const token = jwt.sign(
-            { id: user.id, role: user.role, name: user.name, is_in_debt: user.is_in_debt },
+            { 
+                id: user.id, 
+                role: user.role, 
+                name: user.name, 
+                is_in_debt: user.is_in_debt,
+                office_id: user.office_id // <--- MÁGICA AQUI
+            },
             JWT_SECRET,
             { expiresIn: '24h' }
         );
@@ -56,7 +64,8 @@ export const login = async (req, res) => {
                 email: user.email,
                 role: user.role,
                 status: user.status,
-                is_in_debt: user.is_in_debt
+                is_in_debt: user.is_in_debt,
+                office_id: user.office_id // <--- E AQUI
             }
         });
     } catch (error) {

@@ -2,19 +2,6 @@ import pool from '../config/db.js';
 import * as UserModel from '../models/user.model.js';
 import { hashPassword } from '../utils/bcrypt.utils.js';
 
-// LISTAR TODOS
-export const getAllUsers = async (req, res) => {
-  try {
-    const [rows] = await pool.execute(
-      'SELECT id, name, email, role, status, is_in_debt FROM users'
-    );
-    res.status(200).json(rows);
-  } catch (error) {
-    console.error('[getAllUsers Error]:', error);
-    res.status(500).json({ message: 'Erro ao buscar utilizadores.' });
-  }
-};
-
 // BUSCAR POR ID
 export const getUserById = async (req, res) => {
   try {
@@ -30,10 +17,25 @@ export const getUserById = async (req, res) => {
   }
 };
 
+// LISTAR TODOS
+export const getAllUsers = async (req, res) => {
+  try {
+    // CORREÇÃO: Adicionado office_id
+    const [rows] = await pool.execute(
+      'SELECT id, name, email, role, status, is_in_debt, office_id FROM users'
+    );
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('[getAllUsers Error]:', error);
+    res.status(500).json({ message: 'Erro ao buscar utilizadores.' });
+  }
+};
+
 // CRIAR
 export const createUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    // CORREÇÃO: Agora recebe office_id do frontend
+    const { name, email, password, role, office_id } = req.body;
     if (!name || !email || !password || !role) {
       return res.status(400).json({ message: 'Campos obrigatórios em falta.' });
     }
@@ -43,12 +45,13 @@ export const createUser = async (req, res) => {
     
     const passwordHash = await hashPassword(password);
     
+    // CORREÇÃO: Insere o office_id no banco
     const [result] = await pool.execute(
-      'INSERT INTO users (name, email, password_hash, role, status, is_in_debt) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, email, passwordHash, role.toUpperCase().trim(), 'Ativo', 0]
+      'INSERT INTO users (name, email, password_hash, role, status, is_in_debt, office_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [name, email, passwordHash, role.toUpperCase().trim(), 'Ativo', 0, office_id || null]
     );
 
-    const newUser = { id: result.insertId, name, email, role: role.toUpperCase(), status: 'Ativo' };
+    const newUser = { id: result.insertId, name, email, role: role.toUpperCase(), status: 'Ativo', office_id };
     res.status(201).json({ success: true, user: newUser });
   } catch (error) {
     console.error('[createUser Error]:', error);
