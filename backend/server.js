@@ -20,6 +20,7 @@ import alertRoutes from './src/routes/alert.routes.js';
 import webhookRoutes from './src/routes/webhook.routes.js'; 
 import officeRoutes from './src/routes/office.routes.js';
 
+
 dotenv.config();
 
 const app = express();
@@ -82,7 +83,8 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/public-files', publicFileRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/admin/offices', officeRoutes);
+app.use('/api/offices', officeRoutes);
+
 
 // Rota de teste de saúde da API
 app.get('/', (req, res) => {
