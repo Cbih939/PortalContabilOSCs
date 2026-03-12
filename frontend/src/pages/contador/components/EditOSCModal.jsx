@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../../../components/common/Modal.jsx';
 import Input from '../../../components/common/Input.jsx';
-import Select from '../../../components/common/Select.jsx';
 import Button from '../../../components/common/Button.jsx';
+// A importação do 'Select' foi removida daqui!
 
 export default function EditOSCModal({ isOpen, onClose, oscData, onSave, isLoading }) {
   const [formData, setFormData] = useState({
@@ -78,16 +78,21 @@ export default function EditOSCModal({ isOpen, onClose, oscData, onSave, isLoadi
           <Input label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required />
           <Input label="Telefone" name="phone" value={formData.phone} onChange={handleChange} />
           
-          <Select 
-            label="Status" 
-            name="status" 
-            value={formData.status} 
-            onChange={handleChange} 
-            options={[
-              { value: 'Ativo', label: 'Ativo' },
-              { value: 'Inativo', label: 'Inativo' }
-            ]} 
-          />
+          {/* STATUS: Substituído por um select nativo do HTML */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+             <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#374151', marginBottom: '4px' }}>
+               Status
+             </label>
+             <select 
+               name="status" 
+               value={formData.status} 
+               onChange={handleChange} 
+               style={{ padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', backgroundColor: '#fff', outline: 'none' }}
+             >
+               <option value="Ativo">Ativo</option>
+               <option value="Inativo">Inativo</option>
+             </select>
+          </div>
 
           {/* NOVOS CAMPOS DE DATA PARA O CÁLCULO DO TEC */}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -100,7 +105,7 @@ export default function EditOSCModal({ isOpen, onClose, oscData, onSave, isLoadi
                value={formData.data_origem_estatuto} 
                onChange={handleChange} 
                required
-               style={{ padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db' }}
+               style={{ padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', backgroundColor: '#fff', outline: 'none' }}
              />
              <span style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>Base para histórico contábil</span>
           </div>
@@ -115,7 +120,7 @@ export default function EditOSCModal({ isOpen, onClose, oscData, onSave, isLoadi
                value={formData.data_contrato_conta_comigo} 
                onChange={handleChange} 
                required
-               style={{ padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db' }}
+               style={{ padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', backgroundColor: '#fff', outline: 'none' }}
              />
              <span style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>Define quando começam os envios mensais</span>
           </div>
