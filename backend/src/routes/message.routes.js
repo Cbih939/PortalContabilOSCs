@@ -1,17 +1,27 @@
 import { Router } from 'express';
-import * as messageController from '../controllers/message.controller.js';
+import { 
+    getContacts, 
+    getMessages, 
+    sendMessage, 
+    getMessagesByStatus 
+} from '../controllers/message.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-// Listar contatos para a barra lateral
-router.get('/contacts', protect, messageController.getContacts);
+// Todas as rotas de mensagens precisam de utilizador logado (protegidas)
+router.use(protect);
 
-// Obter histórico de mensagens (Suporta /?contactId=X ou /:id)
-router.get('/', protect, messageController.getMessages);
-router.get('/:id', protect, messageController.getMessages);
+// 1. Busca os contatos da barra lateral
+router.get('/contacts', getContacts);
 
-// Enviar mensagem
-router.post('/', protect, messageController.sendMessage);
+// 2. Envia uma nova mensagem (A ROTA QUE ESTAVA FALTANDO!)
+router.post('/send', sendMessage);
+
+// 3. Busca o histórico de mensagens com um contato específico (ex: /api/messages/5)
+router.get('/:id', getMessages);
+
+// Rota para os status de pagamento (mantida para compatibilidade)
+router.get('/status/:status', getMessagesByStatus);
 
 export default router;
