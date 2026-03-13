@@ -16,10 +16,10 @@ export const getMyAlerts = async (req, res) => {
     let alerts = [];
 
     if (userRole === 'CONTADOR') {
-      const [rows] = await pool.execute('SELECT * FROM notices WHERE created_by_contador_id = ? ORDER BY created_at DESC', [userId]);
+      const [rows] = await pool.execute('SELECT * FROM alerts WHERE created_by_contador_id = ? ORDER BY created_at DESC', [userId]);
       alerts = rows;
     } else {
-      // 1. Busca a OSC e o contador responsável por ela de forma segura
+      // 1. Busca a OSC e o contador responsável por ela
       const [oscRows] = await pool.execute('SELECT id, assigned_contador_id FROM oscs WHERE user_id = ?', [userId]);
       
       if (oscRows && oscRows.length > 0) {
@@ -28,7 +28,7 @@ export const getMyAlerts = async (req, res) => {
          
          let oscOfficeId = null;
          
-         // 2. Se a OSC tem um contador, vamos ver de que escritório ele é
+         // 2. Descobre de que escritório o contador pertence
          if (assignedContadorId) {
             const [userRows] = await pool.execute('SELECT office_id FROM users WHERE id = ?', [assignedContadorId]);
             if (userRows && userRows.length > 0) {
@@ -36,30 +36,31 @@ export const getMyAlerts = async (req, res) => {
             }
          }
 
-         // Garantia anti-crash: MySQL odeia undefined, forçamos para null
          const safeOscId = internalOscId || null;
          const safeOfficeId = oscOfficeId || null;
 
-         // 3. Busca avisos diretos ou avisos gerais do mesmo escritório
-         const [noticesRows] = await pool.execute(`
-            SELECT n.* FROM notices n
-            LEFT JOIN users u ON n.created_by_contador_id = u.id
-            WHERE n.osc_id = ? OR (n.osc_id IS NULL AND u.office_id = ?)
-            ORDER BY n.created_at DESC
+         // 3. Busca na tabela ALERTS os avisos da OSC ou do ESCRITÓRIO
+         const [alertsRows] = await pool.execute(`
+            SELECT a.* FROM alerts a
+            LEFT JOIN users u ON a.created_by_contador_id = u.id
+            WHERE a.osc_id = ? OR (a.osc_id IS NULL AND u.office_id = ?)
+            ORDER BY a.created_at DESC
          `, [safeOscId, safeOfficeId]);
 
-         alerts = noticesRows;
+         // Prepara os dados com os nomes que o Frontend espera ler
+         alerts = alertsRows.map(alert => ({
+             ...alert,
+             read: !!alert.read_status,
+             is_read: !!alert.read_status,
+             date: alert.created_at
+         }));
       }
     }
 
     return res.status(200).json(alerts);
   } catch (error) {
     console.error('[GetMyAlerts] Erro fatal:', error);
-    // Se falhar, mandamos o erro exato para podermos ler no navegador!
-    return res.status(500).json({ 
-        message: 'Erro ao buscar alertas.', 
-        detalheErro: error.message 
-    });
+    return res.status(500).json({ message: 'Erro ao buscar alertas.', detalheErro: error.message });
   }
 };
 
@@ -83,13 +84,22 @@ export const createAlert = async (req, res) => {
 
     const alertType = type || (req.path.includes('/alerts') ? 'Urgente' : 'Informativo');
 
+    // Insere na tabela ALERTS com read_status
     const [result] = await pool.execute(`
-      INSERT INTO notices (osc_id, title, message, type, created_by_contador_id, is_read) 
+      INSERT INTO alerts (osc_id, title, message, type, created_by_contador_id, read_status) 
       VALUES (?, ?, ?, ?, ?, 0)
     `, [oscId, title, message, alertType, fromContadorId]);
 
-    const [newAlert] = await pool.execute('SELECT * FROM notices WHERE id = ?', [result.insertId]);
-    return res.status(201).json(newAlert[0]); 
+    const [newAlert] = await pool.execute('SELECT * FROM alerts WHERE id = ?', [result.insertId]);
+    
+    // Devolve o aviso recém criado no formato amigável para o Frontend
+    const responseAlert = {
+        ...newAlert[0],
+        read: !!newAlert[0].read_status,
+        date: newAlert[0].created_at
+    };
+
+    return res.status(201).json(responseAlert); 
 
   } catch (error) {
     console.error('[Create Alert] Erro:', error);
@@ -107,7 +117,8 @@ export const markAsRead = async (req, res) => {
     const { alertId } = req.params;
     if (req.user.role !== ROLES.OSC) return res.status(403).json({ message: 'Acesso negado.' });
 
-    await pool.execute('UPDATE notices SET is_read = 1 WHERE id = ?', [alertId]);
+    // Atualiza o read_status na tabela alerts
+    await pool.execute('UPDATE alerts SET read_status = 1 WHERE id = ?', [alertId]);
     return res.status(200).json({ success: true, message: 'Alerta lido.' });
   } catch (error) {
     return res.status(500).json({ message: 'Erro ao marcar como lido.', detalheErro: error.message });
@@ -120,7 +131,7 @@ export const markAsRead = async (req, res) => {
 export const getSentNoticesHistory = async (req, res) => {
   try {
     const contadorId = req.user.id;
-    const [notices] = await pool.execute('SELECT * FROM notices WHERE created_by_contador_id = ? ORDER BY created_at DESC', [contadorId]);
+    const [notices] = await pool.execute('SELECT * FROM alerts WHERE created_by_contador_id = ? ORDER BY created_at DESC', [contadorId]);
 
     const enrichedNotices = await Promise.all(notices.map(async (notice) => {
         let oscName = 'Todas as OSCs';
@@ -128,7 +139,12 @@ export const getSentNoticesHistory = async (req, res) => {
             const [oscRow] = await pool.execute('SELECT name, razao_social FROM oscs WHERE id = ?', [notice.osc_id]);
             oscName = oscRow[0]?.name || oscRow[0]?.razao_social || 'OSC Desconhecida';
         }
-        return { ...notice, oscName };
+        return { 
+            ...notice, 
+            oscName,
+            read: !!notice.read_status,
+            date: notice.created_at
+        };
     }));
 
     return res.status(200).json(enrichedNotices);
