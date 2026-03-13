@@ -1,55 +1,46 @@
 // src/components/common/FileUpload.jsx
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import styles from './FileUpload.module.css'; // Criaremos este CSS
+import styles from './FileUpload.module.css'; 
 import { UploadIcon, FileIcon, XIcon } from './Icons.jsx';
 
 /**
  * Componente reutilizável de Upload (Drag-and-Drop)
- *
- * Props:
- * - onFileSelect (function): Função chamada com o ficheiro selecionado.
- * - label (string): O título da caixa (ex: "Logotipo").
- * - acceptedTypes (object): Objeto para o react-dropzone (ex: {'image/*': []}).
- * - description (string): Texto de ajuda (ex: "Até 5 arquivos").
- * - initialFile (File | string): Ficheiro já carregado (não implementado totalmente aqui).
  */
 export default function FileUpload({
-  onFileSelect, // Função para passar o ficheiro para o formulário RHF
+  onFileSelect, 
   label,
-  acceptedTypes = { 'application/pdf': ['.pdf'] }, // Padrão PDF
+  acceptedTypes = { 'application/pdf': ['.pdf'] }, 
   description = "Carregar arquivos ou arraste e solte",
-  hint = "PDF (máx. 5MB)" // Hint de tipo/tamanho
+  hint = "" // <--- O SEGREDO ESTÁ AQUI: Removemos o texto fixo do PDF!
 }) {
-  const [file, setFile] = useState(null); // Estado interno para mostrar nome
+  const [file, setFile] = useState(null); 
 
-  // Callback quando o ficheiro é aceite
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
       const selectedFile = acceptedFiles[0];
       setFile(selectedFile);
       if (onFileSelect) {
-        onFileSelect(selectedFile); // Passa o ficheiro para o React Hook Form
+        onFileSelect(selectedFile); 
       }
     }
   }, [onFileSelect]);
 
-  // Configuração do Dropzone
   const { getRootProps, getInputProps, isDragActive, isFocused } = useDropzone({
     onDrop,
     accept: acceptedTypes,
-    multiple: false, // Aceita apenas 1 ficheiro
-    maxSize: 5 * 1024 * 1024, // Limite de 5MB
+    multiple: false, 
+    maxSize: 5 * 1024 * 1024, 
     onDropRejected: (files) => {
-        alert(`Ficheiro rejeitado: ${files[0].errors[0].message} (Tamanho máx: 5MB ou tipo inválido).`);
+        alert(`Ficheiro rejeitado: O tamanho máximo é 5MB e o formato deve ser o correto para este campo.`);
     }
   });
 
   const removeFile = (e) => {
-      e.stopPropagation(); // Impede que o clique abra o seletor de ficheiros
+      e.stopPropagation(); 
       setFile(null);
       if (onFileSelect) {
-        onFileSelect(null); // Informa o RHF que o ficheiro foi removido
+        onFileSelect(null); 
       }
   };
 
@@ -66,7 +57,6 @@ export default function FileUpload({
       >
         <input {...getInputProps()} />
 
-        {/* Mostra o ficheiro selecionado ou a área de upload */}
         {file ? (
           <div className={styles.filePreview}>
               <FileIcon className={styles.fileIcon} />
@@ -79,7 +69,8 @@ export default function FileUpload({
           <div className={styles.uploadPrompt}>
             <UploadIcon className={styles.uploadIcon} />
             <p className={styles.uploadDescription}>{description}</p>
-            <p className={styles.uploadHint}>{hint}</p>
+            {/* O hint só vai aparecer se você passar alguma coisa explícita no componente pai */}
+            {hint && <p className={styles.uploadHint}>{hint}</p>}
           </div>
         )}
       </div>
