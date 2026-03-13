@@ -35,10 +35,15 @@ const styles = {
   headerRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
   title: { fontSize: '24px', fontWeight: 'bold', color: '#1f2937', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' },
   registerBtn: { backgroundColor: '#ea580c', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', boxShadow: '0 2px 4px rgba(234, 88, 12, 0.2)' },
-  searchRow: { display: 'flex', gap: '15px', marginBottom: '24px', flexWrap: 'wrap' },
+  searchRow: { display: 'flex', gap: '15px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' },
   searchWrapper: { position: 'relative', flex: 1, minWidth: '200px' },
   searchIcon: { position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', display: 'flex' },
   searchInput: { width: '100%', padding: '12px 12px 12px 40px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', color: '#374151', boxSizing: 'border-box' },
+  
+  // NOVO ESTILO: Checkbox de Pendentes
+  filterCheckboxContainer: { display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', backgroundColor: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '6px', cursor: 'pointer', minWidth: 'max-content' },
+  filterCheckboxLabel: { fontSize: '14px', fontWeight: 'bold', color: '#b91c1c', cursor: 'pointer', margin: 0 },
+  
   accordionItem: { border: '1px solid #e0e0e0', borderRadius: '8px', marginBottom: '12px', backgroundColor: '#fff', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
   accordionHeader: { padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', backgroundColor: '#fff', transition: 'background-color 0.2s' },
   oscInfo: { display: 'flex', flexDirection: 'column' },
@@ -125,7 +130,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     }
   };
 
-  // NOVO: Desfazer conclusão e marcar como PENDENTE
   const handlePendingMonths = async () => {
     if (actionMonths.length === 0) return addNotification("Selecione pelo menos um mês.", "error");
     if (!window.confirm(`Deseja reverter os ${actionMonths.length} meses selecionados para PENDENTE?\nIsto anula a marcação de Concluído e apaga os históricos de TEC desse período.`)) return;
@@ -173,9 +177,8 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     }
   };
 
-  // NOVO: Excluir documento
   const handleDeleteDocument = async (e, docId, docName) => {
-    e.stopPropagation(); // Evita abrir o arquivo ao clicar na lixeira
+    e.stopPropagation(); 
     if (!window.confirm(`Tem certeza que deseja excluir o documento:\n"${docName}"?\n\nEsta ação não pode ser desfeita.`)) return;
     
     try {
@@ -195,25 +198,17 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     }
 
     try {
-      // 1. Usa a API segura para buscar o arquivo binário (Blob)
       const fileBlob = await docService.downloadDocument(doc.id);
-      
-      // 2. Cria uma URL temporária local na memória do navegador
       const fileURL = window.URL.createObjectURL(new Blob([fileBlob], { type: doc.mime_type || 'application/pdf' }));
       
-      // 3. Abre numa nova aba (com segurança e sem ser bloqueado pelo Nginx)
       const link = document.createElement('a');
       link.href = fileURL;
       link.target = '_blank';
-      
-      // Se preferir forçar o download automático em vez de abrir, descomente a linha abaixo:
-      // link.download = doc.original_name;
       
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      // 4. Limpa a memória após 10 segundos
       setTimeout(() => window.URL.revokeObjectURL(fileURL), 10000);
 
     } catch (error) {
@@ -341,7 +336,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
                 <IconCheck /> Concluir Manualmente
               </button>
 
-              {/* BOTÃO DESFAZER/PENDENTE */}
               <button style={{...styles.checkBtn, backgroundColor: '#f97316', flex: 1, minWidth: '160px', justifyContent: 'center'}} onClick={handlePendingMonths} title="Anular o 'Concluído' e apagar o histórico de TEC para voltar a Pendente.">
                 <IconUndo /> Voltar para Pendente
               </button>
@@ -485,6 +479,10 @@ export default function OSCsPage() {
   const [expandedOscId, setExpandedOscId] = useState(null);
   const [searchName, setSearchName] = useState('');
   const [searchCnpj, setSearchCnpj] = useState('');
+  
+  // NOVO: Estado para o filtro de "Apenas com Pendências"
+  const [showOnlyPending, setShowOnlyPending] = useState(false);
+  
   const [oscToView, setOscToView] = useState(null);
   const [oscToEdit, setOscToEdit] = useState(null);
   const [oscToSendAlert, setOscToSendAlert] = useState(null);
@@ -525,11 +523,36 @@ export default function OSCsPage() {
 
   useEffect(() => { fetchOSCs(); }, []);
 
+  // --- Lógica de Filtros ---
   const filteredOscs = oscs.filter(osc => {
+    // Filtro por Texto (Nome e CNPJ)
     const name = osc.name || osc.razao_social || '';
     const nameMatch = name.toLowerCase().includes(searchName.toLowerCase());
     const cnpjMatch = (osc.cnpj || '').replace(/\D/g, '').includes(searchCnpj.replace(/\D/g, ''));
-    return nameMatch && cnpjMatch;
+    
+    // NOVO: Filtro por Pendência (Calcula o status dos meses do ano atual)
+    let hasPending = false;
+    if (showOnlyPending) {
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth(); // 0 a 11
+      
+      // Verifica os meses do ano atual até o mês corrente
+      for (let i = 0; i <= currentMonth; i++) {
+        const monthNum = i + 1;
+        const docsInMonth = osc.documents ? osc.documents.filter(d => parseInt(d.ref_month) === monthNum && parseInt(d.ref_year) === currentYear) : [];
+        const hasDoc = docsInMonth.length > 0;
+        const hasConclusoTec = hasDoc && docsInMonth.some(d => d.doc_type === 'CONCLUSO TEC');
+        const isVerified = hasDoc && docsInMonth.some(d => d.status === 'CONCLUIDO');
+        
+        // Se para aquele mês NÃO está Concluído e NÃO tem TEC, está pendente (Atraso, Aberto ou apenas Enviado)
+        if (!hasConclusoTec && !isVerified) {
+          hasPending = true;
+          break; // Se encontrou uma pendência, não precisa olhar os outros meses
+        }
+      }
+    }
+
+    return nameMatch && cnpjMatch && (!showOnlyPending || hasPending);
   });
 
   const handleToggleAccordion = (id) => setExpandedOscId(prevId => (prevId === id ? null : id));
@@ -593,11 +616,26 @@ export default function OSCsPage() {
           <div style={styles.searchIcon}><IconSearch /></div>
           <input type="text" placeholder="CNPJ..." style={styles.searchInput} value={searchCnpj} onChange={(e) => setSearchCnpj(e.target.value)} />
         </div>
+        
+        {/* NOVO: Caixinha de Filtro de Pendências */}
+        <label style={{ ...styles.filterCheckboxContainer, backgroundColor: showOnlyPending ? '#fee2e2' : '#f9fafb', borderColor: showOnlyPending ? '#f87171' : '#d1d5db' }}>
+          <input 
+            type="checkbox" 
+            checked={showOnlyPending} 
+            onChange={(e) => setShowOnlyPending(e.target.checked)} 
+            style={{ cursor: 'pointer', accentColor: '#dc2626' }}
+          />
+          <span style={{ ...styles.filterCheckboxLabel, color: showOnlyPending ? '#b91c1c' : '#4b5563' }}>
+            Apenas com Pendências
+          </span>
+        </label>
       </div>
 
       <div>
         {filteredOscs.length === 0 ? (
-            <div style={styles.emptyState}>Nenhuma OSC encontrada.</div>
+            <div style={styles.emptyState}>
+              {showOnlyPending ? "Todas as OSCs encontradas estão em dia! 🎉" : "Nenhuma OSC encontrada."}
+            </div>
         ) : (
             filteredOscs.map(osc => (
                 <OSCAccordionItem 
