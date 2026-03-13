@@ -1,5 +1,3 @@
-// src/pages/contador/Notices.jsx
-
 import React, { useState, useEffect } from 'react';
 import NoticesView from './components/NoticesView.jsx';
 import * as oscService from '../../services/oscService.js';
@@ -7,7 +5,6 @@ import * as alertService from '../../services/alertService.js';
 import useApi from '../../hooks/useApi.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
-import { formatDate } from '../../utils/formatDate.js';
 
 // Ícone de Informação (Tooltip) declarado localmente
 const InfoIcon = () => (
@@ -41,20 +38,25 @@ export default function NoticesPage() {
     const fetchData = async () => {
       setIsLoadingData(true);
       setErrorLoading(null);
-      let fetchedOscs = [];
+      
       try {
         const [oscsResponse, historyResponse] = await Promise.all([
           oscService.getMyOSCs(),
           alertService.getSentNoticesHistory(),
         ]);
 
-        fetchedOscs = oscsResponse.data || [];
+        // PROTEÇÃO DE DADOS: Desempacotamento seguro para OSCs e Histórico
+        const fetchedOscs = Array.isArray(oscsResponse) ? oscsResponse : (oscsResponse?.data || []);
         setOscs(fetchedOscs);
 
-        const formattedHistory = (historyResponse.data || []).map(notice => {
-            const oscName = notice.osc_id === null
-                           ? 'Todas as OSCs'
-                           : fetchedOscs.find(o => o.id === notice.osc_id)?.name || 'OSC Desconhecida';
+        const historyData = Array.isArray(historyResponse) ? historyResponse : (historyResponse?.data || []);
+
+        const formattedHistory = historyData.map(notice => {
+            // Garante que o ID "all" ou nulo seja tratado como "Todas as OSCs"
+            const isAllOscs = !notice.osc_id || String(notice.osc_id) === 'all' || String(notice.osc_id) === 'null';
+            const oscName = isAllOscs 
+                            ? 'Todas as OSCs'
+                            : fetchedOscs.find(o => String(o.id) === String(notice.osc_id))?.name || 'OSC Desconhecida';
             return {
                 ...notice,
                 oscName: oscName,
@@ -80,21 +82,27 @@ export default function NoticesPage() {
   const handleSendNotice = async (formData) => {
     try {
       const newNoticeResponse = await sendNoticeRequest(formData);
-      const newNotice = newNoticeResponse;
+      
+      // PROTEÇÃO DE DADOS: Pega o objeto do aviso venha ele encapsulado ou direto
+      const newNotice = newNoticeResponse?.data?.notice || newNoticeResponse?.data || newNoticeResponse || {};
 
-      const oscName = formData.oscId === null
+      const isAllOscs = !formData.oscId || String(formData.oscId) === 'all' || String(formData.oscId) === 'null';
+      const oscName = isAllOscs
                       ? 'Todas as OSCs'
-                      : oscs.find(o => o.id === formData.oscId)?.name || 'Desconhecida';
+                      : oscs.find(o => String(o.id) === String(formData.oscId))?.name || 'Desconhecida';
 
       setSentNotices((prev) => [{
           ...newNotice,
           id: newNotice.id || Date.now(),
           oscName: oscName,
           date: newNotice.created_at || new Date().toISOString(),
-          type: formData.type
+          type: formData.type || newNotice.type,
+          // CORREÇÃO AQUI: Força a leitura do title e message diretamente do formulário preenchido!
+          title: formData.title || formData.titulo || newNotice.title, 
+          message: formData.message || formData.content || newNotice.message || newNotice.content
       }, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date)));
 
-      addNotification(`Aviso "${formData.title}" enviado com sucesso para ${oscName}!`, 'success');
+      addNotification(`Aviso "${formData.title || 'enviado'}" com sucesso para ${oscName}!`, 'success');
     } catch (err) {
       console.error('Falha ao enviar aviso:', err);
       addNotification(`Falha ao enviar aviso: ${err.response?.data?.message || err.message}`, 'error');
