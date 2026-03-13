@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 import styles from './AdminSidebar.module.css';
@@ -25,7 +25,14 @@ const FinanceIcon = ({ className }) => (
   </svg>
 );
 
-// NOVO ÍCONE DE PERFIL/CONFIGURAÇÕES
+// ÍCONE DE ESCRITÓRIOS
+const OfficeBuildingIcon = ({ className }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1z" />
+  </svg>
+);
+
+// ÍCONE DE PERFIL/CONFIGURAÇÕES
 const ProfileIcon = ({ className }) => (
   <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -50,10 +57,11 @@ export default function AdminSidebar({ isOpen, onClose }) {
 
   const navItems = [
     { path: '/admin/dashboard', label: 'Dashboard', icon: DashboardIcon },
+    // NOVO ITEM: ESCRITÓRIOS (Coloquei aqui para dar destaque)
+    { path: '/admin/offices', label: 'Escritórios', icon: OfficeBuildingIcon },
     { path: '/admin/usuarios', label: 'Usuários', icon: UserIcon },
     { path: '/admin/oscs', label: 'OSCs', icon: FolderIcon },
     { path: '/admin/financeiro', label: 'Financeiro', icon: FinanceIcon },
-    // NOVO ITEM ADICIONADO AQUI
     { path: '/admin/profile', label: 'Meu Perfil', icon: ProfileIcon },
   ];
 

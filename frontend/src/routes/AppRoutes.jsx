@@ -11,7 +11,7 @@ import Spinner from '../components/common/Spinner.jsx';
 
 // --- PÁGINAS PÚBLICAS ---
 import LoginPage from '../pages/Login.jsx';
-import RegisterOSC from '../pages/auth/RegisterOSC.jsx'; // Adicionado .jsx para consistência no Vite
+import RegisterOSC from '../pages/auth/RegisterOSC.jsx'; 
 import NotFoundPage from '../pages/NotFound.jsx';
 import EsqueceuSenhaPage from '../pages/EsqueceuSenha.jsx';
 import RedefinirSenhaPage from '../pages/RedefinirSenha.jsx';
@@ -21,6 +21,7 @@ import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import ManageUsers from '../pages/admin/ManageUsers.jsx';
 import ManageOSCs from '../pages/admin/ManageOSCs.jsx';
 import ManageLibrary from '../pages/admin/ManageLibrary.jsx';
+import ManageOffices from '../pages/admin/ManageOffices.jsx'; // <-- NOVA IMPORTAÇÃO AQUI
 import AdminSidebar from '../pages/admin/components/AdminSidebar.jsx';
 import AdminHeader from '../pages/admin/components/AdminHeader.jsx';
 import AdminNoticesPage from '../pages/admin/AdminNoticesPage.jsx';
@@ -163,6 +164,8 @@ export default function AppRoutes() {
               <Route path="/admin/financeiro" element={<FinanceiroPage />} />
               <Route path="/admin/avisos" element={<AdminNoticesPage />} />
               <Route path="/admin/profile" element={<AdminProfile />} />
+              {/* --- NOVA ROTA DOS ESCRITÓRIOS AQUI --- */}
+              <Route path="/admin/offices" element={<ManageOffices />} /> 
             </Route>
           </Route>
 
