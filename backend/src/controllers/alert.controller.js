@@ -1,9 +1,6 @@
 // backend/src/controllers/alert.controller.js
 
-import pool from '../config/db.js'; // IMPORTAÇÃO DIRETA PARA RESOLVER O PROBLEMA DOS AVISOS
-import * as AlertModel from '../models/alert.model.js';
-import * as OscModel from '../models/osc.model.js'; 
-import * as UserModel from '../models/user.model.js'; 
+import pool from '../config/db.js';
 import { ROLES } from '../utils/constants.js'; 
 
 /**
@@ -19,44 +16,50 @@ export const getMyAlerts = async (req, res) => {
     let alerts = [];
 
     if (userRole === 'CONTADOR') {
-      // O Contador vê o histórico de todos os avisos que ele enviou
-      const [rows] = await pool.execute(`
-        SELECT * FROM notices 
-        WHERE created_by_contador_id = ? 
-        ORDER BY created_at DESC
-      `, [userId]);
+      const [rows] = await pool.execute('SELECT * FROM notices WHERE created_by_contador_id = ? ORDER BY created_at DESC', [userId]);
       alerts = rows;
     } else {
-      // 1. Busca o ID interno da OSC e quem é o contador dela (sem tentar buscar office_id aqui)
-      const [oscData] = await pool.execute('SELECT id, assigned_contador_id FROM oscs WHERE user_id = ?', [userId]);
-      const internalOscId = oscData[0]?.id;
-      const assignedContadorId = oscData[0]?.assigned_contador_id;
+      // 1. Busca a OSC e o contador responsável por ela de forma segura
+      const [oscRows] = await pool.execute('SELECT id, assigned_contador_id FROM oscs WHERE user_id = ?', [userId]);
+      
+      if (oscRows && oscRows.length > 0) {
+         const internalOscId = oscRows[0].id;
+         const assignedContadorId = oscRows[0].assigned_contador_id;
+         
+         let oscOfficeId = null;
+         
+         // 2. Se a OSC tem um contador, vamos ver de que escritório ele é
+         if (assignedContadorId) {
+            const [userRows] = await pool.execute('SELECT office_id FROM users WHERE id = ?', [assignedContadorId]);
+            if (userRows && userRows.length > 0) {
+               oscOfficeId = userRows[0].office_id;
+            }
+         }
 
-      let oscOfficeId = null;
+         // Garantia anti-crash: MySQL odeia undefined, forçamos para null
+         const safeOscId = internalOscId || null;
+         const safeOfficeId = oscOfficeId || null;
 
-      // 2. Vai buscar o escritório (office_id) diretamente no perfil do contador dessa OSC na tabela users
-      if (assignedContadorId) {
-         const [contadorData] = await pool.execute('SELECT office_id FROM users WHERE id = ?', [assignedContadorId]);
-         oscOfficeId = contadorData[0]?.office_id || null;
-      }
+         // 3. Busca avisos diretos ou avisos gerais do mesmo escritório
+         const [noticesRows] = await pool.execute(`
+            SELECT n.* FROM notices n
+            LEFT JOIN users u ON n.created_by_contador_id = u.id
+            WHERE n.osc_id = ? OR (n.osc_id IS NULL AND u.office_id = ?)
+            ORDER BY n.created_at DESC
+         `, [safeOscId, safeOfficeId]);
 
-      // 3. Busca os avisos específicos e os avisos gerais do escritório
-      if (internalOscId) {
-        const [rows] = await pool.execute(`
-          SELECT n.* FROM notices n
-          LEFT JOIN users u ON n.created_by_contador_id = u.id
-          WHERE n.osc_id = ? 
-             OR (n.osc_id IS NULL AND u.office_id = ?)
-          ORDER BY n.created_at DESC
-        `, [internalOscId, oscOfficeId]);
-        alerts = rows;
+         alerts = noticesRows;
       }
     }
 
-    res.status(200).json(alerts);
+    return res.status(200).json(alerts);
   } catch (error) {
-    console.error('[GetMyAlerts] Erro:', error);
-    res.status(500).json({ message: 'Erro ao buscar alertas.' });
+    console.error('[GetMyAlerts] Erro fatal:', error);
+    // Se falhar, mandamos o erro exato para podermos ler no navegador!
+    return res.status(500).json({ 
+        message: 'Erro ao buscar alertas.', 
+        detalheErro: error.message 
+    });
   }
 };
 
@@ -74,27 +77,23 @@ export const createAlert = async (req, res) => {
       return res.status(400).json({ message: 'Título e mensagem são obrigatórios.' });
     }
 
-    // Se oscId for 'all' ou 'null' (string), nós forçamos para nulo de verdade no banco de dados
     if (String(oscId) === 'all' || String(oscId) === 'null' || !oscId) {
         oscId = null;
     }
 
     const alertType = type || (req.path.includes('/alerts') ? 'Urgente' : 'Informativo');
 
-    // Inserção direta usando pool para garantir que os nomes das colunas batem certinho com a tabela `notices`
     const [result] = await pool.execute(`
       INSERT INTO notices (osc_id, title, message, type, created_by_contador_id, is_read) 
       VALUES (?, ?, ?, ?, ?, 0)
     `, [oscId, title, message, alertType, fromContadorId]);
 
-    // Busca o aviso recém criado para devolver ao Frontend
     const [newAlert] = await pool.execute('SELECT * FROM notices WHERE id = ?', [result.insertId]);
-
-    res.status(201).json(newAlert[0]); 
+    return res.status(201).json(newAlert[0]); 
 
   } catch (error) {
-    console.error('[Create Alert] Erro INESPERADO:', error);
-    res.status(500).json({ message: 'Erro interno do servidor ao criar alerta/aviso.' });
+    console.error('[Create Alert] Erro:', error);
+    return res.status(500).json({ message: 'Erro ao criar aviso.', detalheErro: error.message });
   }
 };
 
@@ -106,21 +105,14 @@ export const createAlert = async (req, res) => {
 export const markAsRead = async (req, res) => {
   try {
     const { alertId } = req.params;
-    
-    if (req.user.role !== ROLES.OSC) {
-        return res.status(403).json({ message: 'Acesso negado.' });
-    }
+    if (req.user.role !== ROLES.OSC) return res.status(403).json({ message: 'Acesso negado.' });
 
-    // Atualiza diretamente na base de dados
     await pool.execute('UPDATE notices SET is_read = 1 WHERE id = ?', [alertId]);
-
-    res.status(200).json({ success: true, message: 'Alerta lido.' });
+    return res.status(200).json({ success: true, message: 'Alerta lido.' });
   } catch (error) {
-    console.error('[MarkAsRead] Erro no controlador:', error);
-    res.status(500).json({ message: 'Erro interno do servidor ao atualizar alerta.' });
+    return res.status(500).json({ message: 'Erro ao marcar como lido.', detalheErro: error.message });
   }
 };
-
 
 /**
  * @desc    Busca o histórico de avisos enviados pelo Contador logado.
@@ -128,13 +120,8 @@ export const markAsRead = async (req, res) => {
 export const getSentNoticesHistory = async (req, res) => {
   try {
     const contadorId = req.user.id;
+    const [notices] = await pool.execute('SELECT * FROM notices WHERE created_by_contador_id = ? ORDER BY created_at DESC', [contadorId]);
 
-    // Busca todos os avisos deste contador
-    const [notices] = await pool.execute(`
-        SELECT * FROM notices WHERE created_by_contador_id = ? ORDER BY created_at DESC
-    `, [contadorId]);
-
-    // Enriquecer com nome da OSC
     const enrichedNotices = await Promise.all(notices.map(async (notice) => {
         let oscName = 'Todas as OSCs';
         if (notice.osc_id) {
@@ -144,17 +131,11 @@ export const getSentNoticesHistory = async (req, res) => {
         return { ...notice, oscName };
     }));
 
-    res.status(200).json(enrichedNotices);
+    return res.status(200).json(enrichedNotices);
   } catch (error) {
-    console.error('[GetSentHistory] Erro no controlador:', error);
-    res.status(500).json({ message: 'Erro interno do servidor ao buscar histórico de avisos.' });
+    return res.status(500).json({ message: 'Erro ao buscar histórico.', detalheErro: error.message });
   }
 };
 
-export const updateAlert = async (req, res) => {
-    res.status(501).json({ message: "Funcionalidade em desenvolvimento" });
-};
-
-export const deleteAlert = async (req, res) => {
-    res.status(501).json({ message: "Funcionalidade em desenvolvimento" });
-};
+export const updateAlert = async (req, res) => res.status(501).json({ message: "Em desenvolvimento" });
+export const deleteAlert = async (req, res) => res.status(501).json({ message: "Em desenvolvimento" });
