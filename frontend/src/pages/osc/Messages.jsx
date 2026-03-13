@@ -198,14 +198,14 @@ export default function OSCMessagesPage() {
           </div>
 
           {/* COLUNA DIREITA: Área de Mensagens */}
-          <div className={styles.chatWindow}>
+          <div className={styles.chatWindow} style={{ display: 'flex', flexDirection: 'column', height: '600px', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
             {selectedContact ? (
               <>
-                <div className={styles.chatHeader}>
-                  <h3>Conversando com: {selectedContact.name}</h3>
+                <div className={styles.chatHeader} style={{ padding: '16px', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#111827' }}>Conversando com: {selectedContact.name}</h3>
                 </div>
 
-                <div className={styles.messagesContainer}>
+                <div className={styles.messagesContainer} style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {messages.length > 0 ? (
                     messages.map(msg => (
                       <div key={msg.id} className={`${styles.messageBubble} ${msg.isMe ? styles.messageMe : styles.messageThem}`}>
@@ -216,32 +216,33 @@ export default function OSCMessagesPage() {
                       </div>
                     ))
                   ) : (
-                    <div className={styles.emptyMessages}>
+                    <div className={styles.emptyMessages} style={{ margin: 'auto', textAlign: 'center', color: '#6b7280' }}>
                       <p>Inicie a conversa com {selectedContact.name}</p>
                     </div>
                   )}
-                  {/* Divisão invisível para forçar o scroll até o final */}
-                  <div ref={messagesEndRef} />
+                  {/* Divisão invisível para forçar o scroll até o final SOMENTE desta div */}
+                  <div ref={messagesEndRef} style={{ float: 'left', clear: 'both' }} />
                 </div>
 
-                <form onSubmit={handleSendMessage} className={styles.messageInputArea}>
+                <form onSubmit={handleSendMessage} className={styles.messageInputArea} style={{ padding: '16px', borderTop: '1px solid #e5e7eb', backgroundColor: '#fff', display: 'flex', gap: '8px' }}>
                   <input 
                     type="text" 
                     placeholder="Digite sua mensagem..." 
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     className={styles.textInput}
+                    style={{ flex: 1, padding: '10px 16px', borderRadius: '9999px', border: '1px solid #d1d5db', outline: 'none' }}
                   />
-                  <button type="submit" disabled={!newMessage.trim()} className={styles.sendButton}>
-                    <SendIcon className={styles.sendIcon} />
+                  <button type="submit" disabled={!newMessage.trim()} className={styles.sendButton} style={{ padding: '10px 20px', borderRadius: '9999px', backgroundColor: newMessage.trim() ? '#ea580c' : '#d1d5db', color: '#fff', border: 'none', cursor: newMessage.trim() ? 'pointer' : 'not-allowed' }}>
+                    <SendIcon className={styles.sendIcon} style={{ width: '20px', height: '20px' }} />
                   </button>
                 </form>
               </>
             ) : (
-              <div className={styles.noContactSelected}>
-                <SupportIcon className={styles.placeholderIcon} />
+              <div className={styles.noContactSelected} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#6b7280' }}>
+                <SupportIcon className={styles.placeholderIcon} style={{ width: '48px', height: '48px', marginBottom: '16px', opacity: 0.5 }} />
                 <p>Selecione um contato ao lado para iniciar o chat.</p>
-              </div>
+          </div>
             )}
           </div>
         </div>
