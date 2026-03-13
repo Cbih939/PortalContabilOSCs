@@ -33,7 +33,7 @@ export default function AlertsModal({
 
   const handleReplyInChat = () => {
     onClose(); // Fecha o modal
-    navigate('/osc/messages'); // Redireciona para o chat
+    navigate('/osc/mensagens'); // Redireciona para o chat
   };
 
   const modalFooter = (
