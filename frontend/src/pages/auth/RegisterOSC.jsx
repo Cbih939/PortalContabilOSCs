@@ -16,11 +16,22 @@ const schema = yup.object().shape({
   razaoSocial: yup.string().required('A razão social é obrigatória.'),
   cnpj: yup.string().required('O CNPJ é obrigatório.').matches(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, 'CNPJ inválido.'),
   dataFundacao: yup.date().nullable().transform((curr, orig) => orig === '' ? null : curr),
-  
-  // NOVO: Campo da Data do Estatuto (opcional, igual à fundação)
   dataOrigemEstatuto: yup.date().nullable().transform((curr, orig) => orig === '' ? null : curr),
   
-  logotipo: yup.mixed().nullable(),
+  // NOVO: Validação restrita de Tamanho (5MB) e Tipo (.png)
+  logotipo: yup.mixed()
+    .nullable()
+    .test('fileSize', 'O arquivo deve ter no máximo 5MB.', (value) => {
+      if (!value) return true; // Se não enviou nada, passa (pois é opcional)
+      const size = value.size || (value[0] && value[0].size); // Trata objeto File ou Array
+      return !size || size <= 5 * 1024 * 1024;
+    })
+    .test('fileType', 'Somente arquivos .png são permitidos.', (value) => {
+      if (!value) return true;
+      const type = value.type || (value[0] && value[0].type);
+      return !type || type === 'image/png';
+    }),
+    
   estatuto: yup.mixed().nullable(),
   emailContato: yup.string().email('Email inválido.').required('O email de contato é obrigatório.'),
   telefone: yup.string().required('O telefone é obrigatório.'),
@@ -35,8 +46,6 @@ const schema = yup.object().shape({
   coordNome: yup.string().required('Nome do responsável obrigatório.'),
   coordEmail: yup.string().email('Email inválido.').required('Email de login obrigatório.'),
   coordSenha: yup.string().required('Senha obrigatória.').min(8, 'Mínimo 8 caracteres.'),
-  
-  // Validação dos Termos de Uso
   aceiteTermos: yup.boolean()
     .oneOf([true], 'Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar.')
     .required('Aceite obrigatório.'),
@@ -99,7 +108,6 @@ export default function RegisterOSC() {
         setIsLoading(true);
         const formData = new FormData();
         
-        // NOVO: Gera a data de hoje (YYYY-MM-DD) automaticamente para o contrato
         const dataContratoAutomatica = new Date().toISOString().split('T')[0];
         formData.append('data_contrato_conta_comigo', dataContratoAutomatica);
 
@@ -109,7 +117,6 @@ export default function RegisterOSC() {
             if (data[key] instanceof File) {
                 formData.append(key, data[key]);
             } else if (data[key] instanceof Date && !isNaN(data[key])) {
-                // Formata objetos Date (como dataFundacao e dataOrigemEstatuto) para envio seguro no banco
                 formData.append(key, data[key].toISOString().split('T')[0]);
             } else if (data[key] !== null && data[key] !== undefined) {
                 formData.append(key, data[key]);
@@ -146,13 +153,10 @@ export default function RegisterOSC() {
                 <section className={styles.formSection}>
                     <h2 className={styles.sectionTitle}>1. Dados da Organização</h2>
                     <div className={styles.grid}>
-                        <RHFInput label="Nome Fantasia *" id="nomeFantasia" registerProps={register('nomeFantasia')} error={errors.nomeFantasia} />
-                        <RHFInput label="Razão Social *" id="razaoSocial" registerProps={register('razaoSocial')} error={errors.razaoSocial} />
-                        <RHFMaskedInput control={control} name="cnpj" label="CNPJ *" id="cnpj" mask="00.000.000/0000-00" error={errors.cnpj} />
-                        
+                        <RHFInput label="Nome Fantasia *" id="nomeFantasia" registerProps={register('nomeFantasia')} error={errors.nomeFantasia} placeholder="Ex: Instituto Mão Amiga" />
+                        <RHFInput label="Razão Social *" id="razaoSocial" registerProps={register('razaoSocial')} error={errors.razaoSocial} placeholder="Ex: Instituto Mão Amiga do Brasil" />
+                        <RHFMaskedInput control={control} name="cnpj" label="CNPJ *" id="cnpj" mask="00.000.000/0000-00" error={errors.cnpj} placeholder="00.000.000/0000-00" />
                         <RHFInput label="Data de Fundação" id="dataFundacao" type="date" registerProps={register('dataFundacao')} error={errors.dataFundacao} />
-                        
-                        {/* NOVO: Campo visível para o Estatuto Social */}
                         <RHFInput label="Data do Estatuto Social" id="dataOrigemEstatuto" type="date" registerProps={register('dataOrigemEstatuto')} error={errors.dataOrigemEstatuto} />
                     </div>
                 </section>
@@ -161,9 +165,21 @@ export default function RegisterOSC() {
                 <section className={styles.formSection}>
                     <h2 className={styles.sectionTitle}>2. Documentação Inicial</h2>
                     <div className={styles.grid}>
-                        <Controller name="logotipo" control={control} render={({ field: { onChange } }) => (
-                            <FileUpload label="Logotipo" onFileSelect={onChange} acceptedTypes={{'image/*': []}} />
-                        )} />
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <Controller name="logotipo" control={control} render={({ field: { onChange } }) => (
+                                <FileUpload 
+                                    label="Logotipo" 
+                                    onFileSelect={onChange} 
+                                    // Limita o file picker do navegador apenas a imagens PNG
+                                    acceptedTypes={{'image/png': ['.png']}} 
+                                />
+                            )} />
+                            {/* Dica visual e mensagem de erro do Yup */}
+                            <span style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '4px' }}>
+                                Apenas .PNG | Máx: 5MB | Resolução ideal: 1080x1080px
+                            </span>
+                            {errors.logotipo && <span className={styles.errorMessage}>{errors.logotipo.message}</span>}
+                        </div>
                     </div>
                 </section>
 
@@ -171,12 +187,14 @@ export default function RegisterOSC() {
                 <section className={styles.formSection}>
                     <h2 className={styles.sectionTitle}>3. Contato e Endereço</h2>
                     <div className={styles.grid}>
-                        <RHFInput label="E-mail de Contato *" id="emailContato" registerProps={register('emailContato')} error={errors.emailContato} />
-                        <RHFMaskedInput control={control} name="telefone" label="Telefone *" id="telefone" mask="(00) 00000-0000" error={errors.telefone} />
-                        <RHFMaskedInput control={control} name="cep" label="CEP *" id="cep" mask="00000-000" error={errors.cep} onBlurCEP={handleCepBlur} />
-                        <RHFInput label="Endereço *" id="endereco" registerProps={register('endereco')} error={errors.endereco} />
-                        <RHFInput label="Cidade *" id="cidade" registerProps={register('cidade')} error={errors.cidade} />
-                        <RHFInput label="Estado *" id="estado" registerProps={register('estado')} error={errors.estado} />
+                        <RHFInput label="E-mail de Contato *" id="emailContato" registerProps={register('emailContato')} error={errors.emailContato} placeholder="Ex: contato@instituto.org.br" />
+                        <RHFMaskedInput control={control} name="telefone" label="Telefone *" id="telefone" mask="(00) 00000-0000" error={errors.telefone} placeholder="(00) 00000-0000" />
+                        <RHFMaskedInput control={control} name="cep" label="CEP *" id="cep" mask="00000-000" error={errors.cep} onBlurCEP={handleCepBlur} placeholder="00000-000" />
+                        <RHFInput label="Endereço *" id="endereco" registerProps={register('endereco')} error={errors.endereco} placeholder="Ex: Rua das Rosas" />
+                        <RHFInput label="Número *" id="numero" registerProps={register('numero')} error={errors.numero} placeholder="Ex: 123" />
+                        <RHFInput label="Bairro *" id="bairro" registerProps={register('bairro')} error={errors.bairro} placeholder="Ex: Centro" />
+                        <RHFInput label="Cidade *" id="cidade" registerProps={register('cidade')} error={errors.cidade} placeholder="Ex: São Paulo" />
+                        <RHFInput label="Estado *" id="estado" registerProps={register('estado')} error={errors.estado} placeholder="Ex: SP" />
                     </div>
                 </section>
 
@@ -184,9 +202,10 @@ export default function RegisterOSC() {
                 <section className={styles.formSection}>
                     <h2 className={styles.sectionTitle}>4. Dados de Acesso (Login)</h2>
                     <div className={styles.grid}>
-                        <RHFInput label="Nome do Responsável *" id="coordNome" registerProps={register('coordNome')} error={errors.coordNome} />
-                        <RHFInput label="E-mail de Login *" id="coordEmail" type="email" registerProps={register('coordEmail')} error={errors.coordEmail} />
-                        <RHFInput label="Crie sua Senha *" id="coordSenha" type="password" registerProps={register('coordSenha')} error={errors.coordSenha} />
+                        <RHFInput label="Nome do Responsável *" id="coordNome" registerProps={register('coordNome')} error={errors.coordNome} placeholder="Ex: João da Silva" />
+                        <RHFMaskedInput control={control} name="respCpf" label="CPF do Responsável *" id="respCpf" mask="000.000.000-00" error={errors.respCpf} placeholder="000.000.000-00" />
+                        <RHFInput label="E-mail de Login *" id="coordEmail" type="email" registerProps={register('coordEmail')} error={errors.coordEmail} placeholder="Ex: joao@instituto.org.br" />
+                        <RHFInput label="Crie sua Senha *" id="coordSenha" type="password" registerProps={register('coordSenha')} error={errors.coordSenha} placeholder="No mínimo 8 caracteres" />
                     </div>
                 </section>
 
