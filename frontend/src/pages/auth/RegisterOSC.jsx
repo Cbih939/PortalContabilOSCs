@@ -16,8 +16,11 @@ const schema = yup.object().shape({
   razaoSocial: yup.string().required('A razão social é obrigatória.'),
   cnpj: yup.string().required('O CNPJ é obrigatório.').matches(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, 'CNPJ inválido.'),
   dataFundacao: yup.date().nullable().transform((curr, orig) => orig === '' ? null : curr),
+  
+  // NOVO: Campo da Data do Estatuto (opcional, igual à fundação)
+  dataOrigemEstatuto: yup.date().nullable().transform((curr, orig) => orig === '' ? null : curr),
+  
   logotipo: yup.mixed().nullable(),
-  // O campo 'ata' foi removido daqui
   estatuto: yup.mixed().nullable(),
   emailContato: yup.string().email('Email inválido.').required('O email de contato é obrigatório.'),
   telefone: yup.string().required('O telefone é obrigatório.'),
@@ -33,7 +36,7 @@ const schema = yup.object().shape({
   coordEmail: yup.string().email('Email inválido.').required('Email de login obrigatório.'),
   coordSenha: yup.string().required('Senha obrigatória.').min(8, 'Mínimo 8 caracteres.'),
   
-  // Validação dos Termos de Uso (Deve ser true obrigatoriamente)
+  // Validação dos Termos de Uso
   aceiteTermos: yup.boolean()
     .oneOf([true], 'Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar.')
     .required('Aceite obrigatório.'),
@@ -96,11 +99,18 @@ export default function RegisterOSC() {
         setIsLoading(true);
         const formData = new FormData();
         
+        // NOVO: Gera a data de hoje (YYYY-MM-DD) automaticamente para o contrato
+        const dataContratoAutomatica = new Date().toISOString().split('T')[0];
+        formData.append('data_contrato_conta_comigo', dataContratoAutomatica);
+
         Object.keys(data).forEach(key => {
             if (key === 'aceiteTermos') return; 
 
             if (data[key] instanceof File) {
                 formData.append(key, data[key]);
+            } else if (data[key] instanceof Date && !isNaN(data[key])) {
+                // Formata objetos Date (como dataFundacao e dataOrigemEstatuto) para envio seguro no banco
+                formData.append(key, data[key].toISOString().split('T')[0]);
             } else if (data[key] !== null && data[key] !== undefined) {
                 formData.append(key, data[key]);
             }
@@ -139,7 +149,11 @@ export default function RegisterOSC() {
                         <RHFInput label="Nome Fantasia *" id="nomeFantasia" registerProps={register('nomeFantasia')} error={errors.nomeFantasia} />
                         <RHFInput label="Razão Social *" id="razaoSocial" registerProps={register('razaoSocial')} error={errors.razaoSocial} />
                         <RHFMaskedInput control={control} name="cnpj" label="CNPJ *" id="cnpj" mask="00.000.000/0000-00" error={errors.cnpj} />
+                        
                         <RHFInput label="Data de Fundação" id="dataFundacao" type="date" registerProps={register('dataFundacao')} error={errors.dataFundacao} />
+                        
+                        {/* NOVO: Campo visível para o Estatuto Social */}
+                        <RHFInput label="Data do Estatuto Social" id="dataOrigemEstatuto" type="date" registerProps={register('dataOrigemEstatuto')} error={errors.dataOrigemEstatuto} />
                     </div>
                 </section>
 
@@ -150,7 +164,6 @@ export default function RegisterOSC() {
                         <Controller name="logotipo" control={control} render={({ field: { onChange } }) => (
                             <FileUpload label="Logotipo" onFileSelect={onChange} acceptedTypes={{'image/*': []}} />
                         )} />
-                        {/* Campo ATA foi removido daqui */}
                     </div>
                 </section>
 

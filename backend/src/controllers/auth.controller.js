@@ -75,13 +75,14 @@ export const login = async (req, res) => {
 };
 
 // --- FUNÇÃO DE REGISTRO ---
+// --- FUNÇÃO DE REGISTRO ---
 export const registerOSC = async (req, res) => {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
 
         const data = req.body;
-        const files = req.files;
+        const files = req.files || {}; // Prevenção de erro de ficheiros
 
         const [existing] = await connection.execute('SELECT id FROM users WHERE email = ?', [data.coordEmail]);
         if (existing.length > 0) {
@@ -102,20 +103,39 @@ export const registerOSC = async (req, res) => {
         const ataPath = files['ata'] ? `uploads/public/${files['ata'][0].filename}` : null;
         const estatutoPath = files['estatuto'] ? `uploads/public/${files['estatuto'][0].filename}` : null;
 
+        // --- ATUALIZAÇÃO AQUI: Adicionamos as duas novas datas no SQL ---
         const sqlOSC = `
             INSERT INTO oscs (
                 user_id, name, razao_social, cnpj, data_fundacao, email_contato, telefone, 
-                cep, endereco, numero, bairro, cidade, estado, logo_path, ata_path, estatuto_path, assigned_contador_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`;
+                cep, endereco, numero, bairro, cidade, estado, logo_path, ata_path, estatuto_path, assigned_contador_id,
+                data_origem_estatuto, data_contrato_conta_comigo
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`;
 
         await connection.execute(sqlOSC, [
-            userId, data.nomeFantasia, data.razaoSocial, data.cnpj, data.dataFundacao || null,
-            data.emailContato, data.telefone, data.cep, data.endereco, data.numero,
-            data.bairro, data.cidade, data.estado, logoPath, ataPath, estatutoPath
+            userId, 
+            data.nomeFantasia, 
+            data.razaoSocial, 
+            data.cnpj, 
+            data.dataFundacao || null,
+            data.emailContato, 
+            data.telefone, 
+            data.cep, 
+            data.endereco, 
+            data.numero,
+            data.bairro, 
+            data.cidade, 
+            data.estado, 
+            logoPath, 
+            ataPath, 
+            estatutoPath,
+            // --- ATUALIZAÇÃO AQUI: Os valores das datas vindos do frontend ---
+            data.dataOrigemEstatuto || null,
+            data.data_contrato_conta_comigo || null
         ]);
 
         await connection.commit();
 
+        // Gerar token de login automático
         const token = jwt.sign(
             { id: userId, role: 'OSC', name: data.coordNome, is_in_debt: 1 },
             JWT_SECRET,
