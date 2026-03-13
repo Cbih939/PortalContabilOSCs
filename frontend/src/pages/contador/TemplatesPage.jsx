@@ -59,7 +59,9 @@ export default function TemplatesPage() {
     setErrorLoading(null);
     try {
       const response = await templateService.getAllTemplates();
-      setTemplates(response.data || []);
+      // Proteção de array
+      const data = Array.isArray(response) ? response : (response?.data || []);
+      setTemplates(data);
     } catch (err) {
       setErrorLoading("Não foi possível carregar os modelos.");
       addNotification("Erro ao carregar modelos.", "error");
@@ -79,9 +81,14 @@ export default function TemplatesPage() {
     formData.append('templateFile', data.templateFile);
 
     try {
-      const newTemplate = await templateService.uploadTemplate(formData);
-      setTemplates(prev => [newTemplate.data, ...prev].sort((a,b) => a.file_name.localeCompare(b.file_name)));
-      addNotification(`Modelo "${newTemplate.data.file_name}" enviado com sucesso!`, 'success');
+      const response = await templateService.uploadTemplate(formData);
+      
+      // MÁGICA AQUI: O desempacotamento seguro para qualquer formato do Backend!
+      const newTemplate = response?.data?.template || response?.data || response?.template || response;
+      const templateName = newTemplate?.file_name || data.file_name;
+
+      setTemplates(prev => [newTemplate, ...prev].sort((a,b) => (a?.file_name || '').localeCompare(b?.file_name || '')));
+      addNotification(`Modelo "${templateName}" enviado com sucesso!`, 'success');
       reset(); 
     } catch (err) {
       addNotification(`Falha no upload: ${err.response?.data?.message || err.message}`, 'error');
@@ -174,7 +181,7 @@ export default function TemplatesPage() {
                       <div className={styles.fileText}>
                         <span className={styles.fileName}>{template.file_name}</span>
                         <span className={styles.fileDescription}>
-                          Enviado em: {formatDate(template.created_at)}
+                          Enviado em: {formatDate(template.created_at || template.createdAt)}
                         </span>
                       </div>
                     </div>
