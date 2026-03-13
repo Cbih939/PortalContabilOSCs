@@ -15,7 +15,6 @@ export const getMyAlerts = async (req, res) => {
   try {
     const userId = req.user.id;
     const userRole = req.user.role ? req.user.role.toUpperCase() : '';
-    const officeId = req.user.office_id; // Pega o escritório do usuário
 
     let alerts = [];
 
@@ -28,14 +27,21 @@ export const getMyAlerts = async (req, res) => {
       `, [userId]);
       alerts = rows;
     } else {
-      // A OSC VÊ DUAS COISAS AGORA:
-      // 1. Avisos mandados diretamente para o ID dela
-      // 2. Avisos "Gerais" (onde osc_id é nulo) mandados por alguém do MESMO ESCRITÓRIO dela!
-      
-      // Primeiro, descobre qual é o ID interno da OSC (tabela oscs) baseada no userId
-      const [oscData] = await pool.execute('SELECT id, office_id FROM oscs WHERE user_id = ?', [userId]);
+      // Busca o ID interno da OSC, o office_id atual e o contador antigo (fallback)
+      const [oscData] = await pool.execute('SELECT id, office_id, assigned_contador_id FROM oscs WHERE user_id = ?', [userId]);
       const internalOscId = oscData[0]?.id;
-      const oscOfficeId = oscData[0]?.office_id;
+      
+      // Prevenção contra undefined!
+      let oscOfficeId = oscData[0]?.office_id;
+
+      // Se a OSC ainda não tem office_id direto, vamos descobrir o escritório pelo contador dela (Fallback para OSCs antigas)
+      if (!oscOfficeId && oscData[0]?.assigned_contador_id) {
+         const [contadorData] = await pool.execute('SELECT office_id FROM users WHERE id = ?', [oscData[0].assigned_contador_id]);
+         oscOfficeId = contadorData[0]?.office_id;
+      }
+
+      // Se ainda assim for undefined, forçamos para NULL para não quebrar a query do MySQL
+      oscOfficeId = oscOfficeId || null;
 
       if (internalOscId) {
         const [rows] = await pool.execute(`
