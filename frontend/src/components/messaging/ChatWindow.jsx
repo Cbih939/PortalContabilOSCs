@@ -3,40 +3,58 @@ import MessageInput from './MessageInput.jsx';
 import * as messageService from '../../services/messageService.js';
 import styles from './ChatWindow.module.css';
 
-export default function ChatWindow({ contact }) {
+// 1. Agora o componente recebe o 'onSendMessage' do ficheiro pai (Messages.jsx)
+export default function ChatWindow({ contact, onSendMessage }) {
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
 
-  // Carrega mensagens quando o contato muda
-  useEffect(() => {
+  // Função isolada para podermos recarregar as mensagens sempre que precisarmos
+  const loadMessages = async () => {
     if (contact) {
-      // Simulação de carregamento (substituir por chamada real da API)
-      const loadMessages = async () => {
-        const msgs = await messageService.getMessages(contact.id);
-        setMessages(msgs);
-      };
-      loadMessages();
+      const msgs = await messageService.getMessages(contact.id);
+      setMessages(msgs);
     }
+  };
+
+  // Carrega mensagens quando o contato muda e define um auto-refresh (polling)
+  useEffect(() => {
+    loadMessages();
+    
+    // Auto-atualiza a conversa a cada 5 segundos para receber novas mensagens
+    const interval = setInterval(loadMessages, 5000);
+    return () => clearInterval(interval);
   }, [contact]);
 
-  // Scroll para o fim
+  // Scroll para o fim da conversa
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSendMessage = async (text, file) => {
-    // Cria objeto de mensagem temporário (otimista)
+    // 2. Cria a mensagem temporária para aparecer instantaneamente no ecrã
+    // Atualizado para usar o padrão "isMe" e "time" que o nosso Backend usa!
     const newMessage = {
       id: Date.now(),
       text,
-      sender: 'me', // 'me' = contador, 'them' = osc
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isMe: true, 
+      time: new Date().toISOString(),
       file: file ? { name: file.name } : null
     };
 
-    setMessages([...messages, newMessage]);
+    // Coloca a mensagem no ecrã imediatamente
+    setMessages(prev => [...prev, newMessage]);
     
-    // Aqui você chamaria a API real: await messageService.sendMessage(...)
+    // 3. Comunica com o ficheiro pai para gravar a mensagem no banco de dados!
+    if (onSendMessage) {
+      try {
+        await onSendMessage(text);
+        // Após salvar com sucesso, recarrega a lista do banco para garantir o ID oficial
+        loadMessages();
+      } catch (error) {
+        console.error("Falha ao enviar mensagem:", error);
+        // Em um sistema mais complexo, poderíamos mostrar um aviso de "Falha no envio" aqui
+      }
+    }
   };
 
   return (
@@ -54,7 +72,8 @@ export default function ChatWindow({ contact }) {
         {messages.map((msg) => (
           <div 
             key={msg.id} 
-            className={`${styles.messageRow} ${msg.sender === 'me' ? styles.sent : styles.received}`}
+            // Atualizado para ler o "isMe" corretamente
+            className={`${styles.messageRow} ${msg.isMe ? styles.sent : styles.received}`}
           >
             <div className={styles.bubble}>
               {msg.text}
@@ -63,7 +82,10 @@ export default function ChatWindow({ contact }) {
                   📎 {msg.file.name}
                 </div>
               )}
-              <span className={styles.timestamp}>{msg.timestamp}</span>
+              {/* Formata a data ISO que vem do backend para horas:minutos */}
+              <span className={styles.timestamp}>
+                {new Date(msg.time || msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
             </div>
           </div>
         ))}
