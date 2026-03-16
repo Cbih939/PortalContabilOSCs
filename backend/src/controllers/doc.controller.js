@@ -16,9 +16,11 @@ export const getDocuments = async (req, res) => {
     let query = `
       SELECT d.*, 
              d.created_at as createdAt, 
-             o.razao_social as osc_name
+             o.razao_social as osc_name,
+             p.name as project_name 
       FROM documents d
       INNER JOIN oscs o ON d.osc_id = o.id
+      LEFT JOIN projects p ON d.project_id = p.id
     `;
     
     const params = [];
@@ -79,7 +81,8 @@ export const getReceivedDocuments = async (req, res) => {
  */
 export const uploadDocument = async (req, res) => {
   try {
-    const { osc_id, doc_type, ref_month, ref_year } = req.body;
+    // Agora extraímos também o project_id
+    const { osc_id, doc_type, ref_month, ref_year, project_id } = req.body;
     const file = req.file;
     const userId = req.user.id;
 
@@ -87,15 +90,18 @@ export const uploadDocument = async (req, res) => {
       return res.status(400).json({ message: 'Nenhum arquivo enviado.' });
     }
 
+    // Formata o project_id (se vier vazio do frontend, salva como null)
+    const parsedProjectId = project_id && project_id !== 'null' && project_id !== '' ? parseInt(project_id) : null;
+
     const query = `
       INSERT INTO documents 
-      (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status, uploaded_by_user_id, file_size_bytes, mime_type) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (osc_id, project_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status, uploaded_by_user_id, file_size_bytes, mime_type) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    // Agora passamos também o tamanho e o tipo de ficheiro!
     await pool.execute(query, [
       osc_id,
+      parsedProjectId, // Injetado aqui!
       file.originalname,
       file.filename,
       file.path,
@@ -157,13 +163,10 @@ export const downloadDocument = async (req, res) => {
 
     const { saved_filename, original_name, mime_type } = rows[0];
     
-    // Limpa qualquer vestígio de pastas que tenha ficado no banco de dados antigo
     const cleanFileName = saved_filename.replace('uploads/', '').replace('public/', '').replace(/^\/+/, '');
     
-    // 1. Tenta procurar na pasta NOVA (segura)
     let filePath = path.resolve(__dirname, '../../uploads', cleanFileName);
 
-    // 2. Se não encontrar na nova, procura na pasta ANTIGA (public) para não perder os históricos
     if (!fs.existsSync(filePath)) {
       filePath = path.resolve(__dirname, '../../uploads/public', cleanFileName);
     }
@@ -197,7 +200,6 @@ export const markConclusoTec = async (req, res) => {
     const status = 'CONCLUIDO';
 
     if (month === 'ALL') {
-      // Marca o ANO TODO (insere 12 registos gerando nomes virtuais únicos)
       for (let m = 1; m <= 12; m++) {
         const uniqueName = `tec_virtual_${osc_id}_${year}_${m}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
         await pool.execute(
@@ -207,7 +209,6 @@ export const markConclusoTec = async (req, res) => {
         );
       }
     } else {
-      // Marca apenas o MÊS SELECIONADO gerando um nome virtual único
       const uniqueName = `tec_virtual_${osc_id}_${year}_${month}_${Date.now()}`;
       await pool.execute(
         `INSERT INTO documents (osc_id, original_name, saved_filename, file_path, doc_type, ref_month, ref_year, status, uploaded_by_user_id, file_size_bytes, mime_type)
@@ -231,14 +232,12 @@ export const markMonthAsPending = async (req, res) => {
       return res.status(400).json({ message: 'OSC, Mês e Ano são obrigatórios.' });
     }
 
-    // Se houver um TEC (que não tem ficheiro físico) para esse mês/ano, apagamos o registo do TEC.
     await pool.execute(
       `DELETE FROM documents 
        WHERE osc_id = ? AND doc_type = 'CONCLUSO TEC' AND ref_month = ? AND ref_year = ?`,
       [oscId, month, year]
     );
 
-    // Se houver documentos normais enviados, passamos o status de volta para 'PENDENTE'.
     const [result] = await pool.execute(
       `UPDATE documents SET status = 'PENDENTE' 
        WHERE osc_id = ? AND ref_month = ? AND ref_year = ? AND doc_type != 'CONCLUSO TEC'`,
@@ -260,18 +259,15 @@ export const deleteDocument = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Busca o nome físico do ficheiro antes de o apagar do banco de dados
     const [rows] = await pool.execute('SELECT saved_filename FROM documents WHERE id = ?', [id]);
     
     if (rows.length > 0 && rows[0].saved_filename !== 'none' && !rows[0].saved_filename.startsWith('tec_virtual')) {
       const filePath = path.resolve(__dirname, '../../uploads', rows[0].saved_filename);
-      // Apaga o ficheiro do disco, se existir
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
     }
 
-    // Apaga o registo do banco de dados
     await pool.execute('DELETE FROM documents WHERE id = ?', [id]);
     
     res.json({ message: 'Documento excluído com sucesso.' });
