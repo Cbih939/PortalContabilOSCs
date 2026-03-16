@@ -21,7 +21,7 @@ import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import ManageUsers from '../pages/admin/ManageUsers.jsx';
 import ManageOSCs from '../pages/admin/ManageOSCs.jsx';
 import ManageLibrary from '../pages/admin/ManageLibrary.jsx';
-import ManageOffices from '../pages/admin/ManageOffices.jsx'; // <-- NOVA IMPORTAÇÃO AQUI
+import ManageOffices from '../pages/admin/ManageOffices.jsx';
 import AdminSidebar from '../pages/admin/components/AdminSidebar.jsx';
 import AdminHeader from '../pages/admin/components/AdminHeader.jsx';
 import AdminNoticesPage from '../pages/admin/AdminNoticesPage.jsx';
@@ -56,6 +56,7 @@ import OSCLibraryPage from '../pages/osc/LibraryPage.jsx';
 import OSCFinanceiro from '../pages/osc/OSCFinanceiro.jsx';
 import OSCSidebar from '../pages/osc/components/OSCSidebar.jsx';
 import OSCHeader from '../pages/osc/components/OSCHeader.jsx';
+import ProjectsPage from '../pages/osc/Projects.jsx';
 
 /**
  * Redirecionador Inteligente
@@ -164,7 +165,6 @@ export default function AppRoutes() {
               <Route path="/admin/financeiro" element={<FinanceiroPage />} />
               <Route path="/admin/avisos" element={<AdminNoticesPage />} />
               <Route path="/admin/profile" element={<AdminProfile />} />
-              {/* --- NOVA ROTA DOS ESCRITÓRIOS AQUI --- */}
               <Route path="/admin/offices" element={<ManageOffices />} /> 
             </Route>
           </Route>
@@ -199,6 +199,7 @@ export default function AppRoutes() {
               <Route path="/osc/documentos" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCDocumentsPage />} />
               <Route path="/osc/modelos" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCTemplatesPage />} />
               <Route path="/osc/biblioteca" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCLibraryPage />} />
+              <Route path="/osc/projetos" element={<ProjectsPage />} />
               
               {/* Rotas de utilidade (Sempre abertas) */}
               <Route path="/osc/mensagens" element={<OSCMessagesPage />} />

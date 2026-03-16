@@ -73,7 +73,7 @@ export default function OSCSidebar({ isOpen }) {
             <div className={styles.submenu}>
               <NavLink to="/osc/financeiro" className={({ isActive }) => `${styles.subNavItem} ${isActive ? styles.subActive : ''}`}>Faturas e Assinatura</NavLink>
               <span className={styles.subNavItem} style={{ opacity: 0.6, cursor: 'not-allowed' }}>Notas Fiscais (Em Breve)</span>
-              <span className={styles.subNavItem} style={{ opacity: 0.6, cursor: 'not-allowed' }}>Projetos e C. Custo (Breve)</span>
+              <NavLink to="/osc/projetos" className={({ isActive }) => `${styles.subNavItem} ${isActive ? styles.subActive : ''}`}>Projetos e C. Custo</NavLink>
             </div>
           )}
         </div>
