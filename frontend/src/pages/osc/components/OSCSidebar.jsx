@@ -17,7 +17,7 @@ const ChevronDownIcon = () => <svg width="16" height="16" fill="none" stroke="cu
 export default function OSCSidebar({ isOpen }) {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
-  const [expandedMenu, setExpandedMenu] = useState('org'); // Controla qual submenu está aberto
+  const [expandedMenu, setExpandedMenu] = useState('org');
 
   const handleLogout = () => {
     logout();
@@ -29,14 +29,12 @@ export default function OSCSidebar({ isOpen }) {
   };
 
   return (
-    <aside className={`${styles.sidebar} ${isOpen ? styles.open : styles.closed}`} style={{ overflowY: 'auto' }}>
+    <aside className={`${styles.sidebar} ${isOpen ? styles.open : styles.closed}`}>
       <div className={styles.logoContainer}>
-        <div className={styles.logoWrapper}>
-          <img src="/logo_portal.png" alt="Conta Comigo" className={styles.sidebarLogo} />
-        </div>
+        <img src="/logo_portal.png" alt="Conta Comigo" className={styles.sidebarLogo} />
       </div>
 
-      <nav className={styles.nav} style={{ paddingBottom: '80px' }}>
+      <nav className={styles.nav}>
         <NavLink to="/osc/inicio" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
           <DashboardIcon className={styles.icon} />
           <span className={styles.label}>Painel Principal</span>
@@ -44,8 +42,8 @@ export default function OSCSidebar({ isOpen }) {
 
         {/* 1. MINHA ORGANIZAÇÃO */}
         <div className={styles.menuGroup}>
-          <button onClick={() => toggleSubmenu('org')} className={styles.navItem} style={{ width: '100%', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button onClick={() => toggleSubmenu('org')} className={styles.navItem}>
+            <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
               <OrgIcon className={styles.icon} />
               <span className={styles.label}>Minha Organização</span>
             </div>
@@ -53,18 +51,18 @@ export default function OSCSidebar({ isOpen }) {
           </button>
           
           {expandedMenu === 'org' && (
-            <div className={styles.submenu} style={{ paddingLeft: '32px', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
-              <NavLink to="/osc/perfil" className={({ isActive }) => `${styles.subNavItem} ${isActive ? styles.subActive : ''}`} style={{ fontSize: '0.85rem', color: '#cbd5e1', textDecoration: 'none' }}>Abertura e Regularização</NavLink>
-              <NavLink to="/osc/documentos" className={({ isActive }) => `${styles.subNavItem} ${isActive ? styles.subActive : ''}`} style={{ fontSize: '0.85rem', color: '#cbd5e1', textDecoration: 'none' }}>Meus Documentos</NavLink>
-              <NavLink to="/osc/modelos" className={({ isActive }) => `${styles.subNavItem} ${isActive ? styles.subActive : ''}`} style={{ fontSize: '0.85rem', color: '#cbd5e1', textDecoration: 'none' }}>Modelos de Documentos</NavLink>
+            <div className={styles.submenu}>
+              <NavLink to="/osc/perfil" className={({ isActive }) => `${styles.subNavItem} ${isActive ? styles.subActive : ''}`}>Abertura e Regularização</NavLink>
+              <NavLink to="/osc/documentos" className={({ isActive }) => `${styles.subNavItem} ${isActive ? styles.subActive : ''}`}>Meus Documentos</NavLink>
+              <NavLink to="/osc/modelos" className={({ isActive }) => `${styles.subNavItem} ${isActive ? styles.subActive : ''}`}>Modelos de Documentos</NavLink>
             </div>
           )}
         </div>
 
         {/* 2. FINANCEIRO */}
-        <div className={styles.menuGroup} style={{ marginTop: '8px' }}>
-          <button onClick={() => toggleSubmenu('fin')} className={styles.navItem} style={{ width: '100%', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className={styles.menuGroup}>
+          <button onClick={() => toggleSubmenu('fin')} className={styles.navItem}>
+            <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
               <FinanceIcon className={styles.icon} />
               <span className={styles.label}>Financeiro</span>
             </div>
@@ -72,28 +70,28 @@ export default function OSCSidebar({ isOpen }) {
           </button>
           
           {expandedMenu === 'fin' && (
-            <div className={styles.submenu} style={{ paddingLeft: '32px', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
-              <NavLink to="/osc/financeiro" className={({ isActive }) => `${styles.subNavItem} ${isActive ? styles.subActive : ''}`} style={{ fontSize: '0.85rem', color: '#cbd5e1', textDecoration: 'none' }}>Faturas e Assinatura</NavLink>
-              <span style={{ fontSize: '0.85rem', color: '#64748b', cursor: 'not-allowed' }}>Notas Fiscais (Em Breve)</span>
-              <span style={{ fontSize: '0.85rem', color: '#64748b', cursor: 'not-allowed' }}>Projetos e C. de Custo (Em Breve)</span>
+            <div className={styles.submenu}>
+              <NavLink to="/osc/financeiro" className={({ isActive }) => `${styles.subNavItem} ${isActive ? styles.subActive : ''}`}>Faturas e Assinatura</NavLink>
+              <span className={styles.subNavItem} style={{ opacity: 0.6, cursor: 'not-allowed' }}>Notas Fiscais (Em Breve)</span>
+              <span className={styles.subNavItem} style={{ opacity: 0.6, cursor: 'not-allowed' }}>Projetos e C. Custo (Breve)</span>
             </div>
           )}
         </div>
 
         {/* 3. PRESTAÇÃO DE CONTAS */}
-        <NavLink to="/osc/prestacao-contas" style={{ marginTop: '8px', opacity: 0.5, pointerEvents: 'none' }} className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
+        <NavLink to="/osc/prestacao-contas" style={{ opacity: 0.6, pointerEvents: 'none' }} className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
           <AccountabilityIcon className={styles.icon} />
-          <span className={styles.label}>Prest. de Contas (Em Breve)</span>
+          <span className={styles.label}>Prest. de Contas (Breve)</span>
         </NavLink>
 
         {/* 4. GOVERNANÇA */}
-        <NavLink to="/osc/governanca" style={{ marginTop: '8px', opacity: 0.5, pointerEvents: 'none' }} className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
+        <NavLink to="/osc/governanca" style={{ opacity: 0.6, pointerEvents: 'none' }} className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
           <GovernanceIcon className={styles.icon} />
           <span className={styles.label}>Governança (Em Breve)</span>
         </NavLink>
 
-        {/* MENSAGENS E AJUDA */}
-        <div style={{ borderTop: '1px solid #334155', margin: '16px 0' }}></div>
+        {/* DIVISOR */}
+        <div style={{ height: '1px', backgroundColor: 'rgba(255,255,255,0.15)', margin: '10px 0' }}></div>
 
         <NavLink to="/osc/mensagens" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
           <ChatIcon className={styles.icon} />
@@ -104,10 +102,9 @@ export default function OSCSidebar({ isOpen }) {
           <HelpIcon className={styles.icon} />
           <span className={styles.label}>Ajuda Institucional</span>
         </NavLink>
-
       </nav>
 
-      <div className={styles.footer} style={{ position: 'absolute', bottom: 0, width: '100%', backgroundColor: '#0f172a' }}>
+      <div className={styles.footer}>
         <div className={styles.userInfo}>
            <span className={styles.userName}>{user?.name || 'Organização'}</span>
         </div>
