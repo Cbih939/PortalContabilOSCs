@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import useApi from '../../hooks/useApi.jsx';
+import api from '../../services/api.js'; // <-- ADICIONADO PARA BUSCAR PROJETOS
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 import * as docService from '../../services/documentService.js';
 import DocumentUpload from './components/DocumentUpload.jsx';
@@ -41,6 +42,7 @@ export default function OSCDocumentsPage() {
   const location = useLocation();
 
   const [myFiles, setMyFiles] = useState([]);
+  const [projects, setProjects] = useState([]); // <-- ESTADO DOS PROJETOS
   const [isLoadingList, setIsLoadingList] = useState(true);
   const [errorLoading, setErrorLoading] = useState(null);
   
@@ -52,11 +54,30 @@ export default function OSCDocumentsPage() {
   const [refMonth, setRefMonth] = useState(initialMonth);
   const [refYear, setRefYear] = useState(initialYear);
   const [viewYear, setViewYear] = useState(initialYear);
+  const [projectId, setProjectId] = useState(''); // <-- ESTADO DO PROJETO SELECIONADO
 
   const { request: uploadFile, isLoading: isUploading } = useApi(docService.uploadDocument);
 
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const years = [2024, 2025, 2026];
+
+  // FILTRO DINÂMICO: Filtra a lista pelo mês e ano selecionados no calendário
+  const filteredFiles = useMemo(() => {
+    return myFiles.filter(f => f.ref_year === viewYear && f.ref_month === refMonth);
+  }, [myFiles, viewYear, refMonth]);
+
+  // BUSCA PROJETOS DA OSC
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await api.get('/projects');
+        setProjects(res.data || []);
+      } catch (err) {
+        console.error("Erro ao carregar projetos", err);
+      }
+    };
+    if (user?.id) fetchProjects();
+  }, [user?.id]);
 
   useEffect(() => {
     const month = parseInt(queryParams.get('month'));
@@ -67,11 +88,6 @@ export default function OSCDocumentsPage() {
         setViewYear(year);
     }
   }, [location.search]);
-
-  // FILTRO DINÂMICO: Filtra a lista pelo mês e ano selecionados no calendário
-  const filteredFiles = useMemo(() => {
-    return myFiles.filter(f => f.ref_year === viewYear && f.ref_month === refMonth);
-  }, [myFiles, viewYear, refMonth]);
 
   const getMonthStatus = (monthIndex) => {
     const monthNum = monthIndex + 1;
@@ -142,8 +158,12 @@ export default function OSCDocumentsPage() {
       formData.append('ref_month', refMonth);
       formData.append('ref_year', refYear);
       
+      // INJETA O PROJETO SE ELE FOI SELECIONADO
+      if (projectId) formData.append('project_id', projectId);
+      
       await uploadFile(formData);
       addNotification(`Documento enviado para ${refMonth}/${refYear}!`, 'success');
+      setProjectId(''); // Reseta o projeto após o upload para evitar envios por engano no próximo
       await fetchDocuments();
     } catch (err) {
       addNotification(`Erro no upload: ${err.response?.data?.message || err.message}`, 'error');
@@ -187,8 +207,22 @@ export default function OSCDocumentsPage() {
                     >
                         <option value="MENSAL">Mensal (Contábil / Fiscal)</option>
                         <option value="FIXO">Fixo (Atas, Estatutos, Cartão CNPJ)</option>
-                        {/* CATEGORIA ADICIONADA AQUI */}
                         <option value="CONCLUSO TEC">CONCLUSO TEC (Transf. Escritório)</option>
+                    </select>
+                </div>
+
+                {/* --- NOVO CAMPO DE PROJETO AQUI --- */}
+                <div style={{ marginBottom: '15px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: 'bold', display: 'block', color: '#ea580c' }}>PROJETO / CENTRO DE CUSTO</label>
+                    <select 
+                        style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd', backgroundColor: '#fff' }}
+                        value={projectId}
+                        onChange={(e) => setProjectId(e.target.value)}
+                    >
+                        <option value="">Recurso Livre / Sem Projeto</option>
+                        {projects.map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
                     </select>
                 </div>
 
@@ -235,7 +269,6 @@ export default function OSCDocumentsPage() {
             </div>
           </div>
 
-          {/* MARCAÇÃO DE INÍCIO DO CONTRATO */}
           {user?.data_contrato_conta_comigo && (
             <div style={{
               backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', color: '#0369a1',
@@ -303,6 +336,17 @@ export default function OSCDocumentsPage() {
                       <span className={styles.fileName}>
                         {file.original_name || file.name}
                         <span style={{ fontSize: '10px', marginLeft: '8px', color: '#6366f1' }}>[{file.doc_type}]</span>
+                        
+                        {/* --- ETIQUETA DO PROJETO AQUI --- */}
+                        {file.project_name ? (
+                          <span style={{ fontSize: '10px', marginLeft: '8px', backgroundColor: '#dcfce7', color: '#166534', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>
+                            {file.project_name}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '10px', marginLeft: '8px', backgroundColor: '#f3f4f6', color: '#4b5563', padding: '2px 6px', borderRadius: '4px' }}>
+                            Recurso Livre
+                          </span>
+                        )}
                       </span>
                       <span className={styles.fileDate}>
                         Enviado em {new Date(file.created_at).toLocaleDateString('pt-BR')} • Status: {file.status}
