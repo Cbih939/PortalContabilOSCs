@@ -19,6 +19,7 @@ import publicFileRoutes from './src/routes/publicFile.routes.js';
 import alertRoutes from './src/routes/alert.routes.js';
 import webhookRoutes from './src/routes/webhook.routes.js'; 
 import officeRoutes from './src/routes/office.routes.js';
+import { startGovernanceCron } from './services/governance.service.js';
 
 
 dotenv.config();
@@ -102,9 +103,10 @@ app.use((err, req, res, next) => {
 
 // --- 7. INICIALIZAÇÃO DO SERVIDOR ---
 app.listen(PORT, () => {
+  startGovernanceCron();
   console.log(`\n=========================================`);
   console.log(`🚀 Servidor rodando na porta: ${PORT}`);
   console.log(`📁 Pasta Uploads: ${uploadsPath}`);
   console.log(`🖼️  Pasta Public: ${publicUploadsPath}`);
-  console.log(`=========================================\n`);
+  console.log(`=========================================\n`); 
 });
