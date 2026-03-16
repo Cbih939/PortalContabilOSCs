@@ -22,14 +22,12 @@ export default function OSCProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   
-  // Estados para a Senha
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const addNotification = useNotification();
   const { register, handleSubmit, control, reset, setValue } = useForm();
 
-  // Buscar dados da OSC logada
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -39,6 +37,10 @@ export default function OSCProfilePage() {
         if (data.data_fundacao) data.data_fundacao = data.data_fundacao.split('T')[0];
         if (data.fim_mandato) data.fim_mandato = data.fim_mandato.split('T')[0];
         if (data.data_origem_estatuto) data.data_origem_estatuto = data.data_origem_estatuto.split('T')[0];
+
+        // Transição de dados antigos para os novos, caso existam
+        if (!data.resp_nome && data.responsible) data.resp_nome = data.responsible;
+        if (!data.resp_cpf && data.responsible_cpf) data.resp_cpf = data.responsible_cpf;
 
         const booleanFields = ['presta_servico', 'vende_mercadorias', 'emite_nfse', 'emite_nfe', 'banco_cadastrado'];
         booleanFields.forEach(field => {
@@ -62,7 +64,7 @@ export default function OSCProfilePage() {
         const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
         const data = await res.json();
         if (!data.erro) {
-          setValue('endereco', data.logradouro);
+          setValue('address', data.logradouro);
           setValue('bairro', data.bairro);
           setValue('cidade', data.localidade);
           setValue('estado', data.uf);
@@ -91,7 +93,6 @@ export default function OSCProfilePage() {
 
     setIsChangingPassword(true);
     try {
-      // Ajuste para a rota de alteração de senha da sua API de utilizadores
       await api.put('/users/change-password', { newPassword }); 
       addNotification("Senha alterada com sucesso!", "success");
       setNewPassword('');
@@ -118,9 +119,6 @@ export default function OSCProfilePage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
-        {/* ========================================== */}
-        {/* FORMULÁRIO DO PERFIL */}
-        {/* ========================================== */}
         <form id="profile-form" onSubmit={handleSubmit(onSubmitProfile)} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
           {/* BLOCO 1: IDENTIFICAÇÃO BÁSICA */}
@@ -163,7 +161,7 @@ export default function OSCProfilePage() {
             </div>
           </section>
 
-          {/* BLOCO 2: LOCALIZAÇÃO E CONTATOS DA OSC */}
+          {/* BLOCO 2: LOCALIZAÇÃO E CONTATOS */}
           <section style={sectionStyle}>
             <h2 style={sectionTitleStyle}><BuildingIcon /> 2. Localização e Contatos Institucionais</h2>
             
@@ -176,7 +174,7 @@ export default function OSCProfilePage() {
               </div>
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={labelStyle}>Logradouro (Endereço Sede)</label>
-                <input {...register('endereco')} style={inputStyle} />
+                <input {...register('address')} style={inputStyle} /> {/* Corrigido: address */}
               </div>
               <div>
                 <label style={labelStyle}>Número</label>
@@ -199,12 +197,12 @@ export default function OSCProfilePage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px' }}>
               <div>
                 <label style={labelStyle}>E-mail Geral</label>
-                <input type="email" {...register('email_contato')} style={inputStyle} />
+                <input type="email" {...register('email')} style={inputStyle} /> {/* Corrigido: email */}
               </div>
               <div>
                 <label style={labelStyle}>Telefone Geral</label>
-                <Controller name="telefone" control={control} render={({ field }) => (
-                  <IMaskInput {...field} mask="(00) 00000-0000" style={inputStyle} />
+                <Controller name="phone" control={control} render={({ field }) => (
+                  <IMaskInput {...field} mask="(00) 00000-0000" style={inputStyle} /> /* Corrigido: phone */
                 )} />
               </div>
               <div>
@@ -218,10 +216,9 @@ export default function OSCProfilePage() {
             </div>
           </section>
 
-          {/* BLOCO 3: RESPONSÁVEIS E GESTÃO */}
+          {/* BLOCO 3: RESPONSÁVEIS */}
           <section style={sectionStyle}>
             <h2 style={sectionTitleStyle}><UsersIcon /> 3. Responsáveis e Gestão</h2>
-            
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
               <div style={{ backgroundColor: '#fffbeb', padding: '16px', borderRadius: '8px', border: '1px solid #fde68a' }}>
                 <h3 style={{ fontSize: '14px', marginTop: 0, marginBottom: '12px', color: '#92400e' }}>Responsável Legal (Presidente)</h3>
@@ -253,10 +250,9 @@ export default function OSCProfilePage() {
             </div>
           </section>
 
-          {/* BLOCO 4: FISCAL E TRIBUTÁRIO */}
+          {/* BLOCO 4: FISCAL */}
           <section style={sectionStyle}>
             <h2 style={sectionTitleStyle}><FiscalIcon /> 4. Raio-X Fiscal</h2>
-
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', marginBottom: '20px' }}>
               <div>
                 <label style={labelStyle}>Inscrição Municipal</label>
@@ -276,10 +272,9 @@ export default function OSCProfilePage() {
             </div>
           </section>
 
-          {/* BLOCO 5: GOVERNANÇA E FINANCEIRO */}
+          {/* BLOCO 5: GOVERNANÇA */}
           <section style={sectionStyle}>
             <h2 style={sectionTitleStyle}><ShieldIcon /> 5. Governança e Financeiro</h2>
-
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
               <div>
                 <label style={labelStyle}>Data do Último Estatuto Social</label>
@@ -301,7 +296,6 @@ export default function OSCProfilePage() {
             </div>
           </section>
 
-          {/* BOTÃO DE SALVAR PERFIL */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
             <Button type="submit" form="profile-form" disabled={isSaving} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#ea580c', color: '#fff', padding: '12px 24px', fontSize: '16px' }}>
               {isSaving ? <Spinner size="sm" /> : <SaveIcon />}
@@ -312,12 +306,8 @@ export default function OSCProfilePage() {
 
         <hr style={{ borderTop: '1px solid #e5e7eb', margin: '20px 0' }} />
 
-        {/* ========================================== */}
-        {/* FORMULÁRIO DE ALTERAÇÃO DE SENHA */}
-        {/* ========================================== */}
         <form onSubmit={handlePasswordChange} style={{ ...sectionStyle, border: '1px solid #fca5a5' }}>
           <h2 style={{ ...sectionTitleStyle, color: '#b91c1c', borderBottomColor: '#fee2e2' }}><KeyIcon /> Segurança: Alterar Senha</h2>
-          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
             <div>
               <label style={labelStyle}>Nova Senha</label>
@@ -328,7 +318,6 @@ export default function OSCProfilePage() {
               <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repita a nova senha" style={inputStyle} />
             </div>
           </div>
-          
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
             <Button type="submit" disabled={isChangingPassword} style={{ backgroundColor: '#b91c1c', color: '#fff' }}>
               {isChangingPassword ? <Spinner size="sm" /> : 'Atualizar Senha de Acesso'}
@@ -339,17 +328,12 @@ export default function OSCProfilePage() {
       </div>
 
       <style>{`
-        .disabled-input {
-          background-color: #f3f4f6 !important;
-          color: #6b7280 !important;
-          cursor: not-allowed;
-        }
+        .disabled-input { background-color: #f3f4f6 !important; color: #6b7280 !important; cursor: not-allowed; }
       `}</style>
     </div>
   );
 }
 
-// --- Variáveis de Estilo Inline ---
 const sectionStyle = { backgroundColor: '#fff', borderRadius: '8px', padding: '24px', border: '1px solid #e5e7eb', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' };
 const sectionTitleStyle = { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '18px', color: '#374151', borderBottom: '2px solid #f3f4f6', paddingBottom: '12px', marginBottom: '20px', marginTop: 0 };
 const labelStyle = { display: 'block', fontSize: '13px', fontWeight: 'bold', color: '#4b5563', marginBottom: '6px' };

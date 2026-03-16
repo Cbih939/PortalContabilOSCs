@@ -114,24 +114,28 @@ export const updateOSC = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Extrai todos os campos enviados pelo Frontend
+    // Nomes rigorosamente iguais aos do Banco de Dados
     let {
       name, razao_social, cnpj, data_fundacao, 
-      email_contato, telefone, endereco, cep, numero, bairro, cidade, estado,
+      email, phone, address, cep, numero, bairro, cidade, estado,
       website, instagram, 
       resp_nome, resp_cpf, gestor_nome, gestor_cpf,
       data_origem_estatuto, data_contrato_conta_comigo, tipo_plano,
       natureza_juridica, atividade_principal, inscricao_municipal, inscricao_estadual,
       presta_servico, vende_mercadorias, emite_nfse, emite_nfe, 
-      fim_mandato, banco_cadastrado
+      fim_mandato, banco_cadastrado,
+      responsible, responsible_cpf // Nomes antigos por precaução
     } = req.body;
 
-    // Função salva-vidas: Formata a data e previne erros se vier vazia
     const formatData = (dateStr) => {
       if (!dateStr || dateStr === '') return null;
-      if (dateStr.includes('T')) return dateStr.split('T')[0]; // Corta o "T00:00..."
+      if (dateStr.includes('T')) return dateStr.split('T')[0];
       return dateStr;
     };
+
+    // Prevenção para não perder o responsável se vier do sistema antigo
+    const finalRespNome = resp_nome || responsible || null;
+    const finalRespCpf = resp_cpf || responsible_cpf || null;
 
     const query = `
       UPDATE oscs SET 
@@ -139,7 +143,7 @@ export const updateOSC = async (req, res) => {
         email = ?, phone = ?, address = ?, cep = ?, numero = ?, bairro = ?, cidade = ?, estado = ?,
         website = ?, instagram = ?, 
         responsible = ?, responsible_cpf = ?, resp_nome = ?, resp_cpf = ?, gestor_nome = ?, gestor_cpf = ?,
-        data_origem_estatuto = ?, data_contrato_conta_comigo = ?, tipo_plano = ?,
+        data_origem_estatuto = ?, data_contrato_conta_comigo = COALESCE(?, data_contrato_conta_comigo), tipo_plano = COALESCE(?, tipo_plano),
         natureza_juridica = ?, atividade_principal = ?, inscricao_municipal = ?, inscricao_estadual = ?,
         presta_servico = ?, vende_mercadorias = ?, emite_nfse = ?, emite_nfe = ?,
         fim_mandato = ?, banco_cadastrado = ?
@@ -148,10 +152,10 @@ export const updateOSC = async (req, res) => {
 
     const values = [
       name || null, razao_social || null, cnpj || null, formatData(data_fundacao),
-      email_contato || null, telefone || null, endereco || null, cep || null, numero || null, bairro || null, cidade || null, estado || null,
+      email || null, phone || null, address || null, cep || null, numero || null, bairro || null, cidade || null, estado || null,
       website || null, instagram || null,
-      resp_nome || null, resp_cpf || null, resp_nome || null, resp_cpf || null, gestor_nome || null, gestor_cpf || null,
-      formatData(data_origem_estatuto), formatData(data_contrato_conta_comigo), tipo_plano || 'PRATA',
+      finalRespNome, finalRespCpf, finalRespNome, finalRespCpf, gestor_nome || null, gestor_cpf || null,
+      formatData(data_origem_estatuto), formatData(data_contrato_conta_comigo), tipo_plano || null,
       natureza_juridica || null, atividade_principal || null, inscricao_municipal || null, inscricao_estadual || null,
       presta_servico ? 1 : 0, vende_mercadorias ? 1 : 0, emite_nfse ? 1 : 0, emite_nfe ? 1 : 0,
       formatData(fim_mandato), banco_cadastrado ? 1 : 0,
