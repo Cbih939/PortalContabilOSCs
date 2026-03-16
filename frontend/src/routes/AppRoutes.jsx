@@ -57,6 +57,7 @@ import OSCFinanceiro from '../pages/osc/OSCFinanceiro.jsx';
 import OSCSidebar from '../pages/osc/components/OSCSidebar.jsx';
 import OSCHeader from '../pages/osc/components/OSCHeader.jsx';
 import ProjectsPage from '../pages/osc/Projects.jsx';
+import GovernancePage from '../pages/osc/Governance.jsx';
 
 /**
  * Redirecionador Inteligente
@@ -200,6 +201,7 @@ export default function AppRoutes() {
               <Route path="/osc/modelos" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCTemplatesPage />} />
               <Route path="/osc/biblioteca" element={isDebt ? <Navigate to="/osc/financeiro" replace /> : <OSCLibraryPage />} />
               <Route path="/osc/projetos" element={<ProjectsPage />} />
+              <Route path="/osc/governanca" element={<GovernancePage />} />
               
               {/* Rotas de utilidade (Sempre abertas) */}
               <Route path="/osc/mensagens" element={<OSCMessagesPage />} />

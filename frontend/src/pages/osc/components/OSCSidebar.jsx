@@ -85,9 +85,9 @@ export default function OSCSidebar({ isOpen }) {
         </NavLink>
 
         {/* 4. GOVERNANÇA */}
-        <NavLink to="/osc/governanca" style={{ opacity: 0.6, pointerEvents: 'none' }} className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
+        <NavLink to="/osc/governanca" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
           <GovernanceIcon className={styles.icon} />
-          <span className={styles.label}>Governança (Em Breve)</span>
+          <span className={styles.label}>Governança e Diretoria</span>
         </NavLink>
 
         {/* DIVISOR */}
