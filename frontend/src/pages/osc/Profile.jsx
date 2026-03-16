@@ -77,7 +77,7 @@ export default function OSCProfilePage() {
     setIsSaving(true);
     try {
       await api.put(`/oscs/${data.id}`, data);
-      addNotification("Raio-X da Organização atualizado com sucesso!", "success");
+      addNotification("Perfil da Organização atualizado com sucesso!", "success");
     } catch (error) {
       addNotification("Erro ao salvar as informações. Tente novamente.", "error");
     } finally {
@@ -104,7 +104,7 @@ export default function OSCProfilePage() {
     }
   };
 
-  if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}><Spinner text="Carregando Raio-X..." /></div>;
+  if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}><Spinner text="A carregar perfil..." /></div>;
 
   return (
     <div style={{ padding: '24px', maxWidth: '1000px', margin: '0 auto' }}>
@@ -112,7 +112,7 @@ export default function OSCProfilePage() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
         <CheckBadgeIcon style={{ color: '#10b981', width: '32px', height: '32px' }} />
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937', margin: 0 }}>Raio-X da Organização</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937', margin: 0 }}>Perfil da Organização</h1>
           <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>Complete o Checklist de Implantação para garantir a regularidade contábil e jurídica.</p>
         </div>
       </div>
@@ -174,7 +174,7 @@ export default function OSCProfilePage() {
               </div>
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={labelStyle}>Logradouro (Endereço Sede)</label>
-                <input {...register('address')} style={inputStyle} /> {/* Corrigido: address */}
+                <input {...register('address')} style={inputStyle} />
               </div>
               <div>
                 <label style={labelStyle}>Número</label>
@@ -197,12 +197,12 @@ export default function OSCProfilePage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px' }}>
               <div>
                 <label style={labelStyle}>E-mail Geral</label>
-                <input type="email" {...register('email')} style={inputStyle} /> {/* Corrigido: email */}
+                <input type="email" {...register('email')} style={inputStyle} />
               </div>
               <div>
                 <label style={labelStyle}>Telefone Geral</label>
                 <Controller name="phone" control={control} render={({ field }) => (
-                  <IMaskInput {...field} mask="(00) 00000-0000" style={inputStyle} /> /* Corrigido: phone */
+                  <IMaskInput {...field} mask="(00) 00000-0000" style={inputStyle} />
                 )} />
               </div>
               <div>
@@ -252,7 +252,7 @@ export default function OSCProfilePage() {
 
           {/* BLOCO 4: FISCAL */}
           <section style={sectionStyle}>
-            <h2 style={sectionTitleStyle}><FiscalIcon /> 4. Raio-X Fiscal</h2>
+            <h2 style={sectionTitleStyle}><FiscalIcon /> 4. Informações Fiscais</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', marginBottom: '20px' }}>
               <div>
                 <label style={labelStyle}>Inscrição Municipal</label>
@@ -299,7 +299,7 @@ export default function OSCProfilePage() {
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
             <Button type="submit" form="profile-form" disabled={isSaving} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#ea580c', color: '#fff', padding: '12px 24px', fontSize: '16px' }}>
               {isSaving ? <Spinner size="sm" /> : <SaveIcon />}
-              {isSaving ? 'Salvando Raio-X...' : 'Salvar Raio-X da Organização'}
+              {isSaving ? 'A salvar perfil...' : 'Salvar Perfil da Organização'}
             </Button>
           </div>
         </form>
