@@ -113,38 +113,57 @@ export const createOSC = async (req, res) => {
 export const updateOSC = async (req, res) => {
   try {
     const { id } = req.params;
-    const { 
-      razao_social, name, cnpj, responsible, phone, email, address,
-      data_origem_estatuto, data_contrato_conta_comigo, tipo_plano 
+    
+    // Extrai todos os campos enviados pelo Frontend
+    let {
+      name, razao_social, cnpj, data_fundacao, 
+      email_contato, telefone, endereco, cep, numero, bairro, cidade, estado,
+      website, instagram, 
+      resp_nome, resp_cpf, gestor_nome, gestor_cpf,
+      data_origem_estatuto, data_contrato_conta_comigo, tipo_plano,
+      natureza_juridica, atividade_principal, inscricao_municipal, inscricao_estadual,
+      presta_servico, vende_mercadorias, emite_nfse, emite_nfe, 
+      fim_mandato, banco_cadastrado
     } = req.body;
 
-    // Verificação de segurança: Um contador só pode atualizar uma OSC se ela pertencer ao escritório dele
-    // (A menos que seja admin)
-    const userRole = req.user.role.toLowerCase();
-    const officeId = req.user.office_id;
+    // Função salva-vidas: Formata a data e previne erros se vier vazia
+    const formatData = (dateStr) => {
+      if (!dateStr || dateStr === '') return null;
+      if (dateStr.includes('T')) return dateStr.split('T')[0]; // Corta o "T00:00..."
+      return dateStr;
+    };
 
-    if (userRole === 'contador') {
-        const [check] = await pool.execute('SELECT office_id FROM oscs WHERE id = ?', [id]);
-        if (check.length === 0 || check[0].office_id !== officeId) {
-            return res.status(403).json({ message: "Acesso negado: OSC pertence a outro escritório." });
-        }
-    }
+    const query = `
+      UPDATE oscs SET 
+        name = ?, razao_social = ?, cnpj = ?, data_fundacao = ?,
+        email = ?, phone = ?, address = ?, cep = ?, numero = ?, bairro = ?, cidade = ?, estado = ?,
+        website = ?, instagram = ?, 
+        responsible = ?, responsible_cpf = ?, resp_nome = ?, resp_cpf = ?, gestor_nome = ?, gestor_cpf = ?,
+        data_origem_estatuto = ?, data_contrato_conta_comigo = ?, tipo_plano = ?,
+        natureza_juridica = ?, atividade_principal = ?, inscricao_municipal = ?, inscricao_estadual = ?,
+        presta_servico = ?, vende_mercadorias = ?, emite_nfse = ?, emite_nfe = ?,
+        fim_mandato = ?, banco_cadastrado = ?
+      WHERE id = ?
+    `;
 
-    const finalName = razao_social || name;
+    const values = [
+      name || null, razao_social || null, cnpj || null, formatData(data_fundacao),
+      email_contato || null, telefone || null, endereco || null, cep || null, numero || null, bairro || null, cidade || null, estado || null,
+      website || null, instagram || null,
+      resp_nome || null, resp_cpf || null, resp_nome || null, resp_cpf || null, gestor_nome || null, gestor_cpf || null,
+      formatData(data_origem_estatuto), formatData(data_contrato_conta_comigo), tipo_plano || 'PRATA',
+      natureza_juridica || null, atividade_principal || null, inscricao_municipal || null, inscricao_estadual || null,
+      presta_servico ? 1 : 0, vende_mercadorias ? 1 : 0, emite_nfse ? 1 : 0, emite_nfe ? 1 : 0,
+      formatData(fim_mandato), banco_cadastrado ? 1 : 0,
+      id
+    ];
 
-    await pool.execute(
-      `UPDATE oscs SET 
-        razao_social = ?, cnpj = ?, responsible = ?, phone = ?, email = ?, address = ?, 
-        data_origem_estatuto = ?, data_contrato_conta_comigo = ?, tipo_plano = ?
-       WHERE id = ?`,
-      [finalName, cnpj, responsible, phone, email, address, 
-       data_origem_estatuto || null, data_contrato_conta_comigo || null, tipo_plano || 'PRATA', id]
-    );
+    await pool.execute(query, values);
 
-    res.json({ message: "Dados atualizados com sucesso!" });
+    return res.status(200).json({ success: true, message: 'Raio-X da Organização atualizado com sucesso!' });
   } catch (error) {
-    console.error("[updateOSC Error]:", error);
-    res.status(500).json({ message: "Erro ao atualizar os dados." });
+    console.error('[updateOSC] Erro:', error);
+    return res.status(500).json({ message: 'Erro ao atualizar a OSC.' });
   }
 };
 
