@@ -240,3 +240,22 @@ export const assignContador = async (req, res) => {
     res.json({ message: 'Associação atualizada' });
   } catch (error) { res.status(500).json({ message: 'Erro ao associar.' }); }
 };
+
+export const getMyOscProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Busca a OSC que pertence ao utilizador logado
+    const [rows] = await pool.execute('SELECT * FROM oscs WHERE user_id = ?', [userId]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Perfil da OSC não encontrado.' });
+    }
+    
+    // Devolve os dados da OSC
+    return res.status(200).json({ osc: rows[0] });
+  } catch (error) {
+    console.error('[getMyOscProfile] Erro:', error);
+    return res.status(500).json({ message: 'Erro ao buscar perfil da OSC.' });
+  }
+};
