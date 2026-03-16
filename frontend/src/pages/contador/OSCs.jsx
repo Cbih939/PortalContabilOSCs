@@ -1,6 +1,6 @@
 // src/pages/contador/OSCs.jsx
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as oscService from '../../services/oscService.js';
 import * as alertService from '../../services/alertService.js';
 import * as docService from '../../services/documentService.js'; 
@@ -39,11 +39,8 @@ const styles = {
   searchWrapper: { position: 'relative', flex: 1, minWidth: '200px' },
   searchIcon: { position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', display: 'flex' },
   searchInput: { width: '100%', padding: '12px 12px 12px 40px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', color: '#374151', boxSizing: 'border-box' },
-  
-  // NOVO ESTILO: Checkbox de Pendentes
   filterCheckboxContainer: { display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', backgroundColor: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '6px', cursor: 'pointer', minWidth: 'max-content' },
   filterCheckboxLabel: { fontSize: '14px', fontWeight: 'bold', color: '#b91c1c', cursor: 'pointer', margin: 0 },
-  
   accordionItem: { border: '1px solid #e0e0e0', borderRadius: '8px', marginBottom: '12px', backgroundColor: '#fff', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
   accordionHeader: { padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', backgroundColor: '#fff', transition: 'background-color 0.2s' },
   oscInfo: { display: 'flex', flexDirection: 'column' },
@@ -57,12 +54,27 @@ const styles = {
   colorBox: (bg, border) => ({ width: '12px', height: '12px', backgroundColor: bg, border: `1px solid ${border}`, borderRadius: '2px' }),
   sectionTitle: { fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '20px' },
   calendarGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '10px', marginBottom: '24px' },
-  monthBox: (bg, color, border) => ({ backgroundColor: bg, color: color, border: `1px solid ${border}`, borderRadius: '6px', padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60px' }),
+  
+  // ATUALIZADO: Suporte visual para meses "Pre-Origem"
+  monthBox: (bg, color, border, isPreOrigin) => ({ 
+    backgroundColor: bg, 
+    color: color, 
+    border: `1px solid ${border}`, 
+    borderRadius: '6px', 
+    padding: '10px', 
+    display: 'flex', 
+    flexDirection: 'column', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    minHeight: '60px',
+    opacity: isPreOrigin ? 0.4 : 1, 
+    pointerEvents: isPreOrigin ? 'none' : 'auto' 
+  }),
   monthText: { fontSize: '14px', fontWeight: 'bold' },
   statusText: { fontSize: '10px', fontWeight: '600', marginTop: '4px', textTransform: 'uppercase' },
   docList: { backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' },
-  docItem: { padding: '12px 16px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', cursor: 'pointer', transition: 'background 0.2s' },
-  docMain: { display: 'flex', alignItems: 'center', gap: '10px', color: '#2563eb', fontWeight: '500' },
+  docItem: { padding: '12px 16px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', transition: 'background 0.2s' },
+  docMain: { display: 'flex', alignItems: 'center', gap: '10px', color: '#2563eb', fontWeight: '500', cursor: 'pointer' },
   docMeta: { display: 'flex', alignItems: 'center', gap: '12px' },
   typeBadge: (isMensal) => ({ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: isMensal ? '#e0e7ff' : '#fef3c7', color: isMensal ? '#3730a3' : '#92400e', fontWeight: 'bold' }),
   docDate: { fontSize: '12px', color: '#9ca3af' },
@@ -98,18 +110,45 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
   const [actionMonths, setActionMonths] = useState([new Date().getMonth() + 1]);
   const [actionYear, setActionYear] = useState(new Date().getFullYear());
 
+  // NOVO: Controle de Documentos Selecionados para Exclusão em Lote
+  const [selectedDocs, setSelectedDocs] = useState([]);
+
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const years = [2024, 2025, 2026];
 
+  // NOVO: Cálculo inteligente da Data de Origem da OSC (Estatuto -> Fundação -> Criação)
+  const getOriginDate = () => {
+    const rawDate = osc.data_origem_estatuto || osc.dataOrigemEstatuto || osc.data_fundacao || osc.dataFundacao || osc.created_at || osc.createdAt;
+    if (!rawDate) return { year: 2000, month: 0 }; 
+    
+    // Evita problemas de fuso horário cortando a string ex: '2023-05-10'
+    if (typeof rawDate === 'string' && rawDate.includes('-')) {
+        const parts = rawDate.split('T')[0].split('-');
+        return { year: parseInt(parts[0], 10), month: parseInt(parts[1], 10) - 1 };
+    }
+    const d = new Date(rawDate);
+    return { year: d.getFullYear(), month: d.getMonth() };
+  };
+
+  const originDate = getOriginDate();
+
+  // Verifica se um mês específico é anterior à origem
+  const isBeforeOrigin = (year, monthIndex) => {
+    return year < originDate.year || (year === originDate.year && monthIndex < originDate.month);
+  };
+
   const toggleMonth = (m) => {
-    setActionMonths(prev => 
-      prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]
-    );
+    if (isBeforeOrigin(actionYear, m - 1)) {
+        addNotification("Este mês é anterior à origem da OSC.", "warning");
+        return;
+    }
+    setActionMonths(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
   };
 
   const toggleAllMonths = () => {
-    if (actionMonths.length === 12) setActionMonths([]);
-    else setActionMonths([1,2,3,4,5,6,7,8,9,10,11,12]);
+    const validMonths = months.map((_, i) => i + 1).filter(m => !isBeforeOrigin(actionYear, m - 1));
+    if (actionMonths.length === validMonths.length) setActionMonths([]);
+    else setActionMonths(validMonths);
   };
 
   const handleConcludeMonths = async () => {
@@ -177,16 +216,46 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     }
   };
 
+  // Lógica de Exclusão Individual e em Lote
   const handleDeleteDocument = async (e, docId, docName) => {
     e.stopPropagation(); 
     if (!window.confirm(`Tem certeza que deseja excluir o documento:\n"${docName}"?\n\nEsta ação não pode ser desfeita.`)) return;
-    
     try {
       await docService.deleteDocument(docId);
       addNotification("Documento excluído com sucesso.", "success");
+      setSelectedDocs(prev => prev.filter(id => id !== docId));
+      onRefresh();
+    } catch (err) { addNotification("Erro ao excluir o documento.", "error"); }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedDocs.length === 0) return;
+    if (!window.confirm(`Excluir ${selectedDocs.length} documento(s) selecionado(s)?\nEsta ação não tem volta.`)) return;
+    
+    setIsUploading(true);
+    try {
+      await Promise.all(selectedDocs.map(id => docService.deleteDocument(id)));
+      addNotification(`${selectedDocs.length} documentos excluídos com sucesso.`, "success");
+      setSelectedDocs([]);
       onRefresh();
     } catch (err) {
-      addNotification("Erro ao excluir o documento.", "error");
+      addNotification("Erro ao excluir alguns documentos.", "error");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleToggleSelectDoc = (docId) => {
+    setSelectedDocs(prev => prev.includes(docId) ? prev.filter(id => id !== docId) : [...prev, docId]);
+  };
+
+  const handleSelectAllDocs = (docsList) => {
+    const listIds = docsList.map(d => d.id);
+    const allSelected = listIds.every(id => selectedDocs.includes(id));
+    if (allSelected) {
+        setSelectedDocs(prev => prev.filter(id => !listIds.includes(id)));
+    } else {
+        setSelectedDocs(prev => [...new Set([...prev, ...listIds])]);
     }
   };
 
@@ -196,32 +265,27 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
       alert("Este é um registro de Histórico (TEC) sem arquivo físico. Os novos envios já possuem o documento associado para visualizar.");
       return;
     }
-
     try {
       const fileBlob = await docService.downloadDocument(doc.id);
       const fileURL = window.URL.createObjectURL(new Blob([fileBlob], { type: doc.mime_type || 'application/pdf' }));
-      
       const link = document.createElement('a');
       link.href = fileURL;
       link.target = '_blank';
-      
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
       setTimeout(() => window.URL.revokeObjectURL(fileURL), 10000);
-
     } catch (error) {
-      console.error("Erro ao abrir arquivo:", error);
       alert("Não foi possível carregar o arquivo. O documento não foi encontrado no servidor.");
     }
   };
 
   const getMonthStatus = (monthIndex) => {
+    // Retorna vazio acinzentado se for antes da criação
+    if (isBeforeOrigin(viewYear, monthIndex)) return 'pre_origin';
+
     const monthNum = monthIndex + 1;
-    const docsInMonth = osc.documents ? osc.documents.filter(d => {
-        return parseInt(d.ref_month) === monthNum && parseInt(d.ref_year) === viewYear;
-    }) : [];
+    const docsInMonth = osc.documents ? osc.documents.filter(d => parseInt(d.ref_month) === monthNum && parseInt(d.ref_year) === viewYear) : [];
     const hasDoc = docsInMonth.length > 0;
     
     const hasConclusoTec = hasDoc && docsInMonth.some(d => d.doc_type === 'CONCLUSO TEC');
@@ -239,6 +303,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
 
   const getStatusStyle = (status) => {
     switch (status) {
+      case 'pre_origin': return ['#f3f4f6', '#d1d5db', '#e5e7eb']; // Cinza transparente
       case 'late': return ['#fee2e2', '#b91c1c', '#fecaca'];
       case 'pending': return ['#fef9c3', '#a16207', '#fde047'];
       case 'sent': return ['#dbeafe', '#1d4ed8', '#bfdbfe'];
@@ -249,6 +314,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
   };
 
   const getStatusLabel = (status) => {
+    if (status === 'pre_origin') return '-';
     switch (status) {
       case 'late': return 'Atraso';
       case 'pending': return 'Aberto';
@@ -259,10 +325,16 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     }
   };
 
-  const docsInViewYear = osc.documents ? osc.documents.filter(d => parseInt(d.ref_year) === viewYear) : [];
-  const docsContabil = docsInViewYear.filter(d => d.doc_type === 'MENSAL');
-  const docsGov = docsInViewYear.filter(d => d.doc_type === 'FIXO');
-  const docsTec = docsInViewYear.filter(d => d.doc_type === 'CONCLUSO TEC');
+  // Ordenação de Documentos (Mais recentes primeiro por data de referência)
+  const sortedDocsInViewYear = osc.documents 
+    ? [...osc.documents]
+        .filter(d => parseInt(d.ref_year) === viewYear)
+        .sort((a, b) => parseInt(b.ref_month || 0) - parseInt(a.ref_month || 0))
+    : [];
+
+  const docsContabil = sortedDocsInViewYear.filter(d => d.doc_type === 'MENSAL');
+  const docsGov = sortedDocsInViewYear.filter(d => d.doc_type === 'FIXO');
+  const docsTec = sortedDocsInViewYear.filter(d => d.doc_type === 'CONCLUSO TEC');
 
   return (
     <div style={{
@@ -288,15 +360,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
       {isExpanded && (
         <div style={styles.accordionBody}>
           
-          {osc.data_contrato_conta_comigo && (
-            <div style={{
-              backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', color: '#0369a1',
-              padding: '10px 15px', borderRadius: '8px', marginBottom: '20px', fontSize: '13px', fontWeight: '500'
-            }}>
-              🤝 Início da relação contratual com CONTA COMIGO: <strong>{new Date(osc.data_contrato_conta_comigo).toLocaleDateString('pt-BR')}</strong>
-            </div>
-          )}
-
+          {/* Action Panel de Envio */}
           <div style={styles.actionPanel}>
             <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px'}}>
               <span style={{fontSize: '13px', fontWeight: 'bold', color: '#374151'}}>Ano de Referência:</span>
@@ -308,22 +372,27 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             <div style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: '10px' }}>
               <span style={{fontSize: '13px', fontWeight: 'bold', color: '#374151', marginBottom: '8px'}}>1. Selecione os Meses:</span>
               <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                <button onClick={toggleAllMonths} style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: '1px solid #94a3b8', cursor: 'pointer', background: actionMonths.length === 12 ? '#3b82f6' : '#f8fafc', color: actionMonths.length === 12 ? '#fff' : '#475569', fontWeight: 'bold' }}>Todos</button>
-                {months.map((m, i) => (
-                  <button 
-                    key={m} 
-                    onClick={() => toggleMonth(i+1)}
-                    style={{
-                      padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: '1px solid #cbd5e1', cursor: 'pointer',
-                      backgroundColor: actionMonths.includes(i+1) ? '#ea580c' : '#f8fafc',
-                      color: actionMonths.includes(i+1) ? '#fff' : '#334155',
-                      fontWeight: actionMonths.includes(i+1) ? 'bold' : 'normal',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    {m}
-                  </button>
-                ))}
+                <button onClick={toggleAllMonths} style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: '1px solid #94a3b8', cursor: 'pointer', background: '#f8fafc', color: '#475569', fontWeight: 'bold' }}>Todos</button>
+                {months.map((m, i) => {
+                  const isPre = isBeforeOrigin(actionYear, i);
+                  return (
+                    <button 
+                      key={m} 
+                      onClick={() => toggleMonth(i+1)}
+                      title={isPre ? "Mês anterior à criação da OSC" : ""}
+                      style={{
+                        padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: '1px solid #cbd5e1', cursor: isPre ? 'not-allowed' : 'pointer',
+                        backgroundColor: actionMonths.includes(i+1) ? '#ea580c' : '#f8fafc',
+                        color: actionMonths.includes(i+1) ? '#fff' : '#334155',
+                        fontWeight: actionMonths.includes(i+1) ? 'bold' : 'normal',
+                        opacity: isPre ? 0.4 : 1,
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {m}
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
@@ -331,30 +400,20 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             
             <span style={{fontSize: '13px', fontWeight: 'bold', color: '#374151', marginBottom: '4px'}}>2. Escolha a ação para os meses selecionados:</span>
             <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', width: '100%'}}>
-              
-              <button style={{...styles.checkBtn, flex: 1, minWidth: '160px', justifyContent: 'center'}} onClick={handleConcludeMonths}>
-                <IconCheck /> Concluir Manualmente
-              </button>
-
-              <button style={{...styles.checkBtn, backgroundColor: '#f97316', flex: 1, minWidth: '160px', justifyContent: 'center'}} onClick={handlePendingMonths} title="Anular o 'Concluído' e apagar o histórico de TEC para voltar a Pendente.">
-                <IconUndo /> Voltar para Pendente
-              </button>
-              
+              <button style={{...styles.checkBtn, flex: 1, minWidth: '160px', justifyContent: 'center'}} onClick={handleConcludeMonths}><IconCheck /> Concluir Manualmente</button>
+              <button style={{...styles.checkBtn, backgroundColor: '#f97316', flex: 1, minWidth: '160px', justifyContent: 'center'}} onClick={handlePendingMonths}><IconUndo /> Voltar para Pendente</button>
               <label style={{...styles.counterUploadBtn, backgroundColor: '#2563eb', flex: 1, minWidth: '160px', justifyContent: 'center'}}>
                 {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar Doc. Contábil</>}
                 <input type="file" style={{ display: 'none' }} onChange={(e) => handleUpload(e, 'MENSAL')} disabled={isUploading} />
               </label>
-
               <label style={{...styles.counterUploadBtn, backgroundColor: '#059669', flex: 1, minWidth: '160px', justifyContent: 'center'}}>
                 {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar Doc. Governança</>}
                 <input type="file" style={{ display: 'none' }} onChange={(e) => handleUpload(e, 'FIXO')} disabled={isUploading} />
               </label>
-
               <label style={{...styles.counterUploadBtn, backgroundColor: '#7e22ce', flex: 1, minWidth: '160px', justifyContent: 'center'}}>
                 {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar Histórico TEC</>}
                 <input type="file" style={{ display: 'none' }} onChange={(e) => handleUpload(e, 'CONCLUSO TEC')} disabled={isUploading} />
               </label>
-
             </div>
           </div>
 
@@ -376,30 +435,70 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
           <div style={styles.calendarGrid}>
             {months.map((m, idx) => {
               const status = getMonthStatus(idx);
+              const isPreOrigin = status === 'pre_origin';
+              const isExactOrigin = viewYear === originDate.year && idx === originDate.month;
               const [bg, color, border] = getStatusStyle(status);
+              
               return (
-                <div key={m} style={styles.monthBox(bg, color, border)}>
+                <div key={m} style={styles.monthBox(bg, color, border, isPreOrigin)}>
                   <span style={styles.monthText}>{m}</span>
                   <span style={styles.statusText}>{getStatusLabel(status)}</span>
+                  {/* Etiqueta Visual de Origem */}
+                  {isExactOrigin && (
+                      <span style={{fontSize: '9px', fontWeight: 'bold', color: '#ea580c', marginTop: '4px', backgroundColor: '#ffedd5', padding: '2px 6px', borderRadius: '4px'}}>
+                        ORIGEM
+                      </span>
+                  )}
                 </div>
               )
             })}
           </div>
 
+          {/* BARRA FLUTUANTE DE EXCLUSÃO EM LOTE */}
+          {selectedDocs.length > 0 && (
+            <div style={{ padding: '10px 15px', backgroundColor: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <span style={{ fontSize: '13px', color: '#b91c1c', fontWeight: 'bold' }}>
+                {selectedDocs.length} documento(s) selecionado(s) para exclusão.
+              </span>
+              <button 
+                onClick={handleBulkDelete}
+                style={{ backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                {isUploading ? <Spinner size="sm" /> : <><IconTrash /> Excluir Selecionados</>}
+              </button>
+            </div>
+          )}
+
           {/* SECÇÃO CONTÁBIL */}
           <h4 style={styles.sectionTitle}><IconFileText /> DOCUMENTAÇÃO | CONTÁBIL (Mensal)</h4>
           <div style={styles.docList}>
+            {docsContabil.length > 0 && (
+              <div style={{ padding: '8px 16px', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input 
+                  type="checkbox" 
+                  checked={docsContabil.every(d => selectedDocs.includes(d.id))}
+                  onChange={() => handleSelectAllDocs(docsContabil)}
+                  style={{ cursor: 'pointer', transform: 'scale(1.1)' }}
+                />
+                <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: 'bold' }}>Selecionar todos Contábeis</span>
+              </div>
+            )}
             {docsContabil.length > 0 ? (
               docsContabil.map((doc, i) => (
-                <div key={i} className="doc-item-row" style={styles.docItem} onClick={() => openDocument(doc)}>
-                  <div style={styles.docMain}>
-                    <IconFileText />
-                    <span>{doc.original_name}</span>
+                <div key={i} className="doc-item-row" style={styles.docItem}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedDocs.includes(doc.id)}
+                      onChange={(e) => { e.stopPropagation(); handleToggleSelectDoc(doc.id); }}
+                      style={{ cursor: 'pointer', transform: 'scale(1.1)' }}
+                    />
+                    <div style={styles.docMain} onClick={() => openDocument(doc)}>
+                      <IconFileText /> <span>{doc.original_name}</span>
+                    </div>
                   </div>
                   <div style={styles.docMeta}>
-                    <span style={{fontSize: '11px', color: '#6b7280', fontWeight: '600'}}>
-                      Ref: {months[(doc.ref_month || 1) - 1]}/{doc.ref_year}
-                    </span>
+                    <span style={{fontSize: '11px', color: '#6b7280', fontWeight: '600'}}>Ref: {months[(doc.ref_month || 1) - 1]}/{doc.ref_year}</span>
                     <span style={styles.typeBadge(true)}>CONTÁBIL</span>
                     <span style={styles.docDate}>Postado: {new Date(doc.createdAt || doc.created_at).toLocaleDateString('pt-BR')}</span>
                     <button className="delete-btn" onClick={(e) => handleDeleteDocument(e, doc.id, doc.original_name)} title="Excluir documento" style={{background: 'none', border: 'none', cursor: 'pointer', marginLeft: '5px'}}>
@@ -416,17 +515,33 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
           {/* SECÇÃO GOVERNANÇA */}
           <h4 style={{...styles.sectionTitle, marginTop: '25px'}}><IconFileText /> DOCUMENTAÇÃO | GOVERNANÇA (Fixo)</h4>
           <div style={styles.docList}>
+            {docsGov.length > 0 && (
+              <div style={{ padding: '8px 16px', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input 
+                  type="checkbox" 
+                  checked={docsGov.every(d => selectedDocs.includes(d.id))}
+                  onChange={() => handleSelectAllDocs(docsGov)}
+                  style={{ cursor: 'pointer', transform: 'scale(1.1)' }}
+                />
+                <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: 'bold' }}>Selecionar todos de Governança</span>
+              </div>
+            )}
             {docsGov.length > 0 ? (
               docsGov.map((doc, i) => (
-                <div key={i} className="doc-item-row" style={styles.docItem} onClick={() => openDocument(doc)}>
-                  <div style={styles.docMain}>
-                    <IconFileText />
-                    <span>{doc.original_name}</span>
+                <div key={i} className="doc-item-row" style={styles.docItem}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedDocs.includes(doc.id)}
+                      onChange={(e) => { e.stopPropagation(); handleToggleSelectDoc(doc.id); }}
+                      style={{ cursor: 'pointer', transform: 'scale(1.1)' }}
+                    />
+                    <div style={styles.docMain} onClick={() => openDocument(doc)}>
+                      <IconFileText /> <span>{doc.original_name}</span>
+                    </div>
                   </div>
                   <div style={styles.docMeta}>
-                    <span style={{fontSize: '11px', color: '#6b7280', fontWeight: '600'}}>
-                      Ref: {months[(doc.ref_month || 1) - 1]}/{doc.ref_year}
-                    </span>
+                    <span style={{fontSize: '11px', color: '#6b7280', fontWeight: '600'}}>Ref: {months[(doc.ref_month || 1) - 1]}/{doc.ref_year}</span>
                     <span style={styles.typeBadge(false)}>GOVERNANÇA</span>
                     <span style={styles.docDate}>Postado: {new Date(doc.createdAt || doc.created_at).toLocaleDateString('pt-BR')}</span>
                     <button className="delete-btn" onClick={(e) => handleDeleteDocument(e, doc.id, doc.original_name)} title="Excluir documento" style={{background: 'none', border: 'none', cursor: 'pointer', marginLeft: '5px'}}>
@@ -445,16 +560,30 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             <>
               <h4 style={{...styles.sectionTitle, marginTop: '25px'}}><IconFileText /> DOCUMENTAÇÃO | HISTÓRICO TEC</h4>
               <div style={styles.docList}>
+                <div style={{ padding: '8px 16px', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={docsTec.every(d => selectedDocs.includes(d.id))}
+                    onChange={() => handleSelectAllDocs(docsTec)}
+                    style={{ cursor: 'pointer', transform: 'scale(1.1)' }}
+                  />
+                  <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: 'bold' }}>Selecionar todos TEC</span>
+                </div>
                 {docsTec.map((doc, i) => (
-                  <div key={i} className="doc-item-row" style={styles.docItem} onClick={() => openDocument(doc)}>
-                    <div style={styles.docMain}>
-                      <IconFileText />
-                      <span style={{color: '#7e22ce'}}>{doc.original_name}</span>
+                  <div key={i} className="doc-item-row" style={styles.docItem}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedDocs.includes(doc.id)}
+                        onChange={(e) => { e.stopPropagation(); handleToggleSelectDoc(doc.id); }}
+                        style={{ cursor: 'pointer', transform: 'scale(1.1)' }}
+                      />
+                      <div style={styles.docMain} onClick={() => openDocument(doc)}>
+                        <IconFileText /> <span style={{color: '#7e22ce'}}>{doc.original_name}</span>
+                      </div>
                     </div>
                     <div style={styles.docMeta}>
-                      <span style={{fontSize: '11px', color: '#6b7280', fontWeight: '600'}}>
-                        Ref: {months[(doc.ref_month || 1) - 1]}/{doc.ref_year}
-                      </span>
+                      <span style={{fontSize: '11px', color: '#6b7280', fontWeight: '600'}}>Ref: {months[(doc.ref_month || 1) - 1]}/{doc.ref_year}</span>
                       <span style={{fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#f3e8ff', color: '#7e22ce', fontWeight: 'bold'}}>CONCLUSO TEC</span>
                       <span style={styles.docDate}>Postado: {new Date(doc.createdAt || doc.created_at).toLocaleDateString('pt-BR')}</span>
                       <button className="delete-btn" onClick={(e) => handleDeleteDocument(e, doc.id, doc.original_name)} title="Excluir documento" style={{background: 'none', border: 'none', cursor: 'pointer', marginLeft: '5px'}}>
@@ -479,10 +608,7 @@ export default function OSCsPage() {
   const [expandedOscId, setExpandedOscId] = useState(null);
   const [searchName, setSearchName] = useState('');
   const [searchCnpj, setSearchCnpj] = useState('');
-  
-  // NOVO: Estado para o filtro de "Apenas com Pendências"
   const [showOnlyPending, setShowOnlyPending] = useState(false);
-  
   const [oscToView, setOscToView] = useState(null);
   const [oscToEdit, setOscToEdit] = useState(null);
   const [oscToSendAlert, setOscToSendAlert] = useState(null);
@@ -496,24 +622,14 @@ export default function OSCsPage() {
     setIsLoadingData(true);
     try {
       const response = await oscService.getMyOSCs();
-      let data = [];
-      if (Array.isArray(response)) {
-        data = response;
-      } else if (response && response.data) {
-        data = response.data;
-      } else {
-        data = response;
-      }
+      let data = Array.isArray(response) ? response : (response?.data || []);
       
       const sortedData = data.map(osc => ({
         ...osc,
-        documents: osc.documents ? [...osc.documents].sort((a, b) => 
-          new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at)
-        ) : []
+        documents: osc.documents ? [...osc.documents] : []
       }));
       setOscs(sortedData.sort((a, b) => (a.name || a.razao_social || '').localeCompare(b.name || b.razao_social || '')));
     } catch (err) {
-      console.error("Erro ao buscar OSCs:", err);
       addNotification("Erro ao carregar OSCs. Verifique sua conexão.", "error");
       setOscs([]); 
     } finally {
@@ -525,29 +641,39 @@ export default function OSCsPage() {
 
   // --- Lógica de Filtros ---
   const filteredOscs = oscs.filter(osc => {
-    // Filtro por Texto (Nome e CNPJ)
-    const name = osc.name || osc.razao_social || '';
-    const nameMatch = name.toLowerCase().includes(searchName.toLowerCase());
+    const nameMatch = (osc.name || osc.razao_social || '').toLowerCase().includes(searchName.toLowerCase());
     const cnpjMatch = (osc.cnpj || '').replace(/\D/g, '').includes(searchCnpj.replace(/\D/g, ''));
     
-    // NOVO: Filtro por Pendência (Calcula o status dos meses do ano atual)
     let hasPending = false;
     if (showOnlyPending) {
       const currentYear = new Date().getFullYear();
-      const currentMonth = new Date().getMonth(); // 0 a 11
+      const currentMonth = new Date().getMonth(); 
       
-      // Verifica os meses do ano atual até o mês corrente
+      // Função local espelho para calcular origem no filtro
+      const rawDate = osc.data_origem_estatuto || osc.dataOrigemEstatuto || osc.data_fundacao || osc.dataFundacao || osc.created_at || osc.createdAt;
+      let oY = 2000, oM = 0;
+      if (rawDate) {
+         if (typeof rawDate === 'string' && rawDate.includes('-')) {
+            const pts = rawDate.split('T')[0].split('-');
+            oY = parseInt(pts[0], 10); oM = parseInt(pts[1], 10) - 1;
+         } else {
+            const d = new Date(rawDate); oY = d.getFullYear(); oM = d.getMonth();
+         }
+      }
+
       for (let i = 0; i <= currentMonth; i++) {
+        // Ignora meses antes da fundação no filtro
+        if (currentYear < oY || (currentYear === oY && i < oM)) continue;
+
         const monthNum = i + 1;
         const docsInMonth = osc.documents ? osc.documents.filter(d => parseInt(d.ref_month) === monthNum && parseInt(d.ref_year) === currentYear) : [];
         const hasDoc = docsInMonth.length > 0;
         const hasConclusoTec = hasDoc && docsInMonth.some(d => d.doc_type === 'CONCLUSO TEC');
         const isVerified = hasDoc && docsInMonth.some(d => d.status === 'CONCLUIDO');
         
-        // Se para aquele mês NÃO está Concluído e NÃO tem TEC, está pendente (Atraso, Aberto ou apenas Enviado)
         if (!hasConclusoTec && !isVerified) {
           hasPending = true;
-          break; // Se encontrou uma pendência, não precisa olhar os outros meses
+          break; 
         }
       }
     }
@@ -561,7 +687,6 @@ export default function OSCsPage() {
   const handleSaveEdit = async (formData) => {
     const oscId = formData.id;
     const payload = { ...formData, responsavel: formData.responsible || formData.responsavel };
-    
     try {
       if (oscId) {
         await updateOSC(oscId, payload);
@@ -573,8 +698,7 @@ export default function OSCsPage() {
       fetchOSCs();
       handleCloseModals();
     } catch (err) { 
-      console.error("Erro na API:", err);
-      addNotification(err.response?.data?.message || 'Erro ao salvar no servidor. Verifique os dados.', 'error'); 
+      addNotification(err.response?.data?.message || 'Erro ao salvar no servidor.', 'error'); 
     }
   };
 
@@ -617,7 +741,6 @@ export default function OSCsPage() {
           <input type="text" placeholder="CNPJ..." style={styles.searchInput} value={searchCnpj} onChange={(e) => setSearchCnpj(e.target.value)} />
         </div>
         
-        {/* NOVO: Caixinha de Filtro de Pendências */}
         <label style={{ ...styles.filterCheckboxContainer, backgroundColor: showOnlyPending ? '#fee2e2' : '#f9fafb', borderColor: showOnlyPending ? '#f87171' : '#d1d5db' }}>
           <input 
             type="checkbox" 
