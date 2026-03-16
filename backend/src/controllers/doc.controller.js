@@ -81,8 +81,7 @@ export const getReceivedDocuments = async (req, res) => {
  */
 export const uploadDocument = async (req, res) => {
   try {
-    // Agora extraímos também o project_id
-    const { osc_id, doc_type, ref_month, ref_year, project_id } = req.body;
+    let { osc_id, doc_type, ref_month, ref_year, project_id } = req.body;
     const file = req.file;
     const userId = req.user.id;
 
@@ -90,8 +89,20 @@ export const uploadDocument = async (req, res) => {
       return res.status(400).json({ message: 'Nenhum arquivo enviado.' });
     }
 
-    // Formata o project_id (se vier vazio do frontend, salva como null)
-    const parsedProjectId = project_id && project_id !== 'null' && project_id !== '' ? parseInt(project_id) : null;
+    // 🛡️ ESCUDO INTELIGENTE: Se o frontend não enviar o osc_id, o backend procura automaticamente!
+    if (!osc_id || osc_id === 'undefined' || osc_id === 'null') {
+      const [oscRows] = await pool.execute('SELECT id FROM oscs WHERE user_id = ?', [userId]);
+      if (oscRows.length > 0) {
+        osc_id = oscRows[0].id;
+      } else {
+        return res.status(404).json({ message: 'Perfil de OSC não encontrado.' });
+      }
+    }
+
+    // Formata o project_id de forma segura para o MySQL não dar erro
+    const parsedProjectId = (project_id && project_id !== 'null' && project_id !== 'undefined' && project_id !== '') 
+      ? parseInt(project_id) 
+      : null;
 
     const query = `
       INSERT INTO documents 
@@ -101,7 +112,7 @@ export const uploadDocument = async (req, res) => {
 
     await pool.execute(query, [
       osc_id,
-      parsedProjectId, // Injetado aqui!
+      parsedProjectId,
       file.originalname,
       file.filename,
       file.path,
