@@ -19,7 +19,7 @@ import publicFileRoutes from './src/routes/publicFile.routes.js';
 import alertRoutes from './src/routes/alert.routes.js';
 import webhookRoutes from './src/routes/webhook.routes.js'; 
 import officeRoutes from './src/routes/office.routes.js';
-import { startGovernanceCron } from './services/governance.service.js';
+import { startGovernanceCron } from './src/services/governance.service.js';
 
 
 dotenv.config();
