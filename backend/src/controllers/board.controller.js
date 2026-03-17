@@ -8,9 +8,7 @@ const getInternalOscId = async (userId) => {
 export const getBoardMembers = async (req, res) => {
   try {
     const oscId = await getInternalOscId(req.user.id);
-    
-    // 🛡️ A CORREÇÃO MÁGICA: Se a OSC ainda não existir, devolvemos VAZIO em vez de erro 404!
-    if (!oscId) return res.status(200).json([]); 
+    if (!oscId) return res.status(200).json([]); // Devolve vazio em vez de erro 404
     
     const [members] = await pool.execute('SELECT * FROM board_members WHERE osc_id = ? ORDER BY status ASC, role ASC', [oscId]);
     return res.status(200).json(members);
@@ -23,8 +21,6 @@ export const getBoardMembers = async (req, res) => {
 export const createBoardMember = async (req, res) => {
   try {
     const oscId = await getInternalOscId(req.user.id);
-    
-    // Se não houver OSC, agora devolvemos erro 400 (Aviso de preenchimento) e não 404.
     if (!oscId) return res.status(400).json({ message: 'Preencha o Perfil da Organização primeiro.' });
     
     const { name, role, cpf, start_date, end_date, status } = req.body;
