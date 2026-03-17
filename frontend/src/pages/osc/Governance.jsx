@@ -45,7 +45,7 @@ export default function GovernancePage() {
     setIsLoading(true);
     try {
       // 💡 DESVIO: Rota alterada para /diretoria
-      const response = await api.get('/diretoria');
+      const response = await api.get('/board');
       setMembers(response.data || []);
     } catch (error) {
       addNotification("Erro ao carregar diretoria.", "error");
