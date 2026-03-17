@@ -1,24 +1,33 @@
 import express from 'express';
 
-// Importação das rotas (NOMES PADRONIZADOS NO SINGULAR)
+// Importações Padrão
 import authRoutes from './auth.routes.js';
-import userRoutes from './user.routes.js';      
-import oscRoutes from './osc.routes.js';        
+import userRoutes from './user.routes.js';
+import oscRoutes from './osc.routes.js';
 import contadorRoutes from './contador.routes.js';
 import alertRoutes from './alert.routes.js';
 import publicFileRoutes from './publicFile.routes.js';
-import messageRoutes from './message.routes.js'; // <-- Apenas UMA importação para as mensagens!
+import messageRoutes from './message.routes.js';
+
+// As Nossas Novas Importações
+import docRoutes from './doc.routes.js';
+import projectRoutes from './project.routes.js';
 import boardRoutes from './board.routes.js';
 
 const router = express.Router();
 
+// Rotas Padrão
 router.use('/auth', authRoutes);
 router.use('/user', userRoutes);
 router.use('/oscs', oscRoutes);
 router.use('/contador', contadorRoutes);
 router.use('/notices', alertRoutes);
-router.use('/messages', messageRoutes);
 router.use('/public-files', publicFileRoutes);
+router.use('/messages', messageRoutes);
+
+// As Nossas Novas Rotas
+router.use('/documents', docRoutes);
+router.use('/projects', projectRoutes);
 router.use('/board', boardRoutes);
 
 export default router;
