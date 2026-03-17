@@ -12,7 +12,7 @@ import messageRoutes from './message.routes.js';
 // As Nossas Novas Importações
 import docRoutes from './doc.routes.js';
 import projectRoutes from './project.routes.js';
-import boardRoutes from './board.routes.js';
+import diretoriaRoutes from './board.routes.js';
 
 const router = express.Router();
 
@@ -28,6 +28,6 @@ router.use('/messages', messageRoutes);
 // As Nossas Novas Rotas
 router.use('/documents', docRoutes);
 router.use('/projects', projectRoutes);
-router.use('/board', boardRoutes);
+router.use('/diretoria', diretoriaRoutes);
 
 export default router;

@@ -44,7 +44,8 @@ export default function GovernancePage() {
   const fetchMembers = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get('/board');
+      // 💡 DESVIO: Rota alterada para /diretoria
+      const response = await api.get('/diretoria');
       setMembers(response.data || []);
     } catch (error) {
       addNotification("Erro ao carregar diretoria.", "error");
@@ -84,10 +85,12 @@ export default function GovernancePage() {
       };
 
       if (memberToEdit) {
-        await api.put(`/board/${memberToEdit.id}`, payload);
+        // 💡 DESVIO: Rota alterada para /diretoria
+        await api.put(`/diretoria/${memberToEdit.id}`, payload);
         addNotification(`Membro atualizado com sucesso!`, 'success');
       } else {
-        await api.post('/board', payload);
+        // 💡 DESVIO: Rota alterada para /diretoria
+        await api.post('/diretoria', payload);
         addNotification(`Membro adicionado à diretoria!`, 'success');
       }
       setIsModalOpen(false);
@@ -102,7 +105,8 @@ export default function GovernancePage() {
   const handleDelete = async (member) => {
     if (!window.confirm(`Tem certeza que deseja remover ${member.name} da diretoria?`)) return;
     try {
-      await api.delete(`/board/${member.id}`);
+      // 💡 DESVIO: Rota alterada para /diretoria
+      await api.delete(`/diretoria/${member.id}`);
       addNotification(`Membro removido com sucesso!`, 'success');
       fetchMembers();
     } catch (error) {
