@@ -2,13 +2,12 @@ import express from 'express';
 
 // Importação das rotas (NOMES PADRONIZADOS NO SINGULAR)
 import authRoutes from './auth.routes.js';
-import userRoutes from './user.routes.js';      // Certifique-se que o arquivo é user.routes.js
-import oscRoutes from './osc.routes.js';        // Certifique-se que o arquivo é osc.routes.js
+import userRoutes from './user.routes.js';      
+import oscRoutes from './osc.routes.js';        
 import contadorRoutes from './contador.routes.js';
 import alertRoutes from './alert.routes.js';
-import messageRoutes from './msg.routes.js';
 import publicFileRoutes from './publicFile.routes.js';
-import messageRoutes from './message.routes.js';
+import messageRoutes from './message.routes.js'; // <-- Apenas UMA importação para as mensagens!
 import boardRoutes from './board.routes.js';
 
 const router = express.Router();
