@@ -1,12 +1,13 @@
-// backend/src/routes/board.routes.js
 import { Router } from 'express';
 import { getBoardMembers, createBoardMember, updateBoardMember, deleteBoardMember } from '../controllers/board.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-router.use(protect); // Apenas OSCs logadas podem aceder
+// Protege a rota: Apenas utilizadores logados acedem
+router.use(protect); 
 
+// As 4 rotas fundamentais
 router.get('/', getBoardMembers);
 router.post('/', createBoardMember);
 router.put('/:id', updateBoardMember);
