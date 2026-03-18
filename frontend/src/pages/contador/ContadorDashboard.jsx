@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend
-} from 'recharts';
-import {
   BuildingIcon, FolderIcon, MessageIcon, FileIcon, DownloadIcon
 } from '../../components/common/Icons.jsx';
 import * as contadorService from '../../services/contadorService.js';
@@ -25,8 +21,7 @@ const AlertTriangleIcon = () => (
   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
 );
 const ArrowRightIcon = () => <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>;
-
-const COLORS = ['#EC6D12', '#1f2937', '#6b7280', '#eab308'];
+const UserIcon = () => <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>;
 
 export default function ContadorDashboard() {
   const navigate = useNavigate();
@@ -35,7 +30,6 @@ export default function ContadorDashboard() {
   const [stats, setStats] = useState({ activeOSCs: 0, pendingDocs: 0, unreadMessages: 0 });
   const [recentActivity, setRecentActivity] = useState([]);
   const [oscsMissingDocs, setOscsMissingDocs] = useState([]);
-  const [chartData, setChartData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -54,14 +48,11 @@ export default function ContadorDashboard() {
           unreadMessages: data.unreadMessages || 0
         });
 
+        // O backend agora deve enviar sender_name na atividade
         setRecentActivity(activityResponse.data || []);
         
-        // Dados dinâmicos vindos do backend
+        // Dados focados na documentação
         setOscsMissingDocs(data.missingDocsList || []);
-        setChartData(data.weeklyChartData || [
-          { name: 'Seg', envios: 0 }, { name: 'Ter', envios: 0 }, 
-          { name: 'Qua', envios: 0 }, { name: 'Qui', envios: 0 }, { name: 'Sex', envios: 0 }
-        ]);
 
       } catch (err) {
         setError('Erro ao carregar dashboard');
@@ -93,15 +84,8 @@ export default function ContadorDashboard() {
       pdf.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight);
       heightLeft -= pageHeight;
     }
-    pdf.save(`relatorio-escritorio-${new Date().toISOString().slice(0, 10)}.pdf`);
+    pdf.save(`relatorio-documental-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
-
-  const pieData = [
-    { name: 'Docs para Validar', value: stats.pendingDocs },
-    { name: 'Mensagens Pendentes', value: stats.unreadMessages },
-    { name: 'OSCs em Dia', value: Math.max(0, stats.activeOSCs - oscsMissingDocs.length) },
-    { name: 'OSCs com Pendências', value: oscsMissingDocs.length }
-  ];
 
   if (error) return <div style={{ padding: '40px', textAlign: 'center', color: '#dc2626' }}>{error}</div>;
   if (isLoading) return <Spinner text="Analisando dados do escritório..." />;
@@ -109,6 +93,15 @@ export default function ContadorDashboard() {
   return (
     <div className={styles.pageContainer}>
       
+      {/* Cabeçalho exclusivo do PDF */}
+      <div className={styles.printOnlyHeader}>
+        <img src="/logo_portal.png" alt="Logo" className={styles.printLogo} />
+        <div>
+          <h1>Relatório Documental de Gestão</h1>
+          <p>Gerado em: {formatDateTime(new Date())}</p>
+        </div>
+      </div>
+
       {/* Alerta Global de Pendências Críticas */}
       {oscsMissingDocs.length > 0 && (
         <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fca5a5', padding: '16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
@@ -125,15 +118,15 @@ export default function ContadorDashboard() {
             <button onClick={handleDownloadPDF} className={`${styles.downloadReportBtn} ${styles.noPrint}`}>
               <DownloadIcon /> Baixar Relatório (PDF)
             </button>
-            <span className={styles.tooltipText}>Gera um documento consolidado em PDF para auditoria.</span>
+            <span className={styles.tooltipText}>Gera um documento em PDF do painel atual.</span>
           </div>
       </div>
 
       <div className={styles.headerWithInfo}>
-        <h2 className={styles.title}>Painel Analítico do Escritório</h2>
+        <h2 className={styles.title}>Painel de Gestão Documental</h2>
         <div className={styles.tooltipContainer}>
           <InfoIcon />
-          <span className={styles.tooltipText}>Visão geral da carteira do escritório.</span>
+          <span className={styles.tooltipText}>Visão geral do calendário de documentação da carteira do escritório.</span>
         </div>
       </div>
 
@@ -149,96 +142,83 @@ export default function ContadorDashboard() {
         </div>
       </div>
 
-      <div className={styles.chartsGrid}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', marginTop: '32px' }}>
+        
+        {/* Tabela de Ação Focada em Documentos */}
         <div className={styles.sectionCard}>
           <div className={styles.headerWithInfo}>
-            <h3>Volume de Documentos (Semana Atual)</h3>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <AlertTriangleIcon /> Tabela de Ação: Calendário de Documentação
+            </h3>
+            <div className={styles.tooltipContainer}>
+              <InfoIcon />
+              <span className={styles.tooltipText}>Mostra apenas OSCs com documentos pendentes de validação ou em atraso.</span>
+            </div>
           </div>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="envios" fill="#EC6D12" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className={styles.sectionCard}>
-          <div className={styles.headerWithInfo}>
-            <h3>Saúde da Carteira</h3>
-          </div>
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <Pie data={pieData} dataKey="value" outerRadius={90}>
-                {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-              </Pie>
-              <Legend />
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className={styles.sectionCard}>
-        <div className={styles.headerWithInfo}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <AlertTriangleIcon /> Tabela de Ação: OSCs com Pendências
-          </h3>
-        </div>
-        <table className={styles.missingTable}>
-          <thead>
-            <tr>
-              <th style={{ textAlign: 'left' }}>Organização</th>
-              <th style={{ textAlign: 'left' }}>Status / Pendência</th>
-              <th style={{ textAlign: 'center' }}>Ação Rápida</th>
-            </tr>
-          </thead>
-          <tbody>
-            {oscsMissingDocs.length === 0 ? (
+          <table className={styles.missingTable}>
+            <thead>
               <tr>
-                <td colSpan="3" style={{ textAlign: 'center', padding: '30px', color: '#16a34a', fontWeight: 'bold' }}>
-                  🎉 Parabéns! Todas as OSCs estão em dia e sem pendências.
-                </td>
+                <th style={{ textAlign: 'left' }}>Organização</th>
+                <th style={{ textAlign: 'left' }}>Pendências de Documentação</th>
+                <th style={{ textAlign: 'center' }}>Ação Rápida</th>
               </tr>
-            ) : (
-              oscsMissingDocs.map(osc => (
-                <tr key={osc.id}>
-                  <td style={{ fontWeight: 'bold', color: '#1f2937' }}>{osc.name}</td>
-                  <td style={{ color: '#dc2626', fontSize: '13px', fontWeight: '500' }}>{osc.missing}</td>
-                  <td style={{ textAlign: 'center' }}>
-                    <button 
-                      onClick={() => navigate('/contador/oscs')} 
-                      style={{ backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                    >
-                      Resolver <ArrowRightIcon />
-                    </button>
+            </thead>
+            <tbody>
+              {oscsMissingDocs.length === 0 ? (
+                <tr>
+                  <td colSpan="3" style={{ textAlign: 'center', padding: '30px', color: '#16a34a', fontWeight: 'bold' }}>
+                    🎉 Parabéns! Todas as OSCs estão com a documentação em dia e sem pendências.
                   </td>
                 </tr>
+              ) : (
+                oscsMissingDocs.map(osc => (
+                  <tr key={osc.id}>
+                    <td style={{ fontWeight: 'bold', color: '#1f2937' }}>{osc.name}</td>
+                    <td style={{ color: '#dc2626', fontSize: '13px', fontWeight: '500' }}>{osc.missing}</td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button 
+                        onClick={() => navigate('/contador/oscs')} 
+                        style={{ backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        Validar Documentos <ArrowRightIcon />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Log de Atividades do Escritório (Com identificação de quem enviou) */}
+        <div className={styles.sectionCard}>
+          <div className={styles.headerWithInfo}>
+            <h3>Log de Envio de Documentos e Atividades</h3>
+          </div>
+          <div className={styles.activityList}>
+            {recentActivity.length === 0 ? (
+              <p style={{ textAlign: 'center', color: '#9ca3af', padding: '20px' }}>Nenhum documento enviado ou atividade registada recentemente.</p>
+            ) : (
+              recentActivity.map(item => (
+                <div key={item.id} className={styles.activityItem} style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '12px', borderBottom: '1px solid #f3f4f6' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <strong style={{ color: '#1f2937', fontSize: '14px' }}>{item.oscName}</strong>
+                      <span style={{ color: '#4b5563', fontSize: '14px' }}> — {item.content}</span>
+                    </div>
+                    <span style={{ fontSize: '11px', color: '#6b7280', whiteSpace: 'nowrap' }}>
+                      {formatDateTime(item.timestamp)}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#ea580c', fontWeight: '500' }}>
+                    <UserIcon /> Enviado por: {item.sender_name || 'Usuário Desconhecido'}
+                  </div>
+                </div>
               ))
             )}
-          </tbody>
-        </table>
-      </div>
+          </div>
+        </div>
 
-      <div className={styles.sectionCard}>
-        <div className={styles.headerWithInfo}>
-          <h3>Log de Atividades do Escritório</h3>
-        </div>
-        <div className={styles.activityList}>
-          {recentActivity.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#9ca3af', padding: '20px' }}>Nenhuma atividade registada recentemente.</p>
-          ) : (
-            recentActivity.map(item => (
-              <div key={item.id} className={styles.activityItem}>
-                <strong>{item.oscName}</strong> — {item.content}
-                <br />
-                <small>{formatDateTime(item.timestamp)}</small>
-              </div>
-            ))
-          )}
-        </div>
       </div>
     </div>
   );

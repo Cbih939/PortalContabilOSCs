@@ -1,12 +1,12 @@
 import pool from '../config/db.js';
 
 // 1. Estatísticas do Dashboard
-// 1. Estatísticas do Dashboard (Dinâmico e focado em Pendências do Escritório)
+// 1. Estatísticas do Dashboard (Foco total em Documentação)
 export const getDashboardStats = async (req, res) => {
     try {
         const cid = req.user.id;
         
-        // Conta OSCs ligadas ao escritório
+        // Conta OSCs ativas ligadas ao escritório
         const [r1] = await pool.execute(`
             SELECT COUNT(o.id) as total 
             FROM oscs o
@@ -15,7 +15,7 @@ export const getDashboardStats = async (req, res) => {
         `, [cid]);
         const activeOSCs = r1[0].total;
 
-        // Conta Documentos com status "Pendente"
+        // Conta todos os documentos com status "Pendente" do escritório
         const [r2] = await pool.execute(`
             SELECT COUNT(d.id) as total 
             FROM documents d
@@ -24,54 +24,46 @@ export const getDashboardStats = async (req, res) => {
         `, [cid]);
         const pendingDocs = r2[0].total;
 
-        // Conta Mensagens não lidas
+        // Conta Mensagens não lidas para o contador
         const [r3] = await pool.execute(
             'SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [cid]
         );
         const unreadMessages = r3[0].total;
 
-        // NOVO: Busca as OSCs que têm documentos aguardando validação (Pendentes)
+        // Busca OSCs que têm documentos "Pendentes" (Aguardando Validação)
         const [missingDocsQuery] = await pool.execute(`
-            SELECT o.id, COALESCE(o.razao_social, u.name) as name, GROUP_CONCAT(d.original_name SEPARATOR ', ') as missing
+            SELECT o.id, COALESCE(o.razao_social, u.name) as name, 
+                   COUNT(d.id) as pending_count,
+                   GROUP_CONCAT(d.original_name SEPARATOR ', ') as missing
             FROM oscs o
             LEFT JOIN users u ON o.user_id = u.id
             JOIN documents d ON d.osc_id = o.id
             WHERE o.assigned_contador_id = ? AND d.status = 'Pendente'
             GROUP BY o.id
-            LIMIT 10
+            ORDER BY pending_count DESC
+            LIMIT 15
         `, [cid]);
 
-        // Formatação simples para o frontend
         const missingDocsList = missingDocsQuery.map(row => ({
             id: row.id,
             name: row.name || 'OSC Sem Nome',
-            missing: `Aguardando validação: ${row.missing.substring(0, 50)}${row.missing.length > 50 ? '...' : ''}`
+            missing: `Aguardando validação: ${row.pending_count} documento(s) (${row.missing.substring(0, 50)}${row.missing.length > 50 ? '...' : ''})`
         }));
-
-        // NOVO: Dados Falsos estruturados para o Gráfico da Semana (Ainda precisamos de tabelas de log se quisermos isto 100% real, mas envia zero para não quebrar o React)
-        const weeklyChartData = [
-            { name: 'Seg', envios: Math.floor(Math.random() * 5) },
-            { name: 'Ter', envios: Math.floor(Math.random() * 10) },
-            { name: 'Qua', envios: Math.floor(Math.random() * 8) },
-            { name: 'Qui', envios: Math.floor(Math.random() * 12) },
-            { name: 'Sex', envios: pendingDocs } // O dia atual usa a estatística real
-        ];
 
         res.json({ 
             activeOSCs, 
             pendingDocs, 
             unreadMessages,
-            missingDocsList,
-            weeklyChartData
+            missingDocsList
         });
 
     } catch (error) {
         console.error('[Dashboard] Erro fatal:', error);
-        res.json({ activeOSCs: 0, pendingDocs: 0, unreadMessages: 0, missingDocsList: [], weeklyChartData: [] });
+        res.json({ activeOSCs: 0, pendingDocs: 0, unreadMessages: 0, missingDocsList: [] });
     }
 };
 
-// 2. Atividade Recente (AJUSTADO PARA O SEU REACT)
+// 2. Atividade Recente (Buscando quem enviou o documento)
 export const getRecentActivity = async (req, res) => {
     try {
         const cid = req.user.id;
@@ -82,28 +74,29 @@ export const getRecentActivity = async (req, res) => {
                 d.original_name, 
                 d.created_at, 
                 d.status,
-                COALESCE(o.razao_social, u.name, u.email, 'OSC Desconhecida') as osc_name
+                COALESCE(o.razao_social, u_osc.name, u_osc.email, 'OSC Desconhecida') as osc_name,
+                COALESCE(u_uploader.name, 'Usuário do Sistema') as sender_name
             FROM documents d
             JOIN oscs o ON d.osc_id = o.id
-            LEFT JOIN users u ON o.user_id = u.id
+            LEFT JOIN users u_osc ON o.user_id = u_osc.id
+            LEFT JOIN users u_uploader ON d.uploaded_by = u_uploader.id
             WHERE o.assigned_contador_id = ?
             ORDER BY d.created_at DESC
-            LIMIT 10
+            LIMIT 15
         `;
 
         const [rows] = await pool.execute(query, [cid]);
 
-        // Mapeamento EXATO para o seu ContadorDashboard.jsx
         const activities = rows.map(row => ({
             id: row.id,
-            oscName: row.osc_name,        // O React espera 'oscName'
-            content: row.original_name,   // O React espera 'content' (nome do arquivo)
-            timestamp: row.created_at,    // O React espera 'timestamp'
-            type: 'file',                 // O React verifica: item.type === 'file'
-            status: row.status
+            oscName: row.osc_name,
+            content: `Novo documento: ${row.original_name}`,
+            timestamp: row.created_at,
+            type: 'file',
+            status: row.status,
+            sender_name: row.sender_name // Nome de quem enviou
         }));
 
-        console.log(`[Activity] Enviando ${activities.length} itens formatados para o React.`);
         res.json(activities);
 
     } catch (error) {
