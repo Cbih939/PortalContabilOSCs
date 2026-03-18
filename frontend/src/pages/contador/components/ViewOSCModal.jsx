@@ -37,8 +37,11 @@ export default function ViewOSCModal({ isOpen, onClose, osc }) {
   );
 
   return (
-    <Modal isOpen={isOpen} title="Raio-X da Organização (OSC)" onClose={onClose}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '70vh', overflowY: 'auto', paddingRight: '10px' }}>
+    // Voltei o título para "Detalhes da OSC"
+    <Modal isOpen={isOpen} title="Detalhes da OSC" onClose={onClose}>
+      
+      {/* Removi o maxHeight e o overflowY para não criar a 2ª barra de rolagem */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         
         {/* Bloco 1: Informações Principais */}
         <div style={{ backgroundColor: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
@@ -89,7 +92,7 @@ export default function ViewOSCModal({ isOpen, onClose, osc }) {
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', borderTop: '1px solid #e5e7eb', paddingTop: '15px' }}>
         <button onClick={onClose} style={{ padding: '10px 24px', backgroundColor: '#4b5563', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#fff', transition: 'background-color 0.2s' }} onMouseOver={(e) => e.target.style.backgroundColor = '#374151'} onMouseOut={(e) => e.target.style.backgroundColor = '#4b5563'}>
-          Fechar Detalhes
+          Fechar
         </button>
       </div>
     </Modal>
