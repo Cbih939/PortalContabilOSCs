@@ -3,6 +3,9 @@ import { protect, checkRole } from '../middlewares/auth.middleware.js';
 import * as messageController from '../controllers/message.controller.js';
 import * as profileController from '../controllers/profile.controller.js';
 
+// --- IMPORTAÇÃO DO PAINEL GERAL (NOVO) ---
+import { getDashboardStats } from '../controllers/admin.controller.js';
+
 // Centralizamos todas as importações do financeiro em um único controller
 import { 
     listOSCsFinanceiro, 
@@ -20,6 +23,10 @@ const router = express.Router();
 router.use(protect);
 router.use(checkRole(['admin', 'financeiro']));
 
+// --- ROTA DO NOVO DASHBOARD DO ADMIN ---
+router.get('/dashboard-stats', getDashboardStats);
+
+// Rotas existentes
 router.put('/profile/password', profileController.updatePassword);
 router.get('/financeiro/stats', getFinanceiroStats);
 router.get('/financeiro/oscs', listOSCsFinanceiro);
