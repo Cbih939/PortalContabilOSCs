@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  BuildingIcon, FolderIcon, MessageIcon, FileIcon, DownloadIcon
+  BuildingIcon, FolderIcon, MessageIcon, DownloadIcon
 } from '../../components/common/Icons.jsx';
 import * as contadorService from '../../services/contadorService.js';
 import { formatDateTime } from '../../utils/formatDate.js';
@@ -48,10 +48,7 @@ export default function ContadorDashboard() {
           unreadMessages: data.unreadMessages || 0
         });
 
-        // O backend agora deve enviar sender_name na atividade
         setRecentActivity(activityResponse.data || []);
-        
-        // Dados focados na documentação
         setOscsMissingDocs(data.missingDocsList || []);
 
       } catch (err) {
@@ -61,7 +58,6 @@ export default function ContadorDashboard() {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, [addNotification]);
 
@@ -70,21 +66,9 @@ export default function ContadorDashboard() {
     const canvas = await html2canvas(element, { scale: 2, useCORS: true });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const imgHeight = (canvas.height * pageWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight);
-    heightLeft -= pageHeight;
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
-    pdf.save(`relatorio-documental-${new Date().toISOString().slice(0, 10)}.pdf`);
+    const imgHeight = (canvas.height * pdf.internal.pageSize.getWidth()) / canvas.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), imgHeight);
+    pdf.save(`relatorio-escritorio-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
   if (error) return <div style={{ padding: '40px', textAlign: 'center', color: '#dc2626' }}>{error}</div>;
@@ -97,39 +81,29 @@ export default function ContadorDashboard() {
       <div className={styles.printOnlyHeader}>
         <img src="/logo_portal.png" alt="Logo" className={styles.printLogo} />
         <div>
-          <h1>Relatório Documental de Gestão</h1>
+          <h1>Relatório de Conformidade do Escritório</h1>
           <p>Gerado em: {formatDateTime(new Date())}</p>
         </div>
       </div>
-
-      {/* Alerta Global de Pendências Críticas */}
-      {oscsMissingDocs.length > 0 && (
-        <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fca5a5', padding: '16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-          <div style={{ color: '#dc2626' }}><AlertTriangleIcon /></div>
-          <div>
-            <h4 style={{ margin: 0, color: '#991b1b', fontSize: '15px' }}>Atenção: Ação Requerida</h4>
-            <p style={{ margin: 0, color: '#b91c1c', fontSize: '13px' }}>Existem <strong>{oscsMissingDocs.length} organizações</strong> com pendências documentais aguardando a sua análise ou envio.</p>
-          </div>
-        </div>
-      )}
 
       <div className={styles.topActions}>
           <div className={styles.tooltipContainer}>
             <button onClick={handleDownloadPDF} className={`${styles.downloadReportBtn} ${styles.noPrint}`}>
               <DownloadIcon /> Baixar Relatório (PDF)
             </button>
-            <span className={styles.tooltipText}>Gera um documento em PDF do painel atual.</span>
+            <span className={styles.tooltipText}>Gera um documento em PDF do painel atual para impressão.</span>
           </div>
       </div>
 
       <div className={styles.headerWithInfo}>
-        <h2 className={styles.title}>Painel de Gestão Documental</h2>
+        <h2 className={styles.title}>Painel Operacional do Escritório</h2>
         <div className={styles.tooltipContainer}>
           <InfoIcon />
-          <span className={styles.tooltipText}>Visão geral do calendário de documentação da carteira do escritório.</span>
+          <span className={styles.tooltipText}>Central de ação rápida focada nas pendências documentais da sua carteira.</span>
         </div>
       </div>
 
+      {/* KPIs Corrigidos */}
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
           <BuildingIcon /> <strong>OSCs Ativas:</strong> {stats.activeOSCs}
@@ -142,45 +116,45 @@ export default function ContadorDashboard() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', marginTop: '32px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', marginTop: '32px' }}>
         
-        {/* Tabela de Ação Focada em Documentos */}
+        {/* Tabela de Ação Focada */}
         <div className={styles.sectionCard}>
           <div className={styles.headerWithInfo}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <AlertTriangleIcon /> Tabela de Ação: Calendário de Documentação
+              <AlertTriangleIcon /> Tabela de Ação: OSCs com Pendências
             </h3>
             <div className={styles.tooltipContainer}>
               <InfoIcon />
-              <span className={styles.tooltipText}>Mostra apenas OSCs com documentos pendentes de validação ou em atraso.</span>
+              <span className={styles.tooltipText}>Lista as OSCs que têm meses em atraso ou documentos aguardando a sua validação.</span>
             </div>
           </div>
           <table className={styles.missingTable}>
             <thead>
               <tr>
                 <th style={{ textAlign: 'left' }}>Organização</th>
-                <th style={{ textAlign: 'left' }}>Pendências de Documentação</th>
-                <th style={{ textAlign: 'center' }}>Ação Rápida</th>
+                <th style={{ textAlign: 'left' }}>Status de Documentação</th>
+                <th style={{ textAlign: 'center', width: '120px' }}>Ação</th>
               </tr>
             </thead>
             <tbody>
               {oscsMissingDocs.length === 0 ? (
                 <tr>
-                  <td colSpan="3" style={{ textAlign: 'center', padding: '30px', color: '#16a34a', fontWeight: 'bold' }}>
-                    🎉 Parabéns! Todas as OSCs estão com a documentação em dia e sem pendências.
+                  <td colSpan="3" style={{ textAlign: 'center', padding: '40px', color: '#16a34a', fontWeight: 'bold' }}>
+                    🎉 Parabéns! Toda a carteira está em dia com a documentação.
                   </td>
                 </tr>
               ) : (
                 oscsMissingDocs.map(osc => (
                   <tr key={osc.id}>
                     <td style={{ fontWeight: 'bold', color: '#1f2937' }}>{osc.name}</td>
-                    <td style={{ color: '#dc2626', fontSize: '13px', fontWeight: '500' }}>{osc.missing}</td>
+                    <td style={{ color: '#4b5563', fontSize: '13px', fontWeight: '500' }}>{osc.missing}</td>
                     <td style={{ textAlign: 'center' }}>
                       <button 
                         onClick={() => navigate('/contador/oscs')} 
-                        style={{ backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        style={{ backgroundColor: '#ea580c', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                       >
-                        Validar Documentos <ArrowRightIcon />
+                        Validar <ArrowRightIcon />
                       </button>
                     </td>
                   </tr>
@@ -190,28 +164,31 @@ export default function ContadorDashboard() {
           </table>
         </div>
 
-        {/* Log de Atividades do Escritório (Com identificação de quem enviou) */}
+        {/* Log de Atividades do Escritório */}
         <div className={styles.sectionCard}>
           <div className={styles.headerWithInfo}>
-            <h3>Log de Envio de Documentos e Atividades</h3>
+            <h3>Log de Atividades do Escritório</h3>
+            <div className={styles.tooltipContainer}>
+              <InfoIcon />
+              <span className={styles.tooltipText}>Monitorize quem enviou documentos na plataforma, sejam eles membros da OSC ou Contadores do seu escritório.</span>
+            </div>
           </div>
           <div className={styles.activityList}>
             {recentActivity.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#9ca3af', padding: '20px' }}>Nenhum documento enviado ou atividade registada recentemente.</p>
+              <p style={{ textAlign: 'center', color: '#9ca3af', padding: '40px' }}>Nenhum documento registado recentemente.</p>
             ) : (
               recentActivity.map(item => (
-                <div key={item.id} className={styles.activityItem} style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '12px', borderBottom: '1px solid #f3f4f6' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <strong style={{ color: '#1f2937', fontSize: '14px' }}>{item.oscName}</strong>
-                      <span style={{ color: '#4b5563', fontSize: '14px' }}> — {item.content}</span>
+                <div key={item.id} className={styles.activityItem} style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', transition: 'background-color 0.2s' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+                    <div style={{ color: '#1f2937', fontSize: '14px', lineHeight: '1.4' }}>
+                      <strong style={{ color: '#2563eb' }}>{item.oscName}</strong> <br/> {item.content}
                     </div>
-                    <span style={{ fontSize: '11px', color: '#6b7280', whiteSpace: 'nowrap' }}>
+                    <span style={{ fontSize: '11px', color: '#9ca3af', whiteSpace: 'nowrap', marginLeft: '12px' }}>
                       {formatDateTime(item.timestamp)}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#ea580c', fontWeight: '500' }}>
-                    <UserIcon /> Enviado por: {item.sender_name || 'Usuário Desconhecido'}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#ea580c', fontWeight: '600', backgroundColor: '#fff7ed', padding: '4px 8px', borderRadius: '4px', width: 'fit-content' }}>
+                    <UserIcon /> Enviado por: {item.sender}
                   </div>
                 </div>
               ))
