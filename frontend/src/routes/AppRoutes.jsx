@@ -15,6 +15,7 @@ import RegisterOSC from '../pages/auth/RegisterOSC.jsx';
 import NotFoundPage from '../pages/NotFound.jsx';
 import EsqueceuSenhaPage from '../pages/EsqueceuSenha.jsx';
 import RedefinirSenhaPage from '../pages/RedefinirSenha.jsx';
+import ManualPage from '../pages/shared/ManualPage.jsx';
 
 // --- ADMIN ---
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
@@ -150,7 +151,10 @@ export default function AppRoutes() {
           {/* Rota Raiz */}
           <Route path="/" element={<RootRedirect />} />
           
-          {/* Rotas Públicas */}
+          {/* ROTA DO MANUAL (Pública para todos - Visitantes ou Logados) */}
+          <Route path="/manual" element={<ManualPage />} />
+
+          {/* Rotas Públicas (Apenas Visitantes sem Login) */}
           <Route element={<GuestLayout />}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register-osc" element={<RegisterOSC />} />
