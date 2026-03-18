@@ -2,58 +2,45 @@ import pool from '../config/db.js';
 
 export const getDashboardStats = async (req, res) => {
     try {
-        // Tenta usar o office_id, se não existir no token antigo, usa o id do utilizador
-        let targetId = req.user.office_id || req.user.id;
+        // 🔥 VOLTAMOS À RECEITA QUE FUNCIONA NO "MINHAS OSCs"
+        const contadorId = req.user.id;
         
-        // 1. Busca OSCs
-        let [oscs] = await pool.execute(`
+        // 1. Busca OSCs usando o id normal do contador
+        const [oscs] = await pool.execute(`
             SELECT o.* FROM oscs o
             LEFT JOIN users u ON o.user_id = u.id
             WHERE o.assigned_contador_id = ?
-        `, [targetId]);
-
-        // FAILSAFE: Se der 0 e o targetId não for 1 (Escritório Master), força a busca no Master!
-        if (oscs.length === 0 && targetId !== 1) {
-            const [masterOscs] = await pool.execute(`
-                SELECT o.* FROM oscs o
-                LEFT JOIN users u ON o.user_id = u.id
-                WHERE o.assigned_contador_id = 1
-            `);
-            if (masterOscs.length > 0) {
-                oscs = masterOscs;
-                targetId = 1; // Ajusta o ID para buscar os documentos corretos
-            }
-        }
+        `, [contadorId]);
 
         const activeOSCs = oscs.length;
 
-        // Se mesmo assim não houver OSCs, devolve zeros
         if (activeOSCs === 0) {
-            const [msgs] = await pool.execute('SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [req.user.id]);
-            return res.json({ activeOSCs: 0, pendingDocs: 0, unreadMessages: msgs[0].total || 0, missingDocsList: [], _debug: 'NOVA_VERSAO_FAILSAFE' });
+            const [msgs] = await pool.execute('SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [contadorId]);
+            return res.json({ activeOSCs: 0, pendingDocs: 0, unreadMessages: msgs[0].total || 0, missingDocsList: [], _debug: 'ID_DO_CONTADOR' });
         }
 
-        // 2. Busca Documentos usando o ID que funcionou
+        // 2. Busca Documentos
         const [docs] = await pool.execute(`
             SELECT d.id, d.osc_id, d.original_name, d.ref_month, d.ref_year, d.status 
             FROM documents d
             JOIN oscs o ON d.osc_id = o.id
             WHERE o.assigned_contador_id = ?
-        `, [targetId]);
+        `, [contadorId]);
 
-        // 3. Busca Mensagens (As mensagens são sempre do utilizador exato)
+        // 3. Busca Mensagens
         const [msgs] = await pool.execute(
-            'SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [req.user.id]
+            'SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [contadorId]
         );
         const unreadMessages = msgs[0].total || 0;
 
         // Conta pendentes gerais
-        const pendingDocs = docs.filter(d => {
+        const pendingDocsList = docs.filter(d => {
             const st = d.status ? String(d.status).toUpperCase() : 'PENDENTE';
             return st !== 'CONCLUIDO' && st !== 'CONCLUSO TEC';
-        }).length;
+        });
+        const pendingDocs = pendingDocsList.length;
 
-        // 4. O Motor do Calendário
+        // 4. Motor do Calendário
         const missingDocsList = [];
         const currentYear = new Date().getFullYear();
         const currentMonth = new Date().getMonth(); 
@@ -105,22 +92,18 @@ export const getDashboardStats = async (req, res) => {
             }
         }
 
-        res.json({ activeOSCs, pendingDocs, unreadMessages, missingDocsList, _debug: 'NOVA_VERSAO_FAILSAFE' });
+        res.json({ activeOSCs, pendingDocs, unreadMessages, missingDocsList, _debug: 'ID_DO_CONTADOR' });
 
     } catch (error) {
         console.error('[Dashboard Stats Error]:', error);
-        res.status(500).json({ message: "Erro ao calcular estatísticas.", error: error.message });
+        res.status(500).json({ message: "Erro ao calcular estatísticas." });
     }
 };
 
 export const getRecentActivity = async (req, res) => {
     try {
-        let targetId = req.user.office_id || req.user.id;
+        const contadorId = req.user.id; // 🔥 ID DO CONTADOR
         
-        // Failsafe rápido para atividades
-        const [oscsTest] = await pool.execute(`SELECT id FROM oscs WHERE assigned_contador_id = ?`, [targetId]);
-        if (oscsTest.length === 0 && targetId !== 1) targetId = 1;
-
         const query = `
             SELECT 
                 d.id, d.original_name, d.created_at, d.status,
@@ -133,7 +116,7 @@ export const getRecentActivity = async (req, res) => {
             LIMIT 15
         `;
 
-        const [rows] = await pool.execute(query, [targetId]);
+        const [rows] = await pool.execute(query, [contadorId]);
 
         const activities = rows.map(row => ({
             id: row.id,
@@ -146,7 +129,7 @@ export const getRecentActivity = async (req, res) => {
         res.json(activities);
     } catch (error) {
         console.error('[Activity Error]:', error);
-        res.status(500).json({ message: "Erro ao buscar atividades.", error: error.message });
+        res.status(500).json({ message: "Erro ao buscar atividades." });
     }
 };
 
