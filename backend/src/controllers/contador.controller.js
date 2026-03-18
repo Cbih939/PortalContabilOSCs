@@ -94,7 +94,7 @@ export const getDashboardStats = async (req, res) => {
     }
 };
 
-// 2. Atividade Recente (Buscando QUEM enviou o arquivo)
+// 2. Atividade Recente (Corrigido para usar a estrutura exata do seu banco de dados)
 export const getRecentActivity = async (req, res) => {
     try {
         const cid = req.user.id;
@@ -102,11 +102,11 @@ export const getRecentActivity = async (req, res) => {
             SELECT 
                 d.id, d.original_name, d.created_at, 
                 COALESCE(o.razao_social, o.name, 'OSC') as osc_name,
-                COALESCE(u.name, 'Sistema') as sender_name,
+                COALESCE(u.name, 'Usuário da OSC') as sender_name,
                 u.role as sender_role
             FROM documents d
             JOIN oscs o ON d.osc_id = o.id
-            LEFT JOIN users u ON d.uploaded_by = u.id
+            LEFT JOIN users u ON o.user_id = u.id
             WHERE o.assigned_contador_id = ?
             ORDER BY d.created_at DESC
             LIMIT 15
