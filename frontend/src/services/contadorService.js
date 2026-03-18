@@ -28,3 +28,12 @@ export const getNotifications = () => {
   // Rota: GET /api/contador/notifications
   return api.get('/contador/notifications');
 };
+
+/**
+ * Busca a lista de todas as OSCs vinculadas ao Contador logado.
+ * @returns {Promise<Array>} Lista de OSCs.
+ */
+export const getMyOSCs = () => {
+  // Rota: GET /api/contador/my-oscs
+  return api.get('/contador/my-oscs');
+};

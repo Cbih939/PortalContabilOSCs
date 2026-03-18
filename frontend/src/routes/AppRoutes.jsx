@@ -58,6 +58,7 @@ import OSCSidebar from '../pages/osc/components/OSCSidebar.jsx';
 import OSCHeader from '../pages/osc/components/OSCHeader.jsx';
 import ProjectsPage from '../pages/osc/Projects.jsx';
 import GovernancePage from '../pages/osc/Governance.jsx';
+import HelpPage from '../pages/osc/Help.jsx';
 
 /**
  * Redirecionador Inteligente
@@ -207,6 +208,7 @@ export default function AppRoutes() {
               <Route path="/osc/mensagens" element={<OSCMessagesPage />} />
               <Route path="/osc/perfil" element={<OSCProfilePage />} />
               <Route path="/osc/financeiro" element={<OSCFinanceiro />} />
+              <Route path="/osc/ajuda" element={<HelpPage />} />
             </Route>
           </Route>
 
