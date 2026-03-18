@@ -1,62 +1,64 @@
 import pool from '../config/db.js';
 
-// 1. Estatísticas do Dashboard (Cérebro Sincronizado com "Minhas OSCs")
 export const getDashboardStats = async (req, res) => {
     try {
-        const cid = req.user.id;
+        // 🔥 A GRANDE CORREÇÃO: Usamos o office_id do Escritório!
+        const targetId = req.user.office_id || req.user.id;
         
-        // Passo 1: Buscar OSCs usando EXATAMENTE a mesma query que funciona no "Minhas OSCs"
+        // 1. Busca OSCs ligadas ao escritório
         const [oscs] = await pool.execute(`
             SELECT o.* FROM oscs o
             LEFT JOIN users u ON o.user_id = u.id
             WHERE o.assigned_contador_id = ?
-        `, [cid]);
+        `, [targetId]);
 
         const activeOSCs = oscs.length;
 
-        // Passo 2: Buscar todos os documentos
+        if (activeOSCs === 0) {
+            const [msgs] = await pool.execute('SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [req.user.id]);
+            return res.json({ activeOSCs: 0, pendingDocs: 0, unreadMessages: msgs[0].total || 0, missingDocsList: [] });
+        }
+
+        // 2. Busca Documentos
         const [docs] = await pool.execute(`
             SELECT d.id, d.osc_id, d.original_name, d.ref_month, d.ref_year, d.status 
             FROM documents d
             JOIN oscs o ON d.osc_id = o.id
             WHERE o.assigned_contador_id = ?
-        `, [cid]);
+        `, [targetId]);
 
-        // Conta pendentes gerais (Qualquer status diferente de CONCLUIDO e CONCLUSO TEC)
-        const pendingDocs = docs.filter(d => {
-            const status = d.status ? String(d.status).toUpperCase() : 'PENDENTE';
-            return status !== 'CONCLUIDO' && status !== 'CONCLUSO TEC';
-        }).length;
-
-        // Passo 3: Mensagens não lidas
+        // 3. Busca Mensagens não lidas (Atenção: Mensagens vão sempre para o utilizador exato)
         const [msgs] = await pool.execute(
-            'SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [cid]
+            'SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [req.user.id]
         );
         const unreadMessages = msgs[0].total || 0;
 
-        // Passo 4: O Motor do Calendário
+        // Conta pendentes gerais
+        const pendingDocs = docs.filter(d => {
+            const st = d.status ? String(d.status).toUpperCase() : 'PENDENTE';
+            return st !== 'CONCLUIDO' && st !== 'CONCLUSO TEC';
+        }).length;
+
+        // 4. O Motor do Calendário
         const missingDocsList = [];
         const currentYear = new Date().getFullYear();
-        const currentMonth = new Date().getMonth(); // 0 a 11
+        const currentMonth = new Date().getMonth(); 
         const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
         for (const osc of oscs) {
             const oscDocs = docs.filter(d => d.osc_id === osc.id);
             
-            // Documentos que o contador precisa olhar agora
             const pendingOscDocs = oscDocs.filter(d => {
-                const status = d.status ? String(d.status).toUpperCase() : 'PENDENTE';
-                return status !== 'CONCLUIDO' && status !== 'CONCLUSO TEC';
+                const st = d.status ? String(d.status).toUpperCase() : 'PENDENTE';
+                return st !== 'CONCLUIDO' && st !== 'CONCLUSO TEC';
             });
             
             let missingText = [];
 
-            // A: Tem arquivos enviados mas não validados
             if (pendingOscDocs.length > 0) {
                 missingText.push(`⏳ ${pendingOscDocs.length} doc(s) aguardando validação`);
             }
 
-            // B: Meses em Atraso (Vermelho no calendário)
             const rawDate = osc.data_origem_estatuto || osc.dataOrigemEstatuto || osc.data_fundacao || osc.dataFundacao || osc.created_at || osc.createdAt;
             let oY = 2000, oM = 0;
             if (rawDate) {
@@ -66,7 +68,7 @@ export const getDashboardStats = async (req, res) => {
 
             let mesesAtraso = [];
             for (let i = 0; i < currentMonth; i++) {
-                if (currentYear < oY || (currentYear === oY && i < oM)) continue; // Pre-origem
+                if (currentYear < oY || (currentYear === oY && i < oM)) continue; 
                 
                 const monthNum = i + 1;
                 const hasDoc = oscDocs.some(d => parseInt(d.ref_month) === monthNum && parseInt(d.ref_year) === currentYear);
@@ -89,19 +91,19 @@ export const getDashboardStats = async (req, res) => {
             }
         }
 
-        // Devolve os dados certinhos
         res.json({ activeOSCs, pendingDocs, unreadMessages, missingDocsList });
 
     } catch (error) {
         console.error('[Dashboard Stats Error]:', error);
-        res.status(500).json({ message: "Erro ao calcular estatísticas." });
+        res.status(500).json({ message: "Erro ao calcular estatísticas.", error: error.message });
     }
 };
 
-// 2. Atividade Recente (Sem buscar colunas inexistentes)
 export const getRecentActivity = async (req, res) => {
     try {
-        const cid = req.user.id;
+        // 🔥 A GRANDE CORREÇÃO AQUI TAMBÉM
+        const targetId = req.user.office_id || req.user.id;
+        
         const query = `
             SELECT 
                 d.id, d.original_name, d.created_at, d.status,
@@ -114,22 +116,24 @@ export const getRecentActivity = async (req, res) => {
             LIMIT 15
         `;
 
-        const [rows] = await pool.execute(query, [cid]);
+        const [rows] = await pool.execute(query, [targetId]);
 
         const activities = rows.map(row => ({
             id: row.id,
             oscName: row.osc_name,
-            content: `Documento enviado: ${row.original_name}`,
+            content: `Documento recebido: ${row.original_name}`,
             timestamp: row.created_at,
-            sender: `Usuário do Sistema` 
+            sender: `Painel da OSC` 
         }));
 
         res.json(activities);
     } catch (error) {
         console.error('[Activity Error]:', error);
-        res.status(500).json({ message: "Erro ao buscar atividades." });
+        res.status(500).json({ message: "Erro ao buscar atividades.", error: error.message });
     }
 };
+
+// ... a sua função getMyOSCs() continua logo abaixo ...
 
 // 3. Minhas OSCs (A sua função original, intocada e funcional)
 export const getMyOSCs = async (req, res) => {
