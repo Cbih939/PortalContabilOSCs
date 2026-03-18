@@ -82,6 +82,11 @@
   flex-shrink: 0;
 }
 
+.label {
+  display: inline-block;
+  line-height: 1;
+}
+
 /* Rodapé (Sair) */
 .footer {
   padding: 1rem;
