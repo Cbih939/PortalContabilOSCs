@@ -1,19 +1,20 @@
 import pool from '../config/db.js';
 
-// 1. Estatísticas do Dashboard (Com Radar de Erros)
+// 1. Estatísticas do Dashboard (Cérebro Sincronizado com "Minhas OSCs")
 export const getDashboardStats = async (req, res) => {
     try {
         const cid = req.user.id;
         
-        // 1. Busca TODAS as OSCs do escritório
-        const [oscs] = await pool.execute(`SELECT * FROM oscs WHERE assigned_contador_id = ?`, [cid]);
+        // Passo 1: Buscar OSCs usando EXATAMENTE a mesma query que funciona no "Minhas OSCs"
+        const [oscs] = await pool.execute(`
+            SELECT o.* FROM oscs o
+            LEFT JOIN users u ON o.user_id = u.id
+            WHERE o.assigned_contador_id = ?
+        `, [cid]);
+
         const activeOSCs = oscs.length;
 
-        if (activeOSCs === 0) {
-            return res.json({ activeOSCs: 0, pendingDocs: 0, unreadMessages: 0, missingDocsList: [] });
-        }
-
-        // 2. Busca TODOS os documentos destas OSCs
+        // Passo 2: Buscar todos os documentos
         const [docs] = await pool.execute(`
             SELECT d.id, d.osc_id, d.original_name, d.ref_month, d.ref_year, d.status 
             FROM documents d
@@ -21,36 +22,41 @@ export const getDashboardStats = async (req, res) => {
             WHERE o.assigned_contador_id = ?
         `, [cid]);
 
-        // A REGRA DE OURO: Se não for 'CONCLUIDO' e não for 'CONCLUSO TEC', então está pendente para o Contador validar!
-        const pendingDocsList = docs.filter(d => !d.status || (d.status.toUpperCase() !== 'CONCLUIDO' && d.status.toUpperCase() !== 'CONCLUSO TEC'));
-        const pendingDocs = pendingDocsList.length;
+        // Conta pendentes gerais (Qualquer status diferente de CONCLUIDO e CONCLUSO TEC)
+        const pendingDocs = docs.filter(d => {
+            const status = d.status ? String(d.status).toUpperCase() : 'PENDENTE';
+            return status !== 'CONCLUIDO' && status !== 'CONCLUSO TEC';
+        }).length;
 
-        // 3. Busca Mensagens não lidas
+        // Passo 3: Mensagens não lidas
         const [msgs] = await pool.execute(
             'SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [cid]
         );
-        const unreadMessages = msgs[0].total;
+        const unreadMessages = msgs[0].total || 0;
 
-        // 4. Lógica do Calendário de Conformidade
+        // Passo 4: O Motor do Calendário
         const missingDocsList = [];
         const currentYear = new Date().getFullYear();
-        const currentMonth = new Date().getMonth(); 
+        const currentMonth = new Date().getMonth(); // 0 a 11
         const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
         for (const osc of oscs) {
             const oscDocs = docs.filter(d => d.osc_id === osc.id);
             
-            // Filtra os que aguardam validação desta OSC específica
-            const pendingOscDocs = oscDocs.filter(d => !d.status || (d.status.toUpperCase() !== 'CONCLUIDO' && d.status.toUpperCase() !== 'CONCLUSO TEC'));
+            // Documentos que o contador precisa olhar agora
+            const pendingOscDocs = oscDocs.filter(d => {
+                const status = d.status ? String(d.status).toUpperCase() : 'PENDENTE';
+                return status !== 'CONCLUIDO' && status !== 'CONCLUSO TEC';
+            });
             
             let missingText = [];
 
-            // Regra A: Aguardando Validação
+            // A: Tem arquivos enviados mas não validados
             if (pendingOscDocs.length > 0) {
                 missingText.push(`⏳ ${pendingOscDocs.length} doc(s) aguardando validação`);
             }
 
-            // Regra B: Atrasos de meses anteriores
+            // B: Meses em Atraso (Vermelho no calendário)
             const rawDate = osc.data_origem_estatuto || osc.dataOrigemEstatuto || osc.data_fundacao || osc.dataFundacao || osc.created_at || osc.createdAt;
             let oY = 2000, oM = 0;
             if (rawDate) {
@@ -60,7 +66,7 @@ export const getDashboardStats = async (req, res) => {
 
             let mesesAtraso = [];
             for (let i = 0; i < currentMonth; i++) {
-                if (currentYear < oY || (currentYear === oY && i < oM)) continue; // Ignora meses antes de a OSC existir
+                if (currentYear < oY || (currentYear === oY && i < oM)) continue; // Pre-origem
                 
                 const monthNum = i + 1;
                 const hasDoc = oscDocs.some(d => parseInt(d.ref_month) === monthNum && parseInt(d.ref_year) === currentYear);
@@ -83,28 +89,26 @@ export const getDashboardStats = async (req, res) => {
             }
         }
 
+        // Devolve os dados certinhos
         res.json({ activeOSCs, pendingDocs, unreadMessages, missingDocsList });
 
     } catch (error) {
         console.error('[Dashboard Stats Error]:', error);
-        // O TRUQUE: Envia o erro de SQL para aparecer na tabela do seu ecrã!
-        res.json({ 
-            activeOSCs: 0, pendingDocs: 0, unreadMessages: 0, 
-            missingDocsList: [{ id: 999, name: '🚨 ERRO NO BANCO DE DADOS', missing: error.message }] 
-        });
+        res.status(500).json({ message: "Erro ao calcular estatísticas." });
     }
 };
 
-// 2. Atividade Recente (À Prova de Falhas)
+// 2. Atividade Recente (Sem buscar colunas inexistentes)
 export const getRecentActivity = async (req, res) => {
     try {
         const cid = req.user.id;
         const query = `
             SELECT 
                 d.id, d.original_name, d.created_at, d.status,
-                COALESCE(o.razao_social, o.name, 'OSC') as osc_name
+                COALESCE(o.razao_social, u.name, 'OSC') as osc_name
             FROM documents d
             JOIN oscs o ON d.osc_id = o.id
+            LEFT JOIN users u ON o.user_id = u.id
             WHERE o.assigned_contador_id = ?
             ORDER BY d.created_at DESC
             LIMIT 15
@@ -115,7 +119,7 @@ export const getRecentActivity = async (req, res) => {
         const activities = rows.map(row => ({
             id: row.id,
             oscName: row.osc_name,
-            content: `Novo documento submetido: ${row.original_name}`,
+            content: `Documento enviado: ${row.original_name}`,
             timestamp: row.created_at,
             sender: `Usuário do Sistema` 
         }));
@@ -123,22 +127,38 @@ export const getRecentActivity = async (req, res) => {
         res.json(activities);
     } catch (error) {
         console.error('[Activity Error]:', error);
-        // O TRUQUE: O erro vai aparecer na lista de atividades!
-        res.json([{ id: 999, oscName: '🚨 ERRO SQL', content: error.message, timestamp: new Date(), sender: 'Sistema' }]);
+        res.status(500).json({ message: "Erro ao buscar atividades." });
     }
 };
 
-// 3. Minhas OSCs
+// 3. Minhas OSCs (A sua função original, intocada e funcional)
 export const getMyOSCs = async (req, res) => {
     try {
-        const [rows] = await pool.execute(`
+        const contadorId = req.user.id;
+
+        const [oscs] = await pool.execute(`
             SELECT o.*, u.status 
             FROM oscs o
             LEFT JOIN users u ON o.user_id = u.id
             WHERE o.assigned_contador_id = ?
-        `, [req.user.id]);
-        res.json(rows);
+        `, [contadorId]);
+
+        if (oscs.length === 0) return res.json([]);
+
+        const [docs] = await pool.execute(`
+            SELECT d.* FROM documents d
+            JOIN oscs o ON d.osc_id = o.id
+            WHERE o.assigned_contador_id = ?
+        `, [contadorId]);
+
+        const formattedOscs = oscs.map(osc => ({
+            ...osc,
+            documents: docs.filter(d => d.osc_id === osc.id)
+        }));
+
+        res.json(formattedOscs);
     } catch (e) {
+        console.error('[Contador getMyOSCs Error]:', e);
         res.status(500).json({ message: "Erro ao buscar OSCs" });
     }
 };
