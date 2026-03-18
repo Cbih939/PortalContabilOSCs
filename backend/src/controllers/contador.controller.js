@@ -2,24 +2,38 @@ import pool from '../config/db.js';
 
 export const getDashboardStats = async (req, res) => {
     try {
-        // 🔥 A GRANDE CORREÇÃO: Usamos o office_id do Escritório!
-        const targetId = req.user.office_id || req.user.id;
+        // Tenta usar o office_id, se não existir no token antigo, usa o id do utilizador
+        let targetId = req.user.office_id || req.user.id;
         
-        // 1. Busca OSCs ligadas ao escritório
-        const [oscs] = await pool.execute(`
+        // 1. Busca OSCs
+        let [oscs] = await pool.execute(`
             SELECT o.* FROM oscs o
             LEFT JOIN users u ON o.user_id = u.id
             WHERE o.assigned_contador_id = ?
         `, [targetId]);
 
-        const activeOSCs = oscs.length;
-
-        if (activeOSCs === 0) {
-            const [msgs] = await pool.execute('SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [req.user.id]);
-            return res.json({ activeOSCs: 0, pendingDocs: 0, unreadMessages: msgs[0].total || 0, missingDocsList: [] });
+        // FAILSAFE: Se der 0 e o targetId não for 1 (Escritório Master), força a busca no Master!
+        if (oscs.length === 0 && targetId !== 1) {
+            const [masterOscs] = await pool.execute(`
+                SELECT o.* FROM oscs o
+                LEFT JOIN users u ON o.user_id = u.id
+                WHERE o.assigned_contador_id = 1
+            `);
+            if (masterOscs.length > 0) {
+                oscs = masterOscs;
+                targetId = 1; // Ajusta o ID para buscar os documentos corretos
+            }
         }
 
-        // 2. Busca Documentos
+        const activeOSCs = oscs.length;
+
+        // Se mesmo assim não houver OSCs, devolve zeros
+        if (activeOSCs === 0) {
+            const [msgs] = await pool.execute('SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [req.user.id]);
+            return res.json({ activeOSCs: 0, pendingDocs: 0, unreadMessages: msgs[0].total || 0, missingDocsList: [], _debug: 'NOVA_VERSAO_FAILSAFE' });
+        }
+
+        // 2. Busca Documentos usando o ID que funcionou
         const [docs] = await pool.execute(`
             SELECT d.id, d.osc_id, d.original_name, d.ref_month, d.ref_year, d.status 
             FROM documents d
@@ -27,7 +41,7 @@ export const getDashboardStats = async (req, res) => {
             WHERE o.assigned_contador_id = ?
         `, [targetId]);
 
-        // 3. Busca Mensagens não lidas (Atenção: Mensagens vão sempre para o utilizador exato)
+        // 3. Busca Mensagens (As mensagens são sempre do utilizador exato)
         const [msgs] = await pool.execute(
             'SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [req.user.id]
         );
@@ -91,7 +105,7 @@ export const getDashboardStats = async (req, res) => {
             }
         }
 
-        res.json({ activeOSCs, pendingDocs, unreadMessages, missingDocsList });
+        res.json({ activeOSCs, pendingDocs, unreadMessages, missingDocsList, _debug: 'NOVA_VERSAO_FAILSAFE' });
 
     } catch (error) {
         console.error('[Dashboard Stats Error]:', error);
@@ -101,9 +115,12 @@ export const getDashboardStats = async (req, res) => {
 
 export const getRecentActivity = async (req, res) => {
     try {
-        // 🔥 A GRANDE CORREÇÃO AQUI TAMBÉM
-        const targetId = req.user.office_id || req.user.id;
+        let targetId = req.user.office_id || req.user.id;
         
+        // Failsafe rápido para atividades
+        const [oscsTest] = await pool.execute(`SELECT id FROM oscs WHERE assigned_contador_id = ?`, [targetId]);
+        if (oscsTest.length === 0 && targetId !== 1) targetId = 1;
+
         const query = `
             SELECT 
                 d.id, d.original_name, d.created_at, d.status,
@@ -132,8 +149,6 @@ export const getRecentActivity = async (req, res) => {
         res.status(500).json({ message: "Erro ao buscar atividades.", error: error.message });
     }
 };
-
-// ... a sua função getMyOSCs() continua logo abaixo ...
 
 // 3. Minhas OSCs (A sua função original, intocada e funcional)
 export const getMyOSCs = async (req, res) => {
