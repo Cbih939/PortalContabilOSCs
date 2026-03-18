@@ -2,34 +2,37 @@ import pool from '../config/db.js';
 
 export const getDashboardStats = async (req, res) => {
     try {
-        // 🔥 VOLTAMOS À RECEITA QUE FUNCIONA NO "MINHAS OSCs"
-        const contadorId = req.user.id;
+        const userId = req.user.id;
+        const officeId = (req.user.office_id && req.user.office_id !== "0") ? req.user.office_id : null;
+
+        if (!officeId) {
+            const [msgs] = await pool.execute('SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [userId]);
+            return res.json({ activeOSCs: 0, pendingDocs: 0, unreadMessages: msgs[0].total || 0, missingDocsList: [], _debug: 'SEM_ESCRITORIO' });
+        }
         
-        // 1. Busca OSCs usando o id normal do contador
+        // 1. Busca OSCs usando o OFFICE_ID (Exatamente como no osc.controller.js)
         const [oscs] = await pool.execute(`
-            SELECT o.* FROM oscs o
-            LEFT JOIN users u ON o.user_id = u.id
-            WHERE o.assigned_contador_id = ?
-        `, [contadorId]);
+            SELECT * FROM oscs WHERE office_id = ?
+        `, [officeId]);
 
         const activeOSCs = oscs.length;
 
         if (activeOSCs === 0) {
-            const [msgs] = await pool.execute('SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [contadorId]);
-            return res.json({ activeOSCs: 0, pendingDocs: 0, unreadMessages: msgs[0].total || 0, missingDocsList: [], _debug: 'ID_DO_CONTADOR' });
+            const [msgs] = await pool.execute('SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [userId]);
+            return res.json({ activeOSCs: 0, pendingDocs: 0, unreadMessages: msgs[0].total || 0, missingDocsList: [], _debug: 'ESCRITORIO_VAZIO' });
         }
 
-        // 2. Busca Documentos
+        // 2. Busca Documentos usando o OFFICE_ID
         const [docs] = await pool.execute(`
             SELECT d.id, d.osc_id, d.original_name, d.ref_month, d.ref_year, d.status 
             FROM documents d
             JOIN oscs o ON d.osc_id = o.id
-            WHERE o.assigned_contador_id = ?
-        `, [contadorId]);
+            WHERE o.office_id = ?
+        `, [officeId]);
 
-        // 3. Busca Mensagens
+        // 3. Busca Mensagens (Mensagens são pessoais do contador)
         const [msgs] = await pool.execute(
-            'SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [contadorId]
+            'SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [userId]
         );
         const unreadMessages = msgs[0].total || 0;
 
@@ -92,7 +95,7 @@ export const getDashboardStats = async (req, res) => {
             }
         }
 
-        res.json({ activeOSCs, pendingDocs, unreadMessages, missingDocsList, _debug: 'ID_DO_CONTADOR' });
+        res.json({ activeOSCs, pendingDocs, unreadMessages, missingDocsList, _debug: 'SUCESSO_OFFICE_ID' });
 
     } catch (error) {
         console.error('[Dashboard Stats Error]:', error);
@@ -102,7 +105,8 @@ export const getDashboardStats = async (req, res) => {
 
 export const getRecentActivity = async (req, res) => {
     try {
-        const contadorId = req.user.id; // 🔥 ID DO CONTADOR
+        const officeId = (req.user.office_id && req.user.office_id !== "0") ? req.user.office_id : null;
+        if (!officeId) return res.json([]);
         
         const query = `
             SELECT 
@@ -111,19 +115,19 @@ export const getRecentActivity = async (req, res) => {
             FROM documents d
             JOIN oscs o ON d.osc_id = o.id
             LEFT JOIN users u ON o.user_id = u.id
-            WHERE o.assigned_contador_id = ?
+            WHERE o.office_id = ?
             ORDER BY d.created_at DESC
             LIMIT 15
         `;
 
-        const [rows] = await pool.execute(query, [contadorId]);
+        const [rows] = await pool.execute(query, [officeId]);
 
         const activities = rows.map(row => ({
             id: row.id,
             oscName: row.osc_name,
             content: `Documento recebido: ${row.original_name}`,
             timestamp: row.created_at,
-            sender: `Painel da OSC` 
+            sender: `Sistema/OSC` 
         }));
 
         res.json(activities);
