@@ -41,18 +41,30 @@ export default function ContadorDashboard() {
           contadorService.getRecentActivity(),
         ]);
 
-        const data = statsResponse.data;
-        setStats({
-          activeOSCs: data.activeOSCs || 0,
-          pendingDocs: data.pendingDocs || 0,
-          unreadMessages: data.unreadMessages || 0
-        });
+        // 🔥 DEBUG: Isto vai imprimir os dados reais no console do seu navegador (F12)
+        console.log("🔥 [DEBUG] Resposta Stats:", statsResponse.data);
+        console.log("🔥 [DEBUG] Resposta Activity:", activityResponse.data);
 
-        setRecentActivity(activityResponse.data || []);
-        setOscsMissingDocs(data.missingDocsList || []);
+        // O SEGREDO ESTÁ AQUI: Se o backend enviar um Array em vez de Objeto, nós ajustamos automaticamente!
+        const rawStats = statsResponse.data;
+        const data = Array.isArray(rawStats) ? rawStats[0] : rawStats;
+
+        if (data) {
+          setStats({
+            activeOSCs: data.activeOSCs || data.activeoscs || data.totalOscs || 0,
+            pendingDocs: data.pendingDocs || data.pendingdocs || data.docsPendentes || 0,
+            unreadMessages: data.unreadMessages || data.unreadmessages || data.mensagens || 0
+          });
+          
+          setOscsMissingDocs(data.missingDocsList || data.missingdocslist || []);
+        }
+
+        const rawActivity = activityResponse.data;
+        setRecentActivity(Array.isArray(rawActivity) ? rawActivity : []);
 
       } catch (err) {
-        setError('Erro ao carregar dashboard');
+        console.error("🔥 [DEBUG ERRO]:", err);
+        setError('Erro ao carregar dashboard. Verifique a conexão com o servidor.');
         addNotification('Erro ao conectar com o servidor.', 'error');
       } finally {
         setIsLoading(false);
@@ -71,7 +83,7 @@ export default function ContadorDashboard() {
     pdf.save(`relatorio-escritorio-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
-  if (error) return <div style={{ padding: '40px', textAlign: 'center', color: '#dc2626' }}>{error}</div>;
+  if (error) return <div style={{ padding: '40px', textAlign: 'center', color: '#dc2626', fontWeight: 'bold' }}>{error}</div>;
   if (isLoading) return <Spinner text="Analisando dados do escritório..." />;
 
   return (
@@ -103,7 +115,7 @@ export default function ContadorDashboard() {
         </div>
       </div>
 
-      {/* KPIs Corrigidos */}
+      {/* KPIs */}
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
           <BuildingIcon /> <strong>OSCs Ativas:</strong> {stats.activeOSCs}
@@ -118,16 +130,12 @@ export default function ContadorDashboard() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', marginTop: '32px' }}>
         
-        {/* Tabela de Ação Focada */}
+        {/* Tabela de Ação */}
         <div className={styles.sectionCard}>
           <div className={styles.headerWithInfo}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <AlertTriangleIcon /> Tabela de Ação: OSCs com Pendências
             </h3>
-            <div className={styles.tooltipContainer}>
-              <InfoIcon />
-              <span className={styles.tooltipText}>Lista as OSCs que têm meses em atraso ou documentos aguardando a sua validação.</span>
-            </div>
           </div>
           <table className={styles.missingTable}>
             <thead>
@@ -141,13 +149,13 @@ export default function ContadorDashboard() {
               {oscsMissingDocs.length === 0 ? (
                 <tr>
                   <td colSpan="3" style={{ textAlign: 'center', padding: '40px', color: '#16a34a', fontWeight: 'bold' }}>
-                    🎉 Parabéns! Toda a carteira está em dia com a documentação.
+                    Nenhuma pendência crítica encontrada para validação neste momento.
                   </td>
                 </tr>
               ) : (
-                oscsMissingDocs.map(osc => (
-                  <tr key={osc.id}>
-                    <td style={{ fontWeight: 'bold', color: '#1f2937' }}>{osc.name}</td>
+                oscsMissingDocs.map((osc, idx) => (
+                  <tr key={osc.id || idx}>
+                    <td style={{ fontWeight: 'bold', color: '#1f2937' }}>{osc.name || osc.razao_social || 'OSC'}</td>
                     <td style={{ color: '#4b5563', fontSize: '13px', fontWeight: '500' }}>{osc.missing}</td>
                     <td style={{ textAlign: 'center' }}>
                       <button 
@@ -164,31 +172,27 @@ export default function ContadorDashboard() {
           </table>
         </div>
 
-        {/* Log de Atividades do Escritório */}
+        {/* Log de Atividades */}
         <div className={styles.sectionCard}>
           <div className={styles.headerWithInfo}>
             <h3>Log de Atividades do Escritório</h3>
-            <div className={styles.tooltipContainer}>
-              <InfoIcon />
-              <span className={styles.tooltipText}>Monitorize quem enviou documentos na plataforma, sejam eles membros da OSC ou Contadores do seu escritório.</span>
-            </div>
           </div>
           <div className={styles.activityList}>
             {recentActivity.length === 0 ? (
               <p style={{ textAlign: 'center', color: '#9ca3af', padding: '40px' }}>Nenhum documento registado recentemente.</p>
             ) : (
-              recentActivity.map(item => (
-                <div key={item.id} className={styles.activityItem} style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', transition: 'background-color 0.2s' }}>
+              recentActivity.map((item, idx) => (
+                <div key={item.id || idx} className={styles.activityItem} style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', transition: 'background-color 0.2s' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
                     <div style={{ color: '#1f2937', fontSize: '14px', lineHeight: '1.4' }}>
-                      <strong style={{ color: '#2563eb' }}>{item.oscName}</strong> <br/> {item.content}
+                      <strong style={{ color: '#2563eb' }}>{item.oscName || 'OSC'}</strong> <br/> {item.content || item.original_name}
                     </div>
                     <span style={{ fontSize: '11px', color: '#9ca3af', whiteSpace: 'nowrap', marginLeft: '12px' }}>
-                      {formatDateTime(item.timestamp)}
+                      {formatDateTime(item.timestamp || item.created_at)}
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#ea580c', fontWeight: '600', backgroundColor: '#fff7ed', padding: '4px 8px', borderRadius: '4px', width: 'fit-content' }}>
-                    <UserIcon /> Enviado por: {item.sender}
+                    <UserIcon /> Enviado por: {item.sender || item.sender_name || 'Sistema'}
                   </div>
                 </div>
               ))
