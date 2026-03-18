@@ -168,3 +168,41 @@ export const getMyOSCs = async (req, res) => {
         res.status(500).json({ message: "Erro ao buscar OSCs" });
     }
 };
+
+// --- NOVO: RELATÓRIOS COMPLETOS DO SISTEMA ---
+export const getSystemReports = async (req, res) => {
+    try {
+        const officeId = (req.user.office_id && req.user.office_id !== "0") ? req.user.office_id : null;
+        if (!officeId) return res.json([]);
+        
+        // Puxa um histórico muito mais amplo (ex: últimos 300 movimentos) com mais detalhes
+        const query = `
+            SELECT 
+                d.id, d.original_name, d.doc_type, d.ref_month, d.ref_year, d.status, d.created_at,
+                COALESCE(o.razao_social, u.name, 'OSC') as osc_name
+            FROM documents d
+            JOIN oscs o ON d.osc_id = o.id
+            LEFT JOIN users u ON o.user_id = u.id
+            WHERE o.office_id = ?
+            ORDER BY d.created_at DESC
+            LIMIT 500
+        `;
+
+        const [rows] = await pool.execute(query, [officeId]);
+
+        const reports = rows.map(row => ({
+            id: row.id,
+            oscName: row.osc_name,
+            action: `Envio de Documento (${row.doc_type})`,
+            document: row.original_name,
+            reference: `${row.ref_month}/${row.ref_year}`,
+            status: row.status || 'Pendente',
+            date: row.created_at
+        }));
+
+        res.json(reports);
+    } catch (error) {
+        console.error('[Reports Error]:', error);
+        res.status(500).json({ message: "Erro ao buscar relatórios." });
+    }
+};

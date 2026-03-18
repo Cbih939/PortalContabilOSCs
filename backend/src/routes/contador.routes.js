@@ -15,5 +15,6 @@ router.use(checkRole(['contador', 'admin', 'Contador', 'Adm']));
 router.get('/dashboard/stats', getDashboardStats);
 router.get('/dashboard/activity', getRecentActivity);
 router.get('/my-oscs', getMyOSCs);
+router.get('/reports', protect, getSystemReports);
 
 export default router;
