@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { protect, checkRole } from '../middlewares/auth.middleware.js';
 import { 
     getDashboardStats, 
-    getMyOSCs, 
+    getMyOSCs,
+    getSystemReports, 
     getRecentActivity 
 } from '../controllers/contador.controller.js';
 
