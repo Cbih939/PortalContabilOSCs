@@ -16,9 +16,11 @@ export default function OSCDashboard() {
   const navigate = useNavigate();
 
   const [oscData, setOscData] = useState(null);
+  const [boardMembers, setBoardMembers] = useState([]);
   const [showCertificadosModal, setShowCertificadosModal] = useState(false);
 
   const today = new Date();
+  today.setHours(0, 0, 0, 0); // Zera as horas para cálculo perfeito de dias
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth() + 1; 
   const currentDay = today.getDate();
@@ -27,33 +29,57 @@ export default function OSCDashboard() {
   const yearsAvailable = [currentYear, currentYear - 1, currentYear - 2];
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       try {
-        const response = await api.get('/oscs/me');
-        setOscData(response.data.osc || response.data[0] || response.data);
+        // Traz os dados da OSC e da Diretoria ao mesmo tempo
+        const [oscRes, boardRes] = await Promise.all([
+            api.get('/oscs/me'),
+            api.get('/board').catch(() => ({ data: [] })) // Previne falha caso a rota falhe
+        ]);
+        setOscData(oscRes.data.osc || oscRes.data[0] || oscRes.data);
+        setBoardMembers(boardRes.data || []);
       } catch (error) {
-        console.error("Erro ao buscar dados da OSC", error);
+        console.error("Erro ao buscar dados do Dashboard", error);
       }
     };
-    fetchProfile();
+    fetchData();
   }, []);
 
-  let governanceStatus = { type: 'UNKNOWN', text: 'Cadastre o fim do mandato no Perfil', color: '#6b7280', bg: '#f3f4f6', icon: <ShieldAlertIcon /> };
+  // --- LÓGICA INTELIGENTE DO ESCUDO DE GOVERNANÇA ---
+  let governanceStatus = { type: 'UNKNOWN', text: 'Cadastre os membros da diretoria para monitorar o mandato.', color: '#6b7280', bg: '#f3f4f6', icon: <ShieldAlertIcon /> };
   
-  if (oscData?.fim_mandato) {
-    const mandateEnd = new Date(oscData.fim_mandato);
-    const diffTime = mandateEnd - today;
-    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const activeMembers = boardMembers.filter(m => m.status === 'ATIVO');
 
-    if (daysLeft < 0) {
-      governanceStatus = { type: 'EXPIRED', text: `ATENÇÃO: Mandato expirou há ${Math.abs(daysLeft)} dias! Atualize a documentação estatutária no setor de governança para ficar com todos os seus documentos em dias.`, color: '#991b1b', bg: '#fef2f2', border: '#fca5a5', icon: <ShieldAlertIcon /> };
-    } else if (daysLeft <= 60) {
-      governanceStatus = { type: 'WARNING', text: `ALERTA: O mandato expira em ${daysLeft} dias. Prepare a assembleia de eleição.`, color: '#9a3412', bg: '#fff7ed', border: '#fdba74', icon: <ShieldAlertIcon /> };
+  if (activeMembers.length > 0) {
+    let mandateEnd = null;
+    
+    // Tenta encontrar o Presidente primeiro
+    const president = activeMembers.find(m => m.role.toLowerCase() === 'presidente');
+    
+    if (president && president.end_date) {
+        mandateEnd = new Date(president.end_date);
     } else {
-      governanceStatus = { type: 'OK', text: `Governança em dia. Mandato válido por mais ${daysLeft} dias.`, color: '#065f46', bg: '#ecfdf5', border: '#6ee7b7', icon: <ShieldCheckIcon /> };
+        // Se não houver presidente, pega a maior data de fim de mandato dos ativos
+        const dates = activeMembers.filter(m => m.end_date).map(m => new Date(m.end_date));
+        if (dates.length > 0) mandateEnd = new Date(Math.max(...dates));
+    }
+
+    if (mandateEnd) {
+      mandateEnd.setHours(0, 0, 0, 0);
+      const diffTime = mandateEnd - today;
+      const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (daysLeft < 0) {
+        governanceStatus = { type: 'EXPIRED', text: `ATENÇÃO: O mandato da diretoria expirou há ${Math.abs(daysLeft)} dias! Atualize a documentação estatutária no setor de governança para manter-se em dia.`, color: '#991b1b', bg: '#fef2f2', border: '#fca5a5', icon: <ShieldAlertIcon /> };
+      } else if (daysLeft <= 60) {
+        governanceStatus = { type: 'WARNING', text: `ALERTA: O mandato expira em ${daysLeft} dias. Prepare a assembleia de eleição.`, color: '#9a3412', bg: '#fff7ed', border: '#fdba74', icon: <ShieldAlertIcon /> };
+      } else {
+        governanceStatus = { type: 'OK', text: `Governança em dia. Mandato da diretoria válido por mais ${daysLeft} dias.`, color: '#065f46', bg: '#ecfdf5', border: '#6ee7b7', icon: <ShieldCheckIcon /> };
+      }
     }
   }
 
+  // --- LÓGICA DO CALENDÁRIO ---
   const originDateStr = oscData?.data_origem_estatuto || oscData?.data_fundacao || oscData?.created_at;
   let originYear = 2000, originMonth = 0; 
   
@@ -115,14 +141,14 @@ export default function OSCDashboard() {
       </div>
 
       {/* Escudo de Governança */}
-      <Link to="/osc/perfil" style={{ textDecoration: 'none' }}>
+      <Link to="/osc/governanca" style={{ textDecoration: 'none' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', backgroundColor: governanceStatus.bg, border: `1px solid ${governanceStatus.border || '#d1d5db'}`, borderRadius: '8px', marginBottom: '24px', color: governanceStatus.color, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'transform 0.2s', cursor: 'pointer' }}>
           <div style={{ padding: '8px', backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: '50%' }}>{governanceStatus.icon}</div>
           <div style={{ flex: 1 }}>
             <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold' }}>Escudo de Governança</h3>
             <p style={{ margin: '4px 0 0 0', fontSize: '14px' }}>{governanceStatus.text}</p>
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', textDecoration: 'underline' }}>Atualizar Perfil &rarr;</span>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', textDecoration: 'underline' }}>Atualizar Diretoria &rarr;</span>
         </div>
       </Link>
 
