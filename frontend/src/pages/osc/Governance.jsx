@@ -44,7 +44,6 @@ export default function GovernancePage() {
   const fetchMembers = async () => {
     setIsLoading(true);
     try {
-      // 💡 DESVIO: Rota alterada para /diretoria
       const response = await api.get('/board');
       setMembers(response.data || []);
     } catch (error) {
@@ -85,12 +84,10 @@ export default function GovernancePage() {
       };
 
       if (memberToEdit) {
-        // 💡 DESVIO: Rota alterada para /diretoria
-        await api.put(`/diretoria/${memberToEdit.id}`, payload);
+        await api.put(`/board/${memberToEdit.id}`, payload);
         addNotification(`Membro atualizado com sucesso!`, 'success');
       } else {
-        // 💡 DESVIO: Rota alterada para /diretoria
-        await api.post('/diretoria', payload);
+        await api.post('/board', payload);
         addNotification(`Membro adicionado à diretoria!`, 'success');
       }
       setIsModalOpen(false);
@@ -105,8 +102,7 @@ export default function GovernancePage() {
   const handleDelete = async (member) => {
     if (!window.confirm(`Tem certeza que deseja remover ${member.name} da diretoria?`)) return;
     try {
-      // 💡 DESVIO: Rota alterada para /diretoria
-      await api.delete(`/diretoria/${member.id}`);
+      await api.delete(`/board/${member.id}`);
       addNotification(`Membro removido com sucesso!`, 'success');
       fetchMembers();
     } catch (error) {
@@ -117,7 +113,6 @@ export default function GovernancePage() {
   return (
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
       
-      {/* Cabeçalho */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '10px', margin: '0 0 8px 0' }}>
@@ -133,7 +128,6 @@ export default function GovernancePage() {
         </Button>
       </div>
 
-      {/* Tabela de Membros */}
       <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
         {isLoading ? (
           <div style={{ padding: '60px', textAlign: 'center' }}><Spinner text="A carregar diretoria..." /></div>
@@ -214,8 +208,6 @@ export default function GovernancePage() {
                 <option value="Tesoureiro">Tesoureiro(a)</option>
                 <option value="Secretário">Secretário(a)</option>
                 <option value="Conselheiro Fiscal">Conselheiro(a) Fiscal</option>
-                <option value="Vogal">Vogal</option>
-                <option value="Outro">Outro</option>
               </select>
             </div>
             <div>
