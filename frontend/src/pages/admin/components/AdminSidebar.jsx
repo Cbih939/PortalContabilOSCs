@@ -40,6 +40,13 @@ const ProfileIcon = ({ className }) => (
   </svg>
 );
 
+// ÍCONE DE LIVRO PARA O MANUAL (NOVO)
+const BookIcon = ({ className }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+  </svg>
+);
+
 const LogoutIcon = ({ className }) => (
   <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -57,7 +64,6 @@ export default function AdminSidebar({ isOpen, onClose }) {
 
   const navItems = [
     { path: '/admin/dashboard', label: 'Dashboard', icon: DashboardIcon },
-    // NOVO ITEM: ESCRITÓRIOS (Coloquei aqui para dar destaque)
     { path: '/admin/offices', label: 'Escritórios', icon: OfficeBuildingIcon },
     { path: '/admin/usuarios', label: 'Usuários', icon: UserIcon },
     { path: '/admin/oscs', label: 'OSCs', icon: FolderIcon },
@@ -84,6 +90,17 @@ export default function AdminSidebar({ isOpen, onClose }) {
             <span className={styles.label}>{item.label}</span>
           </NavLink>
         ))}
+        
+        {/* LINK EXTERNO PARA O MANUAL */}
+        <a 
+          href="/manual" 
+          target="_blank" 
+          rel="noreferrer" 
+          className={styles.navItem}
+        >
+          <BookIcon className={styles.icon} />
+          <span className={styles.label}>Guia do App</span>
+        </a>
       </nav>
 
       <div className={styles.footer}>
