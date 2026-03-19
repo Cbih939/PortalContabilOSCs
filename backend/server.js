@@ -21,8 +21,9 @@ import webhookRoutes from './src/routes/webhook.routes.js';
 import officeRoutes from './src/routes/office.routes.js';
 import { startGovernanceCron } from './src/services/governance.service.js';
 import projectRoutes from './src/routes/project.routes.js';
-import systemRoutes from './routes/system.routes.js';
 
+// AQUI ESTAVA O ERRO! Adicionado o /src/ no caminho
+import systemRoutes from './src/routes/system.routes.js';
 
 dotenv.config();
 
