@@ -10,13 +10,15 @@ import {
   getMyPayments, 
   assignContador,
   transferOSCOffice,
-  getMyOscProfile // <--- IMPORTAMOS A NOVA FUNÇÃO DO PERFIL AQUI
+  getMyOscProfile,
+  deleteOSC // <--- IMPORTAMOS A NOVA FUNÇÃO DO PERFIL AQUI
 } from '../controllers/osc.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
 router.post('/', createOSC);
+router.delete('/:id', protect, deleteOSC);
 
 // Listagem e detalhes
 router.get('/', protect, getAllOSCs);

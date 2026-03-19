@@ -217,3 +217,24 @@ export const getMyOscProfile = async (req, res) => {
     return res.status(500).json({ message: 'Erro ao buscar perfil da OSC.' });
   }
 };
+
+export const deleteOSC = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Primeiro, apaga os documentos associados para evitar erros de chave estrangeira
+    await pool.execute('DELETE FROM documents WHERE osc_id = ?', [id]);
+    
+    // Depois, apaga a OSC
+    const [result] = await pool.execute('DELETE FROM oscs WHERE id = ?', [id]);
+    
+    if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'OSC não encontrada.' });
+    }
+
+    res.status(200).json({ message: 'OSC excluída com sucesso!' });
+  } catch (error) {
+    console.error('[deleteOSC Error]:', error);
+    res.status(500).json({ message: 'Erro interno ao excluir a OSC.' });
+  }
+};

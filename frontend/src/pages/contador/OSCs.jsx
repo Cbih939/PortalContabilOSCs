@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import * as oscService from '../../services/oscService.js';
 import * as alertService from '../../services/alertService.js';
 import * as docService from '../../services/documentService.js'; 
+import api from '../../services/api.js'; // Importação necessária para a exclusão
 
 // Componentes modais
 import ViewOSCModal from './components/ViewOSCModal.jsx';
@@ -54,8 +55,6 @@ const styles = {
   colorBox: (bg, border) => ({ width: '12px', height: '12px', backgroundColor: bg, border: `1px solid ${border}`, borderRadius: '2px' }),
   sectionTitle: { fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '20px' },
   calendarGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '10px', marginBottom: '24px' },
-  
-  // ATUALIZADO: Suporte visual para meses "Pre-Origem"
   monthBox: (bg, color, border, isPreOrigin) => ({ 
     backgroundColor: bg, 
     color: color, 
@@ -102,7 +101,7 @@ const injectStyles = () => {
 };
 injectStyles();
 
-const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAlert, onRefresh }) => {
+const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAlert, onDelete, onRefresh }) => {
   const addNotification = useNotification();
   const [isUploading, setIsUploading] = useState(false);
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
@@ -110,18 +109,15 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
   const [actionMonths, setActionMonths] = useState([new Date().getMonth() + 1]);
   const [actionYear, setActionYear] = useState(new Date().getFullYear());
 
-  // NOVO: Controle de Documentos Selecionados para Exclusão em Lote
   const [selectedDocs, setSelectedDocs] = useState([]);
 
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const years = [2024, 2025, 2026];
 
-  // NOVO: Cálculo inteligente da Data de Origem da OSC (Estatuto -> Fundação -> Criação)
   const getOriginDate = () => {
     const rawDate = osc.data_origem_estatuto || osc.dataOrigemEstatuto || osc.data_fundacao || osc.dataFundacao || osc.created_at || osc.createdAt;
     if (!rawDate) return { year: 2000, month: 0 }; 
     
-    // Evita problemas de fuso horário cortando a string ex: '2023-05-10'
     if (typeof rawDate === 'string' && rawDate.includes('-')) {
         const parts = rawDate.split('T')[0].split('-');
         return { year: parseInt(parts[0], 10), month: parseInt(parts[1], 10) - 1 };
@@ -132,7 +128,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
 
   const originDate = getOriginDate();
 
-  // Verifica se um mês específico é anterior à origem
   const isBeforeOrigin = (year, monthIndex) => {
     return year < originDate.year || (year === originDate.year && monthIndex < originDate.month);
   };
@@ -216,7 +211,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     }
   };
 
-  // Lógica de Exclusão Individual e em Lote
   const handleDeleteDocument = async (e, docId, docName) => {
     e.stopPropagation(); 
     if (!window.confirm(`Tem certeza que deseja excluir o documento:\n"${docName}"?\n\nEsta ação não pode ser desfeita.`)) return;
@@ -281,7 +275,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
   };
 
   const getMonthStatus = (monthIndex) => {
-    // Retorna vazio acinzentado se for antes da criação
     if (isBeforeOrigin(viewYear, monthIndex)) return 'pre_origin';
 
     const monthNum = monthIndex + 1;
@@ -303,7 +296,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'pre_origin': return ['#f3f4f6', '#d1d5db', '#e5e7eb']; // Cinza transparente
+      case 'pre_origin': return ['#f3f4f6', '#d1d5db', '#e5e7eb'];
       case 'late': return ['#fee2e2', '#b91c1c', '#fecaca'];
       case 'pending': return ['#fef9c3', '#a16207', '#fde047'];
       case 'sent': return ['#dbeafe', '#1d4ed8', '#bfdbfe'];
@@ -325,7 +318,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
     }
   };
 
-  // Ordenação de Documentos (Mais recentes primeiro por data de referência)
   const sortedDocsInViewYear = osc.documents 
     ? [...osc.documents]
         .filter(d => parseInt(d.ref_year) === viewYear)
@@ -354,13 +346,14 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
           <button style={styles.actionBtn('#2563eb', '#eff6ff')} onClick={() => onView(osc)} title="Ver Detalhes"><IconEye /></button>
           <button style={styles.actionBtn('#d97706', '#fffbeb')} onClick={() => onEdit(osc)} title="Editar Dados"><IconEdit /></button>
           <button style={styles.actionBtn('#dc2626', '#fef2f2')} onClick={() => onSendAlert(osc)} title="Enviar Alerta"><IconBell /></button>
+          {/* BOTÃO DE EXCLUIR OSC AQUI */}
+          <button style={styles.actionBtn('#991b1b', '#fee2e2')} onClick={() => onDelete(osc)} title="Excluir Organização"><IconTrash /></button>
         </div>
       </div>
 
       {isExpanded && (
         <div style={styles.accordionBody}>
           
-          {/* Action Panel de Envio */}
           <div style={styles.actionPanel}>
             <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px'}}>
               <span style={{fontSize: '13px', fontWeight: 'bold', color: '#374151'}}>Ano de Referência:</span>
@@ -443,7 +436,6 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
                 <div key={m} style={styles.monthBox(bg, color, border, isPreOrigin)}>
                   <span style={styles.monthText}>{m}</span>
                   <span style={styles.statusText}>{getStatusLabel(status)}</span>
-                  {/* Etiqueta Visual de Origem */}
                   {isExactOrigin && (
                       <span style={{fontSize: '9px', fontWeight: 'bold', color: '#ea580c', marginTop: '4px', backgroundColor: '#ffedd5', padding: '2px 6px', borderRadius: '4px'}}>
                         ORIGEM
@@ -639,6 +631,21 @@ export default function OSCsPage() {
 
   useEffect(() => { fetchOSCs(); }, []);
 
+  // --- NOVA FUNÇÃO: EXCLUIR OSC ---
+  const handleDeleteOSC = async (osc) => {
+    const confirmMsg = `ATENÇÃO EXTREMA!\n\nTem certeza que deseja excluir definitivamente a organização "${osc.name || osc.razao_social}"?\n\nTODOS os documentos, históricos e dados serão apagados. Esta ação NÃO pode ser desfeita.`;
+    
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      await api.delete(`/oscs/${osc.id}`); // Chama a rota de exclusão que criámos
+      addNotification("Organização excluída com sucesso!", "success");
+      fetchOSCs(); // Recarrega a lista
+    } catch (err) {
+      addNotification(err.response?.data?.message || "Erro ao excluir a organização.", "error");
+    }
+  };
+
   // --- Lógica de Filtros ---
   const filteredOscs = oscs.filter(osc => {
     const nameMatch = (osc.name || osc.razao_social || '').toLowerCase().includes(searchName.toLowerCase());
@@ -649,7 +656,6 @@ export default function OSCsPage() {
       const currentYear = new Date().getFullYear();
       const currentMonth = new Date().getMonth(); 
       
-      // Função local espelho para calcular origem no filtro
       const rawDate = osc.data_origem_estatuto || osc.dataOrigemEstatuto || osc.data_fundacao || osc.dataFundacao || osc.created_at || osc.createdAt;
       let oY = 2000, oM = 0;
       if (rawDate) {
@@ -662,7 +668,6 @@ export default function OSCsPage() {
       }
 
       for (let i = 0; i <= currentMonth; i++) {
-        // Ignora meses antes da fundação no filtro
         if (currentYear < oY || (currentYear === oY && i < oM)) continue;
 
         const monthNum = i + 1;
@@ -686,7 +691,14 @@ export default function OSCsPage() {
 
   const handleSaveEdit = async (formData) => {
     const oscId = formData.id;
-    const payload = { ...formData, responsavel: formData.responsible || formData.responsavel };
+    
+    // O SEGREDO DA CORREÇÃO DO NOME ESTÁ AQUI: (razao_social: formData.name)
+    const payload = { 
+        ...formData, 
+        responsavel: formData.responsible || formData.responsavel,
+        razao_social: formData.name 
+    };
+    
     try {
       if (oscId) {
         await updateOSC(oscId, payload);
@@ -769,6 +781,7 @@ export default function OSCsPage() {
                     onView={setOscToView}
                     onEdit={(oscData) => setOscToEdit({ ...oscData, id: osc.id })}
                     onSendAlert={setOscToSendAlert}
+                    onDelete={() => handleDeleteOSC(osc)} // <-- Função de exclusão passada aqui!
                     onRefresh={fetchOSCs}
                 />
             ))
