@@ -8,6 +8,7 @@ import ProtectedRoute from './ProtectedRoute.jsx';
 import AppLayout from '../components/layout/AppLayout.jsx';
 import GuestLayout from '../components/layout/GuestLayout.jsx';
 import Spinner from '../components/common/Spinner.jsx';
+import MaintenanceWatcher from '../components/common/MaintenanceWatcher.jsx';
 
 // --- PÁGINAS PÚBLICAS ---
 import LoginPage from '../pages/Login.jsx';
@@ -16,6 +17,7 @@ import NotFoundPage from '../pages/NotFound.jsx';
 import EsqueceuSenhaPage from '../pages/EsqueceuSenha.jsx';
 import RedefinirSenhaPage from '../pages/RedefinirSenha.jsx';
 import ManualPage from '../pages/shared/ManualPage.jsx';
+import MaintenancePage from '../pages/shared/MaintenancePage.jsx';
 
 // --- ADMIN ---
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
@@ -146,6 +148,9 @@ export default function AppRoutes() {
 
   return (
     <BrowserRouter>
+      {/* VIGIA DE MANUTENÇÃO FICA AQUI */}
+      <MaintenanceWatcher />
+      
       <Suspense fallback={<Spinner text="Carregando..." />}>
         <Routes>
           {/* Rota Raiz */}
@@ -153,6 +158,9 @@ export default function AppRoutes() {
           
           {/* ROTA DO MANUAL (Pública para todos - Visitantes ou Logados) */}
           <Route path="/manual" element={<ManualPage />} />
+          
+          {/* ROTA DE MANUTENÇÃO (Para onde os utilizadores são atirados) */}
+          <Route path="/manutencao" element={<MaintenancePage />} />
 
           {/* Rotas Públicas (Apenas Visitantes sem Login) */}
           <Route element={<GuestLayout />}>

@@ -21,6 +21,7 @@ import webhookRoutes from './src/routes/webhook.routes.js';
 import officeRoutes from './src/routes/office.routes.js';
 import { startGovernanceCron } from './src/services/governance.service.js';
 import projectRoutes from './src/routes/project.routes.js';
+import systemRoutes from './routes/system.routes.js';
 
 
 dotenv.config();
@@ -87,6 +88,7 @@ app.use('/api/alerts', alertRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/offices', officeRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/system', systemRoutes);
 
 
 // Rota de teste de saúde da API
