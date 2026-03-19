@@ -46,7 +46,7 @@ export default function OSCDashboard() {
     const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (daysLeft < 0) {
-      governanceStatus = { type: 'EXPIRED', text: `ATENÇÃO: Mandato expirou há ${Math.abs(daysLeft)} dias! Risco de bloqueio bancário.`, color: '#991b1b', bg: '#fef2f2', border: '#fca5a5', icon: <ShieldAlertIcon /> };
+      governanceStatus = { type: 'EXPIRED', text: `ATENÇÃO: Mandato expirou há ${Math.abs(daysLeft)} dias! Atualize a documentação estatutária no setor de governança para ficar com todos os seus documentos em dias.`, color: '#991b1b', bg: '#fef2f2', border: '#fca5a5', icon: <ShieldAlertIcon /> };
     } else if (daysLeft <= 60) {
       governanceStatus = { type: 'WARNING', text: `ALERTA: O mandato expira em ${daysLeft} dias. Prepare a assembleia de eleição.`, color: '#9a3412', bg: '#fff7ed', border: '#fdba74', icon: <ShieldAlertIcon /> };
     } else {
