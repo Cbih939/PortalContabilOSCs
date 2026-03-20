@@ -3,8 +3,9 @@ import api from '../../services/api.js';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 import Button from '../../components/common/Button.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+// 👇 AQUI ESTÁ A MÁGICA DA CORREÇÃO DO PDF 👇
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // --- Ícones ---
 const SearchIcon = () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>;
@@ -17,7 +18,6 @@ export default function SystemReports() {
   const [isLoading, setIsLoading] = useState(false);
   const addNotification = useNotification();
 
-  // Estados dos Filtros
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
@@ -25,7 +25,6 @@ export default function SystemReports() {
     action: ''
   });
 
-  // Carrega os logs ao montar o componente (sem filtros)
   useEffect(() => {
     fetchLogs();
   }, []);
@@ -33,7 +32,6 @@ export default function SystemReports() {
   const fetchLogs = async (currentFilters = filters) => {
     setIsLoading(true);
     try {
-      // Monta a Query String dinamicamente
       const params = new URLSearchParams();
       if (currentFilters.startDate) params.append('startDate', currentFilters.startDate);
       if (currentFilters.endDate) params.append('endDate', currentFilters.endDate);
@@ -64,63 +62,65 @@ export default function SystemReports() {
     fetchLogs(emptyFilters);
   };
 
-  // --- LÓGICA DE GERAÇÃO DE PDF ---
+  // --- LÓGICA DE GERAÇÃO DE PDF (CORRIGIDA) ---
   const exportToPDF = () => {
     if (logs.length === 0) {
       return addNotification("Não há dados para exportar.", "warning");
     }
 
-    const doc = new jsPDF('landscape'); // Formato Paisagem para caber a tabela
-    
-    // Cabeçalho do PDF
-    doc.setFontSize(18);
-    doc.text("Relatório de Auditoria e Logs - Conta Comigo", 14, 20);
-    doc.setFontSize(11);
-    doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
-    
-    if (filters.startDate || filters.endDate) {
-      doc.text(`Período: ${filters.startDate ? new Date(filters.startDate).toLocaleDateString('pt-BR') : 'Início'} até ${filters.endDate ? new Date(filters.endDate).toLocaleDateString('pt-BR') : 'Hoje'}`, 14, 34);
-    }
-
-    // Preparação dos dados para a Tabela do PDF
-    const tableColumn = ["Data e Hora", "Usuário", "Ação", "Módulo", "OSC Relacionada", "Detalhes da Ação"];
-    const tableRows = [];
-
-    logs.forEach(log => {
-      const logData = [
-        new Date(log.created_at).toLocaleString('pt-BR'),
-        log.user_name,
-        log.action,
-        log.module,
-        log.osc_name || '-',
-        log.details || '-'
-      ];
-      tableRows.push(logData);
-    });
-
-    // Desenha a tabela
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 40,
-      styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [234, 88, 12] }, // Cor Laranja do sistema
-      columnStyles: {
-        0: { cellWidth: 35 }, // Data
-        1: { cellWidth: 40 }, // Usuário
-        2: { cellWidth: 25 }, // Ação
-        3: { cellWidth: 30 }, // Módulo
-        4: { cellWidth: 45 }, // OSC
-        5: { cellWidth: 'auto' } // Detalhes
+    try {
+      const doc = new jsPDF('landscape'); // Formato Paisagem
+      
+      doc.setFontSize(18);
+      doc.text("Relatório de Auditoria e Logs - Conta Comigo", 14, 20);
+      doc.setFontSize(11);
+      doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+      
+      if (filters.startDate || filters.endDate) {
+        doc.text(`Período: ${filters.startDate ? new Date(filters.startDate).toLocaleDateString('pt-BR') : 'Início'} até ${filters.endDate ? new Date(filters.endDate).toLocaleDateString('pt-BR') : 'Hoje'}`, 14, 34);
       }
-    });
 
-    // Salva o arquivo
-    doc.save(`Relatorio_ContaComigo_${new Date().getTime()}.pdf`);
-    addNotification("Download do PDF iniciado!", "success");
+      const tableColumn = ["Data e Hora", "Usuário", "Ação", "Módulo", "OSC Relacionada", "Detalhes da Ação"];
+      const tableRows = [];
+
+      logs.forEach(log => {
+        const logData = [
+          new Date(log.created_at).toLocaleString('pt-BR'),
+          log.user_name,
+          log.action,
+          log.module,
+          log.osc_name || '-',
+          log.details || '-'
+        ];
+        tableRows.push(logData);
+      });
+
+      // Nova forma segura de chamar a tabela do PDF
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 40,
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [234, 88, 12] },
+        columnStyles: {
+          0: { cellWidth: 35 }, 
+          1: { cellWidth: 40 }, 
+          2: { cellWidth: 25 }, 
+          3: { cellWidth: 30 }, 
+          4: { cellWidth: 45 }, 
+          5: { cellWidth: 'auto' } 
+        }
+      });
+
+      doc.save(`Relatorio_ContaComigo_${new Date().getTime()}.pdf`);
+      addNotification("Download do PDF concluído!", "success");
+
+    } catch (error) {
+      console.error("Erro ao gerar o PDF:", error);
+      addNotification("Erro ao gerar o PDF. Verifique o console.", "error");
+    }
   };
 
-  // --- Função Auxiliar de Cores para as Labels de Ação ---
   const getActionColor = (action) => {
     switch (action?.toUpperCase()) {
       case 'CRIOU': return { bg: '#dcfce7', text: '#166534' };
@@ -134,7 +134,7 @@ export default function SystemReports() {
   return (
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
       
-      {/* --- CABEÇALHO --- */}
+      {/* CABEÇALHO */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '26px', color: '#1f2937', margin: '0 0 8px 0', fontWeight: 'bold' }}>Auditoria e Relatórios</h1>
@@ -145,7 +145,7 @@ export default function SystemReports() {
         </Button>
       </div>
 
-      {/* --- BLOCO 1: FILTROS AVANÇADOS --- */}
+      {/* BLOCO 1: FILTROS */}
       <div style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
         <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#374151', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <FilterIcon /> Filtros de Pesquisa
@@ -197,7 +197,7 @@ export default function SystemReports() {
         </form>
       </div>
 
-      {/* --- BLOCO 2: TABELA DE RESULTADOS --- */}
+      {/* BLOCO 2: TABELA */}
       <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <div style={{ padding: '16px 24px', backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between' }}>
           <h3 style={{ margin: 0, fontSize: '16px', color: '#374151' }}>Registo de Atividades</h3>
@@ -250,12 +250,10 @@ export default function SystemReports() {
           </div>
         )}
       </div>
-
     </div>
   );
 }
 
-// --- Estilos Base para o Formulário e Tabela ---
 const labelStyle = { fontSize: '13px', fontWeight: 'bold', color: '#374151', marginBottom: '6px' };
 const inputStyle = { width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none', backgroundColor: '#f9fafb', boxSizing: 'border-box' };
 const thStyle = { padding: '14px 16px', fontWeight: 'bold', color: '#4b5563', borderBottom: '1px solid #d1d5db', whiteSpace: 'nowrap' };
