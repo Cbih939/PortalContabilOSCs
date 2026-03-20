@@ -48,14 +48,16 @@ export default function OSCDashboard() {
     fetchData();
   }, []);
 
-  // --- LÓGICA CORRIGIDA DO ESCUDO DE GOVERNANÇA ---
+  // --- LÓGICA DO ESCUDO DE GOVERNANÇA CORRIGIDA E BLINDADA ---
   let governanceStatus = { type: 'UNKNOWN', text: 'Cadastre os membros da diretoria para monitorar o mandato.', color: '#6b7280', bg: '#f3f4f6', icon: <ShieldAlertIcon /> };
   
   const activeMembers = boardMembers.filter(m => m.status === 'ATIVO');
 
   if (activeMembers.length > 0) {
     let mandateEnd = null;
-    const president = activeMembers.find(m => m.role.toLowerCase() === 'presidente');
+    
+    // Procura o Presidente (ignorando espaços extras e maiúsculas/minúsculas)
+    const president = activeMembers.find(m => m.role && m.role.trim().toLowerCase() === 'presidente');
     
     if (president && president.end_date) {
         mandateEnd = new Date(president.end_date);
@@ -117,11 +119,9 @@ export default function OSCDashboard() {
     navigate(`/osc/documentos?month=${monthIndex + 1}&year=${selectedYear}`);
   };
 
-  // Extrair o Estado (UF) e Cidade (Ignorando case e espaços)
   const oscState = oscData?.estado || oscData?.uf || '';
   const oscCity = oscData?.cidade || oscData?.municipio || '';
 
-  // Filtra os Links Mágicos baseados na morada da OSC
   const linksFederais = officialLinks.filter(l => l.type === 'FEDERAL');
   const linksEstaduais = officialLinks.filter(l => l.type === 'ESTADUAL' && l.state?.toUpperCase() === oscState.toUpperCase());
   const linksMunicipais = officialLinks.filter(l => l.type === 'MUNICIPAL' && l.state?.toUpperCase() === oscState.toUpperCase() && l.city?.toLowerCase().trim() === oscCity.toLowerCase().trim());
@@ -129,7 +129,6 @@ export default function OSCDashboard() {
   return (
     <div className={styles.container}>
       
-      {/* Bem Vindos e Botões de Ação Topo */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }} className={styles.welcomeSection}>
         <div className={styles.welcomeHeader} style={{ flex: 1 }}>
           <img src="/logo_portal.png" alt="Logo" className={styles.welcomeLogo} />
@@ -160,7 +159,6 @@ export default function OSCDashboard() {
         </div>
       </Link>
 
-      {/* Cards */}
       <div className={styles.statsGrid}>
         <Link to="/osc/modelos" className={styles.card} style={{ textDecoration: 'none' }}>
           <div className={styles.iconCircleBlue}><FileIcon /></div>
@@ -203,7 +201,6 @@ export default function OSCDashboard() {
         </Link>
       </div>
 
-      {/* Painel de Contabilidade */}
       <div className={styles.calendarSection}>
         <div className={styles.calendarHeaderRow}>
           <div className={styles.calendarTitleGroup}>
@@ -231,12 +228,11 @@ export default function OSCDashboard() {
         </div>
       </div>
 
-      {/* --- MODAL DE ACESSO ÀS CERTIFICADORAS --- */}
+      {/* --- MODAL DE ACESSO ÀS CERTIFICADORAS (LIMPO) --- */}
       {showCertificadosModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
           <div style={{ backgroundColor: '#fff', padding: '0', borderRadius: '12px', width: '100%', maxWidth: '600px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
             
-            {/* Header do Modal */}
             <div style={{ padding: '20px 30px', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
               <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: 0, color: '#1f2937', fontSize: '20px' }}>
                 <ShieldCheckIcon /> Acesso Rápido às Certificadoras
@@ -246,14 +242,12 @@ export default function OSCDashboard() {
               </p>
             </div>
 
-            {/* Conteúdo com Scroll */}
             <div style={{ padding: '30px', overflowY: 'auto' }}>
               
-              <h3 style={{ fontSize: '15px', color: '#111827', borderBottom: '2px solid #bbf7d0', paddingBottom: '5px', marginBottom: '15px', marginTop: 0 }}>
+              <h3 style={{ fontSize: '16px', color: '#111827', borderBottom: '2px solid #bbf7d0', paddingBottom: '8px', marginBottom: '20px', marginTop: 0 }}>
                 Links Oficiais de Emissão (Sefaz / Prefeituras)
               </h3>
 
-              {/* Links Federais */}
               {linksFederais.length > 0 && (
                 <div style={{ marginBottom: '15px' }}>
                   {linksFederais.map(l => (
@@ -264,7 +258,6 @@ export default function OSCDashboard() {
                 </div>
               )}
 
-              {/* Links Estaduais */}
               {linksEstaduais.length > 0 && (
                 <div style={{ marginBottom: '15px' }}>
                   {linksEstaduais.map(l => (
@@ -275,7 +268,6 @@ export default function OSCDashboard() {
                 </div>
               )}
 
-              {/* Links Municipais */}
               {linksMunicipais.length > 0 && (
                 <div style={{ marginBottom: '15px' }}>
                   {linksMunicipais.map(l => (
@@ -294,10 +286,9 @@ export default function OSCDashboard() {
 
             </div>
 
-            {/* Footer do Modal */}
             <div style={{ padding: '20px 30px', borderTop: '1px solid #e5e7eb', backgroundColor: '#f9fafb', textAlign: 'right' }}>
               <button onClick={() => setShowCertificadosModal(false)} style={{ padding: '10px 20px', backgroundColor: '#fff', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#374151', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-                Fechar Visualização
+                Fechar
               </button>
             </div>
           </div>
