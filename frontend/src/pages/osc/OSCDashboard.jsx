@@ -10,6 +10,7 @@ const MsgIcon = () => (<svg className={styles.cardIconGreen} xmlns="http://www.w
 const InfoIcon = () => (<svg className={styles.infoIcon} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>);
 const ShieldCheckIcon = () => (<svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>);
 const ShieldAlertIcon = () => (<svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.618 5.984A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016zM12 9v2m0 4h.01" /></svg>);
+const ExternalLinkIcon = () => (<svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{marginLeft: '4px'}}><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>);
 
 export default function OSCDashboard() {
   const { user } = useAuth();
@@ -17,10 +18,11 @@ export default function OSCDashboard() {
 
   const [oscData, setOscData] = useState(null);
   const [boardMembers, setBoardMembers] = useState([]);
+  const [officialLinks, setOfficialLinks] = useState([]);
   const [showCertificadosModal, setShowCertificadosModal] = useState(false);
 
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Zera as horas para cálculo perfeito de dias
+  today.setHours(0, 0, 0, 0); 
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth() + 1; 
   const currentDay = today.getDate();
@@ -31,13 +33,14 @@ export default function OSCDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Traz os dados da OSC e da Diretoria ao mesmo tempo
-        const [oscRes, boardRes] = await Promise.all([
+        const [oscRes, boardRes, linksRes] = await Promise.all([
             api.get('/oscs/me'),
-            api.get('/board').catch(() => ({ data: [] })) // Previne falha caso a rota falhe
+            api.get('/board').catch(() => ({ data: [] })),
+            api.get('/certificates').catch(() => ({ data: [] })) // Busca os links das certificadoras
         ]);
         setOscData(oscRes.data.osc || oscRes.data[0] || oscRes.data);
         setBoardMembers(boardRes.data || []);
+        setOfficialLinks(linksRes.data || []);
       } catch (error) {
         console.error("Erro ao buscar dados do Dashboard", error);
       }
@@ -45,21 +48,18 @@ export default function OSCDashboard() {
     fetchData();
   }, []);
 
-  // --- LÓGICA INTELIGENTE DO ESCUDO DE GOVERNANÇA ---
+  // --- LÓGICA DO ESCUDO DE GOVERNANÇA ---
   let governanceStatus = { type: 'UNKNOWN', text: 'Cadastre os membros da diretoria para monitorar o mandato.', color: '#6b7280', bg: '#f3f4f6', icon: <ShieldAlertIcon /> };
   
   const activeMembers = boardMembers.filter(m => m.status === 'ATIVO');
 
   if (activeMembers.length > 0) {
     let mandateEnd = null;
-    
-    // Tenta encontrar o Presidente primeiro
     const president = activeMembers.find(m => m.role.toLowerCase() === 'presidente');
     
     if (president && president.end_date) {
         mandateEnd = new Date(president.end_date);
     } else {
-        // Se não houver presidente, pega a maior data de fim de mandato dos ativos
         const dates = activeMembers.filter(m => m.end_date).map(m => new Date(m.end_date));
         if (dates.length > 0) mandateEnd = new Date(Math.max(...dates));
     }
@@ -70,7 +70,7 @@ export default function OSCDashboard() {
       const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
       if (daysLeft < 0) {
-        governanceStatus = { type: 'EXPIRED', text: `ATENÇÃO: O mandato da diretoria expirou há ${Math.abs(daysLeft)} dias! Atualize a documentação estatutária no setor de governança para manter-se em dia.`, color: '#991b1b', bg: '#fef2f2', border: '#fca5a5', icon: <ShieldAlertIcon /> };
+        governanceStatus = { type: 'EXPIRED', text: `ATENÇÃO: O mandato da diretoria expirou há ${Math.abs(daysLeft)} dias! Atualize a documentação estatutária.`, color: '#991b1b', bg: '#fef2f2', border: '#fca5a5', icon: <ShieldAlertIcon /> };
       } else if (daysLeft <= 60) {
         governanceStatus = { type: 'WARNING', text: `ALERTA: O mandato expira em ${daysLeft} dias. Prepare a assembleia de eleição.`, color: '#9a3412', bg: '#fff7ed', border: '#fdba74', icon: <ShieldAlertIcon /> };
       } else {
@@ -117,6 +117,15 @@ export default function OSCDashboard() {
     navigate(`/osc/documentos?month=${monthIndex + 1}&year=${selectedYear}`);
   };
 
+  // Extrair o Estado (UF) e Cidade (Ignorando case e espaços)
+  const oscState = oscData?.estado || oscData?.uf || '';
+  const oscCity = oscData?.cidade || oscData?.municipio || '';
+
+  // Filtra os Links Mágicos baseados na morada da OSC
+  const linksFederais = officialLinks.filter(l => l.type === 'FEDERAL');
+  const linksEstaduais = officialLinks.filter(l => l.type === 'ESTADUAL' && l.state?.toUpperCase() === oscState.toUpperCase());
+  const linksMunicipais = officialLinks.filter(l => l.type === 'MUNICIPAL' && l.state?.toUpperCase() === oscState.toUpperCase() && l.city?.toLowerCase().trim() === oscCity.toLowerCase().trim());
+
   return (
     <div className={styles.container}>
       
@@ -130,7 +139,6 @@ export default function OSCDashboard() {
           </div>
         </div>
 
-        {/* --- NOVO BOTÃO DE CERTIFICADOS --- */}
         <button 
           onClick={() => setShowCertificadosModal(true)}
           style={{ backgroundColor: '#059669', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgba(5, 150, 105, 0.2)' }}
@@ -160,7 +168,7 @@ export default function OSCDashboard() {
             <div className={styles.labelWithInfo}>
               <span className={styles.cardLabel}>Docs | Modelos</span>
               <div className={styles.tooltipContainer}>
-                <InfoIcon /><span className={styles.tooltipText}>Instruções e modelos de documentos para envio contábil.</span>
+                <InfoIcon /><span className={styles.tooltipText}>Instruções e modelos para envio contábil.</span>
               </div>
             </div>
             <strong className={styles.cardValueText}>Acessar Modelos</strong>
@@ -187,7 +195,7 @@ export default function OSCDashboard() {
             <div className={styles.labelWithInfo}>
               <span className={styles.cardLabel}>Suporte Governança</span>
               <div className={styles.tooltipContainer}>
-                <InfoIcon /><span className={styles.tooltipText}>Canal direto de suporte sobre governança e contabilidade.</span>
+                <InfoIcon /><span className={styles.tooltipText}>Canal direto de suporte sobre governança.</span>
               </div>
             </div>
             <strong className={styles.cardValueText}>Contatar Equipe</strong>
@@ -225,59 +233,87 @@ export default function OSCDashboard() {
 
       {/* --- MODAL DE CERTIFICADOS DIGITAIS --- */}
       {showCertificadosModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', width: '90%', maxWidth: '550px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
-            <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#1f2937', fontSize: '20px' }}>
-              <ShieldCheckIcon /> Certidões de Regularidade
-            </h2>
-            <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '25px', borderBottom: '1px solid #e5e7eb', paddingBottom: '15px' }}>
-              {oscData?.name || oscData?.razao_social || 'Sua Organização'} <br/>
-              <strong>Ano Calendário: {new Date().getFullYear()}</strong>
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              {/* Bloco Federal */}
-              <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <strong style={{ display: 'block', color: '#1f2937', fontSize: '15px' }}>Âmbito Federal</strong>
-                  <span style={{ fontSize: '13px', color: '#6b7280' }}>Certidão Conjunta Receita Federal</span>
-                </div>
-                {oscData?.cert_federal ? (
-                  <a href={oscData.cert_federal} target="_blank" rel="noreferrer" style={{ padding: '8px 14px', backgroundColor: '#e0f2fe', color: '#0369a1', borderRadius: '6px', textDecoration: 'none', fontSize: '13px', fontWeight: 'bold' }}>Visualizar Certidão</a>
-                ) : (
-                  <span style={{ fontSize: '13px', color: '#dc2626', fontWeight: 'bold', backgroundColor: '#fef2f2', padding: '6px 12px', borderRadius: '6px' }}>Pendente</span>
-                )}
-              </div>
-
-              {/* Bloco Estadual */}
-              <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <strong style={{ display: 'block', color: '#1f2937', fontSize: '15px' }}>Âmbito Estadual</strong>
-                  <span style={{ fontSize: '13px', color: '#6b7280' }}>Secretaria da Fazenda (Sefaz)</span>
-                </div>
-                {oscData?.cert_estadual ? (
-                  <a href={oscData.cert_estadual} target="_blank" rel="noreferrer" style={{ padding: '8px 14px', backgroundColor: '#e0f2fe', color: '#0369a1', borderRadius: '6px', textDecoration: 'none', fontSize: '13px', fontWeight: 'bold' }}>Visualizar Certidão</a>
-                ) : (
-                  <span style={{ fontSize: '13px', color: '#dc2626', fontWeight: 'bold', backgroundColor: '#fef2f2', padding: '6px 12px', borderRadius: '6px' }}>Pendente</span>
-                )}
-              </div>
-
-              {/* Bloco Municipal */}
-              <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <strong style={{ display: 'block', color: '#1f2937', fontSize: '15px' }}>Âmbito Municipal</strong>
-                  <span style={{ fontSize: '13px', color: '#6b7280' }}>Prefeitura Municipal</span>
-                </div>
-                {oscData?.cert_municipal ? (
-                  <a href={oscData.cert_municipal} target="_blank" rel="noreferrer" style={{ padding: '8px 14px', backgroundColor: '#e0f2fe', color: '#0369a1', borderRadius: '6px', textDecoration: 'none', fontSize: '13px', fontWeight: 'bold' }}>Visualizar Certidão</a>
-                ) : (
-                  <span style={{ fontSize: '13px', color: '#dc2626', fontWeight: 'bold', backgroundColor: '#fef2f2', padding: '6px 12px', borderRadius: '6px' }}>Pendente</span>
-                )}
-              </div>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+          <div style={{ backgroundColor: '#fff', padding: '0', borderRadius: '12px', width: '100%', maxWidth: '600px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+            
+            {/* Header do Modal */}
+            <div style={{ padding: '20px 30px', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: 0, color: '#1f2937', fontSize: '20px' }}>
+                <ShieldCheckIcon /> Certidões de Regularidade
+              </h2>
+              <p style={{ color: '#6b7280', fontSize: '13px', margin: '5px 0 0 0' }}>
+                Acompanhe as suas certidões atuais e acesse rapidamente os portais de emissão correspondentes à sua região ({oscCity ? `${oscCity} - ` : ''}{oscState || 'Brasil'}).
+              </p>
             </div>
 
-            <div style={{ marginTop: '25px', textAlign: 'right' }}>
-              <button onClick={() => setShowCertificadosModal(false)} style={{ padding: '10px 20px', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#374151' }}>
+            {/* Conteúdo com Scroll */}
+            <div style={{ padding: '30px', overflowY: 'auto' }}>
+              
+              <h3 style={{ fontSize: '15px', color: '#111827', borderBottom: '2px solid #fed7aa', paddingBottom: '5px', marginBottom: '15px', marginTop: 0 }}>
+                1. Certidões Armazenadas (Seu Arquivo)
+              </h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '30px' }}>
+                <div style={{ padding: '12px 16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', color: '#334155', fontWeight: '500' }}>Certidão Federal</span>
+                  {oscData?.cert_federal ? <a href={oscData.cert_federal} target="_blank" rel="noreferrer" style={{ fontSize: '13px', color: '#0369a1', fontWeight: 'bold', textDecoration: 'none' }}>Ver Arquivo</a> : <span style={{ fontSize: '12px', color: '#dc2626', fontWeight: 'bold' }}>Pendente</span>}
+                </div>
+                <div style={{ padding: '12px 16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', color: '#334155', fontWeight: '500' }}>Certidão Estadual</span>
+                  {oscData?.cert_estadual ? <a href={oscData.cert_estadual} target="_blank" rel="noreferrer" style={{ fontSize: '13px', color: '#0369a1', fontWeight: 'bold', textDecoration: 'none' }}>Ver Arquivo</a> : <span style={{ fontSize: '12px', color: '#dc2626', fontWeight: 'bold' }}>Pendente</span>}
+                </div>
+                <div style={{ padding: '12px 16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', color: '#334155', fontWeight: '500' }}>Certidão Municipal</span>
+                  {oscData?.cert_municipal ? <a href={oscData.cert_municipal} target="_blank" rel="noreferrer" style={{ fontSize: '13px', color: '#0369a1', fontWeight: 'bold', textDecoration: 'none' }}>Ver Arquivo</a> : <span style={{ fontSize: '12px', color: '#dc2626', fontWeight: 'bold' }}>Pendente</span>}
+                </div>
+              </div>
+
+              <h3 style={{ fontSize: '15px', color: '#111827', borderBottom: '2px solid #bbf7d0', paddingBottom: '5px', marginBottom: '15px' }}>
+                2. Links Úteis para Nova Emissão (Sefaz / Prefeituras)
+              </h3>
+
+              {/* Links Federais */}
+              {linksFederais.length > 0 && (
+                <div style={{ marginBottom: '15px' }}>
+                  {linksFederais.map(l => (
+                    <a key={l.id} href={l.url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', color: '#166534', textDecoration: 'none', marginBottom: '8px', fontSize: '13px', fontWeight: '500' }}>
+                      {l.title} <ExternalLinkIcon />
+                    </a>
+                  ))}
+                </div>
+              )}
+
+              {/* Links Estaduais */}
+              {linksEstaduais.length > 0 && (
+                <div style={{ marginBottom: '15px' }}>
+                  {linksEstaduais.map(l => (
+                    <a key={l.id} href={l.url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '6px', color: '#0369a1', textDecoration: 'none', marginBottom: '8px', fontSize: '13px', fontWeight: '500' }}>
+                      {l.title} <ExternalLinkIcon />
+                    </a>
+                  ))}
+                </div>
+              )}
+
+              {/* Links Municipais */}
+              {linksMunicipais.length > 0 && (
+                <div style={{ marginBottom: '15px' }}>
+                  {linksMunicipais.map(l => (
+                    <a key={l.id} href={l.url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', backgroundColor: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: '6px', color: '#7e22ce', textDecoration: 'none', marginBottom: '8px', fontSize: '13px', fontWeight: '500' }}>
+                      {l.title} <ExternalLinkIcon />
+                    </a>
+                  ))}
+                </div>
+              )}
+
+              {(linksFederais.length === 0 && linksEstaduais.length === 0 && linksMunicipais.length === 0) && (
+                <p style={{ fontSize: '13px', color: '#9ca3af', fontStyle: 'italic' }}>A sua contabilidade ainda não disponibilizou links de emissão rápida para a sua região.</p>
+              )}
+
+            </div>
+
+            {/* Footer do Modal */}
+            <div style={{ padding: '20px 30px', borderTop: '1px solid #e5e7eb', backgroundColor: '#f9fafb', textAlign: 'right' }}>
+              <button onClick={() => setShowCertificadosModal(false)} style={{ padding: '10px 20px', backgroundColor: '#fff', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#374151', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                 Fechar Visualização
               </button>
             </div>
