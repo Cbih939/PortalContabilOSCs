@@ -9,7 +9,17 @@ import Spinner from '../../components/common/Spinner.jsx';
 const ChevronDownIcon = () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>;
 const ChevronUpIcon = () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>;
 
-const STATES = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+// --- Dicionário de Estados (Sigla -> Nome Completo) ---
+const STATE_NAMES = {
+  'AC': 'Acre', 'AL': 'Alagoas', 'AP': 'Amapá', 'AM': 'Amazonas',
+  'BA': 'Bahia', 'CE': 'Ceará', 'DF': 'Distrito Federal', 'ES': 'Espírito Santo',
+  'GO': 'Goiás', 'MA': 'Maranhão', 'MT': 'Mato Grosso', 'MS': 'Mato Grosso do Sul',
+  'MG': 'Minas Gerais', 'PA': 'Pará', 'PB': 'Paraíba', 'PR': 'Paraná',
+  'PE': 'Pernambuco', 'PI': 'Piauí', 'RJ': 'Rio de Janeiro', 'RN': 'Rio Grande do Norte',
+  'RS': 'Rio Grande do Sul', 'RO': 'Rondônia', 'RR': 'Roraima', 'SC': 'Santa Catarina',
+  'SP': 'São Paulo', 'SE': 'Sergipe', 'TO': 'Tocantins'
+};
+const STATES = Object.keys(STATE_NAMES);
 
 export default function ManageCertificates() {
   const [links, setLinks] = useState([]);
@@ -50,7 +60,7 @@ export default function ManageCertificates() {
       await api.post('/certificates', formData);
       addNotification('Link cadastrado com sucesso!', 'success');
       
-      // Se cadastrar um estadual/municipal, abre a sanfona correspondente para ele ver o resultado
+      // Se cadastrar um estadual/municipal, abre a sanfona correspondente
       if (formData.type === 'ESTADUAL') {
         setExpandedEstadual(prev => ({...prev, [formData.state]: true}));
       } else if (formData.type === 'MUNICIPAL') {
@@ -77,21 +87,17 @@ export default function ManageCertificates() {
     }
   };
 
-  // Funções de Toggle (Abrir/Fechar)
   const toggleEstadual = (uf) => setExpandedEstadual(prev => ({...prev, [uf]: !prev[uf]}));
   const toggleMunicipal = (uf) => setExpandedMunicipal(prev => ({...prev, [uf]: !prev[uf]}));
 
-  // Agrupamento para exibição
   const federalLinks = links.filter(l => l.type === 'FEDERAL');
   
-  // Agrupa os links estaduais por Estado (UF)
   const groupedEstaduais = links.filter(l => l.type === 'ESTADUAL').reduce((acc, link) => {
     acc[link.state] = acc[link.state] || [];
     acc[link.state].push(link);
     return acc;
   }, {});
 
-  // Agrupa os links municipais por Estado (UF)
   const groupedMunicipais = links.filter(l => l.type === 'MUNICIPAL').reduce((acc, link) => {
     acc[link.state] = acc[link.state] || [];
     acc[link.state].push(link);
@@ -122,7 +128,7 @@ export default function ManageCertificates() {
               <label style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>Estado (UF)</label>
               <select value={formData.state} onChange={e => setFormData({...formData, state: e.target.value})} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }}>
                 <option value="">Selecione o Estado...</option>
-                {STATES.map(uf => <option key={uf} value={uf}>{uf}</option>)}
+                {STATES.map(uf => <option key={uf} value={uf}>{STATE_NAMES[uf]} ({uf})</option>)}
               </select>
             </div>
           ) : <div />}
@@ -149,7 +155,7 @@ export default function ManageCertificates() {
       {isLoading ? <Spinner text="A carregar links..." /> : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
           
-          {/* FEDERAIS (Lista Simples, pois não agrupam por estado) */}
+          {/* FEDERAIS */}
           <div>
             <h4 style={{ color: '#15803d', borderBottom: '2px solid #bbf7d0', paddingBottom: '8px', marginTop: 0, fontSize: '18px' }}>Links Federais</h4>
             {federalLinks.map(l => (
@@ -161,7 +167,7 @@ export default function ManageCertificates() {
             {federalLinks.length === 0 && <p style={{ fontSize: '14px', color: '#6b7280' }}>Nenhum link federal cadastrado.</p>}
           </div>
 
-          {/* ESTADUAIS (Agrupados por Estado) */}
+          {/* ESTADUAIS */}
           <div>
             <h4 style={{ color: '#0369a1', borderBottom: '2px solid #bae6fd', paddingBottom: '8px', marginTop: 0, fontSize: '18px' }}>Links Estaduais</h4>
             {Object.keys(groupedEstaduais).length === 0 && <p style={{ fontSize: '14px', color: '#6b7280' }}>Nenhum link estadual cadastrado.</p>}
@@ -174,7 +180,8 @@ export default function ManageCertificates() {
                   style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: '#f0f9ff', border: 'none', cursor: 'pointer' }}
                 >
                   <span style={{ fontWeight: 'bold', color: '#0369a1', fontSize: '15px' }}>
-                    Estado: {uf} <span style={{ backgroundColor: '#e0f2fe', color: '#0284c7', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', marginLeft: '8px' }}>{groupedEstaduais[uf].length} link(s)</span>
+                    Estado: {STATE_NAMES[uf] || uf} ({uf})
+                    <span style={{ backgroundColor: '#e0f2fe', color: '#0284c7', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', marginLeft: '8px' }}>{groupedEstaduais[uf].length} link(s)</span>
                   </span>
                   <div style={{ color: '#0369a1' }}>
                     {expandedEstadual[uf] ? <ChevronUpIcon /> : <ChevronDownIcon />}
@@ -196,7 +203,7 @@ export default function ManageCertificates() {
             ))}
           </div>
 
-          {/* MUNICIPAIS (Agrupados por Estado) */}
+          {/* MUNICIPAIS */}
           <div>
             <h4 style={{ color: '#7e22ce', borderBottom: '2px solid #e9d5ff', paddingBottom: '8px', marginTop: 0, fontSize: '18px' }}>Links Municipais</h4>
             {Object.keys(groupedMunicipais).length === 0 && <p style={{ fontSize: '14px', color: '#6b7280' }}>Nenhum link municipal cadastrado.</p>}
@@ -209,7 +216,8 @@ export default function ManageCertificates() {
                   style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: '#faf5ff', border: 'none', cursor: 'pointer' }}
                 >
                   <span style={{ fontWeight: 'bold', color: '#7e22ce', fontSize: '15px' }}>
-                    Estado: {uf} <span style={{ backgroundColor: '#f3e8ff', color: '#6b21a8', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', marginLeft: '8px' }}>{groupedMunicipais[uf].length} link(s)</span>
+                    Estado: {STATE_NAMES[uf] || uf} ({uf})
+                    <span style={{ backgroundColor: '#f3e8ff', color: '#6b21a8', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', marginLeft: '8px' }}>{groupedMunicipais[uf].length} link(s)</span>
                   </span>
                   <div style={{ color: '#7e22ce' }}>
                     {expandedMunicipal[uf] ? <ChevronUpIcon /> : <ChevronDownIcon />}
