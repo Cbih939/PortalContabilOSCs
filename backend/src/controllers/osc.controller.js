@@ -1,4 +1,5 @@
 import pool from '../config/db.js';
+import { logAction } from '../services/logger.service.js'; // Adicione isto lá no topo
 
 export const getMyOSCs = async (req, res) => {
   try {
@@ -224,10 +225,11 @@ export const deleteOSC = async (req, res) => {
 
     // Primeiro, apaga os documentos associados para evitar erros de chave estrangeira
     await pool.execute('DELETE FROM documents WHERE osc_id = ?', [id]);
+    await logAction(req.user.id, req.user.name, id, 'EXCLUIU', 'OSC', `A OSC com ID ${id} foi excluída permanentemente.`);
     
     // Depois, apaga a OSC
     const [result] = await pool.execute('DELETE FROM oscs WHERE id = ?', [id]);
-    
+        
     if (result.affectedRows === 0) {
         return res.status(404).json({ message: 'OSC não encontrada.' });
     }

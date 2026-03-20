@@ -50,6 +50,7 @@ import ContadorSidebar from '../pages/contador/components/ContadorSidebar.jsx';
 import ContadorHeader from '../pages/contador/components/ContadorHeader.jsx';
 import ContadorReportsPage from '../pages/contador/Reports.jsx';
 import ManageCertificates from '../pages/contador/ManageCertificates.jsx';
+import SystemReports from '../pages/contador/SystemReports.jsx';
 
 // --- OSC ---
 import OSCDashboard from '../pages/osc/OSCDashboard.jsx';
@@ -207,6 +208,7 @@ export default function AppRoutes() {
               <Route path="/contador/perfil" element={<ContadorProfilePage />} />
               <Route path="/contador/relatorios" element={<ContadorReportsPage />} />
               <Route path="/contador/certificadoras" element={<ManageCertificates />} />
+              <Route path="/contador/relatorios" element={<SystemReports />} />
             </Route>
           </Route>
 

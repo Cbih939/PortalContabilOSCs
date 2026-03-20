@@ -23,6 +23,7 @@ import { startGovernanceCron } from './src/services/governance.service.js';
 import projectRoutes from './src/routes/project.routes.js';
 import systemRoutes from './src/routes/system.routes.js';
 import certificateRoutes from './src/routes/certificate.routes.js';
+import logRoutes from './src/routes/log.routes.js';
 
 // 🚀 NOVA ROTA DA DIRETORIA AQUI!
 import boardRoutes from './src/routes/board.routes.js';
@@ -94,6 +95,8 @@ app.use('/api/offices', officeRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/system', systemRoutes);
 app.use('/api/certificates', certificateRoutes);
+app.use('/api/logs', logRoutes);
+
 
 // 🚀 REGISTO DA NOVA ROTA DA DIRETORIA AQUI!
 app.use('/api/board', boardRoutes);
