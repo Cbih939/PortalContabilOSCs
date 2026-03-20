@@ -36,7 +36,7 @@ export default function OSCDashboard() {
         const [oscRes, boardRes, linksRes] = await Promise.all([
             api.get('/oscs/me'),
             api.get('/board').catch(() => ({ data: [] })),
-            api.get('/certificates').catch(() => ({ data: [] })) // Busca os links das certificadoras
+            api.get('/certificates').catch(() => ({ data: [] })) 
         ]);
         setOscData(oscRes.data.osc || oscRes.data[0] || oscRes.data);
         setBoardMembers(boardRes.data || []);
@@ -48,7 +48,7 @@ export default function OSCDashboard() {
     fetchData();
   }, []);
 
-  // --- LÓGICA DO ESCUDO DE GOVERNANÇA ---
+  // --- LÓGICA CORRIGIDA DO ESCUDO DE GOVERNANÇA ---
   let governanceStatus = { type: 'UNKNOWN', text: 'Cadastre os membros da diretoria para monitorar o mandato.', color: '#6b7280', bg: '#f3f4f6', icon: <ShieldAlertIcon /> };
   
   const activeMembers = boardMembers.filter(m => m.status === 'ATIVO');
@@ -144,7 +144,7 @@ export default function OSCDashboard() {
           style={{ backgroundColor: '#059669', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgba(5, 150, 105, 0.2)' }}
         >
           <ShieldCheckIcon />
-          Certificados de Regularidade
+          Acesso às Certificadoras
         </button>
       </div>
 
@@ -231,7 +231,7 @@ export default function OSCDashboard() {
         </div>
       </div>
 
-      {/* --- MODAL DE CERTIFICADOS DIGITAIS --- */}
+      {/* --- MODAL DE ACESSO ÀS CERTIFICADORAS --- */}
       {showCertificadosModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
           <div style={{ backgroundColor: '#fff', padding: '0', borderRadius: '12px', width: '100%', maxWidth: '600px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
@@ -239,44 +239,25 @@ export default function OSCDashboard() {
             {/* Header do Modal */}
             <div style={{ padding: '20px 30px', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
               <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: 0, color: '#1f2937', fontSize: '20px' }}>
-                <ShieldCheckIcon /> Certidões de Regularidade
+                <ShieldCheckIcon /> Acesso Rápido às Certificadoras
               </h2>
               <p style={{ color: '#6b7280', fontSize: '13px', margin: '5px 0 0 0' }}>
-                Acompanhe as suas certidões atuais e acesse rapidamente os portais de emissão correspondentes à sua região ({oscCity ? `${oscCity} - ` : ''}{oscState || 'Brasil'}).
+                Acesse rapidamente os portais oficiais de emissão de certidões correspondentes à sua região ({oscCity ? `${oscCity} - ` : ''}{oscState || 'Brasil'}).
               </p>
             </div>
 
             {/* Conteúdo com Scroll */}
             <div style={{ padding: '30px', overflowY: 'auto' }}>
               
-              <h3 style={{ fontSize: '15px', color: '#111827', borderBottom: '2px solid #fed7aa', paddingBottom: '5px', marginBottom: '15px', marginTop: 0 }}>
-                1. Certidões Armazenadas (Seu Arquivo)
-              </h3>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '30px' }}>
-                <div style={{ padding: '12px 16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '14px', color: '#334155', fontWeight: '500' }}>Certidão Federal</span>
-                  {oscData?.cert_federal ? <a href={oscData.cert_federal} target="_blank" rel="noreferrer" style={{ fontSize: '13px', color: '#0369a1', fontWeight: 'bold', textDecoration: 'none' }}>Ver Arquivo</a> : <span style={{ fontSize: '12px', color: '#dc2626', fontWeight: 'bold' }}>Pendente</span>}
-                </div>
-                <div style={{ padding: '12px 16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '14px', color: '#334155', fontWeight: '500' }}>Certidão Estadual</span>
-                  {oscData?.cert_estadual ? <a href={oscData.cert_estadual} target="_blank" rel="noreferrer" style={{ fontSize: '13px', color: '#0369a1', fontWeight: 'bold', textDecoration: 'none' }}>Ver Arquivo</a> : <span style={{ fontSize: '12px', color: '#dc2626', fontWeight: 'bold' }}>Pendente</span>}
-                </div>
-                <div style={{ padding: '12px 16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '14px', color: '#334155', fontWeight: '500' }}>Certidão Municipal</span>
-                  {oscData?.cert_municipal ? <a href={oscData.cert_municipal} target="_blank" rel="noreferrer" style={{ fontSize: '13px', color: '#0369a1', fontWeight: 'bold', textDecoration: 'none' }}>Ver Arquivo</a> : <span style={{ fontSize: '12px', color: '#dc2626', fontWeight: 'bold' }}>Pendente</span>}
-                </div>
-              </div>
-
-              <h3 style={{ fontSize: '15px', color: '#111827', borderBottom: '2px solid #bbf7d0', paddingBottom: '5px', marginBottom: '15px' }}>
-                2. Links Úteis para Nova Emissão (Sefaz / Prefeituras)
+              <h3 style={{ fontSize: '15px', color: '#111827', borderBottom: '2px solid #bbf7d0', paddingBottom: '5px', marginBottom: '15px', marginTop: 0 }}>
+                Links Oficiais de Emissão (Sefaz / Prefeituras)
               </h3>
 
               {/* Links Federais */}
               {linksFederais.length > 0 && (
                 <div style={{ marginBottom: '15px' }}>
                   {linksFederais.map(l => (
-                    <a key={l.id} href={l.url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', color: '#166534', textDecoration: 'none', marginBottom: '8px', fontSize: '13px', fontWeight: '500' }}>
+                    <a key={l.id} href={l.url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', color: '#166534', textDecoration: 'none', marginBottom: '8px', fontSize: '14px', fontWeight: '500', transition: 'transform 0.1s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
                       {l.title} <ExternalLinkIcon />
                     </a>
                   ))}
@@ -287,7 +268,7 @@ export default function OSCDashboard() {
               {linksEstaduais.length > 0 && (
                 <div style={{ marginBottom: '15px' }}>
                   {linksEstaduais.map(l => (
-                    <a key={l.id} href={l.url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '6px', color: '#0369a1', textDecoration: 'none', marginBottom: '8px', fontSize: '13px', fontWeight: '500' }}>
+                    <a key={l.id} href={l.url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '8px', color: '#0369a1', textDecoration: 'none', marginBottom: '8px', fontSize: '14px', fontWeight: '500', transition: 'transform 0.1s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
                       {l.title} <ExternalLinkIcon />
                     </a>
                   ))}
@@ -298,7 +279,7 @@ export default function OSCDashboard() {
               {linksMunicipais.length > 0 && (
                 <div style={{ marginBottom: '15px' }}>
                   {linksMunicipais.map(l => (
-                    <a key={l.id} href={l.url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', backgroundColor: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: '6px', color: '#7e22ce', textDecoration: 'none', marginBottom: '8px', fontSize: '13px', fontWeight: '500' }}>
+                    <a key={l.id} href={l.url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', backgroundColor: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: '8px', color: '#7e22ce', textDecoration: 'none', marginBottom: '8px', fontSize: '14px', fontWeight: '500', transition: 'transform 0.1s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
                       {l.title} <ExternalLinkIcon />
                     </a>
                   ))}
@@ -306,7 +287,9 @@ export default function OSCDashboard() {
               )}
 
               {(linksFederais.length === 0 && linksEstaduais.length === 0 && linksMunicipais.length === 0) && (
-                <p style={{ fontSize: '13px', color: '#9ca3af', fontStyle: 'italic' }}>A sua contabilidade ainda não disponibilizou links de emissão rápida para a sua região.</p>
+                <div style={{ textAlign: 'center', padding: '40px 20px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px dashed #d1d5db' }}>
+                  <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>A sua contabilidade ainda não disponibilizou links rápidos para a sua região.</p>
+                </div>
               )}
 
             </div>
