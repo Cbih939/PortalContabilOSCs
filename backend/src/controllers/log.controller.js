@@ -12,36 +12,16 @@ export const getSystemLogs = async (req, res) => {
     `;
     const params = [];
 
-    // --- APLICANDO OS FILTROS INTELIGENTES ---
-    if (startDate) {
-      query += ' AND DATE(l.created_at) >= ?';
-      params.push(startDate);
-    }
-    if (endDate) {
-      query += ' AND DATE(l.created_at) <= ?';
-      params.push(endDate);
-    }
-    if (userId) {
-      query += ' AND l.user_id = ?';
-      params.push(userId);
-    }
-    if (oscId) {
-      query += ' AND l.osc_id = ?';
-      params.push(oscId);
-    }
-    if (module) {
-      query += ' AND l.module = ?';
-      params.push(module);
-    }
-    if (action) {
-      query += ' AND l.action = ?';
-      params.push(action);
-    }
+    if (startDate) { query += ' AND DATE(l.created_at) >= ?'; params.push(startDate); }
+    if (endDate) { query += ' AND DATE(l.created_at) <= ?'; params.push(endDate); }
+    if (userId) { query += ' AND l.user_id = ?'; params.push(userId); }
+    if (oscId) { query += ' AND l.osc_id = ?'; params.push(oscId); }
+    if (module) { query += ' AND l.module = ?'; params.push(module); }
+    if (action) { query += ' AND l.action = ?'; params.push(action); }
 
-    query += ' ORDER BY l.created_at DESC LIMIT 500'; // Limite de segurança
+    query += ' ORDER BY l.created_at DESC LIMIT 500';
 
     const [logs] = await pool.execute(query, params);
-    
     res.status(200).json(logs);
   } catch (error) {
     console.error('[getSystemLogs Error]:', error);
