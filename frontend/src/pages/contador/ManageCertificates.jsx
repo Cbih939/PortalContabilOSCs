@@ -6,20 +6,32 @@ import Input from '../../components/common/Input.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
 
 // --- Ícones para a Sanfona (Accordion) ---
-const ChevronDownIcon = () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>;
-const ChevronUpIcon = () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>;
+const ChevronDownIcon = () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>;
+const ChevronUpIcon = () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>;
+const MapPinIcon = () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '6px'}}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
 
-// --- Dicionário de Estados (Sigla -> Nome Completo) ---
-const STATE_NAMES = {
-  'AC': 'Acre', 'AL': 'Alagoas', 'AP': 'Amapá', 'AM': 'Amazonas',
-  'BA': 'Bahia', 'CE': 'Ceará', 'DF': 'Distrito Federal', 'ES': 'Espírito Santo',
-  'GO': 'Goiás', 'MA': 'Maranhão', 'MT': 'Mato Grosso', 'MS': 'Mato Grosso do Sul',
-  'MG': 'Minas Gerais', 'PA': 'Pará', 'PB': 'Paraíba', 'PR': 'Paraná',
-  'PE': 'Pernambuco', 'PI': 'Piauí', 'RJ': 'Rio de Janeiro', 'RN': 'Rio Grande do Norte',
-  'RS': 'Rio Grande do Sul', 'RO': 'Rondônia', 'RR': 'Roraima', 'SC': 'Santa Catarina',
-  'SP': 'São Paulo', 'SE': 'Sergipe', 'TO': 'Tocantins'
+// --- Mapeamento do Brasil (Regiões e Estados) ---
+const REGIONS = {
+  'Região Norte': ['AC', 'AP', 'AM', 'PA', 'RO', 'RR', 'TO'],
+  'Região Nordeste': ['AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE'],
+  'Região Centro-Oeste': ['DF', 'GO', 'MT', 'MS'],
+  'Região Sudeste': ['ES', 'MG', 'RJ', 'SP'],
+  'Região Sul': ['PR', 'RS', 'SC']
 };
-const STATES = Object.keys(STATE_NAMES);
+
+const STATE_NAMES = {
+  'AC': 'Acre', 'AL': 'Alagoas', 'AP': 'Amapá', 'AM': 'Amazonas', 'BA': 'Bahia', 'CE': 'Ceará', 'DF': 'Distrito Federal', 
+  'ES': 'Espírito Santo', 'GO': 'Goiás', 'MA': 'Maranhão', 'MT': 'Mato Grosso', 'MS': 'Mato Grosso do Sul', 'MG': 'Minas Gerais', 
+  'PA': 'Pará', 'PB': 'Paraíba', 'PR': 'Paraná', 'PE': 'Pernambuco', 'PI': 'Piauí', 'RJ': 'Rio de Janeiro', 'RN': 'Rio Grande do Norte',
+  'RS': 'Rio Grande do Sul', 'RO': 'Rondônia', 'RR': 'Roraima', 'SC': 'Santa Catarina', 'SP': 'São Paulo', 'SE': 'Sergipe', 'TO': 'Tocantins'
+};
+const STATES = Object.keys(STATE_NAMES).sort();
+
+// Cria um dicionário inverso para descobrir rápido de que região é a UF
+const UF_TO_REGION = {};
+Object.entries(REGIONS).forEach(([region, ufs]) => {
+  ufs.forEach(uf => { UF_TO_REGION[uf] = region; });
+});
 
 export default function ManageCertificates() {
   const [links, setLinks] = useState([]);
@@ -27,9 +39,11 @@ export default function ManageCertificates() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const addNotification = useNotification();
 
-  // Estados para controlar as Sanfonas (Accordions) abertas
-  const [expandedEstadual, setExpandedEstadual] = useState({});
-  const [expandedMunicipal, setExpandedMunicipal] = useState({});
+  // Estados para controlar Sanfonas de REGIÃO e de ESTADO
+  const [expandedEstReg, setExpandedEstReg] = useState({});
+  const [expandedEstUF, setExpandedEstUF] = useState({});
+  const [expandedMunReg, setExpandedMunReg] = useState({});
+  const [expandedMunUF, setExpandedMunUF] = useState({});
 
   const [formData, setFormData] = useState({
     type: 'FEDERAL', state: '', city: '', title: '', url: ''
@@ -60,11 +74,15 @@ export default function ManageCertificates() {
       await api.post('/certificates', formData);
       addNotification('Link cadastrado com sucesso!', 'success');
       
-      // Se cadastrar um estadual/municipal, abre a sanfona correspondente
+      const reg = UF_TO_REGION[formData.state];
+
+      // Abre automaticamente a Região e o Estado onde o link foi adicionado
       if (formData.type === 'ESTADUAL') {
-        setExpandedEstadual(prev => ({...prev, [formData.state]: true}));
+        setExpandedEstReg(prev => ({...prev, [reg]: true}));
+        setExpandedEstUF(prev => ({...prev, [formData.state]: true}));
       } else if (formData.type === 'MUNICIPAL') {
-        setExpandedMunicipal(prev => ({...prev, [formData.state]: true}));
+        setExpandedMunReg(prev => ({...prev, [reg]: true}));
+        setExpandedMunUF(prev => ({...prev, [formData.state]: true}));
       }
 
       setFormData({ type: 'FEDERAL', state: '', city: '', title: '', url: '' });
@@ -87,22 +105,38 @@ export default function ManageCertificates() {
     }
   };
 
-  const toggleEstadual = (uf) => setExpandedEstadual(prev => ({...prev, [uf]: !prev[uf]}));
-  const toggleMunicipal = (uf) => setExpandedMunicipal(prev => ({...prev, [uf]: !prev[uf]}));
+  // Funções Toggle
+  const toggleEstReg = (reg) => setExpandedEstReg(prev => ({...prev, [reg]: !prev[reg]}));
+  const toggleEstUF = (uf) => setExpandedEstUF(prev => ({...prev, [uf]: !prev[uf]}));
+  const toggleMunReg = (reg) => setExpandedMunReg(prev => ({...prev, [reg]: !prev[reg]}));
+  const toggleMunUF = (uf) => setExpandedMunUF(prev => ({...prev, [uf]: !prev[uf]}));
 
+  // Filtros
   const federalLinks = links.filter(l => l.type === 'FEDERAL');
-  
-  const groupedEstaduais = links.filter(l => l.type === 'ESTADUAL').reduce((acc, link) => {
-    acc[link.state] = acc[link.state] || [];
-    acc[link.state].push(link);
-    return acc;
-  }, {});
 
-  const groupedMunicipais = links.filter(l => l.type === 'MUNICIPAL').reduce((acc, link) => {
-    acc[link.state] = acc[link.state] || [];
-    acc[link.state].push(link);
-    return acc;
-  }, {});
+  // Função mágica para agrupar: Região -> UF -> Array de Links
+  const groupLinksByRegionAndState = (type) => {
+    const filtered = links.filter(l => l.type === type);
+    const grouped = {};
+    
+    filtered.forEach(link => {
+      const reg = UF_TO_REGION[link.state];
+      if (!reg) return;
+      if (!grouped[reg]) grouped[reg] = {};
+      if (!grouped[reg][link.state]) grouped[reg][link.state] = [];
+      grouped[reg][link.state].push(link);
+    });
+    
+    return grouped;
+  };
+
+  const estaduais = groupLinksByRegionAndState('ESTADUAL');
+  const municipais = groupLinksByRegionAndState('MUNICIPAL');
+
+  // Conta quantos links tem numa região inteira (somando os estados)
+  const countLinksInRegion = (regionObj) => {
+    return Object.values(regionObj).reduce((sum, stateArray) => sum + stateArray.length, 0);
+  };
 
   return (
     <div style={{ padding: '24px', maxWidth: '1000px', margin: '0 auto' }}>
@@ -155,7 +189,7 @@ export default function ManageCertificates() {
       {isLoading ? <Spinner text="A carregar links..." /> : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
           
-          {/* FEDERAIS */}
+          {/* FEDERAIS (Sem Agrupamento) */}
           <div>
             <h4 style={{ color: '#15803d', borderBottom: '2px solid #bbf7d0', paddingBottom: '8px', marginTop: 0, fontSize: '18px' }}>Links Federais</h4>
             {federalLinks.map(l => (
@@ -167,34 +201,47 @@ export default function ManageCertificates() {
             {federalLinks.length === 0 && <p style={{ fontSize: '14px', color: '#6b7280' }}>Nenhum link federal cadastrado.</p>}
           </div>
 
-          {/* ESTADUAIS */}
+          {/* ESTADUAIS (Agrupados por Região -> UF) */}
           <div>
             <h4 style={{ color: '#0369a1', borderBottom: '2px solid #bae6fd', paddingBottom: '8px', marginTop: 0, fontSize: '18px' }}>Links Estaduais</h4>
-            {Object.keys(groupedEstaduais).length === 0 && <p style={{ fontSize: '14px', color: '#6b7280' }}>Nenhum link estadual cadastrado.</p>}
+            {Object.keys(estaduais).length === 0 && <p style={{ fontSize: '14px', color: '#6b7280' }}>Nenhum link estadual cadastrado.</p>}
             
-            {Object.keys(groupedEstaduais).sort().map(uf => (
-              <div key={uf} style={{ marginBottom: '12px', border: '1px solid #bae6fd', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#fff' }}>
-                {/* Botão da Sanfona */}
-                <button 
-                  onClick={() => toggleEstadual(uf)} 
-                  style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: '#f0f9ff', border: 'none', cursor: 'pointer' }}
-                >
-                  <span style={{ fontWeight: 'bold', color: '#0369a1', fontSize: '15px' }}>
-                    Estado: {STATE_NAMES[uf] || uf} ({uf})
-                    <span style={{ backgroundColor: '#e0f2fe', color: '#0284c7', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', marginLeft: '8px' }}>{groupedEstaduais[uf].length} link(s)</span>
+            {/* Loop nas Regiões que possuem dados */}
+            {Object.keys(estaduais).sort().map(region => (
+              <div key={region} style={{ marginBottom: '16px', border: '1px solid #bae6fd', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#f0f9ff' }}>
+                {/* Botão da Região */}
+                <button onClick={() => toggleEstReg(region)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: '#e0f2fe', border: 'none', cursor: 'pointer' }}>
+                  <span style={{ fontWeight: 'bold', color: '#0369a1', fontSize: '16px', display: 'flex', alignItems: 'center' }}>
+                    <MapPinIcon /> {region} 
+                    <span style={{ backgroundColor: '#0284c7', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', marginLeft: '10px' }}>
+                      {countLinksInRegion(estaduais[region])} link(s)
+                    </span>
                   </span>
-                  <div style={{ color: '#0369a1' }}>
-                    {expandedEstadual[uf] ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                  </div>
+                  <div style={{ color: '#0369a1' }}>{expandedEstReg[region] ? <ChevronUpIcon /> : <ChevronDownIcon />}</div>
                 </button>
 
-                {/* Conteúdo da Sanfona */}
-                {expandedEstadual[uf] && (
-                  <div style={{ padding: '10px 16px' }}>
-                    {groupedEstaduais[uf].map(l => (
-                      <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
-                        <div><strong style={{color: '#334155'}}>{l.title}</strong> <br/><a href={l.url} target="_blank" rel="noreferrer" style={{ fontSize: '13px', color: '#2563eb', textDecoration: 'none' }}>{l.url}</a></div>
-                        <button onClick={() => handleDelete(l.id)} style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>Excluir</button>
+                {/* Sub-Sanfona dos Estados daquela Região */}
+                {expandedEstReg[region] && (
+                  <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {Object.keys(estaduais[region]).sort().map(uf => (
+                      <div key={uf} style={{ border: '1px solid #7dd3fc', borderRadius: '6px', overflow: 'hidden', backgroundColor: '#fff' }}>
+                        <button onClick={() => toggleEstUF(uf)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: '#fff', border: 'none', cursor: 'pointer' }}>
+                          <span style={{ fontWeight: 'bold', color: '#0284c7', fontSize: '14px' }}>
+                            {STATE_NAMES[uf]} ({uf}) <span style={{ color: '#94a3b8', fontWeight: 'normal', fontSize: '13px', marginLeft: '6px' }}>({estaduais[region][uf].length})</span>
+                          </span>
+                          <div style={{ color: '#0ea5e9' }}>{expandedEstUF[uf] ? <ChevronUpIcon /> : <ChevronDownIcon />}</div>
+                        </button>
+
+                        {expandedEstUF[uf] && (
+                          <div style={{ padding: '10px 16px', backgroundColor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+                            {estaduais[region][uf].map(l => (
+                              <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #e2e8f0' }}>
+                                <div><strong style={{color: '#334155', fontSize: '14px'}}>{l.title}</strong> <br/><a href={l.url} target="_blank" rel="noreferrer" style={{ fontSize: '13px', color: '#2563eb', textDecoration: 'none' }}>{l.url}</a></div>
+                                <button onClick={() => handleDelete(l.id)} style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>Excluir</button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -203,40 +250,53 @@ export default function ManageCertificates() {
             ))}
           </div>
 
-          {/* MUNICIPAIS */}
+          {/* MUNICIPAIS (Agrupados por Região -> UF) */}
           <div>
             <h4 style={{ color: '#7e22ce', borderBottom: '2px solid #e9d5ff', paddingBottom: '8px', marginTop: 0, fontSize: '18px' }}>Links Municipais</h4>
-            {Object.keys(groupedMunicipais).length === 0 && <p style={{ fontSize: '14px', color: '#6b7280' }}>Nenhum link municipal cadastrado.</p>}
+            {Object.keys(municipais).length === 0 && <p style={{ fontSize: '14px', color: '#6b7280' }}>Nenhum link municipal cadastrado.</p>}
             
-            {Object.keys(groupedMunicipais).sort().map(uf => (
-              <div key={uf} style={{ marginBottom: '12px', border: '1px solid #e9d5ff', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#fff' }}>
-                {/* Botão da Sanfona */}
-                <button 
-                  onClick={() => toggleMunicipal(uf)} 
-                  style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: '#faf5ff', border: 'none', cursor: 'pointer' }}
-                >
-                  <span style={{ fontWeight: 'bold', color: '#7e22ce', fontSize: '15px' }}>
-                    Estado: {STATE_NAMES[uf] || uf} ({uf})
-                    <span style={{ backgroundColor: '#f3e8ff', color: '#6b21a8', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', marginLeft: '8px' }}>{groupedMunicipais[uf].length} link(s)</span>
+            {/* Loop nas Regiões que possuem dados */}
+            {Object.keys(municipais).sort().map(region => (
+              <div key={region} style={{ marginBottom: '16px', border: '1px solid #e9d5ff', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#faf5ff' }}>
+                {/* Botão da Região */}
+                <button onClick={() => toggleMunReg(region)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: '#f3e8ff', border: 'none', cursor: 'pointer' }}>
+                  <span style={{ fontWeight: 'bold', color: '#7e22ce', fontSize: '16px', display: 'flex', alignItems: 'center' }}>
+                    <MapPinIcon /> {region} 
+                    <span style={{ backgroundColor: '#9333ea', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', marginLeft: '10px' }}>
+                      {countLinksInRegion(municipais[region])} link(s)
+                    </span>
                   </span>
-                  <div style={{ color: '#7e22ce' }}>
-                    {expandedMunicipal[uf] ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                  </div>
+                  <div style={{ color: '#7e22ce' }}>{expandedMunReg[region] ? <ChevronUpIcon /> : <ChevronDownIcon />}</div>
                 </button>
 
-                {/* Conteúdo da Sanfona */}
-                {expandedMunicipal[uf] && (
-                  <div style={{ padding: '10px 16px' }}>
-                    {groupedMunicipais[uf].map(l => (
-                      <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
-                        <div>
-                          <span style={{ backgroundColor: '#f3e8ff', color: '#7e22ce', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', marginRight: '6px' }}>
-                            MUNICÍPIO: {l.city?.toUpperCase()}
+                {/* Sub-Sanfona dos Estados daquela Região */}
+                {expandedMunReg[region] && (
+                  <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {Object.keys(municipais[region]).sort().map(uf => (
+                      <div key={uf} style={{ border: '1px solid #d8b4fe', borderRadius: '6px', overflow: 'hidden', backgroundColor: '#fff' }}>
+                        <button onClick={() => toggleMunUF(uf)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: '#fff', border: 'none', cursor: 'pointer' }}>
+                          <span style={{ fontWeight: 'bold', color: '#9333ea', fontSize: '14px' }}>
+                            {STATE_NAMES[uf]} ({uf}) <span style={{ color: '#94a3b8', fontWeight: 'normal', fontSize: '13px', marginLeft: '6px' }}>({municipais[region][uf].length})</span>
                           </span>
-                          <strong style={{color: '#334155'}}>{l.title}</strong> <br/>
-                          <a href={l.url} target="_blank" rel="noreferrer" style={{ fontSize: '13px', color: '#2563eb', textDecoration: 'none' }}>{l.url}</a>
-                        </div>
-                        <button onClick={() => handleDelete(l.id)} style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>Excluir</button>
+                          <div style={{ color: '#a855f7' }}>{expandedMunUF[uf] ? <ChevronUpIcon /> : <ChevronDownIcon />}</div>
+                        </button>
+
+                        {expandedMunUF[uf] && (
+                          <div style={{ padding: '10px 16px', backgroundColor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+                            {municipais[region][uf].map(l => (
+                              <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #e2e8f0' }}>
+                                <div>
+                                  <span style={{ backgroundColor: '#f3e8ff', color: '#7e22ce', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', marginRight: '6px' }}>
+                                    {l.city?.toUpperCase()}
+                                  </span>
+                                  <strong style={{color: '#334155', fontSize: '14px'}}>{l.title}</strong> <br/>
+                                  <a href={l.url} target="_blank" rel="noreferrer" style={{ fontSize: '13px', color: '#2563eb', textDecoration: 'none' }}>{l.url}</a>
+                                </div>
+                                <button onClick={() => handleDelete(l.id)} style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>Excluir</button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
