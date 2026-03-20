@@ -45,8 +45,6 @@ const LogoutIcon = ({ className }) => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
   </svg>
 );
-
-// --- NOVOS ÍCONES (Relatórios e Avisos) ---
 const ReportIcon = ({ className }) => (
   <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -75,19 +73,20 @@ export default function AdminSidebar({ isOpen, onClose }) {
     { path: '/admin/biblioteca', label: 'Biblioteca', icon: BookIcon },
     { path: '/admin/financeiro', label: 'Financeiro', icon: FinanceIcon },
     { path: '/admin/avisos', label: 'Avisos Globais', icon: MegaphoneIcon },
-    { path: '/admin/relatorios', label: 'Auditoria e Logs', icon: ReportIcon }, // <-- NOVO LINK DO RELATÓRIO
+    { path: '/admin/relatorios', label: 'Auditoria e Logs', icon: ReportIcon },
     { path: '/admin/profile', label: 'Meu Perfil', icon: ProfileIcon },
   ];
 
   return (
-    <aside className={`${styles.sidebar} ${isOpen ? styles.open : styles.closed}`}>
+    <aside className={`${styles.sidebar} ${isOpen ? styles.open : styles.closed}`} style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <div className={styles.logoContainer}>
         <div className={styles.logoWrapper}>
           <img src="/logo_portal.png" alt="Portal Contábil" className={styles.sidebarLogo} />
         </div>
       </div>
 
-      <nav className={styles.nav}>
+      {/* 👇 A MÁGICA DO SCROLL ACONTECE AQUI 👇 */}
+      <nav className={styles.nav} style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: '20px' }}>
         {navItems.map((item) => (
           <NavLink
             key={item.path}
@@ -99,7 +98,6 @@ export default function AdminSidebar({ isOpen, onClose }) {
           </NavLink>
         ))}
         
-        {/* LINK EXTERNO PARA O MANUAL */}
         <a 
           href="/manual" 
           target="_blank" 
@@ -111,7 +109,7 @@ export default function AdminSidebar({ isOpen, onClose }) {
         </a>
       </nav>
 
-      <div className={styles.footer}>
+      <div className={styles.footer} style={{ marginTop: 'auto' }}>
         <div className={styles.userInfo}>
            <span className={styles.userName}>{user?.name || 'Administrador'}</span>
         </div>
