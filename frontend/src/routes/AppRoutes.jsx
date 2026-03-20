@@ -182,6 +182,7 @@ export default function AppRoutes() {
               <Route path="/admin/avisos" element={<AdminNoticesPage />} />
               <Route path="/admin/profile" element={<AdminProfile />} />
               <Route path="/admin/offices" element={<ManageOffices />} /> 
+              <Route path="/admin/relatorios" element={<SystemReports />} />
             </Route>
           </Route>
 
@@ -192,6 +193,7 @@ export default function AppRoutes() {
               <Route path="/financeiro/gestao" element={<FinanceiroPage />} />
               <Route path="/financeiro/historico" element={<HistoricoFinanceiro />} />
               <Route path="/financeiro/configuracao" element={<StripeConfig />} />
+              <Route path="/admin/relatorios" element={<SystemReports />} />
             </Route>
           </Route>
 
