@@ -22,18 +22,17 @@ import officeRoutes from './src/routes/office.routes.js';
 import { startGovernanceCron } from './src/services/governance.service.js';
 import projectRoutes from './src/routes/project.routes.js';
 import systemRoutes from './src/routes/system.routes.js';
-import certificateRoutes from './src/routes/certificate.routes.js';
-import logRoutes from './src/routes/log.routes.js';
-
-// 🚀 NOVA ROTA DA DIRETORIA AQUI!
 import boardRoutes from './src/routes/board.routes.js';
+import certificateRoutes from './src/routes/certificate.routes.js';
+
+// 🚀 NOVA ROTA DE LOGS / AUDITORIA AQUI!
+import logRoutes from './src/routes/log.routes.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Configuração para suportar ES Modules (__dirname)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -43,36 +42,23 @@ app.use(cors({
   credentials: true
 }));
 
-// --- 2. SERVIDOR DE FICHEIROS ESTÁTICOS (RESOLUÇÃO DE ERRO 404) ---
-/**
- * Definimos caminhos absolutos para garantir que a VPS encontre os ficheiros.
- * O cabeçalho 'inline' permite abrir PDFs e Imagens diretamente no browser.
- */
+// --- 2. SERVIDOR DE FICHEIROS ESTÁTICOS ---
 const staticOptions = {
   setHeaders: (res, filePath) => {
     res.set('Access-Control-Allow-Origin', '*');
-    if (filePath.endsWith('.pdf')) {
-      res.set('Content-Type', 'application/pdf');
-    }
+    if (filePath.endsWith('.pdf')) res.set('Content-Type', 'application/pdf');
     res.set('Content-Disposition', 'inline');
   }
 };
 
-// Caminhos físicos absolutos na VPS
 const uploadsPath = path.resolve(__dirname, 'uploads');
 const publicUploadsPath = path.resolve(uploadsPath, 'public');
 
-// Mapeamento prioritário: primeiro a subpasta 'public' (imagens da biblioteca)
 app.use('/uploads/public', express.static(publicUploadsPath, staticOptions));
-
-// Mapeamento secundário: pasta raiz 'uploads' (documentos das OSCs)
 app.use('/uploads', express.static(uploadsPath, staticOptions));
 
-
 // --- 3. MIDDLEWARES DE PROCESSAMENTO ---
-// Webhooks devem vir antes do express.json() se precisarem de raw body
 app.use('/api/webhooks', webhookRoutes);
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -94,15 +80,12 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/offices', officeRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/system', systemRoutes);
+app.use('/api/board', boardRoutes);
 app.use('/api/certificates', certificateRoutes);
+
+// 🚀 REGISTO DA ROTA DE LOGS NO SERVIDOR!
 app.use('/api/logs', logRoutes);
 
-
-// 🚀 REGISTO DA NOVA ROTA DA DIRETORIA AQUI!
-app.use('/api/board', boardRoutes);
-
-
-// Rota de teste de saúde da API
 app.get('/', (req, res) => {
   res.send('API Portal Contábil Ativa e Operacional 🚀');
 });
@@ -119,9 +102,5 @@ app.use((err, req, res, next) => {
 // --- 7. INICIALIZAÇÃO DO SERVIDOR ---
 app.listen(PORT, () => {
   startGovernanceCron();
-  console.log(`\n=========================================`);
   console.log(`🚀 Servidor rodando na porta: ${PORT}`);
-  console.log(`📁 Pasta Uploads: ${uploadsPath}`);
-  console.log(`🖼️  Pasta Public: ${publicUploadsPath}`);
-  console.log(`=========================================\n`); 
 });
