@@ -54,6 +54,9 @@ const staticOptions = {
 const uploadsPath = path.resolve(__dirname, 'uploads');
 const publicUploadsPath = path.resolve(uploadsPath, 'public');
 
+app.use('/api/uploads/public', express.static(publicUploadsPath, staticOptions));
+app.use('/api/uploads', express.static(uploadsPath, staticOptions));
+
 app.use('/uploads/public', express.static(publicUploadsPath, staticOptions));
 app.use('/uploads', express.static(uploadsPath, staticOptions));
 
