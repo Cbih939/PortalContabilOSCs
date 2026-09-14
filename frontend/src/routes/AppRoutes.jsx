@@ -18,6 +18,7 @@ import EsqueceuSenhaPage from '../pages/EsqueceuSenha.jsx';
 import RedefinirSenhaPage from '../pages/RedefinirSenha.jsx';
 import ManualPage from '../pages/shared/ManualPage.jsx';
 import MaintenancePage from '../pages/shared/MaintenancePage.jsx';
+import LandingPage from '../pages/LandingPage.jsx';
 
 // --- ADMIN ---
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
@@ -162,6 +163,9 @@ export default function AppRoutes() {
           
           {/* ROTA DE MANUTENÇÃO (Para onde os utilizadores são atirados) */}
           <Route path="/manutencao" element={<MaintenancePage />} />
+
+          {/* LANDING PAGE (Standalone) */}
+          <Route path="/landpage" element={<LandingPage />} />
 
           {/* Rotas Públicas (Apenas Visitantes sem Login) */}
           <Route element={<GuestLayout />}>

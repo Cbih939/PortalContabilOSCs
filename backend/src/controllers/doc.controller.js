@@ -227,3 +227,110 @@ export const deleteDocument = async (req, res) => {
     res.status(500).json({ message: 'Erro ao excluir o documento.' });
   }
 };
+
+import archiver from 'archiver';
+
+export const downloadMonthZip = async (req, res) => {
+  try {
+    const { oscId, month, year } = req.query;
+    
+    if (!oscId || !month || !year) {
+      return res.status(400).json({ message: 'OSC, Mês e Ano são obrigatórios.' });
+    }
+
+    const [rows] = await pool.execute(
+      'SELECT original_name, saved_filename FROM documents WHERE osc_id = ? AND ref_month = ? AND ref_year = ? AND doc_type != "CONCLUSO TEC"',
+      [oscId, month, year]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Nenhum documento encontrado para este mês.' });
+    }
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', \`attachment; filename="documentos_\${year}_\${month}.zip"\`);
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    
+    archive.on('error', (err) => {
+      console.error('Erro no Archiver:', err);
+      res.status(500).send({ error: err.message });
+    });
+
+    archive.pipe(res);
+
+    for (const doc of rows) {
+      const cleanFileName = doc.saved_filename.replace('uploads/', '').replace('public/', '').replace(/^\\/+/, '');
+      let filePath = path.resolve(__dirname, '../../uploads', cleanFileName);
+      if (!fs.existsSync(filePath)) filePath = path.resolve(__dirname, '../../uploads/public', cleanFileName);
+      
+      if (fs.existsSync(filePath)) {
+        archive.file(filePath, { name: doc.original_name });
+      }
+    }
+
+    await archive.finalize();
+
+  } catch (error) {
+    console.error('Erro ao gerar ZIP:', error);
+    if (!res.headersSent) res.status(500).json({ message: 'Erro ao processar o arquivo ZIP.' });
+  }
+};
+
+import jwt from 'jsonwebtoken';
+
+export const generatePublicLink = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const [rows] = await pool.execute('SELECT id, original_name FROM documents WHERE id = ?', [id]);
+    
+    if (rows.length === 0) return res.status(404).json({ message: 'Documento não encontrado.' });
+    
+    // Gera token válido por 30 dias (ou qualquer outro prazo)
+    const token = jwt.sign({ docId: id }, process.env.JWT_SECRET || 'fallbackSecret', { expiresIn: '30d' });
+    
+    const publicUrl = `${process.env.VITE_API_URL || 'http://localhost:3000'}/api/documents/public/${token}`;
+    
+    res.json({ message: 'Link gerado com sucesso.', link: publicUrl });
+  } catch (error) {
+    console.error('Erro ao gerar link público:', error);
+    res.status(500).json({ message: 'Erro ao gerar link de partilha.' });
+  }
+};
+
+export const downloadPublicDocument = async (req, res) => {
+  try {
+    const { token } = req.params;
+    if (!token) return res.status(400).send('Token inválido ou expirado.');
+    
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallbackSecret');
+    } catch (err) {
+      return res.status(401).send('O link expirou ou é inválido.');
+    }
+    
+    const docId = decoded.docId;
+    const [rows] = await pool.execute('SELECT saved_filename, original_name, mime_type FROM documents WHERE id = ?', [docId]);
+    
+    if (rows.length === 0) return res.status(404).send('Documento não encontrado no servidor.');
+    
+    const { saved_filename, original_name, mime_type } = rows[0];
+    const cleanFileName = saved_filename.replace('uploads/', '').replace('public/', '').replace(/^\\/+/, '');
+    
+    let filePath = path.resolve(__dirname, '../../uploads', cleanFileName);
+    if (!fs.existsSync(filePath)) filePath = path.resolve(__dirname, '../../uploads/public', cleanFileName);
+
+    if (fs.existsSync(filePath)) {
+      res.setHeader('Content-Type', mime_type || 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${original_name}"`);
+      return res.sendFile(filePath);
+    } else {
+      return res.status(404).send('O arquivo físico não foi encontrado.');
+    }
+  } catch (error) {
+    console.error('Erro ao processar download público:', error);
+    res.status(500).send('Erro interno.');
+  }
+};

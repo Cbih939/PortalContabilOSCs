@@ -178,6 +178,25 @@ export default function OSCDocumentsPage() {
     }
   };
 
+  const handleShare = async (file) => {
+    try {
+      const response = await docService.generatePublicLink(file.id);
+      if (response && response.link) {
+        await navigator.clipboard.writeText(response.link);
+        addNotification('Link copiado para a área de transferência!', 'success');
+      }
+    } catch (err) {
+      addNotification('Erro ao gerar link de partilha.', 'error');
+    }
+  };
+
+  const LinkIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+    </svg>
+  );
+
   return (
     <div className={styles.pageContainer}>
       <div className={styles.grid}>
@@ -206,7 +225,9 @@ export default function OSCDocumentsPage() {
                         onChange={(e) => setDocType(e.target.value)}
                     >
                         <option value="MENSAL">Mensal (Contábil / Fiscal)</option>
+                        <option value="RELATORIO">Relatório Mês a Mês</option>
                         <option value="FIXO">Fixo (Atas, Estatutos, Cartão CNPJ)</option>
+                        <option value="CERTIFICACAO">Certificação (Documento Fixo)</option>
                         <option value="CONCLUSO TEC">CONCLUSO TEC (Transf. Escritório)</option>
                     </select>
                 </div>
@@ -353,9 +374,19 @@ export default function OSCDocumentsPage() {
                       </span>
                     </div>
                   </div>
-                  <button onClick={() => handleDownload(file)} className={styles.downloadButton}>
-                    <DownloadIcon className={styles.icon} />
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button 
+                      onClick={() => handleShare(file)} 
+                      className={styles.downloadButton}
+                      title="Gerar Link Público"
+                      style={{ backgroundColor: '#f3f4f6', color: '#4f46e5' }}
+                    >
+                      <LinkIcon />
+                    </button>
+                    <button onClick={() => handleDownload(file)} className={styles.downloadButton} title="Download">
+                      <DownloadIcon className={styles.icon} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

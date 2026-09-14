@@ -29,6 +29,7 @@ const IconInfo = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="no
 const IconUpload = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>);
 const IconTrash = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>);
 const IconUndo = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg>);
+const IconDownload = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>);
 
 // --- ESTILOS ---
 const styles = {
@@ -324,8 +325,8 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
         .sort((a, b) => parseInt(b.ref_month || 0) - parseInt(a.ref_month || 0))
     : [];
 
-  const docsContabil = sortedDocsInViewYear.filter(d => d.doc_type === 'MENSAL');
-  const docsGov = sortedDocsInViewYear.filter(d => d.doc_type === 'FIXO');
+  const docsContabil = sortedDocsInViewYear.filter(d => ['MENSAL', 'RELATORIO'].includes(d.doc_type));
+  const docsGov = sortedDocsInViewYear.filter(d => ['FIXO', 'CERTIFICACAO'].includes(d.doc_type));
   const docsTec = sortedDocsInViewYear.filter(d => d.doc_type === 'CONCLUSO TEC');
 
   return (
@@ -395,6 +396,22 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
             <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', width: '100%'}}>
               <button style={{...styles.checkBtn, flex: 1, minWidth: '160px', justifyContent: 'center'}} onClick={handleConcludeMonths}><IconCheck /> Concluir Manualmente</button>
               <button style={{...styles.checkBtn, backgroundColor: '#f97316', flex: 1, minWidth: '160px', justifyContent: 'center'}} onClick={handlePendingMonths}><IconUndo /> Voltar para Pendente</button>
+              <button style={{...styles.counterUploadBtn, backgroundColor: '#4f46e5', flex: 1, minWidth: '160px', justifyContent: 'center'}} onClick={async () => {
+                if (actionMonths.length === 0) return addNotification("Selecione pelo menos um mês.", "error");
+                setIsUploading(true);
+                try {
+                  for (const m of actionMonths) {
+                    await docService.downloadMonthZip(osc.id, m, actionYear);
+                  }
+                  addNotification("Downloads iniciados!", "success");
+                } catch (e) {
+                  addNotification("Erro ao baixar ZIP.", "error");
+                } finally {
+                  setIsUploading(false);
+                }
+              }}>
+                {isUploading ? <Spinner size="sm" /> : <><IconDownload /> Baixar Lote (.zip)</>}
+              </button>
               <label style={{...styles.counterUploadBtn, backgroundColor: '#2563eb', flex: 1, minWidth: '160px', justifyContent: 'center'}}>
                 {isUploading ? <Spinner size="sm" /> : <><IconUpload /> Enviar Doc. Contábil</>}
                 <input type="file" style={{ display: 'none' }} onChange={(e) => handleUpload(e, 'MENSAL')} disabled={isUploading} />
@@ -724,6 +741,44 @@ export default function OSCsPage() {
     }
   };
 
+  const getDelayCount = (osc) => {
+    let delayCount = 0;
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth(); // Somente meses fechados (anteriores)
+
+    const rawDate = osc.data_origem_estatuto || osc.dataOrigemEstatuto || osc.data_fundacao || osc.dataFundacao || osc.created_at || osc.createdAt;
+    let oY = 2000, oM = 0;
+    if (rawDate) {
+      if (typeof rawDate === 'string' && rawDate.includes('-')) {
+        const pts = rawDate.split('T')[0].split('-');
+        oY = parseInt(pts[0], 10); oM = parseInt(pts[1], 10) - 1;
+      } else {
+        const d = new Date(rawDate); oY = d.getFullYear(); oM = d.getMonth();
+      }
+    }
+
+    for (let i = 0; i < currentMonth; i++) {
+      if (currentYear < oY || (currentYear === oY && i < oM)) continue;
+
+      const monthNum = i + 1;
+      const docsInMonth = osc.documents ? osc.documents.filter(d => parseInt(d.ref_month) === monthNum && parseInt(d.ref_year) === currentYear) : [];
+      const hasDoc = docsInMonth.length > 0;
+      const hasConclusoTec = hasDoc && docsInMonth.some(d => d.doc_type === 'CONCLUSO TEC');
+      const isVerified = hasDoc && docsInMonth.some(d => d.status === 'CONCLUIDO');
+      
+      if (!hasConclusoTec && !isVerified) {
+        delayCount++;
+      }
+    }
+    return delayCount;
+  };
+
+  const topDelayedOscs = [...oscs]
+    .map(osc => ({ ...osc, delayCount: getDelayCount(osc) }))
+    .filter(osc => osc.delayCount > 0)
+    .sort((a, b) => b.delayCount - a.delayCount)
+    .slice(0, 3); // Top 3
+
   if (isLoadingData) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}><Spinner text="Carregando..." /></div>;
 
   return (
@@ -742,6 +797,23 @@ export default function OSCsPage() {
           <IconPlus /> Cadastrar Nova OSC
         </button>
       </div>
+
+      {topDelayedOscs.length > 0 && (
+        <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '8px', padding: '15px 20px', marginBottom: '24px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+          <h3 style={{ margin: '0 0 10px 0', color: '#991b1b', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px' }}>
+            🚨 SINAL DE ALERTA: OSCs com mais pendências no ano
+          </h3>
+          <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+            {topDelayedOscs.map((osc, idx) => (
+              <div key={osc.id} style={{ backgroundColor: '#fff', border: '1px solid #fecaca', borderRadius: '6px', padding: '10px 15px', flex: '1', minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#7f1d1d' }}>{idx + 1}. {osc.name || osc.razao_social}</span>
+                <span style={{ fontSize: '12px', color: '#b91c1c', fontWeight: 'bold' }}>{osc.delayCount} meses atrasados</span>
+                <button onClick={() => setOscToSendAlert(osc)} style={{ marginTop: '5px', padding: '6px', fontSize: '11px', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Cobrar Agora</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={styles.searchRow}>
         <div style={styles.searchWrapper}>

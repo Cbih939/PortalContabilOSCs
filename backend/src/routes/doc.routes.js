@@ -7,17 +7,27 @@ import {
   markMonthAsConcluded, 
   markConclusoTec,
   markMonthAsPending,
-  deleteDocument
+  deleteDocument,
+  downloadMonthZip,
+  generatePublicLink,
+  downloadPublicDocument
 } from '../controllers/doc.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 import { upload } from '../middlewares/upload.middleware.js'; 
 
 const router = Router();
 
+// ROTA PÚBLICA (Sem protect)
+router.get('/public/:token', downloadPublicDocument);
+
 router.get('/my', protect, getDocuments);
 router.get('/received', protect, getReceivedDocuments);
 router.post('/upload', protect, upload.single('file'), uploadDocument);
 router.get('/download/:id', protect, downloadDocument);
+router.get('/download-month-zip', protect, downloadMonthZip);
+
+// Gerar link de partilha
+router.post('/share/:id', protect, generatePublicLink);
 
 // Marcar como Concluído
 router.post('/conclude', protect, markMonthAsConcluded);

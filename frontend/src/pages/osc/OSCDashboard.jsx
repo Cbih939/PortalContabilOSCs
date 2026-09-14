@@ -138,13 +138,31 @@ export default function OSCDashboard() {
           </div>
         </div>
 
-        <button 
-          onClick={() => setShowCertificadosModal(true)}
-          style={{ backgroundColor: '#059669', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgba(5, 150, 105, 0.2)' }}
-        >
-          <ShieldCheckIcon />
-          Acesso às Certificadoras
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            onClick={() => {
+              import('../../utils/calendar.js').then(module => {
+                module.downloadICS(
+                  "Envio de Documentos Contábeis",
+                  "Lembrete mensal para enviar a documentação contábil para o Portal Contábil OSCs.",
+                  "Portal Contábil OSCs"
+                );
+              });
+            }}
+            style={{ backgroundColor: '#2563eb', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)' }}
+          >
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            Sincronizar Calendário
+          </button>
+          
+          <button 
+            onClick={() => setShowCertificadosModal(true)}
+            style={{ backgroundColor: '#059669', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgba(5, 150, 105, 0.2)' }}
+          >
+            <ShieldCheckIcon />
+            Acesso às Certificadoras
+          </button>
+        </div>
       </div>
 
       {/* Escudo de Governança */}

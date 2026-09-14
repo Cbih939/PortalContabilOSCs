@@ -1,0 +1,11 @@
+# Configuração de finais de linha para garantir compatibilidade com Linux (LF)
+* text=auto eol=lf
+
+# Exceções para arquivos binários (não devem ser alterados)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary

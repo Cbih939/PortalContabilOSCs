@@ -60,6 +60,21 @@ export const downloadDocument = async (id) => {
 };
 
 /**
+ * Faz o download de todos os documentos do mês em formato ZIP.
+ */
+export const downloadMonthZip = async (oscId, month, year) => {
+  try {
+    const response = await api.get(`/documents/download-month-zip?oscId=${oscId}&month=${month}&year=${year}`, {
+      responseType: 'blob',
+    });
+    triggerDownload(response.data, `documentos_${year}_${month}.zip`);
+  } catch (error) {
+    console.error('Erro ao fazer o download do ZIP:', error);
+    throw new Error('Não foi possível fazer o download do ZIP. Verifique se existem documentos neste mês.');
+  }
+};
+
+/**
  * Faz o download de um ficheiro de template (ex: modelo.xlsx).
  */
 export const downloadTemplate = async (templateName) => {
@@ -123,5 +138,11 @@ export const markAsPending = async (data) => {
 // Excluir um documento
 export const deleteDocument = async (id) => {
   const response = await api.delete(`/documents/${id}`);
+  return response.data;
+};
+
+// Gerar link público de um documento
+export const generatePublicLink = async (id) => {
+  const response = await api.post(`/documents/share/${id}`);
   return response.data;
 };

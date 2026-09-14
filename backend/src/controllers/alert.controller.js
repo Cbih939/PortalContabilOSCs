@@ -16,7 +16,12 @@ export const getMyAlerts = async (req, res) => {
     let alerts = [];
 
     if (userRole === 'CONTADOR') {
-      const [rows] = await pool.execute('SELECT * FROM alerts WHERE created_by_contador_id = ? ORDER BY created_at DESC', [userId]);
+      const [rows] = await pool.execute(`
+        SELECT * FROM alerts 
+        WHERE created_by_contador_id = ? 
+           OR (osc_id IS NULL AND created_by_contador_id IS NULL) 
+        ORDER BY created_at DESC
+      `, [userId]);
       alerts = rows;
     } else {
       // 1. Busca a OSC e o contador responsável por ela
