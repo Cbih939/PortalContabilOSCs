@@ -1,7 +1,7 @@
 import express from 'express';
 import { getTransactions, createTransaction, updateTransaction, deleteTransaction } from '../controllers/transaction.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
-import upload from '../middlewares/upload.middleware.js'; // Utilizando o middleware existente para uploads
+import { upload } from '../middlewares/upload.middleware.js'; // Utilizando o middleware existente para uploads
 
 const router = express.Router();
 
