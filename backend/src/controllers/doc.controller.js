@@ -228,7 +228,9 @@ export const deleteDocument = async (req, res) => {
   }
 };
 
-import archiver from 'archiver';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const archiver = require('archiver');
 
 export const downloadMonthZip = async (req, res) => {
   try {
@@ -248,7 +250,7 @@ export const downloadMonthZip = async (req, res) => {
     }
 
     res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', \`attachment; filename="documentos_\${year}_\${month}.zip"\`);
+    res.setHeader('Content-Disposition', `attachment; filename="documentos_${year}_${month}.zip"`);
 
     const archive = archiver('zip', { zlib: { level: 9 } });
     
@@ -260,7 +262,7 @@ export const downloadMonthZip = async (req, res) => {
     archive.pipe(res);
 
     for (const doc of rows) {
-      const cleanFileName = doc.saved_filename.replace('uploads/', '').replace('public/', '').replace(/^\\/+/, '');
+      const cleanFileName = doc.saved_filename.replace('uploads/', '').replace('public/', '').replace(/^\/+/, '');
       let filePath = path.resolve(__dirname, '../../uploads', cleanFileName);
       if (!fs.existsSync(filePath)) filePath = path.resolve(__dirname, '../../uploads/public', cleanFileName);
       
@@ -317,7 +319,7 @@ export const downloadPublicDocument = async (req, res) => {
     if (rows.length === 0) return res.status(404).send('Documento não encontrado no servidor.');
     
     const { saved_filename, original_name, mime_type } = rows[0];
-    const cleanFileName = saved_filename.replace('uploads/', '').replace('public/', '').replace(/^\\/+/, '');
+    const cleanFileName = saved_filename.replace('uploads/', '').replace('public/', '').replace(/^\/+/, '');
     
     let filePath = path.resolve(__dirname, '../../uploads', cleanFileName);
     if (!fs.existsSync(filePath)) filePath = path.resolve(__dirname, '../../uploads/public', cleanFileName);
