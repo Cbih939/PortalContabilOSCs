@@ -13,6 +13,7 @@ import messageRoutes from './message.routes.js';
 import docRoutes from './doc.routes.js';
 import projectRoutes from './project.routes.js';
 import boardRoutes from './board.routes.js';
+import transactionRoutes from './transaction.routes.js';
 
 const router = express.Router();
 
@@ -29,5 +30,6 @@ router.use('/messages', messageRoutes);
 router.use('/documents', docRoutes);
 router.use('/projects', projectRoutes);
 router.use('/board', boardRoutes);
+router.use('/transactions', transactionRoutes);
 
 export default router;

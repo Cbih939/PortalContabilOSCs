@@ -81,3 +81,30 @@ export const getAllOffices = async () => {
   const response = await api.get('/offices');
   return response.data;
 };
+
+// --- Transações (Prestação de Contas) ---
+
+export const getTransactions = async () => {
+  const response = await api.get('/transactions');
+  return response.data;
+};
+
+export const createTransaction = async (formData) => {
+  // Passamos formData porque pode conter anexo (file)
+  const response = await api.post('/transactions', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return response.data;
+};
+
+export const updateTransaction = async (id, formData) => {
+  const response = await api.put(`/transactions/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return response.data;
+};
+
+export const deleteTransaction = async (id) => {
+  const response = await api.delete(`/transactions/${id}`);
+  return response.data;
+};
