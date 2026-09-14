@@ -88,9 +88,9 @@ export default function OSCSidebar({ isOpen, onClose }) {
         </div>
 
         {/* 3. PRESTAÇÃO DE CONTAS */}
-        <NavLink to="/osc/prestacao-contas" style={{ opacity: 0.6, pointerEvents: 'none' }} className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
+        <NavLink to="/osc/prestacao-contas" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
           <AccountabilityIcon className={styles.icon} />
-          <span className={styles.label}>Prest. de Contas (Breve)</span>
+          <span className={styles.label}>Prestação de Contas</span>
         </NavLink>
 
         {/* 4. GOVERNANÇA */}

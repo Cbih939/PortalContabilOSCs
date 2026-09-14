@@ -138,3 +138,46 @@
 .navItem:hover .icon {
   color: var(--primary-color);
 }
+
+.menuGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.menuGroup > button {
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  outline: none;
+  font-family: inherit;
+}
+
+.submenu {
+  display: flex;
+  flex-direction: column;
+  padding-left: 2rem; /* Indent submenus */
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.subNavItem {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  display: block;
+}
+
+.subNavItem:hover {
+  color: var(--primary-color);
+  background-color: #f8fafc;
+}
+
+.subActive {
+  color: var(--primary-hover);
+  font-weight: 600;
+  background-color: transparent; /* Keep it clean */
+}
