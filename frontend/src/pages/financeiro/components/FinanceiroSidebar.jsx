@@ -35,7 +35,7 @@ const LogoutIcon = ({ className }) => (
   </svg>
 );
 
-export default function FinanceiroSidebar({ isOpen }) {
+export default function FinanceiroSidebar({ isOpen, onClose }) {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
