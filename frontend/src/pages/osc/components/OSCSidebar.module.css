@@ -1,188 +1,119 @@
-/* src/pages/osc/components/OSCSidebar.module.css */
-
-/* Sidebar Principal */
 .sidebar {
-  background-color: #EC6D12;
-  color: white;
-  height: 100vh;
-  width: 17rem;
+  width: 280px;
+  height: 100%;
+  background-color: var(--bg-sidebar);
+  color: var(--text-dark);
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-  box-shadow: 4px 0 10px rgba(0,0,0,0.1);
-  transition: all 0.3s ease-in-out;
-  position: relative;
-  z-index: 50;
 }
 
-/* Área do Logo (Retângulo suave e moderno em vez da pílula gigante) */
 .logoContainer {
-  padding: 1rem;
+  padding: 30px 20px 20px 20px;
   display: flex;
   justify-content: center;
+}
+
+.logoWrapper {
+  width: 130px;
+  height: 130px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
   align-items: center;
-  background-color: #ffffff;
-  margin: 1.5rem 1.5rem 1rem 1.5rem;
-  border-radius: 12px; 
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  justify-content: center;
+  padding: 15px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
 
 .sidebarLogo {
-  width: 100%;
-  max-width: 140px;
-  height: auto;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
-  display: block;
 }
 
-/* Área Central de Navegação */
 .nav {
   flex: 1;
-  padding: 0 1.5rem 1rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+  padding: 15px;
   overflow-y: auto;
 }
 
-/* Scrollbar invisível mas funcional */
-.nav::-webkit-scrollbar { width: 4px; }
-.nav::-webkit-scrollbar-track { background: transparent; }
-.nav::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 4px; }
-
-/* Botões do Menu (Modernizados para caixas arredondadas em vez de pílulas) */
 .navItem {
   display: flex;
   align-items: center;
-  padding: 0.8rem 1rem;
+  gap: 12px;
+  padding: 12px 16px;
+  color: var(--text-body);
   text-decoration: none;
-  color: #ffffff;
+  border-radius: var(--radius-md);
+  margin-bottom: 6px;
+  transition: all 0.2s ease;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px; 
-  transition: all 0.2s ease-in-out;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 0.95rem;
-  cursor: pointer;
-  width: 100%;
-  box-sizing: border-box;
-  font-family: inherit;
 }
 
 .navItem:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: #f8fafc;
+  color: var(--primary-color);
 }
 
 .active {
-  background-color: #ffffff;
-  color: #EC6D12 !important;
-  border-color: #ffffff;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background: var(--primary-light) !important;
+  color: var(--primary-hover) !important;
+  font-weight: 600;
 }
 
-.icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  margin-right: 0.75rem;
-  flex-shrink: 0;
+.active .icon {
+  color: var(--primary-color);
 }
 
-.label {
-  flex: 1;
-  text-align: left;
-}
-
-/* Área de Submenus */
-.menuGroup {
-  display: flex;
-  flex-direction: column;
-}
-
-.submenu {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  margin-top: 0.4rem;
-  padding-left: 2.75rem; /* Alinhamento exato com o texto do pai */
-}
-
-.subNavItem {
-  padding: 0.5rem 0.75rem;
-  text-decoration: none;
-  color: rgba(255, 255, 255, 0.85); /* Branco levemente transparente */
-  font-size: 0.85rem;
-  font-weight: 500;
-  border-radius: 6px;
-  transition: all 0.2s ease-in-out;
-  display: block;
-}
-
-.subNavItem:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
-}
-
-.subActive {
-  background-color: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
-  font-weight: 700;
-}
-
-/* Rodapé Escurecido (Agora não quebra o scroll) */
 .footer {
-  padding: 1.5rem;
-  background-color: rgba(0, 0, 0, 0.15); 
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: auto; /* Empurra o rodapé para baixo naturalmente */
+  padding: 20px;
+  border-top: 1px solid var(--border-color);
 }
 
 .userInfo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  margin-bottom: 12px;
+  text-align: center;
 }
 
 .userName {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #ffffff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
 .logoutBtn {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   width: 100%;
-  padding: 0.7rem 1rem;
-  background-color: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #ffffff;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-body);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  border-radius: 8px;
-  transition: all 0.2s;
+  font-family: inherit;
   font-weight: 600;
   font-size: 0.9rem;
+  transition: all 0.2s ease;
 }
 
 .logoutBtn:hover {
-  background-color: rgba(220, 38, 38, 0.9); /* Vermelho erro ao passar o rato */
-  border-color: transparent;
+  background: #fff1f2;
+  color: #e11d48;
+  border-color: #fda4af;
 }
 
-/* Responsividade Mobile */
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    left: -100%;
-  }
-  .sidebar.open {
-    left: 0;
-  }
+.icon {
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.navItem:hover .icon {
+  color: var(--primary-color);
 }

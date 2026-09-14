@@ -1,12 +1,10 @@
 .header {
   height: 70px;
-  background-color: #ffffff;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 2rem;
-  border-bottom: 1px solid #e2e8f0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
   width: 100%;
 }
 
@@ -19,24 +17,27 @@
 .menuButton {
   background: none;
   border: none;
-  color: #64748b;
+  color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   padding: 8px;
-  border-radius: 8px;
-  transition: background 0.2s;
+  border-radius: var(--radius-pill);
+  transition: all 0.2s ease;
 }
 
 .menuButton:hover {
-  background-color: #f1f5f9;
+  background-color: white;
+  color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
 }
 
 .pageTitle {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-dark);
   margin: 0;
+  letter-spacing: -0.02em;
 }
 
 .rightSection {
@@ -44,26 +45,43 @@
   align-items: center;
 }
 
-/* Estilos de fallback (Avatar e Notificação) */
+/* Estilos de fallback (Avatar e Notificação) caso Header Right Content falhe */
 .userProfile {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
-  background-color: #f16e13;
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
   color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
+  font-weight: 700;
+  border: 2px solid white;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease;
+}
+
+.avatar:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
 }
 
 .notificationIcon {
-  color: #64748b;
+  color: var(--text-muted);
   cursor: pointer;
+  padding: 8px;
+  border-radius: var(--radius-pill);
+  transition: all 0.2s ease;
+}
+
+.notificationIcon:hover {
+  background-color: white;
+  color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
 }

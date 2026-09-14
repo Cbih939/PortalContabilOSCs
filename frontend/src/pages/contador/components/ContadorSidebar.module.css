@@ -1,134 +1,119 @@
-/* Sidebar Laranja Principal */
 .sidebar {
-  background-color: #EC6D12; 
-  color: white;
-  height: 100vh;
+  width: 280px;
+  height: 100%;
+  background-color: var(--bg-sidebar);
+  color: var(--text-dark);
   display: flex;
   flex-direction: column;
-  width: 17rem;
-  transition: width 0.3s ease;
-  flex-shrink: 0;
-  box-shadow: 4px 0 10px rgba(0,0,0,0.1);
-  /* REMOVIDO OVERFLOW PARA ELIMINAR SCROLL */
-  overflow: hidden; 
 }
 
-/* --- CONTAINER DA LOGO COM FUNDO BRANCO --- */
 .logoContainer {
-  background-color: #ffffff; 
-  /* Ajustado para não criar scroll */
-  padding: 1.25rem;
-  margin: 1rem; 
+  padding: 30px 20px 20px 20px;
   display: flex;
   justify-content: center;
+}
+
+.logoWrapper {
+  width: 130px;
+  height: 130px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
   align-items: center;
-  border-radius: 300px; 
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
-  position: relative;
+  justify-content: center;
+  padding: 15px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
 
 .sidebarLogo {
-  width: 70%;
-  max-width: 100px; /* Reduzi levemente para garantir espaço */
-  height: auto;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
-  display: block;
 }
 
-/* Navegação */
 .nav {
   flex: 1;
-  padding: 0.5rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem; 
-  /* REMOVIDO OVERFLOW-Y: AUTO PARA ELIMINAR SCROLL */
-  overflow: hidden; 
+  padding: 15px;
+  overflow-y: auto;
 }
 
-/* Botões em formato de Pílula (Outline) */
 .navItem {
   display: flex;
   align-items: center;
-  padding: 0.7rem 1.25rem;
+  gap: 12px;
+  padding: 12px 16px;
+  color: var(--text-body);
   text-decoration: none;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.4); 
-  border-radius: 50px; 
-  transition: all 0.2s ease-in-out;
+  border-radius: var(--radius-md);
+  margin-bottom: 6px;
+  transition: all 0.2s ease;
+  background: transparent;
   font-weight: 500;
   font-size: 0.95rem;
-  white-space: nowrap; /* Impede que o texto quebre e force altura */
 }
 
-/* Hover */
 .navItem:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-color: #ffffff;
+  background: #f8fafc;
+  color: var(--primary-color);
 }
 
-/* Item Ativo */
 .active {
-  background-color: #ffffff !important; 
-  color: #EC6D12 !important; 
-  border-color: #ffffff;
-  font-weight: 700;
+  background: var(--primary-light) !important;
+  color: var(--primary-hover) !important;
+  font-weight: 600;
+}
+
+.active .icon {
+  color: var(--primary-color);
+}
+
+.footer {
+  padding: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.userInfo {
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.userName {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.logoutBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-body);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.logoutBtn:hover {
+  background: #fff1f2;
+  color: #e11d48;
+  border-color: #fda4af;
 }
 
 .icon {
-  width: 1.3rem;
-  height: 1.3rem;
-  margin-right: 0.75rem;
-  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
 }
 
-.label {
-  display: inline-block;
-  line-height: 1;
-}
-
-/* Rodapé (Sair) */
-.footer {
-  padding: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.logoutButton {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  padding: 0.7rem 1.25rem;
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  color: #ffffff;
-  cursor: pointer;
-  border-radius: 50px;
-  transition: all 0.2s;
-  font-weight: 500;
-  font-size: 0.95rem;
-}
-
-.logoutButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: #ffffff;
-}
-
-/* Responsividade Mobile */
-.closeButton {
-  display: none;
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-}
-
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    z-index: 1000;
-  }
-  .closeButton {
-    display: block;
-  }
+.navItem:hover .icon {
+  color: var(--primary-color);
 }
