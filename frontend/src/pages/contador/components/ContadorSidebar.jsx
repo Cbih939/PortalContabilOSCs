@@ -27,19 +27,24 @@ export default function ContadorSidebar({ isOpen }) {
     { path: '/contador/dashboard', label: 'Painel', icon: DashboardIcon },
     { path: '/contador/oscs', label: 'Minhas OSCs', icon: OSCIcon },
     { path: '/contador/modelos', label: 'Documentos e Modelos', icon: LibraryIcon },
-    { path: '/contador/certificadoras', label: 'Certificadoras', icon: ShieldIcon }, // <-- NOVO LINK AQUI
+    { path: '/contador/certificadoras', label: 'Certificadoras', icon: ShieldIcon },
     { path: '/contador/mensagens', label: 'Mensagens', icon: ChatIcon },
     { path: '/contador/avisos', label: 'Avisos Gerais', icon: MegaphoneIcon },
     { path: '/contador/relatorios', label: 'Relatórios do Sistema', icon: ReportIcon },
     { path: '/contador/perfil', label: 'Meu Perfil', icon: ProfileIcon },
   ];
 
-  if (!isOpen) return null;
-
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar} ${isOpen ? styles.open : styles.closed}`} style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <div className={styles.logoContainer}>
-        <img src="/logo_portal.png" alt="Portal Contábil" className={styles.sidebarLogo} />
+        <button className={styles.closeBtn} onClick={onClose} aria-label="Fechar Menu">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <div className={styles.logoWrapper}>
+          <img src="/logo_portal.png" alt="Portal Contábil" className={styles.sidebarLogo} />
+        </div>
       </div>
 
       <nav className={styles.nav}>

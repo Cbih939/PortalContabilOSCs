@@ -78,7 +78,7 @@
 .headerRight {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 2.5rem;
 }
 
 .iconButton {

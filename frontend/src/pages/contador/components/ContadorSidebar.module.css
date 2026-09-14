@@ -11,6 +11,27 @@
   padding: 30px 20px 20px 20px;
   display: flex;
   justify-content: center;
+  position: relative;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: none;
+  padding: 8px;
+}
+.closeBtn:hover {
+  color: var(--primary-color);
+}
+@media (max-width: 768px) {
+  .closeBtn {
+    display: block;
+  }
 }
 
 .logoWrapper {
@@ -41,16 +62,16 @@
 .navItem {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 16px;
+  padding: 14px 20px;
   color: var(--text-body);
   text-decoration: none;
   border-radius: var(--radius-md);
-  margin-bottom: 6px;
+  margin-bottom: 12px;
   transition: all 0.2s ease;
   background: transparent;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 .navItem:hover {

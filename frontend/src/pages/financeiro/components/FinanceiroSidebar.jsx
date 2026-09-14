@@ -52,10 +52,15 @@ export default function FinanceiroSidebar({ isOpen }) {
   ];
 
   return (
-    <aside className={`${styles.sidebar} ${isOpen ? styles.open : styles.closed}`}>
+    <aside className={`${styles.sidebar} ${isOpen ? styles.open : styles.closed}`} style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <div className={styles.logoContainer}>
+        <button className={styles.closeBtn} onClick={onClose} aria-label="Fechar Menu">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
         <div className={styles.logoWrapper}>
-          <img src="/logo_portal.png" alt="Logo Conta Comigo" className={styles.sidebarLogo} />
+          <img src="/logo_portal.png" alt="Portal Contábil" className={styles.sidebarLogo} />
         </div>
       </div>
 
