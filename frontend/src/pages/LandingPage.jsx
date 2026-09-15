@@ -121,7 +121,7 @@ export default function LandingPage() {
                 Líderes que buscam profissionalismo e tecnologia.
               </li>
             </ul>
-            <a href="https://redepapelsolidario.org.br/app-conta-comigo/#contato" target="_blank" rel="noopener noreferrer" className={styles.targetBtn}>
+            <a href="https://wa.me/5511964369720?text=Ol%C3%A1%20vim%20do%20Portal%20Conta%20Comigo%2C%20e%20gostaria%20de%20saber%20mais" target="_blank" rel="noopener noreferrer" className={styles.targetBtn}>
               Saiba mais
             </a>
           </div>
@@ -159,7 +159,7 @@ export default function LandingPage() {
             </div>
 
             <div className={styles.libraryAction}>
-              <a href="https://redepapelsolidario.org.br/app-conta-comigo/#contato" target="_blank" rel="noopener noreferrer" className={styles.orangeBtn}>
+              <a href="https://wa.me/5511964369720?text=Ol%C3%A1%20vim%20do%20Portal%20Conta%20Comigo%2C%20e%20gostaria%20de%20saber%20mais" target="_blank" rel="noopener noreferrer" className={styles.orangeBtn}>
                 Saiba mais
               </a>
             </div>
@@ -217,7 +217,7 @@ export default function LandingPage() {
             </ul>
             <div className={styles.pricingBtnContainer}>
               <a href="https://contacomigo.org.br/register-osc" className={styles.pricingBtn}>
-                Iniciar Seção
+                Cadastrar
               </a>
             </div>
             <div className={styles.pricingFooter}>
