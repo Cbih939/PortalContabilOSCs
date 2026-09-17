@@ -3,8 +3,8 @@ import {
   PieChart, Pie, Cell, Tooltip as PieTooltip, Legend as PieLegend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as BarTooltip, Legend as BarLegend, ResponsiveContainer
 } from 'recharts';
-import api from '../../../services/api';
-import Spinner from '../../common/Spinner';
+import api from '../../services/api';
+import Spinner from '../common/Spinner';
 
 export default function ReportCharts({ role }) {
   const [data, setData] = useState(null);
