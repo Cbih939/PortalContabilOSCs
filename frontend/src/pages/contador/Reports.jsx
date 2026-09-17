@@ -5,6 +5,7 @@ import Spinner from '../../components/common/Spinner.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import ReportCharts from '../../components/charts/ReportCharts.jsx';
 
 // Ícones
 const DownloadIcon = () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>;
@@ -77,6 +78,9 @@ export default function ContadorReports() {
           <DownloadIcon /> Exportar PDF
         </button>
       </div>
+
+      {/* Gráficos de Relatórios - Visão do Contador */}
+      <ReportCharts role="CONTADOR" />
 
       <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', backgroundColor: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
         <div style={{ position: 'relative', flex: 1 }}>

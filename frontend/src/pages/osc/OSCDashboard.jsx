@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth.jsx';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api.js'; 
 import styles from './OSCDashboard.module.css';
+import ReportCharts from '../../components/charts/ReportCharts.jsx';
 
 const FileIcon = () => (<svg className={styles.cardIconBlue} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>);
 const FolderWarningIcon = () => (<svg className={styles.cardIconYellow} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" /></svg>);
@@ -218,6 +219,9 @@ export default function OSCDashboard() {
           </div>
         </Link>
       </div>
+
+      {/* Gráficos de Relatórios - Visão da OSC */}
+      <ReportCharts role="OSC" />
 
       <div className={styles.calendarSection}>
         <div className={styles.calendarHeaderRow}>

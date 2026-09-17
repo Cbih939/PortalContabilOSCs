@@ -14,6 +14,7 @@ import docRoutes from './doc.routes.js';
 import projectRoutes from './project.routes.js';
 import boardRoutes from './board.routes.js';
 import transactionRoutes from './transaction.routes.js';
+import reportRoutes from './report.routes.js';
 
 const router = express.Router();
 
@@ -31,5 +32,6 @@ router.use('/documents', docRoutes);
 router.use('/projects', projectRoutes);
 router.use('/board', boardRoutes);
 router.use('/transactions', transactionRoutes);
+router.use('/reports', reportRoutes);
 
 export default router;
