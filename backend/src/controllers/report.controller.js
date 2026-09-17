@@ -8,10 +8,10 @@ export const getChartData = async (req, res) => {
         let oscsQuery = 'SELECT id, razao_social, created_at, data_origem_estatuto, data_fundacao FROM oscs';
         const queryParams = [];
 
-        if (userRole === 'Contador') {
+        if (userRole?.toUpperCase() === 'CONTADOR') {
             oscsQuery += ' WHERE assigned_contador_id = ?';
             queryParams.push(userId);
-        } else if (userRole === 'OSC') {
+        } else if (userRole?.toUpperCase() === 'OSC') {
             oscsQuery += ' WHERE user_id = ?';
             queryParams.push(userId);
         }
@@ -144,6 +144,6 @@ export const getChartData = async (req, res) => {
         });
     } catch (error) {
         console.error('[Chart Data Error]', error);
-        res.status(500).json({ message: 'Erro ao gerar dados dos gráficos.' });
+        res.status(500).json({ message: 'Erro ao gerar dados dos gráficos. Detalhe: ' + error.message });
     }
 };
