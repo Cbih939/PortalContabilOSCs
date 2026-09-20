@@ -2,14 +2,10 @@ import React, { useState, useEffect } from 'react';
 import * as fileService from '../../services/publicFileService.js';
 import { FileIcon, DownloadIcon, EyeIcon } from '../../components/common/Icons.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
+import Card, { CardBody, CardHeader } from '../../components/ui/Card.jsx';
+import Button from '../../components/ui/Button.jsx';
+import { FiInfo, FiEye, FiDownload } from 'react-icons/fi';
 import styles from './TemplatesPage.module.css';
-
-// Ícone local para garantir o sucesso do Build
-const InfoIcon = ({ className }) => (
-  <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
 
 export default function TemplatesPage() {
   const [modelos, setModelos] = useState([]);
@@ -38,7 +34,6 @@ export default function TemplatesPage() {
     try {
       setLoading(true);
       const data = await fileService.getFilesByCategory('');
-      // Ordenação numérica baseada no início do título ou classificação
       const sortedData = data.sort((a, b) => 
         (a.title || "").toLowerCase().localeCompare((b.title || "").toLowerCase(), undefined, { numeric: true, sensitivity: 'base' })
       );
@@ -62,30 +57,31 @@ export default function TemplatesPage() {
     return (
       <div key={file.id} className={styles.fileItem}>
         <div className={styles.fileInfo}>
-          <FileIcon className={styles.fileIcon} />
+          <div className={styles.fileIconWrapper}>
+            <FileIcon className={styles.fileIcon} />
+          </div>
           <div className={styles.fileText}>
             <span className={styles.fileName}>{file.title}</span>
-            <div className={styles.classificationWrapper}>
-              <InfoIcon className={styles.infoIconSmall} />
-              <span className={styles.tooltipText}>
+            <div className="tooltip-container" style={{display: 'inline-flex', marginLeft: '6px'}}>
+              <FiInfo className="text-primary cursor-help" size={14} />
+              <span className="tooltip-text tooltip-right" style={{whiteSpace: 'pre-wrap'}}>
                 {classifications[file.title] || "Classificação na Biblioteca – CONTA COMIGO\nDocumento Orientativo"}
               </span>
             </div>
           </div>
         </div>
         <div className={styles.actionGroup}>
-          <a href={fileUrl} target="_blank" rel="noopener noreferrer" className={styles.viewButton} title="Visualizar">
-            <EyeIcon className={styles.icon} />
+          <a href={fileUrl} target="_blank" rel="noopener noreferrer" className={styles.linkNoDecoration}>
+            <Button variant="secondary" size="sm" icon={<FiEye />} title="Visualizar" />
           </a>
-          <a href={fileUrl} download className={styles.downloadButton} title="Descarregar">
-            <DownloadIcon className={styles.icon} />
+          <a href={fileUrl} download className={styles.linkNoDecoration}>
+            <Button variant="primary" size="sm" icon={<FiDownload />} title="Descarregar" />
           </a>
         </div>
       </div>
     );
   };
 
-  // Funções de filtro para organização em subcategorias
   const getFilesBySubcategory = (list, keywords) => {
     return list.filter(file => 
       keywords.some(key => file.title.toLowerCase().includes(key.toLowerCase()))
@@ -97,14 +93,18 @@ export default function TemplatesPage() {
   }
 
   return (
-    <div className={styles.pageContainer} style={{ width: '90%', maxWidth: '1200px', margin: '0 auto', padding: '40px 0' }}>
+    <div className={styles.pageContainer}>
       
-      {/* SEÇÃO DE TEXTOS INSTITUCIONAIS - Mantida conforme original */}
+      <div className={styles.header}>
+        <h1 className={styles.pageTitle}>Biblioteca Digital</h1>
+        <p className={styles.pageSubtitle}>Modelos padronizados e orientações jurídicas e contábeis.</p>
+      </div>
+
       <section className={styles.libraryHeader}>
         <div className={styles.welcomeSection}>
-          <h1 className={styles.mainTitle}>BEM-VINDO(A) AO CONTA COMIGO</h1>
-          <p>O Conta Comigo é um aplicativo criado para apoiar, organizar e fortalecer organizações da sociedade civil, coletivos e iniciativas sociais em todo o Brasil, especialmente aquelas que não possuem acesso facilitado a assessoria jurídica, contábil, administrativa, marketing e mobilização de recursos.</p>
-          <p>A Biblioteca Digital é um dos principais recursos do app. Ela reúne modelos padronizados, claros e acessíveis, pensados para ajudar você a:</p>
+          <h2 className={styles.mainTitle}>BEM-VINDO(A) AO CONTA COMIGO</h2>
+          <p>O Conta Comigo é um aplicativo criado para apoiar, organizar e fortalecer organizações da sociedade civil, coletivos e iniciativas sociais em todo o Brasil.</p>
+          <p>A Biblioteca Digital reúne modelos padronizados, pensados para ajudar você a:</p>
           <ul className={styles.styledList}>
             <li>Criar sua organização</li>
             <li>Regularizar documentos</li>
@@ -115,128 +115,90 @@ export default function TemplatesPage() {
         </div>
 
         <div className={styles.contentGrid}>
-          <div className={styles.contentCard}>
-            <h2 className={styles.subTitle}>O QUE É A BIBLIOTECA DIGITAL</h2>
-            <p>A Biblioteca Digital do Conta Comigo é um acervo organizado de documentos orientativos, desenvolvidos a partir da prática real do terceiro setor. Aqui você encontra modelos de:</p>
+          <Card padding="lg" className={styles.infoCard}>
+            <h3 className={styles.subTitle}>O QUE É A BIBLIOTECA</h3>
+            <p>Acervo organizado de documentos orientativos desenvolvidos a partir da prática real do terceiro setor:</p>
             <ul className={styles.styledList}>
-              <li>Estatutos Sociais</li>
-              <li>Atas institucionais</li>
+              <li>Estatutos Sociais e Atas</li>
               <li>Regimentos internos</li>
-              <li>Declarações usuais</li>
-              <li>Checklists de organização e regularidade</li>
+              <li>Declarações e Checklists</li>
             </ul>
-            <p className={styles.highlightText}><strong>Importante:</strong> Os documentos são modelos de referência, que podem e devem ser adaptados à realidade da sua organização.</p>
-          </div>
+            <div className={styles.highlightText}>
+              <strong>Importante:</strong> Os documentos são modelos de referência, que podem e devem ser adaptados.
+            </div>
+          </Card>
 
-          <div className={styles.contentCard}>
-            <h2 className={styles.subTitle}>COMO UTILIZAR A BIBLIOTECA</h2>
-            <h3 className={styles.stepTitle}>Identifique o estágio da sua organização</h3>
+          <Card padding="lg" className={styles.infoCard}>
+            <h3 className={styles.subTitle}>COMO UTILIZAR</h3>
+            <h4 className={styles.stepTitle}>Identifique o estágio da sua organização</h4>
             <p>Antes de baixar um documento, reflita:</p>
             <ol className={styles.styledList}>
               <li>Minha organização está começando agora?</li>
-              <li>Já atuamos em alguma política pública?</li>
               <li>Queremos acessar recursos públicos?</li>
-              <li>Precisamos nos cadastrar em conselhos?</li>
               <li>Temos ou pretendemos ter CEBAS?</li>
             </ol>
-            <p>O app sempre indicará o modelo mais adequado para o seu momento.</p>
-          </div>
+          </Card>
         </div>
 
-        <div className={styles.instructionCard}>
-          <h2 className={styles.subTitle}>INSTRUÇÕES DE PREENCHIMENTO</h2>
+        <Card padding="lg" className={styles.instructionCard}>
+          <h3 className={styles.subTitle}>INSTRUÇÕES DE PREENCHIMENTO</h3>
           <div className={styles.instructionFlex}>
-            <div>
-              <p><strong>Escolha o modelo correto:</strong> Use o modelo que atende sua necessidade atual. Modelos mais complexos são para fases avançadas.</p>
+            <div className={styles.flexHalf}>
+              <p><strong>Escolha o modelo correto:</strong> Use o modelo que atende sua necessidade atual.</p>
               <ul className={styles.miniList}>
                 <li>Modelo Base (simples)</li>
                 <li>Assistência Social</li>
                 <li>MROSC / CEBAS</li>
               </ul>
             </div>
-            <div>
+            <div className={styles.flexHalf}>
               <p><strong>Preencha com atenção:</strong> Nome completo, Município, Estado e Datas corretas são essenciais.</p>
-              <p><strong>Registre e arquive:</strong> Estatutos e atas devem ser registrados em cartório. Guarde sempre a versão final assinada e a ata de aprovação.</p>
+              <p><strong>Registre e arquive:</strong> Estatutos e atas devem ser registrados em cartório.</p>
             </div>
           </div>
-        </div>
-
-        <div className={styles.legalSection}>
-          <div className={styles.legalNotice}>
-            <h2 className={styles.subTitle}>AVISO LEGAL (TRANSPARÊNCIA)</h2>
-            <p>Os modelos disponibilizados no Conta Comigo são orientativos e não substituem a análise jurídica ou contábil especializada, quando exigida por lei, edital ou órgão público.</p>
-            <p>A Rede Papel Solidário possui um corpo de profissionais técnicos e que praticam bons descontos para serviços extras, para membros do CONTA COMIGO.</p>
-          </div>
-          
-          <div className={styles.purposeBox}>
-            <h2 className={styles.subTitle}>PROPÓSITO DA REDE PAPEL SOLIDÁRIO</h2>
-            <p>A Biblioteca Digital do Conta Comigo foi criada pela Rede Papel Solidário com o compromisso de:</p>
-            <ul className={styles.styledList}>
-              <li>Democratizar o acesso à informação</li>
-              <li>Reduzir barreiras burocráticas</li>
-              <li>Fortalecer pequenas organizações</li>
-              <li>Promover transparência e boa governança</li>
-            </ul>
-          </div>
-        </div>
+        </Card>
       </section>
 
-      <div className={styles.downloadHeader}>
-        <h1 className={styles.pageTitle}>DOCUMENTOS MODELOS | DOWNLOADS</h1>
-      </div>
-
       <div className={styles.gridContainer}>
-        {/* COLUNA 1: MODELOS DE DOCUMENTOS ORGANIZADOS POR CATEGORIA */}
-        <div className={styles.listCard}>
-          <h2 className={styles.cardHeader}>Modelos de Documentos</h2>
-          
-          <div className={styles.fileListContainer}>
-            {/* SUB-CATEGORIA: ESTATUTOS */}
-            <h3 className={styles.groupTitle} style={{ padding: '10px 15px', background: '#f8f9fa', fontSize: '0.9rem', color: '#f27405', borderLeft: '4px solid #f27405', margin: '10px 0' }}>
-              Estatutos Sociais
-            </h3>
+        {/* COLUNA 1: MODELOS */}
+        <Card padding="none" className={styles.listCard}>
+          <CardHeader className={styles.cardHeader} title="Modelos de Documentos" />
+          <CardBody className={styles.cardBody}>
+            <h3 className={styles.groupTitle}>Estatutos Sociais</h3>
             {getFilesBySubcategory(modelos, ['Estatuto']).length > 0 ? 
               getFilesBySubcategory(modelos, ['Estatuto']).map(renderFileRow) : 
               <p className={styles.empty}>Sem estatutos disponíveis.</p>
             }
 
-            {/* SUB-CATEGORIA: ATAS */}
-            <h3 className={styles.groupTitle} style={{ padding: '10px 15px', background: '#f8f9fa', fontSize: '0.9rem', color: '#f27405', borderLeft: '4px solid #f27405', margin: '20px 0 10px' }}>
-              Atas Institucionais
-            </h3>
+            <h3 className={styles.groupTitle}>Atas Institucionais</h3>
             {getFilesBySubcategory(modelos, ['Ata']).length > 0 ? 
               getFilesBySubcategory(modelos, ['Ata']).map(renderFileRow) : 
               <p className={styles.empty}>Sem atas disponíveis.</p>
             }
 
-            {/* SUB-CATEGORIA: REGIMENTOS */}
-            <h3 className={styles.groupTitle} style={{ padding: '10px 15px', background: '#f8f9fa', fontSize: '0.9rem', color: '#f27405', borderLeft: '4px solid #f27405', margin: '20px 0 10px' }}>
-              Regimentos Internos
-            </h3>
+            <h3 className={styles.groupTitle}>Regimentos Internos</h3>
             {getFilesBySubcategory(modelos, ['Regimento']).length > 0 ? 
               getFilesBySubcategory(modelos, ['Regimento']).map(renderFileRow) : 
               <p className={styles.empty}>Sem regimentos disponíveis.</p>
             }
 
-            {/* SUB-CATEGORIA: DECLARAÇÕES */}
-            <h3 className={styles.groupTitle} style={{ padding: '10px 15px', background: '#f8f9fa', fontSize: '0.9rem', color: '#f27405', borderLeft: '4px solid #f27405', margin: '20px 0 10px' }}>
-              Declarações
-            </h3>
+            <h3 className={styles.groupTitle}>Declarações</h3>
             {getFilesBySubcategory(modelos, ['Declaração', 'Declarações']).length > 0 ? 
               getFilesBySubcategory(modelos, ['Declaração', 'Declarações']).map(renderFileRow) : 
               <p className={styles.empty}>Sem declarações disponíveis.</p>
             }
-          </div>
-        </div>
+          </CardBody>
+        </Card>
 
-        {/* COLUNA 2: COMUNICAÇÃO INSTITUCIONAL */}
-        <div className={styles.listCard}>
-          <h2 className={styles.cardHeader}>Comunicação Institucional</h2>
-          <div className={styles.fileListContainer}>
+        {/* COLUNA 2: COMUNICAÇÃO */}
+        <Card padding="none" className={styles.listCard}>
+          <CardHeader className={styles.cardHeader} title="Comunicação Institucional" />
+          <CardBody className={styles.cardBody}>
             {comunicacao.length > 0 ? comunicacao.map(renderFileRow) : <p className={styles.empty}>Sem documentos nesta categoria.</p>}
-          </div>
-        </div>
+          </CardBody>
+        </Card>
       </div>
+
     </div>
   );
 }

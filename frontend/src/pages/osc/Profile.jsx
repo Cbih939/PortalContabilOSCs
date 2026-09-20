@@ -1,21 +1,13 @@
-// src/pages/osc/Profile.jsx
-
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { IMaskInput } from 'react-imask';
 import api from '../../services/api.js';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
-import Button from '../../components/common/Button.jsx';
+import Button from '../../components/ui/Button.jsx';
+import Card, { CardBody, CardHeader } from '../../components/ui/Card.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
-
-// --- Ícones Nativos ---
-const SaveIcon = () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>;
-const CheckBadgeIcon = () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
-const BuildingIcon = () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1z" /></svg>;
-const FiscalIcon = () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" /></svg>;
-const ShieldIcon = () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>;
-const UsersIcon = () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;
-const KeyIcon = () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>;
+import { FiSave, FiCheckCircle, FiBriefcase, FiFileText, FiShield, FiUsers, FiKey } from 'react-icons/fi';
+import styles from './Profile.module.css';
 
 export default function OSCProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -38,7 +30,7 @@ export default function OSCProfilePage() {
         if (data.fim_mandato) data.fim_mandato = data.fim_mandato.split('T')[0];
         if (data.data_origem_estatuto) data.data_origem_estatuto = data.data_origem_estatuto.split('T')[0];
 
-        // Transição de dados antigos para os novos, caso existam
+        // Transição de dados antigos para os novos
         if (!data.resp_nome && data.responsible) data.resp_nome = data.responsible;
         if (!data.resp_cpf && data.responsible_cpf) data.resp_cpf = data.responsible_cpf;
 
@@ -104,240 +96,271 @@ export default function OSCProfilePage() {
     }
   };
 
-  if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}><Spinner text="A carregar perfil..." /></div>;
+  if (isLoading) return <div className={styles.loadingContainer}><Spinner text="A carregar perfil..." /></div>;
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1000px', margin: '0 auto' }}>
+    <div className={styles.pageContainer}>
       
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-        <CheckBadgeIcon style={{ color: '#10b981', width: '32px', height: '32px' }} />
+      <div className={styles.header}>
+        <FiCheckCircle className={styles.headerIcon} />
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937', margin: 0 }}>Perfil da Organização</h1>
-          <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>Complete o Checklist de Implantação para garantir a regularidade contábil e jurídica.</p>
+          <h1 className={styles.pageTitle}>Perfil da Organização</h1>
+          <p className={styles.pageSubtitle}>Complete o Checklist de Implantação para garantir a regularidade contábil e jurídica.</p>
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className={styles.formContainer}>
         
-        <form id="profile-form" onSubmit={handleSubmit(onSubmitProfile)} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <form id="profile-form" onSubmit={handleSubmit(onSubmitProfile)} className={styles.formContainer}>
           
           {/* BLOCO 1: IDENTIFICAÇÃO BÁSICA */}
-          <section style={sectionStyle}>
-            <h2 style={sectionTitleStyle}><BuildingIcon /> 1. Identificação Básica</h2>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
-              <div>
-                <label style={labelStyle}>Razão Social</label>
-                <input {...register('razao_social')} style={inputStyle} disabled className="disabled-input" />
-                <span style={hintStyle}>Para alterar a Razão Social, contate o contador.</span>
+          <Card padding="none" className={styles.sectionCard} style={{borderTopColor: 'var(--primary-color)'}}>
+            <CardHeader 
+              className={styles.sectionHeader} 
+              title={<span className={styles.sectionTitle}><FiBriefcase /> 1. Identificação Básica</span>} 
+            />
+            <CardBody className={styles.sectionBody}>
+              <div className={styles.gridColsAuto}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Razão Social</label>
+                  <input {...register('razao_social')} className={styles.formInput} disabled />
+                  <span className={styles.formHint}>Para alterar a Razão Social, contate o contador.</span>
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Nome Fantasia</label>
+                  <input {...register('name')} placeholder="Nome público da OSC" className={styles.formInput} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>CNPJ</label>
+                  <input {...register('cnpj')} className={styles.formInput} disabled />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Natureza Jurídica</label>
+                  <select {...register('natureza_juridica')} className={styles.formInput}>
+                    <option value="">Selecione...</option>
+                    <option value="Associação sem fins lucrativos">Associação sem fins lucrativos</option>
+                    <option value="Organização da Sociedade Civil (OSC)">Organização da Sociedade Civil (OSC)</option>
+                    <option value="OSCIP">OSCIP</option>
+                    <option value="Cooperativa">Cooperativa</option>
+                    <option value="Grupo Produtivo Informal">Grupo Produtivo Informal</option>
+                  </select>
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Atividade Principal</label>
+                  <input {...register('atividade_principal')} placeholder="Ex: Assistência Social" className={styles.formInput} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Data de Fundação</label>
+                  <input type="date" {...register('data_fundacao')} className={styles.formInput} />
+                </div>
               </div>
-              <div>
-                <label style={labelStyle}>Nome Fantasia</label>
-                <input {...register('name')} placeholder="Nome público da OSC" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>CNPJ</label>
-                <input {...register('cnpj')} style={inputStyle} disabled className="disabled-input" />
-              </div>
-              <div>
-                <label style={labelStyle}>Natureza Jurídica</label>
-                <select {...register('natureza_juridica')} style={inputStyle}>
-                  <option value="">Selecione...</option>
-                  <option value="Associação sem fins lucrativos">Associação sem fins lucrativos</option>
-                  <option value="Organização da Sociedade Civil (OSC)">Organização da Sociedade Civil (OSC)</option>
-                  <option value="OSCIP">OSCIP</option>
-                  <option value="Cooperativa">Cooperativa</option>
-                  <option value="Grupo Produtivo Informal">Grupo Produtivo Informal</option>
-                </select>
-              </div>
-              <div>
-                <label style={labelStyle}>Atividade Principal</label>
-                <input {...register('atividade_principal')} placeholder="Ex: Assistência Social" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Data de Fundação</label>
-                <input type="date" {...register('data_fundacao')} style={inputStyle} />
-              </div>
-            </div>
-          </section>
+            </CardBody>
+          </Card>
 
           {/* BLOCO 2: LOCALIZAÇÃO E CONTATOS */}
-          <section style={sectionStyle}>
-            <h2 style={sectionTitleStyle}><BuildingIcon /> 2. Localização e Contatos Institucionais</h2>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-              <div>
-                <label style={labelStyle}>CEP</label>
-                <Controller name="cep" control={control} render={({ field }) => (
-                  <IMaskInput {...field} mask="00000-000" onBlur={(e) => { field.onBlur(e); handleCepBlur(e); }} style={inputStyle} />
-                )} />
+          <Card padding="none" className={styles.sectionCard} style={{borderTopColor: 'var(--primary-color)'}}>
+            <CardHeader 
+              className={styles.sectionHeader} 
+              title={<span className={styles.sectionTitle}><FiBriefcase /> 2. Localização e Contatos Institucionais</span>} 
+            />
+            <CardBody className={styles.sectionBody}>
+              <div className={styles.gridColsAuto} style={{marginBottom: '20px'}}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>CEP</label>
+                  <Controller name="cep" control={control} render={({ field }) => (
+                    <IMaskInput {...field} mask="00000-000" onBlur={(e) => { field.onBlur(e); handleCepBlur(e); }} className={styles.formInput} />
+                  )} />
+                </div>
+                <div className={`${styles.formGroup} ${styles.spanTwo}`}>
+                  <label className={styles.formLabel}>Logradouro (Endereço Sede)</label>
+                  <input {...register('address')} className={styles.formInput} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Número</label>
+                  <input {...register('numero')} className={styles.formInput} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Bairro</label>
+                  <input {...register('bairro')} className={styles.formInput} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Cidade</label>
+                  <input {...register('cidade')} className={styles.formInput} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Estado</label>
+                  <input {...register('estado')} className={styles.formInput} />
+                </div>
               </div>
-              <div style={{ gridColumn: 'span 2' }}>
-                <label style={labelStyle}>Logradouro (Endereço Sede)</label>
-                <input {...register('address')} style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Número</label>
-                <input {...register('numero')} style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Bairro</label>
-                <input {...register('bairro')} style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Cidade</label>
-                <input {...register('cidade')} style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Estado</label>
-                <input {...register('estado')} style={inputStyle} />
-              </div>
-            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px' }}>
-              <div>
-                <label style={labelStyle}>E-mail Geral</label>
-                <input type="email" {...register('email')} style={inputStyle} />
+              <div className={styles.highlightBox}>
+                <div className={styles.gridColsAuto}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>E-mail Geral</label>
+                    <input type="email" {...register('email')} className={styles.formInput} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Telefone Geral</label>
+                    <Controller name="phone" control={control} render={({ field }) => (
+                      <IMaskInput {...field} mask="(00) 00000-0000" className={styles.formInput} />
+                    )} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Website</label>
+                    <input {...register('website')} placeholder="https://..." className={styles.formInput} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Instagram / Redes</label>
+                    <input {...register('instagram')} placeholder="@suaong" className={styles.formInput} />
+                  </div>
+                </div>
               </div>
-              <div>
-                <label style={labelStyle}>Telefone Geral</label>
-                <Controller name="phone" control={control} render={({ field }) => (
-                  <IMaskInput {...field} mask="(00) 00000-0000" style={inputStyle} />
-                )} />
-              </div>
-              <div>
-                <label style={labelStyle}>Website</label>
-                <input {...register('website')} placeholder="https://..." style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Instagram / Redes</label>
-                <input {...register('instagram')} placeholder="@suaong" style={inputStyle} />
-              </div>
-            </div>
-          </section>
+            </CardBody>
+          </Card>
 
           {/* BLOCO 3: RESPONSÁVEIS */}
-          <section style={sectionStyle}>
-            <h2 style={sectionTitleStyle}><UsersIcon /> 3. Responsáveis e Gestão</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <div style={{ backgroundColor: '#fffbeb', padding: '16px', borderRadius: '8px', border: '1px solid #fde68a' }}>
-                <h3 style={{ fontSize: '14px', marginTop: 0, marginBottom: '12px', color: '#92400e' }}>Responsável Legal (Presidente)</h3>
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={labelStyle}>Nome Completo</label>
-                  <input {...register('resp_nome')} style={inputStyle} />
+          <Card padding="none" className={styles.sectionCard} style={{borderTopColor: 'var(--primary-color)'}}>
+            <CardHeader 
+              className={styles.sectionHeader} 
+              title={<span className={styles.sectionTitle}><FiUsers /> 3. Responsáveis e Gestão</span>} 
+            />
+            <CardBody className={styles.sectionBody}>
+              <div className={styles.gridColsTwo}>
+                <div className={styles.responsibleBox}>
+                  <h3 className={styles.responsibleTitle}>Responsável Legal (Presidente)</h3>
+                  <div className={styles.formGroup} style={{marginBottom: '12px'}}>
+                    <label className={styles.formLabel}>Nome Completo</label>
+                    <input {...register('resp_nome')} className={styles.formInput} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>CPF</label>
+                    <Controller name="resp_cpf" control={control} render={({ field }) => (
+                      <IMaskInput {...field} mask="000.000.000-00" className={styles.formInput} />
+                    )} />
+                  </div>
                 </div>
-                <div>
-                  <label style={labelStyle}>CPF</label>
-                  <Controller name="resp_cpf" control={control} render={({ field }) => (
-                    <IMaskInput {...field} mask="000.000.000-00" style={inputStyle} />
-                  )} />
-                </div>
-              </div>
 
-              <div style={{ backgroundColor: '#eff6ff', padding: '16px', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
-                <h3 style={{ fontSize: '14px', marginTop: 0, marginBottom: '12px', color: '#1e40af' }}>Gestor / Coordenador</h3>
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={labelStyle}>Nome Completo</label>
-                  <input {...register('gestor_nome')} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>CPF</label>
-                  <Controller name="gestor_cpf" control={control} render={({ field }) => (
-                    <IMaskInput {...field} mask="000.000.000-00" style={inputStyle} />
-                  )} />
+                <div className={styles.managerBox}>
+                  <h3 className={styles.managerTitle}>Gestor / Coordenador</h3>
+                  <div className={styles.formGroup} style={{marginBottom: '12px'}}>
+                    <label className={styles.formLabel}>Nome Completo</label>
+                    <input {...register('gestor_nome')} className={styles.formInput} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>CPF</label>
+                    <Controller name="gestor_cpf" control={control} render={({ field }) => (
+                      <IMaskInput {...field} mask="000.000.000-00" className={styles.formInput} />
+                    )} />
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </CardBody>
+          </Card>
 
           {/* BLOCO 4: FISCAL */}
-          <section style={sectionStyle}>
-            <h2 style={sectionTitleStyle}><FiscalIcon /> 4. Informações Fiscais</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-              <div>
-                <label style={labelStyle}>Inscrição Municipal</label>
-                <input {...register('inscricao_municipal')} placeholder="Apenas números, se houver" style={inputStyle} />
+          <Card padding="none" className={styles.sectionCard} style={{borderTopColor: 'var(--primary-color)'}}>
+            <CardHeader 
+              className={styles.sectionHeader} 
+              title={<span className={styles.sectionTitle}><FiFileText /> 4. Informações Fiscais</span>} 
+            />
+            <CardBody className={styles.sectionBody}>
+              <div className={styles.gridColsAuto} style={{marginBottom: '20px'}}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Inscrição Municipal</label>
+                  <input {...register('inscricao_municipal')} placeholder="Apenas números, se houver" className={styles.formInput} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Inscrição Estadual</label>
+                  <input {...register('inscricao_estadual')} placeholder="Apenas números, se houver" className={styles.formInput} />
+                </div>
               </div>
-              <div>
-                <label style={labelStyle}>Inscrição Estadual</label>
-                <input {...register('inscricao_estadual')} placeholder="Apenas números, se houver" style={inputStyle} />
-              </div>
-            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <label style={checkboxLabelStyle}><input type="checkbox" {...register('presta_servico')} style={checkboxStyle} /> A organização presta serviços?</label>
-              <label style={checkboxLabelStyle}><input type="checkbox" {...register('vende_mercadorias')} style={checkboxStyle} /> A organização vende mercadorias?</label>
-              <label style={checkboxLabelStyle}><input type="checkbox" {...register('emite_nfse')} style={checkboxStyle} /> Costuma emitir NFS-e?</label>
-              <label style={checkboxLabelStyle}><input type="checkbox" {...register('emite_nfe')} style={checkboxStyle} /> Costuma emitir NF-e?</label>
-            </div>
-          </section>
+              <div className={styles.highlightBox}>
+                <div className={styles.gridColsAuto}>
+                  <label className={styles.checkboxLabel}><input type="checkbox" {...register('presta_servico')} className={styles.checkboxInput} /> A organização presta serviços?</label>
+                  <label className={styles.checkboxLabel}><input type="checkbox" {...register('vende_mercadorias')} className={styles.checkboxInput} /> A organização vende mercadorias?</label>
+                  <label className={styles.checkboxLabel}><input type="checkbox" {...register('emite_nfse')} className={styles.checkboxInput} /> Costuma emitir NFS-e?</label>
+                  <label className={styles.checkboxLabel}><input type="checkbox" {...register('emite_nfe')} className={styles.checkboxInput} /> Costuma emitir NF-e?</label>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
 
           {/* BLOCO 5: GOVERNANÇA */}
-          <section style={sectionStyle}>
-            <h2 style={sectionTitleStyle}><ShieldIcon /> 5. Governança e Financeiro</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
-              <div>
-                <label style={labelStyle}>Data do Último Estatuto Social</label>
-                <input type="date" {...register('data_origem_estatuto')} style={inputStyle} />
-                <span style={{ fontSize: '11px', color: '#ea580c', fontWeight: 'bold' }}>Esta data define o início do Calendário de Conformidade.</span>
+          <Card padding="none" className={styles.sectionCard} style={{borderTopColor: 'var(--primary-color)'}}>
+            <CardHeader 
+              className={styles.sectionHeader} 
+              title={<span className={styles.sectionTitle}><FiShield /> 5. Governança e Financeiro</span>} 
+            />
+            <CardBody className={styles.sectionBody}>
+              <div className={styles.gridColsAuto}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Data do Último Estatuto Social</label>
+                  <input type="date" {...register('data_origem_estatuto')} className={styles.formInput} />
+                  <span className={styles.formHintImportant}>Esta data define o início do Calendário de Conformidade.</span>
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Término do Mandato Atual da Diretoria</label>
+                  <input type="date" {...register('fim_mandato')} className={styles.formInput} />
+                  <span className={styles.formHint}>O sistema avisará sobre as novas eleições 60 dias antes.</span>
+                </div>
               </div>
-              <div>
-                <label style={labelStyle}>Término do Mandato Atual da Diretoria</label>
-                <input type="date" {...register('fim_mandato')} style={inputStyle} />
-                <span style={hintStyle}>O sistema avisará sobre as novas eleições 60 dias antes.</span>
+
+              <div className={styles.highlightBox} style={{marginTop: '20px'}}>
+                <label className={styles.checkboxLabel}>
+                  <input type="checkbox" {...register('banco_cadastrado')} className={styles.checkboxInput} />
+                  A Organização possui conta bancária ativa no seu próprio CNPJ?
+                </label>
               </div>
-            </div>
+            </CardBody>
+          </Card>
 
-            <div style={{ marginTop: '20px', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <label style={checkboxLabelStyle}>
-                <input type="checkbox" {...register('banco_cadastrado')} style={checkboxStyle} />
-                A Organização possui conta bancária ativa no seu próprio CNPJ?
-              </label>
-            </div>
-          </section>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-            <Button type="submit" form="profile-form" disabled={isSaving} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#ea580c', color: '#fff', padding: '12px 24px', fontSize: '16px' }}>
-              {isSaving ? <Spinner size="sm" /> : <SaveIcon />}
+          <div className={styles.submitAction}>
+            <Button 
+              type="submit" 
+              form="profile-form" 
+              variant="primary" 
+              loading={isSaving}
+              icon={!isSaving && <FiSave />}
+              size="lg"
+            >
               {isSaving ? 'A salvar perfil...' : 'Salvar Perfil da Organização'}
             </Button>
           </div>
         </form>
 
-        <hr style={{ borderTop: '1px solid #e5e7eb', margin: '20px 0' }} />
-
-        <form onSubmit={handlePasswordChange} style={{ ...sectionStyle, border: '1px solid #fca5a5' }}>
-          <h2 style={{ ...sectionTitleStyle, color: '#b91c1c', borderBottomColor: '#fee2e2' }}><KeyIcon /> Segurança: Alterar Senha</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
-            <div>
-              <label style={labelStyle}>Nova Senha</label>
-              <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mínimo 8 caracteres" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Confirmar Nova Senha</label>
-              <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repita a nova senha" style={inputStyle} />
-            </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
-            <Button type="submit" disabled={isChangingPassword} style={{ backgroundColor: '#b91c1c', color: '#fff' }}>
-              {isChangingPassword ? <Spinner size="sm" /> : 'Atualizar Senha de Acesso'}
-            </Button>
-          </div>
-        </form>
+        {/* SECURITY SECTION */}
+        <Card padding="none" className={`${styles.sectionCard} ${styles.securitySection}`}>
+          <CardHeader 
+            className={styles.sectionHeader} 
+            title={<span className={`${styles.sectionTitle} ${styles.securityTitle}`}><FiKey /> Segurança: Alterar Senha</span>} 
+          />
+          <CardBody className={styles.sectionBody}>
+            <form onSubmit={handlePasswordChange}>
+              <div className={styles.gridColsAuto}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Nova Senha</label>
+                  <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mínimo 8 caracteres" className={styles.formInput} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Confirmar Nova Senha</label>
+                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repita a nova senha" className={styles.formInput} />
+                </div>
+              </div>
+              <div className={styles.submitAction}>
+                <Button 
+                  type="submit" 
+                  loading={isChangingPassword}
+                  style={{ backgroundColor: 'var(--color-danger)', color: 'white' }}
+                >
+                  {isChangingPassword ? 'Atualizando...' : 'Atualizar Senha de Acesso'}
+                </Button>
+              </div>
+            </form>
+          </CardBody>
+        </Card>
 
       </div>
-
-      <style>{`
-        .disabled-input { background-color: #f3f4f6 !important; color: #6b7280 !important; cursor: not-allowed; }
-      `}</style>
     </div>
   );
 }
-
-const sectionStyle = { backgroundColor: '#fff', borderRadius: '8px', padding: '24px', border: '1px solid #e5e7eb', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' };
-const sectionTitleStyle = { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '18px', color: '#374151', borderBottom: '2px solid #f3f4f6', paddingBottom: '12px', marginBottom: '20px', marginTop: 0 };
-const labelStyle = { display: 'block', fontSize: '13px', fontWeight: 'bold', color: '#4b5563', marginBottom: '6px' };
-const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', boxSizing: 'border-box', fontSize: '14px', color: '#1f2937', outline: 'none' };
-const hintStyle = { fontSize: '11px', color: '#9ca3af' };
-const checkboxLabelStyle = { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#374151', cursor: 'pointer', fontWeight: '500' };
-const checkboxStyle = { width: '18px', height: '18px', accentColor: '#ea580c', cursor: 'pointer' };

@@ -56,6 +56,13 @@
   flex-direction: column;
   position: relative;
   padding: 1.5rem; /* Mais respiro global para o conteúdo */
+  padding-bottom: calc(1.5rem + 64px); /* Espaço extra para o Bottom Navigation no mobile */
+}
+
+@media (min-width: 768px) {
+  .pageScrollArea {
+    padding-bottom: 1.5rem; /* No desktop, volta ao normal */
+  }
 }
 
 .contentWrapper {
@@ -119,23 +126,6 @@
 .userAvatar:hover {
   transform: scale(1.05);
   box-shadow: var(--shadow-md);
-}
-
-/* Mobile Overlay */
-.mobileOverlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(15, 23, 42, 0.6); /* Cor de overlay mais premium (slate-900) */
-  backdrop-filter: blur(2px);
-  z-index: 25;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-}
-
-.overlayVisible {
-  opacity: 1;
-  visibility: visible;
 }
 
 /* ==============================================

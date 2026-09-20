@@ -1,40 +1,16 @@
-// frontend/src/pages/osc/Documents.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import useApi from '../../hooks/useApi.jsx';
-import api from '../../services/api.js'; // <-- ADICIONADO PARA BUSCAR PROJETOS
+import api from '../../services/api.js'; 
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 import * as docService from '../../services/documentService.js';
 import DocumentUpload from './components/DocumentUpload.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
-import { FileIcon, DownloadIcon } from '../../components/common/Icons.jsx';
+import Card, { CardBody, CardHeader } from '../../components/ui/Card.jsx';
+import Button from '../../components/ui/Button.jsx';
+import { FiInfo, FiFileText, FiDownload, FiLink, FiCalendar, FiFilter } from 'react-icons/fi';
 import styles from './Documents.module.css';
-
-// Ícone de Informação Local
-const InfoIcon = () => (
-  <svg 
-    style={{ width: '16px', height: '16px', color: '#EC6D12', cursor: 'help' }} 
-    xmlns="http://www.w3.org/2000/svg" 
-    fill="none" 
-    viewBox="0 0 24 24" 
-    stroke="currentColor"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const calStyles = {
-  legend: { display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px', fontSize: '11px', color: '#555', padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #eee' },
-  legendItem: { display: 'flex', alignItems: 'center', gap: '6px' },
-  colorBox: (bg, border) => ({ width: '10px', height: '10px', backgroundColor: bg, border: `1px solid ${border}`, borderRadius: '2px' }),
-  sectionTitle: { fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' },
-  calendarGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))', gap: '8px', marginBottom: '24px' },
-  monthBox: (bg, color, border) => ({ backgroundColor: bg, color: color, border: `1px solid ${border}`, borderRadius: '6px', padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50px', transition: 'all 0.2s' }),
-  monthText: { fontSize: '12px', fontWeight: 'bold' },
-  statusText: { fontSize: '9px', fontWeight: '600', marginTop: '2px', textTransform: 'uppercase' },
-  periodSelector: { marginBottom: '15px', padding: '12px', backgroundColor: '#fff7ed', borderRadius: '8px', border: '1px solid #ffedd5' }
-};
 
 export default function OSCDocumentsPage() {
   const { user } = useAuth();
@@ -42,9 +18,8 @@ export default function OSCDocumentsPage() {
   const location = useLocation();
 
   const [myFiles, setMyFiles] = useState([]);
-  const [projects, setProjects] = useState([]); // <-- ESTADO DOS PROJETOS
+  const [projects, setProjects] = useState([]);
   const [isLoadingList, setIsLoadingList] = useState(true);
-  const [errorLoading, setErrorLoading] = useState(null);
   
   const queryParams = new URLSearchParams(location.search);
   const initialMonth = parseInt(queryParams.get('month')) || new Date().getMonth() + 1;
@@ -54,19 +29,17 @@ export default function OSCDocumentsPage() {
   const [refMonth, setRefMonth] = useState(initialMonth);
   const [refYear, setRefYear] = useState(initialYear);
   const [viewYear, setViewYear] = useState(initialYear);
-  const [projectId, setProjectId] = useState(''); // <-- ESTADO DO PROJETO SELECIONADO
+  const [projectId, setProjectId] = useState('');
 
   const { request: uploadFile, isLoading: isUploading } = useApi(docService.uploadDocument);
 
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const years = [2024, 2025, 2026];
 
-  // FILTRO DINÂMICO: Filtra a lista pelo mês e ano selecionados no calendário
   const filteredFiles = useMemo(() => {
     return myFiles.filter(f => f.ref_year === viewYear && f.ref_month === refMonth);
   }, [myFiles, viewYear, refMonth]);
 
-  // BUSCA PROJETOS DA OSC
   useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -114,13 +87,13 @@ export default function OSCDocumentsPage() {
     return 'future';
   };
 
-  const getStatusStyle = (status) => {
+  const getStatusClass = (status) => {
     switch (status) {
-      case 'late': return ['#fee2e2', '#b91c1c', '#fecaca'];
-      case 'pending': return ['#fef9c3', '#a16207', '#fde047'];
-      case 'sent': return ['#dbeafe', '#1d4ed8', '#bfdbfe'];
-      case 'concluded': return ['#dcfce7', '#15803d', '#86efac'];
-      default: return ['#f3f4f6', '#9ca3af', '#e5e7eb'];
+      case 'late': return styles.statusLate;
+      case 'pending': return styles.statusPending;
+      case 'sent': return styles.statusSent;
+      case 'concluded': return styles.statusConcluded;
+      default: return styles.statusFuture;
     }
   };
 
@@ -140,7 +113,7 @@ export default function OSCDocumentsPage() {
       const response = await docService.getMyDocuments();
       setMyFiles(Array.isArray(response) ? response : (response.data || []));
     } catch (err) {
-      setErrorLoading("Erro ao carregar lista de documentos.");
+      addNotification("Erro ao carregar lista de documentos.", 'error');
     } finally {
       setIsLoadingList(false);
     }
@@ -157,13 +130,11 @@ export default function OSCDocumentsPage() {
       formData.append('doc_type', docType);
       formData.append('ref_month', refMonth);
       formData.append('ref_year', refYear);
-      
-      // INJETA O PROJETO SE ELE FOI SELECIONADO
       if (projectId) formData.append('project_id', projectId);
       
       await uploadFile(formData);
       addNotification(`Documento enviado para ${refMonth}/${refYear}!`, 'success');
-      setProjectId(''); // Reseta o projeto após o upload para evitar envios por engano no próximo
+      setProjectId('');
       await fetchDocuments();
     } catch (err) {
       addNotification(`Erro no upload: ${err.response?.data?.message || err.message}`, 'error');
@@ -190,207 +161,179 @@ export default function OSCDocumentsPage() {
     }
   };
 
-  const LinkIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-    </svg>
-  );
-
   return (
     <div className={styles.pageContainer}>
+      
+      <div className={styles.header}>
+        <div>
+          <h1 className={styles.pageTitle}>Meus Documentos</h1>
+          <p className={styles.pageSubtitle}>Gerencie o envio da sua documentação mensal e fixa.</p>
+        </div>
+      </div>
+
       <div className={styles.grid}>
         
-        <div className={styles.uploadColumn}>
-          <div className={`${styles.infoCard} mb-8`}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-              <p className={styles.welcomeText}>
-                <strong>Upload de Documentos</strong><br/>
-                Período Selecionado: <strong>{months[refMonth - 1]}/{refYear}</strong>
-              </p>
-              <div className={styles.tooltipContainer}>
-                <InfoIcon />
-                <span className={styles.tooltipText} style={{ top: '150%', bottom: 'auto', transform: 'translateX(-90%)' }}>
-                  Selecione o mês no calendário ao lado para ver ou enviar arquivos daquele período.
-                </span>
+        {/* COLUNA ESQUERDA: UPLOAD & FILTROS */}
+        <div className={styles.sidebarColumn}>
+          <Card className={styles.filterCard} padding="none">
+            <CardHeader className={styles.filterCardHeader} title="Parâmetros de Envio" />
+            <CardBody className={styles.filterCardBody}>
+              <div className="form-group">
+                <label className="form-label">TIPO DE DOCUMENTO</label>
+                <select className="input-clean" value={docType} onChange={(e) => setDocType(e.target.value)}>
+                  <option value="MENSAL">Mensal (Contábil / Fiscal)</option>
+                  <option value="RELATORIO">Relatório Mês a Mês</option>
+                  <option value="FIXO">Fixo (Atas, Estatutos, Cartão CNPJ)</option>
+                  <option value="CERTIFICACAO">Certificação (Documento Fixo)</option>
+                  <option value="CONCLUSO TEC">CONCLUSO TEC (Transf. Escritório)</option>
+                </select>
               </div>
-            </div>
-            
-            <div style={calStyles.periodSelector}>
-                <div style={{ marginBottom: '10px' }}>
-                    <label style={{ fontSize: '11px', fontWeight: 'bold', display: 'block', color: '#ea580c' }}>TIPO DE DOCUMENTO</label>
-                    <select 
-                        style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                        value={docType}
-                        onChange={(e) => setDocType(e.target.value)}
-                    >
-                        <option value="MENSAL">Mensal (Contábil / Fiscal)</option>
-                        <option value="RELATORIO">Relatório Mês a Mês</option>
-                        <option value="FIXO">Fixo (Atas, Estatutos, Cartão CNPJ)</option>
-                        <option value="CERTIFICACAO">Certificação (Documento Fixo)</option>
-                        <option value="CONCLUSO TEC">CONCLUSO TEC (Transf. Escritório)</option>
-                    </select>
-                </div>
 
-                {/* --- NOVO CAMPO DE PROJETO AQUI --- */}
-                <div style={{ marginBottom: '15px' }}>
-                    <label style={{ fontSize: '11px', fontWeight: 'bold', display: 'block', color: '#ea580c' }}>PROJETO / CENTRO DE CUSTO</label>
-                    <select 
-                        style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd', backgroundColor: '#fff' }}
-                        value={projectId}
-                        onChange={(e) => setProjectId(e.target.value)}
-                    >
-                        <option value="">Recurso Livre / Sem Projeto</option>
-                        {projects.map(p => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                    </select>
-                </div>
+              <div className="form-group mt-3">
+                <label className="form-label">PROJETO / CENTRO DE CUSTO</label>
+                <select className="input-clean" value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+                  <option value="">Recurso Livre / Sem Projeto</option>
+                  {projects.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
 
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: '11px', fontWeight: 'bold', display: 'block', color: '#ea580c' }}>MÊS DE REF.</label>
-                        <select 
-                            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                            value={refMonth}
-                            onChange={(e) => setRefMonth(parseInt(e.target.value))}
-                        >
-                            {months.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-                        </select>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: '11px', fontWeight: 'bold', display: 'block', color: '#ea580c' }}>ANO DE REF.</label>
-                        <select 
-                            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                            value={refYear}
-                            onChange={(e) => setRefYear(parseInt(e.target.value))}
-                        >
-                            {years.map(y => <option key={y} value={y}>{y}</option>)}
-                        </select>
-                    </div>
+              <div className={styles.rowGrid}>
+                <div className="form-group">
+                  <label className="form-label">MÊS DE REF.</label>
+                  <select className="input-clean" value={refMonth} onChange={(e) => setRefMonth(parseInt(e.target.value))}>
+                    {months.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+                  </select>
                 </div>
-            </div>
-            <p className={styles.infoText}><strong>OSC:</strong> {user?.name}</p>
-          </div>
-          <DocumentUpload onUpload={handleFileUpload} isLoading={isUploading} />
+                <div className="form-group">
+                  <label className="form-label">ANO DE REF.</label>
+                  <select className="input-clean" value={refYear} onChange={(e) => setRefYear(parseInt(e.target.value))}>
+                    {years.map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+
+          <DocumentUpload onUpload={handleFileUpload} isLoading={isUploading} className={styles.uploadWidget} />
         </div>
 
-        <div className={`${styles.listCard} ${styles.listColumn}`}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 className={styles.cardTitle} style={{ margin: 0 }}>Painel de Documentos</h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Ano:</span>
-              <select 
-                style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #ccc' }}
-                value={viewYear}
-                onChange={(e) => setViewYear(parseInt(e.target.value))}
-              >
-                {years.map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-          </div>
-
-          {user?.data_contrato_conta_comigo && (
-            <div style={{
-              backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', color: '#0369a1',
-              padding: '10px 15px', borderRadius: '8px', marginBottom: '20px', fontSize: '13px', fontWeight: '500'
-            }}>
-              🤝 Início da relação contratual com CONTA COMIGO: <strong>{new Date(user.data_contrato_conta_comigo).toLocaleDateString('pt-BR')}</strong>
-            </div>
-          )}
-
-          <div style={{marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '20px'}}>
-            <h4 style={calStyles.sectionTitle}>Situação em {viewYear}</h4>
-            <div style={calStyles.legend}>
-                {['late', 'pending', 'sent', 'concluded'].map(s => (
-                    <div key={s} style={calStyles.legendItem}>
-                        <div style={calStyles.colorBox(getStatusStyle(s)[0], getStatusStyle(s)[2])}></div> {getStatusLabel(s)}
-                    </div>
-                ))}
-            </div>
-
-            <div style={calStyles.calendarGrid}>
-                {months.map((m, idx) => {
-                    const status = getMonthStatus(idx);
-                    const [bg, color, border] = getStatusStyle(status);
-                    const isSelected = refMonth === idx + 1 && viewYear === refYear;
-                    return (
-                        <div 
-                          key={m} 
-                          style={{
-                            ...calStyles.monthBox(bg, color, border),
-                            cursor: 'pointer',
-                            transform: isSelected ? 'scale(1.05)' : 'scale(1)',
-                            boxShadow: isSelected ? '0 0 0 2px #ea580c' : 'none',
-                            fontWeight: isSelected ? 'bold' : 'normal'
-                          }}
-                          onClick={() => {
-                            setRefMonth(idx + 1);
-                            setRefYear(viewYear);
-                          }}
-                        >
-                            <span style={calStyles.monthText}>{m}</span>
-                            <span style={calStyles.statusText}>{getStatusLabel(status)}</span>
-                        </div>
-                    )
-                })}
-            </div>
-          </div>
-
-          <h4 style={{...calStyles.sectionTitle, borderTop: '1px solid #eee', paddingTop: '15px'}}>
-            Arquivos de {months[refMonth - 1]}/{viewYear}
-          </h4>
-
-          {isLoadingList ? (
-            <div className={styles.loadingContainer}><Spinner text="Carregando..." /></div>
-          ) : filteredFiles.length === 0 ? (
-            <div className={styles.emptyContainer}>
-                <p>Nenhum documento enviado para <strong>{months[refMonth - 1]}/{viewYear}</strong>.</p>
-            </div>
-          ) : (
-            <div className={styles.fileListContainer}>
-              {filteredFiles.map((file) => (
-                <div key={file.id} className={styles.fileItem}>
-                  <div className={styles.fileInfo}>
-                    <FileIcon className={styles.fileIcon} />
-                    <div className={styles.fileText}>
-                      <span className={styles.fileName}>
-                        {file.original_name || file.name}
-                        <span style={{ fontSize: '10px', marginLeft: '8px', color: '#6366f1' }}>[{file.doc_type}]</span>
-                        
-                        {/* --- ETIQUETA DO PROJETO AQUI --- */}
-                        {file.project_name ? (
-                          <span style={{ fontSize: '10px', marginLeft: '8px', backgroundColor: '#dcfce7', color: '#166534', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>
-                            {file.project_name}
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: '10px', marginLeft: '8px', backgroundColor: '#f3f4f6', color: '#4b5563', padding: '2px 6px', borderRadius: '4px' }}>
-                            Recurso Livre
-                          </span>
-                        )}
-                      </span>
-                      <span className={styles.fileDate}>
-                        Enviado em {new Date(file.created_at).toLocaleDateString('pt-BR')} • Status: {file.status}
-                      </span>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button 
-                      onClick={() => handleShare(file)} 
-                      className={styles.downloadButton}
-                      title="Gerar Link Público"
-                      style={{ backgroundColor: '#f3f4f6', color: '#4f46e5' }}
-                    >
-                      <LinkIcon />
-                    </button>
-                    <button onClick={() => handleDownload(file)} className={styles.downloadButton} title="Download">
-                      <DownloadIcon className={styles.icon} />
-                    </button>
-                  </div>
+        {/* COLUNA DIREITA: CALENDÁRIO E LISTA DE ARQUIVOS */}
+        <div className={styles.mainColumn}>
+          
+          <Card padding="none" className={styles.mainCard}>
+            <CardHeader 
+              className={styles.mainCardHeader}
+              title={<span style={{display: 'flex', alignItems: 'center', gap: '8px'}}><FiCalendar /> Calendário de Situação</span>} 
+              action={
+                <select className="input-clean" style={{width: 'auto'}} value={viewYear} onChange={(e) => setViewYear(parseInt(e.target.value))}>
+                  {years.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              }
+            />
+            <CardBody className={styles.mainCardBody}>
+              {user?.data_contrato_conta_comigo && (
+                <div className={styles.contractAlert}>
+                  🤝 Início da relação contratual com a contabilidade: <strong>{new Date(user.data_contrato_conta_comigo).toLocaleDateString('pt-BR')}</strong>
                 </div>
-              ))}
-            </div>
-          )}
+              )}
+
+              <div className={styles.legendGrid}>
+                {['late', 'pending', 'sent', 'concluded'].map(s => (
+                  <div key={s} className={styles.legendItem}>
+                    <div className={`${styles.legendColor} ${getStatusClass(s)}`}></div> {getStatusLabel(s)}
+                  </div>
+                ))}
+              </div>
+
+              <div className={styles.calendarGrid}>
+                {months.map((m, idx) => {
+                  const status = getMonthStatus(idx);
+                  const isSelected = refMonth === idx + 1 && viewYear === refYear;
+                  const itemClass = `${styles.monthBox} ${getStatusClass(status)} ${isSelected ? styles.monthSelected : ''}`;
+                  
+                  return (
+                    <div 
+                      key={m} 
+                      className={itemClass}
+                      onClick={() => {
+                        setRefMonth(idx + 1);
+                        setRefYear(viewYear);
+                      }}
+                    >
+                      <span className={styles.monthName}>{m}</span>
+                      <span className={styles.monthStatus}>{getStatusLabel(status)}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card padding="none" className={styles.filesCard}>
+            <CardHeader 
+              className={styles.filesCardHeader}
+              title={`Arquivos de ${months[refMonth - 1]}/${viewYear}`}
+            />
+            <CardBody className={styles.filesCardBody}>
+              {isLoadingList ? (
+                <div className={styles.loadingState}><Spinner text="Carregando documentos..." /></div>
+              ) : filteredFiles.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <FiFileText size={48} className="text-muted mb-3" />
+                  <p>Nenhum documento enviado para <strong>{months[refMonth - 1]}/{viewYear}</strong>.</p>
+                </div>
+              ) : (
+                <div className={styles.fileList}>
+                  {filteredFiles.map((file) => (
+                    <div key={file.id} className={styles.fileItem}>
+                      <div className={styles.fileIconWrapper}>
+                        <FiFileText size={24} />
+                      </div>
+                      
+                      <div className={styles.fileDetails}>
+                        <h4 className={styles.fileName}>
+                          {file.original_name || file.name}
+                        </h4>
+                        
+                        <div className={styles.fileTagsRow}>
+                          <span className={styles.docTypeTag}>{file.doc_type}</span>
+                          {file.project_name ? (
+                            <span className={styles.projectTag}>{file.project_name}</span>
+                          ) : (
+                            <span className={styles.noProjectTag}>Recurso Livre</span>
+                          )}
+                        </div>
+                        
+                        <span className={styles.fileMeta}>
+                          Enviado em {new Date(file.created_at).toLocaleDateString('pt-BR')} • {file.status}
+                        </span>
+                      </div>
+
+                      <div className={styles.fileActions}>
+                        <Button 
+                          variant="secondary" 
+                          size="sm"
+                          icon={<FiLink />}
+                          onClick={() => handleShare(file)}
+                          title="Gerar Link Público"
+                        />
+                        <Button 
+                          variant="primary" 
+                          size="sm"
+                          icon={<FiDownload />}
+                          onClick={() => handleDownload(file)}
+                          title="Fazer Download"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardBody>
+          </Card>
+
         </div>
       </div>
     </div>

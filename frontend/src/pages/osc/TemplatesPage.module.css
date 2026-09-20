@@ -1,293 +1,261 @@
-/* Container Principal */
 .pageContainer {
-  font-family: 'Inter', sans-serif;
-  color: #334155;
-  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-/* Títulos com a Identidade Laranja */
-.mainTitle, .pageTitle {
-  color: #EC6D12;
-  font-size: 2rem;
+.header {
+  margin-bottom: var(--space-sm);
+}
+
+.pageTitle {
+  font-size: 1.75rem;
   font-weight: 800;
-  margin-bottom: 1.5rem;
+  color: var(--text-dark);
+  margin: 0 0 var(--space-xs) 0;
   text-transform: uppercase;
-  letter-spacing: -0.02em;
+}
+
+.pageSubtitle {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* SEÇÃO DE CABEÇALHO DA BIBLIOTECA */
+.libraryHeader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.welcomeSection {
+  background-color: var(--bg-surface);
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border-top: 6px solid var(--primary-color);
+}
+
+.mainTitle {
+  color: var(--primary-color);
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0 0 var(--space-md) 0;
 }
 
 .subTitle {
-  color: #EC6D12;
-  font-size: 1.25rem;
+  color: var(--primary-color);
+  font-size: 1.15rem;
   font-weight: 700;
-  margin-bottom: 1rem;
-  text-transform: uppercase;
-  border-bottom: 2px solid #fef3c7;
-  padding-bottom: 5px;
+  margin: 0 0 var(--space-md) 0;
+  border-bottom: 2px solid var(--primary-light);
+  padding-bottom: 4px;
   display: inline-block;
 }
 
 .stepTitle {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin: 1rem 0;
-}
-
-/* Seção de Cabeçalho / Textos */
-.libraryHeader {
-  background-color: #ffffff;
-  padding: 2rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  margin-bottom: 3rem;
-  border-top: 6px solid #EC6D12;
-}
-
-.welcomeSection {
-  margin-bottom: 2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: var(--space-md) 0 var(--space-sm) 0;
 }
 
 .contentGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  margin-bottom: 2rem;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
 }
 
-@media (max-width: 768px) {
+@media (min-width: 768px) {
   .contentGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
-.contentCard, .instructionCard {
-  background: #f8fafc;
-  padding: 1.5rem;
-  border-radius: 12px;
+.infoCard {
+  background-color: var(--bg-surface);
   height: 100%;
+}
+
+.instructionCard {
+  background-color: var(--bg-surface);
 }
 
 .instructionFlex {
   display: flex;
-  gap: 2rem;
+  flex-direction: column;
+  gap: var(--space-lg);
 }
 
-@media (max-width: 600px) {
+@media (min-width: 768px) {
   .instructionFlex {
-    flex-direction: column;
+    flex-direction: row;
+  }
+  .flexHalf {
+    flex: 1;
   }
 }
 
-/* Listas Estilizadas com Bullets Laranjas */
-.styledList, .miniList {
+.styledList {
   list-style: none;
-  padding-left: 1.5rem;
-  margin: 1rem 0;
+  padding-left: var(--space-lg);
+  margin: var(--space-md) 0;
 }
 
-.styledList li, .miniList li {
+.styledList li {
   position: relative;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-xs);
 }
 
-/* O marcador (bullet) laranja */
 .styledList li::before {
   content: "•";
-  color: #EC6D12;
+  color: var(--primary-color);
   font-weight: bold;
-  display: inline-block;
-  width: 1em;
-  margin-left: -1.5em;
-  font-size: 1.2rem;
+  position: absolute;
+  left: -1rem;
+}
+
+.miniList {
+  list-style: none;
+  padding-left: var(--space-lg);
+  margin: var(--space-md) 0;
+}
+
+.miniList li {
+  position: relative;
+  margin-bottom: var(--space-xs);
 }
 
 .miniList li::before {
   content: "→";
-  color: #EC6D12;
-  margin-left: -1.5em;
-  padding-right: 0.5rem;
+  color: var(--primary-color);
+  position: absolute;
+  left: -1.2rem;
 }
 
 .highlightText {
-  background: #fff7ed;
-  padding: 10px;
-  border-left: 4px solid #EC6D12;
-  margin: 1rem 0;
+  background-color: #fff7ed;
+  padding: var(--space-sm) var(--space-md);
+  border-left: 4px solid var(--primary-color);
+  margin-top: var(--space-md);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
-/* Avisos e Propósito */
-.legalSection {
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 2rem;
-  margin-top: 2rem;
-}
-
-.legalNotice {
-  background-color: #fffbeb;
-  border: 1px solid #fef3c7;
-  padding: 1.5rem;
-  border-radius: 12px;
-  font-size: 0.9rem;
-}
-
-.purposeBox {
-  background-color: #f1f5f9;
-  padding: 1.5rem;
-  border-radius: 12px;
-}
-
-/* Grid de Downloads */
+/* LISTAS DE ARQUIVOS */
 .gridContainer {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
 }
 
-@media (max-width: 900px) {
+@media (min-width: 1024px) {
   .gridContainer {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
 .listCard {
-  background: white;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  height: max-content;
 }
 
 .cardHeader {
-  background-color: #1e293b;
-  color: white;
-  padding: 1.25rem;
+  background-color: var(--bg-surface);
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--border-color);
   margin: 0;
-  font-size: 1.1rem;
-  text-align: center;
 }
 
-.fileListContainer {
-  padding: 1rem;
+.cardBody {
+  padding: 0;
+}
+
+.groupTitle {
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--bg-app);
+  font-size: 0.9rem;
+  color: var(--primary-color);
+  border-left: 4px solid var(--primary-color);
+  margin: var(--space-md) 0 0 0;
+  text-transform: uppercase;
 }
 
 .fileItem {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem;
-  border-bottom: 1px solid #f1f5f9;
-  transition: background 0.2s;
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color var(--transition-fast);
+}
+
+.fileItem:last-child {
+  border-bottom: none;
 }
 
 .fileItem:hover {
-  background-color: #f8fafc;
+  background-color: var(--bg-app);
 }
 
 .fileInfo {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-md);
+  flex: 1;
 }
 
-.fileIcon {
-  width: 24px;
-  height: 24px;
-  color: #64748b;
-}
-
-.fileName {
-  font-weight: 600;
-  color: #334155;
-}
-
-/* Tooltip de Classificação */
-.classificationWrapper {
-  position: relative;
-  display: inline-flex;
-  margin-left: 8px;
-  cursor: help;
-}
-
-.infoIconSmall {
-  width: 16px;
-  height: 16px;
-  color: #EC6D12;
-}
-
-.tooltipText {
-  visibility: hidden;
-  width: 280px;
-  background-color: #1e293b;
-  color: #fff;
-  padding: 12px;
-  border-radius: 8px;
-  position: absolute;
-  z-index: 100;
-  bottom: 140%;
-  left: 50%;
-  transform: translateX(-50%);
-  opacity: 0;
-  transition: opacity 0.3s;
-  font-size: 0.8rem;
-  line-height: 1.4;
-  white-space: pre-wrap;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-}
-
-.classificationWrapper:hover .tooltipText {
-  visibility: visible;
-  opacity: 1;
-}
-
-/* Botões de Ação */
-.actionGroup {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.viewButton, .downloadButton {
-  padding: 8px;
-  border-radius: 8px;
+.fileIconWrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
-  text-decoration: none;
+  width: 40px;
+  height: 40px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
 }
 
-.viewButton {
-  background-color: #f1f5f9;
-  color: #475569;
-}
-
-.downloadButton {
-  background-color: #EC6D12;
-  color: white;
-}
-
-.viewButton:hover {
-  background-color: #e2e8f0;
-}
-
-.downloadButton:hover {
-  background-color: #d15d0f;
-}
-
-.icon {
+.fileIcon {
   width: 20px;
   height: 20px;
 }
 
-/* Loading e Empty */
+.fileText {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.fileName {
+  font-weight: 600;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+}
+
+.actionGroup {
+  display: flex;
+  gap: var(--space-xs);
+  margin-left: var(--space-sm);
+}
+
+.linkNoDecoration {
+  text-decoration: none;
+}
+
 .loadingFull {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 60vh;
+  height: 40vh;
 }
 
 .empty {
   text-align: center;
-  color: #94a3b8;
-  padding: 2rem;
+  color: var(--text-muted);
+  padding: var(--space-lg);
+  font-style: italic;
 }

@@ -1,0 +1,70 @@
+.bottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: var(--bg-surface);
+  box-shadow: var(--shadow-top);
+  border-top: 1px solid var(--border-color);
+  z-index: var(--z-sticky);
+  padding-bottom: env(safe-area-inset-bottom, 0px); /* Suporte a entalhe do iPhone */
+}
+
+.navList {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  height: 64px;
+}
+
+.navItem {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.navLink {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  padding: 4px;
+}
+
+.iconWrapper {
+  font-size: 1.25rem;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+
+.navLabel {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.navLink.active {
+  color: var(--primary-color);
+}
+
+.navLink.active .iconWrapper {
+  transform: translateY(-2px);
+}
+
+/* Efeito de toque nativo */
+.navLink:active .iconWrapper {
+  transform: scale(0.9);
+}

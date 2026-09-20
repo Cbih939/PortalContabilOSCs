@@ -6,29 +6,69 @@
   --primary-hover: #c2410c;
   --primary-light: #ffedd5; /* Laranja super suave para fundos ativos */
 
+  /* Cores Semânticas */
+  --color-success: #10b981;
+  --color-success-light: #d1fae5;
+  --color-danger: #ef4444;
+  --color-danger-light: #fee2e2;
+  --color-warning: #f59e0b;
+  --color-warning-light: #fef3c7;
+  --color-info: #3b82f6;
+  --color-info-light: #dbeafe;
+
   /* Cores de Fundo (App-like) */
-  --bg-app: #f4f7f9; /* Fundo cinza com toque azulado super premium */
+  --bg-app: #f8fafc; /* Fundo cinza super claro premium */
   --bg-card: #ffffff;
+  --bg-surface: #ffffff;
   --bg-sidebar: #ffffff;
   --bg-header: rgba(255, 255, 255, 0.95);
 
   /* Texto */
-  --text-dark: #1e293b;
-  --text-body: #475569;
-  --text-muted: #94a3b8;
+  --text-dark: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
 
-  /* Bordas e Sombras (Soft Design) */
+  /* Bordas e Divisores */
   --border-color: #e2e8f0;
+  --border-light: #f1f5f9;
+
+  /* Sombras (Soft Design) */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
   --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+  --shadow-top: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
   
   /* Arredondamentos globais */
   --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 16px;
+  --radius-xl: 24px;
   --radius-pill: 9999px;
+
+  /* Espaçamentos (Mobile-first scales) */
+  --space-xs: 0.25rem; /* 4px */
+  --space-sm: 0.5rem;  /* 8px */
+  --space-md: 1rem;    /* 16px */
+  --space-lg: 1.5rem;  /* 24px */
+  --space-xl: 2rem;    /* 32px */
+  --space-2xl: 3rem;   /* 48px */
+
+  /* Transições globais */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+  --transition-slow: 0.4s ease;
+
+  /* Z-index (App layers) */
+  --z-base: 1;
+  --z-elevated: 10;
+  --z-dropdown: 40;
+  --z-sticky: 50;
+  --z-fixed: 100;
+  --z-modal-backdrop: 200;
+  --z-modal: 210;
+  --z-toast: 300;
 }
 
 /* Reset básico */
@@ -222,3 +262,66 @@ a:hover {
   position: relative;
   z-index: 10;
 }
+
+/* ==========================================================================
+   UTILITY CLASSES (Responsive & Layout)
+   ========================================================================== */
+
+/* Show/Hide Helpers based on Breakpoints */
+.hide-on-mobile {
+  display: none !important;
+}
+
+.show-on-mobile {
+  display: block !important;
+}
+
+.show-on-mobile-flex {
+  display: flex !important;
+}
+
+@media (min-width: 768px) {
+  .hide-on-desktop {
+    display: none !important;
+  }
+  
+  .show-on-desktop {
+    display: block !important;
+  }
+
+  .show-on-desktop-flex {
+    display: flex !important;
+  }
+
+  .hide-on-mobile {
+    display: block !important;
+  }
+  
+  .show-on-mobile {
+    display: none !important;
+  }
+
+  .show-on-mobile-flex {
+    display: none !important;
+  }
+}
+
+/* Base text utilities */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+.text-muted { color: var(--text-muted); }
+.text-danger { color: var(--color-danger); }
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+
+/* Flexbox utilities */
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.gap-xs { gap: var(--space-xs); }
+.gap-sm { gap: var(--space-sm); }
+.gap-md { gap: var(--space-md); }
+.gap-lg { gap: var(--space-lg); }

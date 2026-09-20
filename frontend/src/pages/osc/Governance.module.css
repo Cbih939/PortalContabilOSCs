@@ -1,0 +1,244 @@
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-xs) 0;
+}
+
+.iconWrapper {
+  padding: 8px;
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pageSubtitle {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Empty State */
+.emptyState {
+  padding: var(--space-3xl) var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 48px;
+  height: 48px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-md);
+}
+
+.emptyTitle {
+  font-size: 1.25rem;
+  color: var(--text-dark);
+  margin: 0 0 var(--space-xs) 0;
+}
+
+.emptySubtitle {
+  color: var(--text-muted);
+  margin: 0 0 var(--space-lg) 0;
+  font-size: 0.95rem;
+}
+
+/* Table Styles */
+.tableContainer {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.table th {
+  padding: var(--space-md) var(--space-lg);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table td {
+  padding: var(--space-md) var(--space-lg);
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover td {
+  background-color: var(--bg-app);
+}
+
+.memberName {
+  font-weight: 600;
+  color: var(--text-dark);
+  font-size: 1rem;
+}
+
+.memberCpf {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.roleTag {
+  background-color: var(--bg-app);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  border: 1px solid var(--border-color);
+}
+
+.dateInfo {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.statusActive {
+  background-color: var(--color-success-light);
+  color: #166534;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.statusInactive {
+  background-color: var(--color-danger-light);
+  color: #991b1b;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.actionButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: background-color var(--transition-fast);
+}
+
+.actionButton:hover {
+  background-color: var(--bg-surface);
+}
+
+.btnEdit {
+  color: var(--text-muted);
+}
+
+.btnEdit:hover {
+  color: var(--primary-color);
+}
+
+.btnDelete {
+  color: var(--color-danger);
+}
+
+.loadingContainer {
+  padding: var(--space-3xl);
+  display: flex;
+  justify-content: center;
+}
+
+/* Modal Form Grid */
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding-top: var(--space-sm);
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+
+@media (min-width: 640px) {
+  .formRow {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.formLabel {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.formInput {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color var(--transition-fast);
+  background-color: var(--bg-surface);
+}
+
+.formInput:focus {
+  border-color: var(--primary-color);
+}
+
+.errorText {
+  color: var(--color-danger);
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-color);
+}
