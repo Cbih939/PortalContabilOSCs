@@ -1,34 +1,20 @@
-// src/pages/contador/TemplatesPage.jsx
-
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-// Serviços e Hooks
+
 import * as templateService from '../../services/templateService.js';
 import useApi from '../../hooks/useApi.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
-// Componentes
-import styles from './TemplatesPage.module.css';
-import Input from '../../components/common/Input.jsx';
-import Button from '../../components/common/Button.jsx';
-import Spinner from '../../components/common/Spinner.jsx';
-import FileUpload from '../../components/common/FileUpload.jsx'; 
-import { FileIcon, XIcon, UploadIcon } from '../../components/common/Icons.jsx';
 import { formatDate } from '../../utils/formatDate.js';
 
-// Ícone de Informação (Tooltip) declarado localmente
-const InfoIcon = () => (
-  <svg 
-    style={{ width: '16px', height: '16px', color: '#EC6D12', cursor: 'help', marginLeft: '8px' }} 
-    xmlns="http://www.w3.org/2000/svg" 
-    fill="none" 
-    viewBox="0 0 24 24" 
-    stroke="currentColor"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
+import Card, { CardBody } from '../../components/ui/Card.jsx';
+import Button from '../../components/ui/Button.jsx';
+import Spinner from '../../components/common/Spinner.jsx';
+import FileUpload from '../../components/common/FileUpload.jsx'; 
+import styles from './TemplatesPage.module.css';
+
+import { FiInfo, FiFile, FiTrash2, FiUploadCloud } from 'react-icons/fi';
 
 const uploadSchema = yup.object().shape({
   file_name: yup.string().required('O nome de exibição é obrigatório.'),
@@ -59,7 +45,6 @@ export default function TemplatesPage() {
     setErrorLoading(null);
     try {
       const response = await templateService.getAllTemplates();
-      // Proteção de array
       const data = Array.isArray(response) ? response : (response?.data || []);
       setTemplates(data);
     } catch (err) {
@@ -82,8 +67,6 @@ export default function TemplatesPage() {
 
     try {
       const response = await templateService.uploadTemplate(formData);
-      
-      // MÁGICA AQUI: O desempacotamento seguro para qualquer formato do Backend!
       const newTemplate = response?.data?.template || response?.data || response?.template || response;
       const templateName = newTemplate?.file_name || data.file_name;
 
@@ -113,7 +96,7 @@ export default function TemplatesPage() {
       <div className={styles.headerWithInfo}>
         <h2 className={styles.title}>Gerenciar Modelos (Downloads Úteis)</h2>
         <div className={styles.tooltipContainer}>
-          <InfoIcon />
+          <FiInfo className={styles.infoIcon} />
           <span className={styles.tooltipText}>
             Nesta área você define as planilhas de controle e documentos-base que suas OSCs poderão baixar. Estes arquivos servem como guia para a organização documental delas.
           </span>
@@ -121,84 +104,97 @@ export default function TemplatesPage() {
       </div>
       
       <div className={styles.grid}>
-        <div className={styles.uploadColumn}>
-          <div className={styles.formCard}>
-            <div className={styles.headerWithInfo}>
-              <h3 className={styles.formTitle}>Enviar Novo Modelo</h3>
-              <div className={styles.tooltipContainer}>
-                <InfoIcon />
-                <span className={styles.tooltipText}>
-                  Escolha um nome claro (ex: Controle de Caixa) e anexe o arquivo (Excel, PDF ou Word). O arquivo ficará disponível na aba "Docs | Modelos" da OSC.
-                </span>
+        
+        <div>
+          <Card>
+            <CardBody>
+              <div className={styles.headerWithInfo} style={{ marginBottom: '15px' }}>
+                <h3 className={styles.formTitle} style={{ border: 'none', margin: 0, padding: 0 }}>Enviar Novo Modelo</h3>
+                <div className={styles.tooltipContainer}>
+                  <FiInfo className={styles.infoIcon} />
+                  <span className={styles.tooltipText}>
+                    Escolha um nome claro (ex: Controle de Caixa) e anexe o arquivo (Excel, PDF ou Word). O arquivo ficará disponível na aba "Docs | Modelos" da OSC.
+                  </span>
+                </div>
               </div>
-            </div>
-            <form onSubmit={handleSubmit(onSubmitUpload)} className={styles.form}>
-              <Input
-                label="Nome de Exibição *"
-                id="file_name"
-                {...register('file_name')}
-                error={errors.file_name?.message}
-                placeholder="Ex: Modelo de Controle Financeiro"
-              />
               
-              <Controller
-                name="templateFile"
-                control={control}
-                render={({ field: { onChange } }) => (
-                  <FileUpload
-                    label="Ficheiro *"
-                    onFileSelect={(file) => onChange(file)} 
-                    acceptedTypes={{}} 
-                    hint="Qualquer tipo (XLSX, PDF, DOCX, etc. Máx. 5MB)"
+              <form onSubmit={handleSubmit(onSubmitUpload)} className={styles.form}>
+                
+                <div className={styles.inputGroup}>
+                  <label htmlFor="file_name" className={styles.formLabel}>Nome de Exibição *</label>
+                  <input
+                    id="file_name"
+                    type="text"
+                    {...register('file_name')}
+                    placeholder="Ex: Modelo de Controle Financeiro"
+                    className={`${styles.formInput} ${errors.file_name ? styles.formInputError : ''}`}
                   />
-                )}
-              />
-              {errors.templateFile && <p className={styles.errorMessage}>{errors.templateFile.message}</p>}
+                  {errors.file_name && <span className={styles.errorMessage}>{errors.file_name.message}</span>}
+                </div>
+                
+                <Controller
+                  name="templateFile"
+                  control={control}
+                  render={({ field: { onChange } }) => (
+                    <FileUpload
+                      label="Ficheiro *"
+                      onFileSelect={(file) => onChange(file)} 
+                      acceptedTypes={{}} 
+                      hint="Qualquer tipo (XLSX, PDF, DOCX, etc. Máx. 5MB)"
+                    />
+                  )}
+                />
+                {errors.templateFile && <p className={styles.errorMessage}>{errors.templateFile.message}</p>}
 
-              <Button type="submit" variant="primary" disabled={isUploading}>
-                {isUploading ? <Spinner size="sm" className="mr-2" /> : <UploadIcon className="w-5 h-5 mr-2" />}
-                {isUploading ? 'Enviando...' : 'Enviar Modelo'}
-              </Button>
-            </form>
-          </div>
+                <div className={styles.submitActions}>
+                  <Button type="submit" variant="primary" disabled={isUploading} icon={<FiUploadCloud />}>
+                    {isUploading ? <Spinner size="sm" /> : 'Enviar Modelo'}
+                  </Button>
+                </div>
+              </form>
+            </CardBody>
+          </Card>
         </div>
 
-        <div className={styles.listColumn}>
-          <div className={styles.listCard}>
-            <h3 className={styles.listTitle}>Modelos Enviados</h3>
-            <div className={styles.listContainer}>
-              {isLoadingList ? (
-                <Spinner text="Carregando modelos..." />
-              ) : errorLoading ? (
-                <p className={styles.emptyText} style={{ color: 'red' }}>{errorLoading}</p>
-              ) : templates.length === 0 ? (
-                <p className={styles.emptyText}>Nenhum modelo enviado.</p>
-              ) : (
-                templates.map(template => (
-                  <div key={template.id} className={styles.templateItem}>
-                    <div className={styles.fileInfo}>
-                      <FileIcon className={styles.fileIcon} />
-                      <div className={styles.fileText}>
-                        <span className={styles.fileName}>{template.file_name}</span>
-                        <span className={styles.fileDescription}>
-                          Enviado em: {formatDate(template.created_at || template.createdAt)}
-                        </span>
+        <div>
+          <Card>
+            <CardBody>
+              <h3 className={styles.listTitle}>Modelos Enviados</h3>
+              <div className={styles.listContainer}>
+                {isLoadingList ? (
+                  <div style={{display: 'flex', justifyContent: 'center', padding: '20px'}}><Spinner text="Carregando modelos..." /></div>
+                ) : errorLoading ? (
+                  <p className={styles.emptyText} style={{ color: 'red' }}>{errorLoading}</p>
+                ) : templates.length === 0 ? (
+                  <p className={styles.emptyText}>Nenhum modelo enviado.</p>
+                ) : (
+                  templates.map(template => (
+                    <div key={template.id} className={styles.templateItem}>
+                      <div className={styles.fileInfo}>
+                        <FiFile className={styles.fileIcon} />
+                        <div className={styles.fileText}>
+                          <span className={styles.fileName}>{template.file_name}</span>
+                          <span className={styles.fileDescription}>
+                            Enviado em: {formatDate(template.created_at || template.createdAt)}
+                          </span>
+                        </div>
                       </div>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleDelete(template)}
+                        title="Apagar modelo"
+                        disabled={isDeleting}
+                        icon={<FiTrash2 />}
+                      />
                     </div>
-                    <button
-                      onClick={() => handleDelete(template)}
-                      className={styles.deleteButton}
-                      title="Apagar modelo"
-                      disabled={isDeleting}
-                    >
-                      <XIcon />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+                  ))
+                )}
+              </div>
+            </CardBody>
+          </Card>
         </div>
+
       </div>
     </div>
   );

@@ -1,25 +1,18 @@
-// src/pages/admin/ManageUsers.jsx
-
 import React, { useState, useMemo, useEffect } from 'react';
 import * as userService from '../../services/userService.js';
-import { ROLES } from '../../utils/constants.js';
-// Adicionado MessageIcon para as mensagens de pagamento
-import { EditIcon, UsersIcon, SearchIcon, TrashIcon, MessageIcon } from '../../components/common/Icons.jsx';
-import Input from '../../components/common/Input.jsx';
-import Button from '../../components/common/Button.jsx';
+import Button from '../../components/ui/Button.jsx';
+import Card, { CardBody } from '../../components/ui/Card.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 import styles from './ManageUsers.module.css';
 import CreateUserModal from './components/CreateUserModal.jsx';
 import EditUserModal from './components/EditUserModal.jsx';
 import CreateOfficeModal from './components/CreateOfficeModal.jsx';
-import PaymentMessageModal from './components/PaymentMessageModal.jsx'; // Novo Modal
+import PaymentMessageModal from './components/PaymentMessageModal.jsx';
 import useApi from '../../hooks/useApi.jsx';
 import api from '../../services/api.js';
+import { FiUsers, FiSearch, FiEdit2, FiTrash2, FiMessageCircle, FiPlus } from 'react-icons/fi';
 
-/**
- * Página de Gerenciamento de Usuários e Escritórios (Atualizada com Mensagens de Pagamento)
- */
 export default function ManageUsers() {
   const [allUsers, setAllUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,7 +25,7 @@ export default function ManageUsers() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isOfficeModalOpen, setIsOfficeModalOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState(null);
-  const [userToMessage, setUserToMessage] = useState(null); // Estado para o modal de pagamento
+  const [userToMessage, setUserToMessage] = useState(null);
 
   // --- Hooks API ---
   const { request: createUserRequest, isLoading: isCreating } = useApi(
@@ -42,7 +35,6 @@ export default function ManageUsers() {
       userService.updateUser, { showErrorNotification: false }
   );
 
-  // Busca lista de utilizadores
   const fetchUsers = async (showLoadingSpinner = true) => {
       if (showLoadingSpinner) setIsLoading(true);
       setError(null);
@@ -63,7 +55,6 @@ export default function ManageUsers() {
     fetchUsers(true);
   }, []);
 
-  // Filtros de busca
   const filteredUsers = useMemo(() => {
     return allUsers.filter(
       (user) =>
@@ -86,7 +77,6 @@ export default function ManageUsers() {
       setUserToMessage(null);
   };
 
-  // Handler para Exclusão de Usuário
   const handleDeleteUser = async (user) => {
     if (window.confirm(`Tem certeza que deseja excluir o usuário ${user.name}? Esta ação não pode ser desfeita.`)) {
       try {
@@ -115,12 +105,10 @@ export default function ManageUsers() {
   const handleSaveEdit = async (userId, formData) => {
     try {
         const response = await updateUserRequest(userId, formData);
-        // Garantimos que pegamos o objeto correto da resposta
         const updatedUser = response.user || response.data || response;
 
         setAllUsers(prev => 
             prev.map(u => (u.id === userId ? { ...u, ...updatedUser } : u))
-                // Adicionamos uma verificação extra antes do localeCompare
                 .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
         );
         addNotification(`Utilizador atualizado com sucesso!`, 'success');
@@ -128,7 +116,7 @@ export default function ManageUsers() {
     } catch (err) {
          addNotification(`Falha ao atualizar: ${err.response?.data?.message || err.message}`, 'error');
     }
-};
+  };
 
   const handleSaveOffice = async (officeData) => {
     try {
@@ -152,129 +140,131 @@ export default function ManageUsers() {
   };
 
   const getStatusClass = (status) => {
-  switch (status) {
-    case 'Ativo': return styles.statusBadgeActive;
-    case 'Pendente': return styles.statusBadgePending;
-    case 'Inativo': return styles.statusBadgeInactive;
-    default: return styles.statusBadgeDefault;
-  }
-};
+    switch (status) {
+      case 'Ativo': return styles.statusBadgeActive;
+      case 'Pendente': return styles.statusBadgePending;
+      case 'Inativo': return styles.statusBadgeInactive;
+      default: return styles.statusBadgeDefault;
+    }
+  };
 
   return (
     <div className={styles.pageContainer}>
       <div className={styles.header}>
-        <h2 className={styles.title}>Gerenciamento de Usuários</h2>
+        <div>
+          <h1 className={styles.pageTitle}>Gerenciamento de Usuários</h1>
+          <p className={styles.pageSubtitle}>Adicione, edite ou remova acessos ao sistema.</p>
+        </div>
         <div className={styles.headerActions}>
-          <Button variant="secondary" onClick={handleCreateOffice} className="mr-2">
-            + Novo Escritório
+          <Button variant="secondary" onClick={handleCreateOffice} icon={<FiPlus />}>
+            Novo Escritório
           </Button>
-          <Button variant="primary" onClick={handleCreate}>
-            <UsersIcon className="w-5 h-5 mr-2" />
-            Criar Novo Usuário
+          <Button variant="primary" onClick={handleCreate} icon={<FiUsers />}>
+            Criar Usuário
           </Button>
         </div>
       </div>
 
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
-          <Input
-            icon={SearchIcon}
-            placeholder="Buscar por Nome ou Email..."
-            value={filterName}
-            onChange={(e) => setFilterName(e.target.value)}
-          />
-          <div>
-            <select
-              className={styles.filterSelect}
-              value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value)}
-            >
-              <option value="">Todos os Perfis</option>
-              <option value="ADMIN">Administrador</option>
-              <option value="CONTADOR">Contador</option>
-              <option value="OSC">OSC</option>
-              <option value="FINANCEIRO">Financeiro</option>
-            </select>
+          <div className={styles.searchGroup}>
+            <FiSearch className={styles.searchIcon} />
+            <input
+              type="text"
+              placeholder="Buscar por Nome ou Email..."
+              value={filterName}
+              onChange={(e) => setFilterName(e.target.value)}
+              className={styles.searchInput}
+            />
           </div>
+          <select
+            className={styles.filterSelect}
+            value={filterRole}
+            onChange={(e) => setFilterRole(e.target.value)}
+          >
+            <option value="">Todos os Perfis</option>
+            <option value="ADMIN">Administrador</option>
+            <option value="CONTADOR">Contador</option>
+            <option value="OSC">OSC</option>
+            <option value="FINANCEIRO">Financeiro</option>
+          </select>
         </div>
       </div>
 
-      <div className={styles.tableContainer}>
-        {isLoading ? (
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <Spinner text="Carregando utilizadores..." />
-          </div>
-        ) : (
-          <table className={styles.table}>
-             <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Email / Identificador</th>
-                  <th>Perfil (Role)</th>
-                  <th>Status</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-            <tbody>
-              {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.name}</td>
-                  <td>{user.email || 'N/A'}</td>
-                  <td>
-                    <span className={`${styles.roleBadge} ${getRoleClass(user.role)}`}>
-                      {user.role}
-                    </span>
-                  </td>
-                   <td>
-                    <span className={`${styles.statusBadge} ${getStatusClass(user.status)}`}>
-                      <span className={styles.statusText}>{user.status}</span>
-                    </span>
-                  </td>
-                  <td>
-                    <div className={styles.actionsContainer}>
-                      {/* BOTÃO MENSAGEM - Novo para Pagamentos */}
-                      <button
-                        onClick={() => handleOpenMessage(user)}
-                        className={`${styles.actionButton} ${styles.messageButton}`}
-                        title="Enviar Mensagem de Pagamento"
-                        disabled={user.role !== 'OSC'} // Geralmente focado em OSCs
-                      >
-                        <MessageIcon />
-                      </button>
-
-                      {/* BOTÃO EDITAR */}
-                      <button
-                        onClick={() => handleEdit(user)}
-                        className={`${styles.actionButton} ${styles.editButton}`}
-                        title="Editar Usuário"
-                      >
-                        <EditIcon />
-                      </button>
-
-                      {/* BOTÃO EXCLUIR */}
-                      <button
-                        onClick={() => handleDeleteUser(user)}
-                        className={`${styles.actionButton} ${styles.deleteButton}`}
-                        title="Excluir Usuário"
-                      >
-                        <TrashIcon />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                  ))
-              ) : (
-                  <tr className={styles.emptyRow}>
-                      <td colSpan="5">Nenhum utilizador encontrado.</td>
+      <Card padding="none">
+        <CardBody className={styles.tableBody}>
+          {isLoading ? (
+            <div className={styles.loadingContainer}>
+              <Spinner text="Carregando utilizadores..." />
+            </div>
+          ) : (
+            <div className={styles.tableWrapper}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Email / Identificador</th>
+                    <th>Perfil (Role)</th>
+                    <th>Status</th>
+                    <th style={{ textAlign: 'right' }}>Ações</th>
                   </tr>
-              )}
-            </tbody>
-          </table>
-        )}
-      </div>
+                </thead>
+                <tbody>
+                  {filteredUsers.length > 0 ? (
+                    filteredUsers.map((user) => (
+                      <tr key={user.id}>
+                        <td>{user.name}</td>
+                        <td>{user.email || 'N/A'}</td>
+                        <td>
+                          <span className={`${styles.roleBadge} ${getRoleClass(user.role)}`}>
+                            {user.role}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`${styles.statusBadge} ${getStatusClass(user.status)}`}>
+                            {user.status}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div className={styles.actionsContainer}>
+                            <button
+                              onClick={() => handleOpenMessage(user)}
+                              className={styles.actionBtn}
+                              title="Enviar Mensagem de Pagamento"
+                              disabled={user.role !== 'OSC'}
+                            >
+                              <FiMessageCircle size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleEdit(user)}
+                              className={styles.actionBtn}
+                              title="Editar Usuário"
+                            >
+                              <FiEdit2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(user)}
+                              className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                              title="Excluir Usuário"
+                            >
+                              <FiTrash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className={styles.emptyState}>Nenhum utilizador encontrado.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardBody>
+      </Card>
       
-      {/* --- MODAIS --- */}
       <CreateUserModal
         isOpen={isCreateModalOpen}
         onClose={handleCloseModals}
@@ -296,7 +286,6 @@ export default function ManageUsers() {
         onSave={handleSaveOffice}
       />
 
-      {/* MODAL DE MENSAGENS DE PAGAMENTO */}
       <PaymentMessageModal
         isOpen={!!userToMessage}
         onClose={handleCloseModals}

@@ -8,11 +8,17 @@ export const getChartData = async (req, res) => {
         let oscsQuery = 'SELECT id, razao_social, created_at, data_origem_estatuto, data_fundacao FROM oscs';
         const queryParams = [];
 
+        const officeId = req.user.office_id;
+
         if (userRole?.toUpperCase() === 'CONTADOR') {
-            oscsQuery += ' WHERE assigned_contador_id = ?';
-            queryParams.push(userId);
+            if (!officeId || officeId === "0") {
+                return res.json({ statusGeral: [], mensal: [], semestral: [], totalOscs: 0 });
+            }
+            oscsQuery += ' WHERE office_id = ?';
+            queryParams.push(officeId);
         } else if (userRole?.toUpperCase() === 'OSC') {
-            oscsQuery += ' WHERE user_id = ?';
+            // Em alguns locais é user_id, mas a chave primária da tabela oscs é id
+            oscsQuery += ' WHERE id = ?'; 
             queryParams.push(userId);
         }
 

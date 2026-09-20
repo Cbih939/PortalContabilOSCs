@@ -1,22 +1,19 @@
-// src/pages/contador/CreateOSCPage.jsx
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form'; // <-- Importa o Controller
+import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { IMaskInput } from 'react-imask'; // <-- Importa o IMaskInput
+import { IMaskInput } from 'react-imask';
 import styles from './CreateOSCPage.module.css';
-import Button from '../../components/common/Button.jsx';
+import Button from '../../components/ui/Button.jsx';
+import Card, { CardBody, CardHeader } from '../../components/ui/Card.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
 import FileUpload from '../../components/common/FileUpload.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 import * as oscService from '../../services/oscService.js';
-// (Opcional: ícones de senha)
-// import { EyeIcon, EyeOffIcon } from '../../components/common/Icons.jsx';
+import { FiSave, FiMapPin, FiUser, FiInfo, FiFileText } from 'react-icons/fi';
 
 // --- Schema de Validação (Yup) ---
-// (Atualiza as máscaras para o formato do Yup)
 const schema = yup.object().shape({
   nomeFantasia: yup.string().required('O nome fantasia é obrigatório.'),
   razaoSocial: yup.string().required('A razão social é obrigatória.'),
@@ -45,40 +42,43 @@ const schema = yup.object().shape({
   coordSenha: yup.string().required('A senha é obrigatória.').min(8, 'A senha deve ter no mínimo 8 caracteres.'),
 });
 
-// --- Componentes Helper RHF (Input simples e Máscara) ---
-// RHFInput (Input simples)
-const RHFInput = React.memo(({ label, id, error, type = "text", registerProps }) => (
+// --- Componentes Helper RHF ---
+const RHFInput = React.memo(({ label, id, error, type = "text", registerProps, placeholder, disabled }) => (
     <div className={styles.field}>
         <label htmlFor={id} className={styles.formLabel}>{label}</label>
-        <input id={id} type={type} {...registerProps} className={`${styles.formInput} ${error ? styles.formInputError : ''}`} />
+        <input 
+            id={id} 
+            type={type} 
+            {...registerProps} 
+            className={`${styles.formInput} ${error ? styles.formInputError : ''}`}
+            placeholder={placeholder}
+            disabled={disabled} 
+        />
         {error && <span className={styles.errorMessage}>{error.message}</span>}
     </div>
 ));
 
-// RHFMaskedInput (ATUALIZADO para react-imask e Controller)
-const RHFMaskedInput = React.memo(({ control, name, label, id, mask, placeholder, error, onBlurCEP = () => {}, ...props }) => (
+const RHFMaskedInput = React.memo(({ control, name, label, id, mask, placeholder, error, onBlurCEP = () => {}, disabled }) => (
      <div className={styles.field}>
         <label htmlFor={id} className={styles.formLabel}>{label}</label>
         <Controller
             name={name}
             control={control}
-            render={({ field }) => ( // 'field' contém { onChange, onBlur, value, ref }
+            render={({ field }) => (
                 <IMaskInput
-                    {...field} // Passa props do RHF (value, onChange, etc.)
+                    {...field}
                     mask={mask}
                     id={id}
                     placeholder={placeholder}
-                    onBlur={(e) => { field.onBlur(e); onBlurCEP(e); }} // Combina onBlur
+                    onBlur={(e) => { field.onBlur(e); onBlurCEP(e); }}
                     className={`${styles.formInput} ${error ? styles.formInputError : ''}`}
-                    disabled={props.disabled}
+                    disabled={disabled}
                 />
             )}
         />
         {error && <span className={styles.errorMessage}>{error.message}</span>}
     </div>
 ));
-// --- Fim Componentes Helper ---
-
 
 export default function CreateOSCPage() {
     const navigate = useNavigate();
@@ -90,9 +90,8 @@ export default function CreateOSCPage() {
         defaultValues: { pais: 'Brasil' }
     });
 
-    // Handler Busca CEP (ViaCEP)
     const handleCepBlur = async (e) => {
-        const cep = e.target.value.replace(/\D/g, ''); // Remove máscara
+        const cep = e.target.value.replace(/\D/g, '');
         if (cep.length === 8) {
             try {
                 const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
@@ -112,7 +111,6 @@ export default function CreateOSCPage() {
         }
     };
 
-    // Handler Submissão (Envia FormData)
     const onSubmit = async (data) => {
         setIsLoading(true);
         const formData = new FormData();
@@ -124,15 +122,9 @@ export default function CreateOSCPage() {
                 }
             }
         }
-        if (data.logotipo && data.logotipo instanceof File) {
-            formData.append('logotipo', data.logotipo);
-        }
-        if (data.ata && data.ata instanceof File) {
-            formData.append('ata', data.ata);
-        }
-        if (data.estatuto && data.estatuto instanceof File) {
-            formData.append('estatuto', data.estatuto);
-        }
+        if (data.logotipo && data.logotipo instanceof File) formData.append('logotipo', data.logotipo);
+        if (data.ata && data.ata instanceof File) formData.append('ata', data.ata);
+        if (data.estatuto && data.estatuto instanceof File) formData.append('estatuto', data.estatuto);
 
         try {
             const response = await oscService.createOSC(formData); 
@@ -152,147 +144,95 @@ export default function CreateOSCPage() {
 
     return (
         <div className={styles.pageContainer}>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <div className={styles.formHeader}>
-                    <h1 className={styles.title}>Cadastrar Nova Organização</h1>
-                    <p className={styles.subtitle}>Preencha os dados abaixo para registar uma nova Organização da Sociedade Civil.</p>
-                </div>
+            <div className={styles.formHeader}>
+                <h1 className={styles.title}>Cadastrar Nova Organização</h1>
+                <p className={styles.subtitle}>Preencha os dados abaixo para registrar uma nova Organização da Sociedade Civil.</p>
+            </div>
 
-                {/* --- Secção 1: Informações da OSC --- */}
-                <section className={styles.formSection}>
-                    <h2 className={styles.sectionTitle}>1. Informações da OSC</h2>
-                    <div className={styles.grid}>
-                        <RHFInput label="Nome Fantasia da OSC *" id="nomeFantasia" registerProps={register('nomeFantasia')} error={errors.nomeFantasia} />
-                        <RHFInput label="Razão Social *" id="razaoSocial" registerProps={register('razaoSocial')} error={errors.razaoSocial} />
-                        <RHFMaskedInput
-                            control={control} name="cnpj"
-                            label="CNPJ *" id="cnpj"
-                            mask="00.000.000/0000-00" // Formato react-imask
-                            error={errors.cnpj}
-                            placeholder="00.000.000/0000-00"
-                        />
-                        <RHFInput label="Data de Fundação" id="dataFundacao" type="date" registerProps={register('dataFundacao')} error={errors.dataFundacao} />
-                    </div>
-                </section>
+            <form onSubmit={handleSubmit(onSubmit)} className={styles.formContent}>
+                <Card>
+                    <CardHeader title={<><FiInfo className={styles.iconHeading} /> 1. Informações da OSC</>} />
+                    <CardBody className={styles.cardBodyPadding}>
+                        <div className={styles.grid}>
+                            <RHFInput label="Nome Fantasia da OSC *" id="nomeFantasia" registerProps={register('nomeFantasia')} error={errors.nomeFantasia} />
+                            <RHFInput label="Razão Social *" id="razaoSocial" registerProps={register('razaoSocial')} error={errors.razaoSocial} />
+                            <RHFMaskedInput
+                                control={control} name="cnpj" label="CNPJ *" id="cnpj"
+                                mask="00.000.000/0000-00" error={errors.cnpj} placeholder="00.000.000/0000-00"
+                            />
+                            <RHFInput label="Data de Fundação" id="dataFundacao" type="date" registerProps={register('dataFundacao')} error={errors.dataFundacao} />
+                        </div>
+                    </CardBody>
+                </Card>
 
-                {/* --- Secção 2: Documentos --- */}
-                <section className={styles.formSection}>
-                    <h2 className={styles.sectionTitle}>2. Documentos</h2>
-                    <div className={styles.grid}>
-                        <Controller
-                            name="logotipo"
-                            control={control}
-                            render={({ field: { onChange } }) => (
-                                <FileUpload
-                                    label="Logotipo"
-                                    onFileSelect={onChange}
-                                    acceptedTypes={imageOnly}
-                                    hint="JPG, PNG, GIF (máx. 5MB)"
-                                />
-                            )}
-                        />
-                        <Controller
-                            name="ata"
-                            control={control}
-                            render={({ field: { onChange } }) => (
-                                <FileUpload
-                                    label="Última ATA (.pdf)"
-                                    onFileSelect={onChange}
-                                    acceptedTypes={pdfOnly}
-                                    hint="Apenas .pdf (máx. 5MB)"
-                                />
-                            )}
-                        />
-                         <Controller
-                            name="estatuto"
-                            control={control}
-                            render={({ field: { onChange } }) => (
-                                <FileUpload
-                                    label="Estatuto Social (.pdf)"
-                                    onFileSelect={onChange}
-                                    acceptedTypes={pdfOnly}
-                                    hint="Apenas .pdf (máx. 5MB)"
-                                />
-                            )}
-                        />
-                    </div>
-                </section>
+                <Card>
+                    <CardHeader title={<><FiFileText className={styles.iconHeading} /> 2. Documentos</>} />
+                    <CardBody className={styles.cardBodyPadding}>
+                        <div className={styles.grid}>
+                            <Controller name="logotipo" control={control} render={({ field: { onChange } }) => (
+                                <FileUpload label="Logotipo" onFileSelect={onChange} acceptedTypes={imageOnly} hint="JPG, PNG, GIF (máx. 5MB)" />
+                            )}/>
+                            <Controller name="ata" control={control} render={({ field: { onChange } }) => (
+                                <FileUpload label="Última ATA (.pdf)" onFileSelect={onChange} acceptedTypes={pdfOnly} hint="Apenas .pdf (máx. 5MB)" />
+                            )}/>
+                            <Controller name="estatuto" control={control} render={({ field: { onChange } }) => (
+                                <FileUpload label="Estatuto Social (.pdf)" onFileSelect={onChange} acceptedTypes={pdfOnly} hint="Apenas .pdf (máx. 5MB)" />
+                            )}/>
+                        </div>
+                    </CardBody>
+                </Card>
 
-                {/* --- Secção 3: Contato e Endereço --- */}
-                <section className={styles.formSection}>
-                    <h2 className={styles.sectionTitle}>3. Contato e Endereço</h2>
-                    <div className={styles.grid}>
-                        <RHFInput label="E-mail de Contato *" id="emailContato" type="email" registerProps={register('emailContato')} error={errors.emailContato} />
-                        <RHFMaskedInput
-                            control={control} name="telefone"
-                            label="Telefone / WhatsApp *" id="telefone"
-                            mask="(00) 00000-0000" // Formato react-imask
-                            error={errors.telefone}
-                            placeholder="(00) 00000-0000"
-                        />
-                        <RHFInput label="Website" id="website" type="url" registerProps={register('website')} error={errors.website} placeholder="https://..." />
-                        <RHFInput label="Instagram" id="instagram" registerProps={register('instagram')} error={errors.instagram} placeholder="@seu_perfil" />
-                        
-                        <RHFMaskedInput
-                            control={control} name="cep"
-                            label="CEP *" id="cep"
-                            mask="00000-000" // Formato react-imask
-                            error={errors.cep}
-                            onBlurCEP={handleCepBlur}
-                            placeholder="XXXXX-XXX"
-                        />
-                        <RHFInput label="Endereço *" id="endereco" registerProps={register('endereco')} error={errors.endereco} />
-                        <RHFInput label="Número *" id="numero" registerProps={register('numero')} error={errors.numero} />
-                        <RHFInput label="Bairro *" id="bairro" registerProps={register('bairro')} error={errors.bairro} />
-                        <RHFInput label="Cidade *" id="cidade" registerProps={register('cidade')} error={errors.cidade} />
-                        <RHFInput label="Estado *" id="estado" registerProps={register('estado')} error={errors.estado} />
-                        <RHFInput label="País" id="pais" registerProps={register('pais')} error={errors.pais} disabled />
-                    </div>
-                </section>
+                <Card>
+                    <CardHeader title={<><FiMapPin className={styles.iconHeading} /> 3. Contato e Endereço</>} />
+                    <CardBody className={styles.cardBodyPadding}>
+                        <div className={styles.grid}>
+                            <RHFInput label="E-mail de Contato *" id="emailContato" type="email" registerProps={register('emailContato')} error={errors.emailContato} />
+                            <RHFMaskedInput control={control} name="telefone" label="Telefone / WhatsApp *" id="telefone" mask="(00) 00000-0000" error={errors.telefone} placeholder="(00) 00000-0000" />
+                            <RHFInput label="Website" id="website" type="url" registerProps={register('website')} error={errors.website} placeholder="https://..." />
+                            <RHFInput label="Instagram" id="instagram" registerProps={register('instagram')} error={errors.instagram} placeholder="@seu_perfil" />
+                            <RHFMaskedInput control={control} name="cep" label="CEP *" id="cep" mask="00000-000" error={errors.cep} onBlurCEP={handleCepBlur} placeholder="XXXXX-XXX" />
+                            <RHFInput label="Endereço *" id="endereco" registerProps={register('endereco')} error={errors.endereco} />
+                            <RHFInput label="Número *" id="numero" registerProps={register('numero')} error={errors.numero} />
+                            <RHFInput label="Bairro *" id="bairro" registerProps={register('bairro')} error={errors.bairro} />
+                            <RHFInput label="Cidade *" id="cidade" registerProps={register('cidade')} error={errors.cidade} />
+                            <RHFInput label="Estado *" id="estado" registerProps={register('estado')} error={errors.estado} />
+                            <RHFInput label="País" id="pais" registerProps={register('pais')} error={errors.pais} disabled />
+                        </div>
+                    </CardBody>
+                </Card>
                 
-                {/* --- Secção 4: Responsável Legal --- */}
-                <section className={styles.formSection}>
-                     <h2 className={styles.sectionTitle}>4. Responsável Legal (Presidente)</h2>
-                     <div className={styles.grid}>
-                        <RHFInput label="Nome *" id="respNome" registerProps={register('respNome')} error={errors.respNome} />
-                        <RHFMaskedInput
-                            control={control} name="respCpf"
-                            label="CPF *" id="respCpf"
-                            mask="000.000.000-00" // Formato react-imask
-                            error={errors.respCpf}
-                            placeholder="000.000.000-00"
-                        />
-                     </div>
-                </section>
+                <Card>
+                     <CardHeader title={<><FiUser className={styles.iconHeading} /> 4. Responsável Legal (Presidente)</>} />
+                     <CardBody className={styles.cardBodyPadding}>
+                        <div className={styles.grid}>
+                            <RHFInput label="Nome *" id="respNome" registerProps={register('respNome')} error={errors.respNome} />
+                            <RHFMaskedInput control={control} name="respCpf" label="CPF *" id="respCpf" mask="000.000.000-00" error={errors.respCpf} placeholder="000.000.000-00" />
+                        </div>
+                     </CardBody>
+                </Card>
 
-                {/* --- Secção 5: Coordenador (Utilizador OSC) --- */}
-                 <section className={styles.formSection}>
-                     <h2 className={styles.sectionTitle}>5. Coordenador do Programa (Utilizador)</h2>
-                     <div className={styles.grid}>
-                        <RHFInput label="Nome Completo do Coordenador *" id="coordNome" registerProps={register('coordNome')} error={errors.coordNome} />
-                        <RHFMaskedInput
-                            control={control} name="coordCpf"
-                            label="CPF do Coordenador *" id="coordCpf"
-                            mask="000.000.000-00" // Formato react-imask
-                            error={errors.coordCpf}
-                            placeholder="000.000.000-00"
-                        />
-                        <RHFInput label="E-mail do Coordenador (será o login) *" id="coordEmail" type="email" registerProps={register('coordEmail')} error={errors.coordEmail} />
-                        <RHFMaskedInput
-                            control={control} name="coordTelefone"
-                            label="Telefone do Coordenador *" id="coordTelefone"
-                            mask="(00) 00000-0000" // Formato react-imask
-                            error={errors.coordTelefone}
-                            placeholder="(00) 00000-0000"
-                        />
-                        <RHFInput label="Senha Provisória (Mín. 8 caracteres) *" id="coordSenha" type="password" registerProps={register('coordSenha')} error={errors.coordSenha} />
-                     </div>
-                </section>
+                 <Card>
+                     <CardHeader title={<><FiUser className={styles.iconHeading} /> 5. Coordenador do Programa (Utilizador)</>} />
+                     <CardBody className={styles.cardBodyPadding}>
+                        <div className={styles.grid}>
+                            <RHFInput label="Nome Completo do Coordenador *" id="coordNome" registerProps={register('coordNome')} error={errors.coordNome} />
+                            <RHFMaskedInput control={control} name="coordCpf" label="CPF do Coordenador *" id="coordCpf" mask="000.000.000-00" error={errors.coordCpf} placeholder="000.000.000-00" />
+                            <RHFInput label="E-mail do Coordenador (será o login) *" id="coordEmail" type="email" registerProps={register('coordEmail')} error={errors.coordEmail} />
+                            <RHFMaskedInput control={control} name="coordTelefone" label="Telefone do Coordenador *" id="coordTelefone" mask="(00) 00000-0000" error={errors.coordTelefone} placeholder="(00) 00000-0000" />
+                            <RHFInput label="Senha Provisória (Mín. 8 caracteres) *" id="coordSenha" type="password" registerProps={register('coordSenha')} error={errors.coordSenha} />
+                        </div>
+                     </CardBody>
+                </Card>
 
-                {/* --- Submissão --- */}
                 <div className={styles.submitContainer}>
-                    <Button type="submit" variant="primary" size="lg" disabled={isLoading} style={{backgroundImage: 'linear-gradient(to right, #f97316, #ef4444)'}}>
-                         {isLoading ? <Spinner size="sm" className="mr-2" /> : "Finalizar Cadastro da OSC"}
+                    <Button 
+                        type="submit" 
+                        variant="primary" 
+                        size="lg" 
+                        disabled={isLoading}
+                        icon={<FiSave />}
+                    >
+                         {isLoading ? <Spinner size="sm" /> : "Finalizar Cadastro da OSC"}
                     </Button>
                 </div>
             </form>

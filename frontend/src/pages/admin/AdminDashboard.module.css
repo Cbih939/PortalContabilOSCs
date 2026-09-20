@@ -1,52 +1,60 @@
 .pageContainer {
-  padding: 2rem;
-  background-color: #f3f4f6; /* Fundo cinza claro padrão */
-  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: var(--space-sm);
 }
 
 .pageTitle {
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: #111827; /* Texto quase preto */
-  margin-bottom: 2rem;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0 0 var(--space-xs) 0;
+  text-transform: uppercase;
+}
+
+.pageSubtitle {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin: 0;
 }
 
 /* Grid dos Cards de Estatísticas */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 3rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
 }
 
 .statCard {
-  background-color: #ffffff;
-  padding: 1.5rem;
-  border-radius: 1rem; /* Bordas arredondadas */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); /* Sombra suave */
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  transition: transform 0.2s;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .statCard:hover {
-  transform: translateY(-2px); /* Efeito de elevação leve */
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.statContent {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
 }
 
 .iconWrapper {
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-}
-
-.icon {
-  width: 1.75rem;
-  height: 1.75rem;
 }
 
 /* Variações de Cores para os Ícones */
@@ -55,84 +63,58 @@
 .orangeTheme { background-color: #ffedd5; color: #c2410c; }
 .purpleTheme { background-color: #ede9fe; color: #6d28d9; }
 
-.statContent {
+.statText {
   display: flex;
   flex-direction: column;
 }
 
 .statLabel {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #6b7280;
-  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 2px;
 }
 
 .statValue {
   font-size: 1.5rem;
-  font-weight: 700;
-  color: #1f2937;
+  font-weight: 800;
+  color: var(--text-dark);
 }
 
-/* Seção de Ações Rápidas */
-.actionsSection {
-  background-color: #ffffff;
-  padding: 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+/* Ações */
+.actionsCard {
+  margin-top: var(--space-xl);
 }
 
-.sectionTitle {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #e5e7eb;
+.actionsHeader {
+  border-bottom: 1px solid var(--border-color);
+  padding: var(--space-md) var(--space-lg);
+}
+
+.actionsBody {
+  padding: var(--space-lg);
 }
 
 .actionsGrid {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-md);
 }
 
-.actionButton {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1.5rem;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  color: white;
+.linkNoDecoration {
   text-decoration: none;
-  transition: opacity 0.2s, transform 0.1s;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: block;
 }
 
-.actionButton:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
+.actionBtn {
+  height: 100%;
+  min-height: 48px;
+  font-size: 0.95rem;
 }
 
-.actionButton:active {
-  transform: translateY(0);
-}
-
-/* Cores dos Botões */
-.btnOrange { background-color: #f97316; }
-.btnGreen { background-color: #10b981; }
-.btnIndigo { background-color: #6366f1; }
-.btnGray { background-color: #6b7280; }
-
-@media (max-width: 640px) {
-  .actionsGrid {
-    flex-direction: column;
-  }
-  .actionButton {
-    width: 100%;
-    justify-content: center;
-  }
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
 }

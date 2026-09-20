@@ -72,6 +72,7 @@ export default function AdminSidebar({ isOpen, onClose }) {
     { path: '/admin/oscs', label: 'OSCs', icon: FolderIcon },
     { path: '/admin/biblioteca', label: 'Biblioteca', icon: BookIcon },
     { path: '/admin/financeiro', label: 'Financeiro', icon: FinanceIcon },
+    { path: '/admin/planos', label: 'Planos e Preços', icon: FinanceIcon },
     { path: '/admin/avisos', label: 'Avisos Globais', icon: MegaphoneIcon },
     { path: '/admin/relatorios', label: 'Auditoria e Logs', icon: ReportIcon },
     { path: '/admin/profile', label: 'Meu Perfil', icon: ProfileIcon },

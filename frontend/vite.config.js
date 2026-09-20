@@ -41,4 +41,17 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          pdf: ['jspdf', 'jspdf-autotable'],
+          charts: ['recharts'],
+          icons: ['react-icons']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 2500 // aumenta o limite do aviso para 2500kb
+  }
 })

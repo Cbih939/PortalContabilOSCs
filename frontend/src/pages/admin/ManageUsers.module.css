@@ -1,172 +1,215 @@
-/* src/pages/admin/ManageUsers.module.css */
-
 .pageContainer {
-  padding: 2rem; /* p-8 */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem; /* mb-6 */
+  flex-direction: column;
+  gap: var(--space-md);
 }
 
-.title {
-  font-size: 1.875rem; /* text-3xl */
-  font-weight: 700; /* font-bold */
-  color: #1f2937; /* text-gray-800 */
+@media (min-width: 768px) {
+  .header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
 }
 
-/* Estilo para botão "Criar Usuário" (usa Button.jsx) */
-.createButton {
-  /* Ajustes finos se necessário */
-}
-.createButton svg {
-  height: 1.25rem; /* h-5 */
-  width: 1.25rem; /* w-5 */
-  margin-right: 0.5rem; /* mr-2 */
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0 0 var(--space-xs) 0;
+  text-transform: uppercase;
 }
 
+.pageSubtitle {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.headerActions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+/* Filtros */
 .filtersContainer {
-  margin-bottom: 1.5rem; /* mb-6 */
-  background-color: white;
-  padding: 1rem; /* p-4 */
-  border-radius: 0.5rem; /* rounded-lg */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+  background-color: var(--bg-app); /* Transparente / fundo base */
 }
 
 .filtersGrid {
   display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr)); /* 1 coluna */
-  gap: 1rem; /* gap-4 */
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
 }
-/* 2 colunas em telas médias */
+
 @media (min-width: 768px) {
   .filtersGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 2fr 1fr;
   }
 }
 
-/* Estilo básico para select */
+.searchGroup {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px 12px 10px 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color var(--transition-fast);
+  background-color: var(--bg-surface);
+}
+
+.searchInput:focus {
+  border-color: var(--primary-color);
+}
+
 .filterSelect {
   width: 100%;
-  padding: 0.75rem; /* p-3 */
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  background-color: white;
-  appearance: none;
-  background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>');
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 1.25em 1.25em;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color var(--transition-fast);
+  background-color: var(--bg-surface);
   cursor: pointer;
 }
+
 .filterSelect:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  border-color: var(--primary-color);
 }
 
-/* Estilos da tabela */
-.tableContainer {
-  background-color: white; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+/* Tabela */
+.tableBody {
+  padding: 0;
+}
+
+.tableWrapper {
   overflow-x: auto;
 }
-.table { min-width: 100%; line-height: 1.25; }
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
 .table th {
-  padding: 0.75rem 1.25rem; border-bottom: 2px solid #e5e7eb; background-color: #f9fafb; text-align: left; font-size: 0.75rem;
-  font-weight: 600; color: #4b5563; text-transform: uppercase; white-space: nowrap;
+  padding: var(--space-md) var(--space-lg);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
 }
-.table td { padding: 1.25rem 1.25rem; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; color: #111827; white-space: nowrap; }
-.table tr:hover td { background-color: #f9fafb; }
 
-/* Badge de Role */
+.table td {
+  padding: var(--space-md) var(--space-lg);
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.95rem;
+  color: var(--text-dark);
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover td {
+  background-color: var(--bg-app);
+}
+
+/* Badges */
 .roleBadge {
-  display: inline-block; padding: 0.25rem 0.75rem; font-weight: 600; line-height: 1.25; border-radius: 9999px; font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-block;
+  text-transform: uppercase;
 }
-.roleAdmin { background-color: #fecaca; color: #b91c1c; } /* bg-red-200 text-red-900 */
-.roleContador { background-color: #dbeafe; color: #1e40af; } /* bg-blue-200 text-blue-900 */
-.roleOsc { background-color: #dcfce7; color: #166534; } /* bg-green-200 text-green-900 */
-.roleFinanceiro { background-color: #dcfce7; color: #7b1389; } /* bg-green-200 text-green-900 */
-.roleDefault { background-color: #e5e7eb; color: #1f2937; } /* bg-gray-200 text-gray-900 */
 
-/* --- Badge de Status (Estilo da Imagem 2) --- */
-.statusBadge { 
-  position: relative; 
-  display: inline-block; 
-  padding: 0.25rem 0.75rem; /* py-1 px-3 */
-  font-weight: 600; /* font-semibold */
-  line-height: 1.25; 
-  border-radius: 9999px; /* rounded-full */
-  font-size: 0.75rem; /* text-xs */
-}
-/* O 'span' interno que dá o fundo com opacidade */
-.statusBadge span { 
-  position: absolute; 
-  inset: 0; 
-  opacity: 0.5; 
-  border-radius: 9999px; 
-}
-/* Cor do Texto e Fundo para ATIVO */
-.statusBadgeActive {
-  background-color: #dcfce7;
-  color: #166534;
-  padding: 4px 8px;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-.statusBadgeActive span { 
-  background-color: #a7f3d0; /* bg-green-200 */
-}
-.statusBadgePending {
-  background-color: #fef9c3;
-  color: #854d0e;
-  padding: 4px 8px;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-/* Cor do Texto e Fundo para INATIVO */
-.statusBadgeInactive {
-  background-color: #fee2e2;
-  color: #991b1b;
-  padding: 4px 8px;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-.statusBadgeInactive span { 
-  background-color: #fecaca; /* bg-red-200 */
-}
-/* O texto real (para ficar acima do fundo) */
-.statusText { 
-  position: relative; 
-}
-/* --- Fim Badge de Status --- */
+.roleAdmin { background-color: var(--color-danger-light); color: #991b1b; }
+.roleContador { background-color: var(--color-info-light); color: #1e40af; }
+.roleOsc { background-color: var(--color-success-light); color: #166534; }
+.roleFinanceiro { background-color: var(--color-warning-light); color: #9a3412; }
+.roleDefault { background-color: var(--bg-app); color: var(--text-dark); }
 
+.statusBadge {
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.statusBadgeActive { background-color: var(--color-success-light); color: #166534; }
+.statusBadgePending { background-color: #fef9c3; color: #854d0e; }
+.statusBadgeInactive { background-color: var(--color-danger-light); color: #991b1b; }
+.statusBadgeDefault { background-color: var(--bg-app); color: var(--text-muted); }
 
 /* Ações */
-.actionsContainer { display: flex; align-items: center; gap: 0.5rem; }
-.actionButton { background: none; border: none; padding: 0.25rem; border-radius: 9999px; cursor: pointer; transition: background-color 0.2s ease, color 0.2s ease; }
-.actionButton svg { height: 1rem; width: 1rem; display: block; }
-.editButton { color: #ca8a04; }
-.editButton:hover { color: #854d0e; background-color: #fef9c3; }
-
-.emptyRow td { padding: 2.5rem 1.25rem; text-align: center; color: #6b7280; white-space: normal; }
-
-
-.deleteButton {
-  color: #ef4444; /* Vermelho */
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+.actionsContainer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
 }
 
-.deleteButton:hover {
-  background-color: #fee2e2;
+.actionBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  transition: all var(--transition-fast);
+}
+
+.actionBtn:hover {
+  background-color: var(--bg-surface);
+  color: var(--primary-color);
+}
+
+.actionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.actionBtnDanger:hover {
+  color: var(--color-danger);
+}
+
+.emptyState {
+  padding: var(--space-3xl) var(--space-lg) !important;
+  text-align: center;
+  color: var(--text-muted) !important;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40vh;
 }

@@ -1,41 +1,103 @@
-/* src/pages/contador/Profile.module.css */
-
 .pageContainer {
-  padding: 2rem; /* p-8 */
+  padding: var(--space-lg);
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .title {
-  font-size: 1.875rem; /* text-3xl */
-  font-weight: 700; /* font-bold */
-  color: #1f2937; /* text-gray-800 */
-  margin-bottom: 1.5rem; /* mb-6 */
-}
-
-.formCard {
-  margin-top: 1.5rem; /* mt-6 */
-  background-color: white;
-  padding: 2rem; /* p-8 */
-  border-radius: 0.5rem; /* rounded-lg */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
-  max-width: 42rem; /* max-w-2xl */
-  /* margin-left: auto; margin-right: auto; // Opcional: centralizar o card */
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0 0 var(--space-xl) 0;
+  text-transform: uppercase;
 }
 
 .formFields {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* space-y-6 */
+  gap: var(--space-md);
 }
 
-/* O estilo dos Inputs vem do Input.jsx e Input.module.css */
+.sectionTitle {
+  font-size: 1.15rem;
+  color: var(--text-dark);
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: var(--space-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.sectionSubtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: var(--space-md);
+  margin-top: -5px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.formLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.formInput {
+  width: 100%;
+  padding: 0.75rem var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface);
+  color: var(--text-dark);
+  font-size: 0.95rem;
+  transition: all var(--transition-fast);
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-color-light);
+}
+
+.formInputError {
+  border-color: var(--color-danger);
+}
+
+.formInputError:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.errorMessage {
+  font-size: 0.75rem;
+  color: var(--color-danger);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.gridInputs {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+
+@media (min-width: 768px) {
+  .gridInputs {
+    grid-template-columns: 1fr 1fr;
+  }
+}
 
 .formActions {
-  margin-top: 2rem; /* mt-8 */
-  padding-top: 1.5rem; /* pt-6 (opcional se já houver gap) */
-  /* border-top: 1px solid #e5e7eb; */ /* border-t (opcional) */
   display: flex;
   justify-content: flex-end;
-  gap: 1rem; /* space-x-4 */
+  gap: var(--space-sm);
+  margin-top: var(--space-xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border-light);
 }
-
-/* Estilos para botões (usam o componente Button.jsx) */

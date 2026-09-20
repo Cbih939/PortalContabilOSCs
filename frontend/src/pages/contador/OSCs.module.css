@@ -1,0 +1,544 @@
+.pageContainer {
+  padding: var(--space-lg);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+@media (min-width: 768px) {
+  .header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.headerTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.infoIcon {
+  color: var(--primary-color);
+  cursor: help;
+}
+
+/* Tooltip */
+.tooltipContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.tooltipText {
+  visibility: hidden;
+  width: 250px;
+  background-color: var(--text-dark);
+  color: #ffffff;
+  text-align: left;
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  position: absolute;
+  z-index: 100;
+  top: 125%;
+  right: 0;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  font-weight: 400;
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+}
+
+.tooltipContainer:hover .tooltipText {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Search Bar */
+.searchRow {
+  display: flex;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.searchWrapper {
+  position: relative;
+  flex: 1;
+  min-width: 250px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  color: var(--text-muted);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.75rem 0.75rem 0.75rem 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  font-size: 0.95rem;
+  outline: none;
+  color: var(--text-dark);
+  box-sizing: border-box;
+  background-color: var(--bg-surface);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.searchInput:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-color-light);
+}
+
+.filterCheckboxContainer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0.75rem var(--space-md);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  min-width: max-content;
+  transition: all var(--transition-fast);
+}
+
+.filterCheckboxContainer.active {
+  background-color: var(--color-danger-light);
+  border-color: var(--color-danger);
+}
+
+.filterCheckboxLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin: 0;
+}
+
+.filterCheckboxContainer.active .filterCheckboxLabel {
+  color: var(--color-danger);
+}
+
+/* OSC List (Accordion) */
+.oscList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.accordionItem {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.accordionItem.expanded {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 1px var(--primary-color-light);
+}
+
+.accordionHeader {
+  padding: var(--space-md) var(--space-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  background-color: var(--bg-surface);
+  transition: background-color var(--transition-fast);
+}
+
+.accordionHeader:hover {
+  background-color: var(--bg-app);
+}
+
+.oscInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.oscName {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.oscCnpj {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+.actionBtn {
+  padding: 8px;
+  border-radius: var(--radius-round);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--transition-fast);
+}
+
+.actionBtn:hover {
+  opacity: 0.8;
+}
+
+.actionBtn.view { color: #2563eb; background-color: #eff6ff; }
+.actionBtn.edit { color: #d97706; background-color: #fffbeb; }
+.actionBtn.alert { color: #dc2626; background-color: #fef2f2; }
+.actionBtn.delete { color: #991b1b; background-color: #fee2e2; }
+
+/* Accordion Body */
+.accordionBody {
+  padding: var(--space-xl);
+  background-color: var(--bg-app);
+  border-top: 1px solid var(--border-color);
+}
+
+/* Action Panel */
+.actionPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  align-items: flex-start;
+  background: var(--bg-surface);
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.panelRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.panelLabel {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.selectInput {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.monthGrid {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.monthBtn {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  background: var(--bg-surface);
+  color: var(--text-dark);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.monthBtn:hover:not(:disabled) {
+  background-color: var(--bg-app);
+}
+
+.monthBtn.active {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.monthBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.panelDivider {
+  width: 100%;
+  height: 1px;
+  background-color: var(--border-light);
+  margin: var(--space-sm) 0;
+}
+
+.actionButtons {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+/* Legend */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-weight: 600;
+}
+
+.colorBox {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+/* Section Titles */
+.sectionTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: var(--space-md);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-xl);
+}
+
+/* Calendar */
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+}
+
+.monthBox {
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 70px;
+  position: relative;
+}
+
+.monthBoxText {
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.monthBoxStatus {
+  font-size: 0.65rem;
+  font-weight: 700;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+.originBadge {
+  position: absolute;
+  top: -8px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  background-color: var(--primary-color-light);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+/* Document Lists */
+.docList {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.docListHeader {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--border-light);
+  background-color: var(--bg-app);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.docListHeader span {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.docItem {
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color var(--transition-fast);
+}
+
+.docItem:hover {
+  background-color: var(--bg-app);
+}
+
+.docItem:last-child {
+  border-bottom: none;
+}
+
+.docMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: #2563eb;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.docMain span:hover {
+  text-decoration: underline;
+}
+
+.docMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.docRef {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.typeBadge {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-weight: 800;
+}
+
+.docDate {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.deleteBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-round);
+  display: flex;
+  transition: all var(--transition-fast);
+}
+
+.deleteBtn:hover {
+  color: var(--color-danger);
+  background-color: var(--color-danger-light);
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: var(--space-2xl);
+  color: var(--text-muted);
+  background-color: var(--bg-app);
+  font-weight: 500;
+  border-radius: var(--radius-md);
+}
+
+/* Alert Top Box */
+.alertBox {
+  background-color: var(--color-danger-light);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.alertBox h3 {
+  margin: 0 0 var(--space-sm) 0;
+  color: var(--color-danger);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 1.1rem;
+}
+
+.alertBoxList {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.alertBoxItem {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.alertBoxOscName {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #7f1d1d;
+}
+
+.alertBoxDelay {
+  font-size: 0.85rem;
+  color: var(--color-danger);
+  font-weight: 700;
+}

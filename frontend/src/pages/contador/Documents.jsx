@@ -1,32 +1,17 @@
-// frontend/src/pages/contador/Documents.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import * as docService from '../../services/documentService.js';
 import PdfThumbnail from '../osc/components/PdfThumbnail.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
-import { DownloadIcon } from '../../components/common/Icons.jsx';
 import { formatDate } from '../../utils/formatDate.js';
 import styles from './Documents.module.css';
-
-// Ícone de Informação (Tooltip)
-const InfoIcon = () => (
-  <svg 
-    style={{ width: '18px', height: '18px', color: '#EC6D12', cursor: 'help', marginLeft: '10px' }} 
-    xmlns="http://www.w3.org/2000/svg" 
-    fill="none" 
-    viewBox="0 0 24 24" 
-    stroke="currentColor"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
+import { FiInfo, FiDownload } from 'react-icons/fi';
 
 export default function ContadorDocumentsPage() {
   const { user } = useAuth();
   const [documents, setDocuments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Função para verificar se é imagem
   const isImage = (fileName) => {
     return /\.(jpg|jpeg|png|webp|gif)$/i.test(fileName);
   };
@@ -63,7 +48,7 @@ export default function ContadorDocumentsPage() {
       <div className={styles.headerWithInfo}>
         <h1 className={styles.title}>Documentos Recebidos das OSCs</h1>
         <div className={styles.tooltipContainer}>
-          <InfoIcon />
+          <FiInfo className={styles.infoIcon} />
           <span className={styles.tooltipText}>
             Esta central reúne todos os documentos enviados pelas suas OSCs. Ao clicar em um arquivo, você pode descarregá-lo para realizar a conferência.
           </span>
@@ -71,7 +56,7 @@ export default function ContadorDocumentsPage() {
       </div>
 
       {isLoading ? (
-        <Spinner text="Carregando documentos..." />
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}><Spinner text="Carregando documentos..." /></div>
       ) : documents.length === 0 ? (
         <div className={styles.empty}>Nenhum documento recebido até o momento.</div>
       ) : (
@@ -87,21 +72,19 @@ export default function ContadorDocumentsPage() {
                 onClick={() => handleDownload(doc)}
               >
                 <div className={styles.pdfThumbnail}>
-                  {/* LÓGICA DE TRATAMENTO DE IMAGEM VS PDF */}
                   {isImage(fileName) ? (
                     <img 
                       src={fileUrl} 
                       alt="Preview" 
                       className={styles.imagePreview}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      onError={(e) => { e.target.src = '/placeholder-file.png'; }} // Caso dê 404
+                      onError={(e) => { e.target.src = '/placeholder-file.png'; }} 
                     />
                   ) : (
                     <PdfThumbnail fileUrl={fileUrl} />
                   )}
                   
                   <div className={styles.downloadOverlay}>
-                    <DownloadIcon />
+                    <FiDownload className={styles.downloadIcon} />
                   </div>
                 </div>
                 

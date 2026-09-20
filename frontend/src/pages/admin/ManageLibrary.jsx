@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import * as fileService from '../../services/publicFileService.js';
+import Card, { CardBody, CardHeader } from '../../components/ui/Card.jsx';
+import Button from '../../components/ui/Button.jsx';
+import { useNotification } from '../../contexts/NotificationContext.jsx';
+import { FiUpload, FiTrash2, FiFileText } from 'react-icons/fi';
 import styles from './ManageLibrary.module.css';
 
 export default function ManageLibrary() {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const addNotification = useNotification();
 
   const [form, setForm] = useState({ 
     title: '', 
@@ -36,7 +41,7 @@ export default function ManageLibrary() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.file) return alert("Por favor, selecione o arquivo.");
+    if (!form.file) return addNotification("Por favor, selecione o arquivo.", "error");
 
     const formData = new FormData();
     formData.append('title', form.title);
@@ -52,7 +57,7 @@ export default function ManageLibrary() {
     setLoading(true);
     try {
       await fileService.uploadFile(formData);
-      alert("Publicado com sucesso!");
+      addNotification("Conteúdo publicado com sucesso!", "success");
       
       setForm({ 
         title: '', 
@@ -67,13 +72,24 @@ export default function ManageLibrary() {
       
       loadFiles();
     } catch (error) {
-      alert("Erro ao enviar.");
+      addNotification("Erro ao enviar conteúdo.", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  // Função para renderizar uma seção específica de arquivos
+  const handleDelete = async (file) => {
+    if (window.confirm("Tem certeza que deseja excluir este conteúdo?")) {
+      try {
+        await fileService.deleteFile(file.id);
+        addNotification("Conteúdo excluído com sucesso!", "success");
+        loadFiles();
+      } catch (err) {
+        addNotification("Erro ao excluir conteúdo.", "error");
+      }
+    }
+  };
+
   const renderFileSection = (title, categoryKey) => {
     const filteredFiles = files.filter(f => f.category === categoryKey);
     if (filteredFiles.length === 0) return null;
@@ -86,14 +102,15 @@ export default function ManageLibrary() {
             <div key={f.id} className={styles.fileCard}>
               <div className={styles.coverWrapper}>
                 {f.cover_path ? (
-                  // Correção da visualização da imagem com URL absoluta
                   <img 
                     src={`https://contacomigo.org.br/${f.cover_path.replace(/\\/g, '/')}`} 
                     alt={f.title} 
                     className={styles.gridCover} 
                   />
                 ) : (
-                  <div className={styles.placeholderCover}><span>📄</span></div>
+                  <div className={styles.placeholderCover}>
+                    <FiFileText size={32} color="var(--text-muted)" />
+                  </div>
                 )}
               </div>
               <div className={styles.fileDetails}>
@@ -102,10 +119,11 @@ export default function ManageLibrary() {
                 </span>
                 <h4 className={styles.fileTitle}>{f.title}</h4>
                 <button 
-                  onClick={() => { if(window.confirm("Excluir?")) fileService.deleteFile(f.id).then(loadFiles); }} 
+                  onClick={() => handleDelete(f)}
                   className={styles.deleteBtn}
+                  title="Excluir"
                 >
-                  Excluir
+                  <FiTrash2 size={16} /> Excluir
                 </button>
               </div>
             </div>
@@ -116,103 +134,122 @@ export default function ManageLibrary() {
   };
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>Gestão de Biblioteca e Modelos</h1>
-      
-      <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Adicionar Novo Conteúdo</h3>
-        <form onSubmit={handleSubmit} className={styles.form}>
-          
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Onde este arquivo aparecerá?</label>
-            <select 
-              className={styles.select}
-              value={form.category} 
-              onChange={e => setForm({...form, category: e.target.value, title: ''})}
-            >
-              <option value="BIBLIOTECA">Biblioteca Digital (E-books)</option>
-              <option value="MODELO_DOC">Modelos de Documentos (Lado Esquerdo)</option>
-              <option value="MODELO_INSTITUCIONAL">Comunicação Institucional (Lado Direito)</option>
-            </select>
-          </div>
-
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Título do Documento</label>
-            {form.category === 'MODELO_DOC' ? (
-              <select 
-                className={styles.select}
-                value={form.title}
-                onChange={e => setForm({...form, title: e.target.value})}
-                required
-              >
-                <option value="">Selecione o título padrão (Ativa Tooltip)...</option>
-                {standardTitles.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            ) : (
-              <input 
-                type="text" 
-                className={styles.input}
-                value={form.title}
-                placeholder="Ex: Guia de Comunicação 2026"
-                onChange={e => setForm({...form, title: e.target.value})}
-                required
-              />
-            )}
-          </div>
-
-          {form.category === 'BIBLIOTECA' && (
-            <div className={styles.inputGroup}>
-              <label className={styles.label} style={{color: '#EC6D12'}}>Subcategoria (E-book)</label>
-              <select 
-                className={styles.select}
-                value={form.ebookCategory}
-                onChange={e => setForm({...form, ebookCategory: e.target.value})}
-                style={{borderColor: '#EC6D12'}}
-              >
-                <option value="Governança">Governança</option>
-                <option value="Contábil">Contábil</option>
-                <option value="Manual">Manual</option>
-                <option value="E-book">E-book Geral</option>
-              </select>
-            </div>
-          )}
-
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Arquivo (PDF ou Word)</label>
-            <input 
-              id="fileInput" 
-              type="file" 
-              // Atualizado para aceitar PDF e formatos Word
-              accept=".pdf,.doc,.docx" 
-              className={styles.input} 
-              onChange={e => setForm({...form, file: e.target.files[0]})} 
-              required 
-            />
-          </div>
-
-          {form.category === 'BIBLIOTECA' && (
-            <div className={styles.inputGroup}>
-              <label className={styles.label}>Capa do E-book (Obrigatório para Biblioteca)</label>
-              <input id="coverInput" type="file" accept="image/*" className={styles.input} onChange={e => setForm({...form, cover: e.target.files[0]})} />
-            </div>
-          )}
-
-          <button type="submit" disabled={loading} className={styles.submitButton}>
-            {loading ? 'A processar...' : 'Publicar Agora'}
-          </button>
-        </form>
+    <div className={styles.pageContainer}>
+      <div className={styles.header}>
+        <h1 className={styles.pageTitle}>Gestão de Biblioteca e Modelos</h1>
+        <p className={styles.pageSubtitle}>Adicione novos E-books e arquivos de modelo para todas as OSCs.</p>
       </div>
+      
+      <Card padding="none" className={styles.uploadCard}>
+        <CardHeader title="Adicionar Novo Conteúdo" />
+        <CardBody className={styles.uploadBody}>
+          <form onSubmit={handleSubmit} className={styles.formGrid}>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Onde este arquivo aparecerá?</label>
+              <select 
+                className={styles.formInput}
+                value={form.category} 
+                onChange={e => setForm({...form, category: e.target.value, title: ''})}
+              >
+                <option value="BIBLIOTECA">Biblioteca Digital (E-books)</option>
+                <option value="MODELO_DOC">Modelos de Documentos (Lado Esquerdo)</option>
+                <option value="MODELO_INSTITUCIONAL">Comunicação Institucional (Lado Direito)</option>
+              </select>
+            </div>
 
-      <div className={styles.card}>
-        <h2 className={styles.cardTitle}>Conteúdos Publicados</h2>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Título do Documento</label>
+              {form.category === 'MODELO_DOC' ? (
+                <select 
+                  className={styles.formInput}
+                  value={form.title}
+                  onChange={e => setForm({...form, title: e.target.value})}
+                  required
+                >
+                  <option value="">Selecione o título padrão...</option>
+                  {standardTitles.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              ) : (
+                <input 
+                  type="text" 
+                  className={styles.formInput}
+                  value={form.title}
+                  placeholder="Ex: Guia de Comunicação 2026"
+                  onChange={e => setForm({...form, title: e.target.value})}
+                  required
+                />
+              )}
+            </div>
+
+            {form.category === 'BIBLIOTECA' && (
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Subcategoria (E-book)</label>
+                <select 
+                  className={styles.formInput}
+                  value={form.ebookCategory}
+                  onChange={e => setForm({...form, ebookCategory: e.target.value})}
+                >
+                  <option value="Governança">Governança</option>
+                  <option value="Contábil">Contábil</option>
+                  <option value="Manual">Manual</option>
+                  <option value="E-book">E-book Geral</option>
+                </select>
+              </div>
+            )}
+
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Arquivo (PDF ou Word)</label>
+              <input 
+                id="fileInput" 
+                type="file" 
+                accept=".pdf,.doc,.docx" 
+                className={styles.formInputFile} 
+                onChange={e => setForm({...form, file: e.target.files[0]})} 
+                required 
+              />
+            </div>
+
+            {form.category === 'BIBLIOTECA' && (
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Capa do E-book (Obrigatório)</label>
+                <input 
+                  id="coverInput" 
+                  type="file" 
+                  accept="image/*" 
+                  className={styles.formInputFile} 
+                  onChange={e => setForm({...form, cover: e.target.files[0]})} 
+                />
+              </div>
+            )}
+
+            <div className={styles.formAction}>
+              <Button 
+                type="submit" 
+                variant="primary" 
+                loading={loading}
+                icon={!loading && <FiUpload />}
+                size="lg"
+                block
+              >
+                {loading ? 'A processar...' : 'Publicar Conteúdo'}
+              </Button>
+            </div>
+          </form>
+        </CardBody>
+      </Card>
+
+      <div className={styles.contentSection}>
+        <h2 className={styles.sectionTitle}>Conteúdos Publicados</h2>
         
-        {/* Renderização por Categorias Separadas */}
         {renderFileSection("📚 Biblioteca Digital (E-books)", "BIBLIOTECA")}
         {renderFileSection("📄 Modelos de Documentos", "MODELO_DOC")}
         {renderFileSection("📢 Comunicação Institucional", "MODELO_INSTITUCIONAL")}
 
         {files.length === 0 && (
-          <p className={styles.emptyText}>Nenhum conteúdo publicado.</p>
+          <div className={styles.emptyState}>
+            Nenhum conteúdo publicado.
+          </div>
         )}
       </div>
     </div>

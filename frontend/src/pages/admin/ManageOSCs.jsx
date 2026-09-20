@@ -1,32 +1,18 @@
 import React, { useState, useMemo, useEffect } from 'react';
-// Serviços API
 import * as oscService from '../../services/oscService.js';
 import * as userService from '../../services/userService.js';
-// Constantes
 import { ROLES } from '../../utils/constants.js';
-// Componentes Comuns
-import { ViewIcon, EditIcon, UsersIcon, SearchIcon } from '../../components/common/Icons.jsx';
-import Input from '../../components/common/Input.jsx';
-import Button from '../../components/common/Button.jsx';
+import Button from '../../components/ui/Button.jsx';
+import Card, { CardBody } from '../../components/ui/Card.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
-// Hooks
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 import useApi from '../../hooks/useApi.jsx';
-// Estilos
 import styles from './ManageOSCs.module.css';
-// Modais
 import AssignContadorModal from './components/AssignContadorModal.jsx';
 import TransferOfficeModal from './components/TransferOfficeModal.jsx';
-
-// Ícone de Transferência (Setas)
-const TransferIcon = () => (
-  <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-  </svg>
-);
+import { FiUsers, FiSearch, FiEye, FiEdit2, FiRepeat } from 'react-icons/fi';
 
 export default function ManageOSCs() {
-  // --- Estados ---
   const [oscs, setOscs] = useState([]); 
   const [contadores, setContadores] = useState([]); 
   const [offices, setOffices] = useState([]); 
@@ -36,16 +22,13 @@ export default function ManageOSCs() {
   const [filterContador, setFilterContador] = useState('');
   const addNotification = useNotification();
   
-  // --- Estados Modais ---
   const [oscToAssign, setOscToAssign] = useState(null); 
   const [oscToTransfer, setOscToTransfer] = useState(null);
 
-  // --- Hooks API ---
   const { request: assignContadorRequest, isLoading: isAssigning } = useApi(
       oscService.assignContador, { showErrorNotification: false }
   );
 
-  // --- Efeito para Buscar Dados ---
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -57,7 +40,6 @@ export default function ManageOSCs() {
           oscService.getAllOffices() 
         ]);
 
-        // Proteção de dados: desempacota arrays quer venham direto ou via .data
         const rawOscs = Array.isArray(oscsResponse) ? oscsResponse : (oscsResponse?.data || []);
         const allUsers = Array.isArray(usersResponse) ? usersResponse : (usersResponse?.data || []);
         const allOffices = Array.isArray(officesResponse) ? officesResponse : (officesResponse?.data || []);
@@ -81,7 +63,7 @@ export default function ManageOSCs() {
         
       } catch (err) {
         console.error("Erro ao buscar dados:", err);
-        setError("Não foi possível carregar os dados. Verifique a consola.");
+        setError("Não foi possível carregar os dados.");
         addNotification("Erro ao carregar dados.", "error");
       } finally {
         setIsLoading(false);
@@ -90,7 +72,6 @@ export default function ManageOSCs() {
     fetchData();
   }, [addNotification]);
 
-  // --- Filtros ---
   const filteredOSCs = useMemo(() => {
       return oscs.filter(
         (osc) =>
@@ -99,7 +80,6 @@ export default function ManageOSCs() {
       );
   }, [oscs, filterName, filterContador]);
 
-  // --- Handlers ---
   const handleView = (osc) => alert(`(Admin) Visualizando: ${osc.name}.`);
   const handleAssign = (osc) => setOscToAssign(osc); 
   const handleTransfer = (osc) => setOscToTransfer(osc); 
@@ -151,77 +131,105 @@ export default function ManageOSCs() {
     }
   };
 
-  if (isLoading) return <div style={{ padding: '2rem', textAlign: 'center' }}><Spinner text="Carregando dados..." /></div>;
-  if (error) return <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>{error}</div>;
+  if (error) return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-danger)' }}>{error}</div>;
 
   return (
     <div className={styles.pageContainer}>
       <div className={styles.header}>
-        <h2 className={styles.title}>Gerenciamento de OSCs</h2>
-        <Button variant="primary" onClick={handleOpenAssignModal} className={styles.assignButton}>
-          <UsersIcon className="w-5 h-5 mr-2" />
-          Associar OSC a um Contador
-        </Button>
+        <div>
+          <h1 className={styles.pageTitle}>Gerenciamento de OSCs</h1>
+          <p className={styles.pageSubtitle}>Acompanhe e associe organizações a escritórios contábeis.</p>
+        </div>
+        <div className={styles.headerActions}>
+          <Button variant="primary" onClick={handleOpenAssignModal} icon={<FiUsers />}>
+            Associar OSC
+          </Button>
+        </div>
       </div>
 
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
-          <Input icon={SearchIcon} placeholder="Buscar por Nome..." value={filterName} onChange={(e) => setFilterName(e.target.value)} />
-          <Input icon={SearchIcon} placeholder="Buscar por Contador..." value={filterContador} onChange={(e) => setFilterContador(e.target.value)} />
+          <div className={styles.searchGroup}>
+            <FiSearch className={styles.searchIcon} />
+            <input
+              type="text"
+              placeholder="Buscar por Nome da OSC..."
+              value={filterName}
+              onChange={(e) => setFilterName(e.target.value)}
+              className={styles.searchInput}
+            />
+          </div>
+          <div className={styles.searchGroup}>
+            <FiSearch className={styles.searchIcon} />
+            <input
+              type="text"
+              placeholder="Buscar por Contador..."
+              value={filterContador}
+              onChange={(e) => setFilterContador(e.target.value)}
+              className={styles.searchInput}
+            />
+          </div>
         </div>
       </div>
 
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Nome da OSC</th>
-              <th>CNPJ</th>
-              <th>Escritório Atual</th>
-              <th>Contador Associado</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredOSCs.length > 0 ? (
-              filteredOSCs.map((osc) => (
-                <tr key={osc.id}>
-                  <td>{osc.name}</td>
-                  <td>{osc.cnpj}</td>
-                  <td><strong>{osc.officeName || 'Sem Escritório'}</strong></td>
-                  <td className={!osc.contadorName || osc.contadorName === 'Nenhum' ? styles.contadorNameNone : ''}>
-                    {osc.contadorName || 'Nenhum'}
-                  </td>
-                  <td>
-                    <div className={styles.actionsContainer} style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => handleView(osc)} className={`${styles.actionButton} ${styles.viewButton}`} title="Visualizar">
-                        <ViewIcon />
-                      </button>
-                      
-                      <button onClick={() => handleAssign(osc)} className={`${styles.actionButton} ${styles.assignButtonAction}`} title="Associar / Trocar Contador">
-                        <EditIcon />
-                      </button>
-                      
-                      <button 
-                        onClick={() => handleTransfer(osc)} 
-                        className={styles.actionButton} 
-                        style={{ color: '#ea580c', backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '4px', padding: '4px' }}
-                        title="Transferir para outro Escritório"
-                      >
-                        <TransferIcon />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-             ) : (
-                <tr className={styles.emptyRow}>
-                  <td colSpan="5">Nenhuma OSC encontrada.</td>
-                </tr>
-             )}
-          </tbody>
-        </table>
-      </div>
+      <Card padding="none">
+        <CardBody className={styles.tableBody}>
+          {isLoading ? (
+            <div className={styles.loadingContainer}>
+              <Spinner text="Carregando OSCs..." />
+            </div>
+          ) : (
+            <div className={styles.tableWrapper}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Nome da OSC</th>
+                    <th>CNPJ</th>
+                    <th>Escritório Atual</th>
+                    <th>Contador Associado</th>
+                    <th style={{ textAlign: 'right' }}>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredOSCs.length > 0 ? (
+                    filteredOSCs.map((osc) => (
+                      <tr key={osc.id}>
+                        <td>{osc.name}</td>
+                        <td>{osc.cnpj}</td>
+                        <td><strong>{osc.officeName || 'Sem Escritório'}</strong></td>
+                        <td className={!osc.contadorName || osc.contadorName === 'Nenhum' ? styles.contadorNameNone : ''}>
+                          {osc.contadorName || 'Nenhum'}
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div className={styles.actionsContainer}>
+                            <button onClick={() => handleView(osc)} className={styles.actionBtn} title="Visualizar">
+                              <FiEye size={16} />
+                            </button>
+                            <button onClick={() => handleAssign(osc)} className={styles.actionBtn} title="Associar / Trocar Contador">
+                              <FiEdit2 size={16} />
+                            </button>
+                            <button 
+                              onClick={() => handleTransfer(osc)} 
+                              className={`${styles.actionBtn} ${styles.actionBtnOrange}`} 
+                              title="Transferir para outro Escritório"
+                            >
+                              <FiRepeat size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                   ) : (
+                      <tr>
+                        <td colSpan="5" className={styles.emptyState}>Nenhuma OSC encontrada.</td>
+                      </tr>
+                   )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardBody>
+      </Card>
       
       <AssignContadorModal
         isOpen={!!oscToAssign}
@@ -240,7 +248,6 @@ export default function ManageOSCs() {
         osc={oscToTransfer}
         offices={offices}
       />
-
     </div>
   );
 }

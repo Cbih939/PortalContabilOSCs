@@ -1,62 +1,135 @@
 .container {
-  padding: 2rem;
-  background-color: #f9fafb;
-  min-height: 100vh;
+  padding: var(--space-lg);
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .title {
   font-size: 1.75rem;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 2rem;
-  border-left: 4px solid #ff6600;
-  padding-left: 1rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0;
+  text-transform: uppercase;
 }
 
-/* Grelha de 5 colunas idêntica à da OSC */
+.headerWithInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+}
+
+.tooltipContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.infoIcon {
+  color: var(--primary-color);
+  cursor: help;
+  font-size: 1.2rem;
+}
+
+.tooltipText {
+  visibility: hidden;
+  width: 250px;
+  background-color: var(--text-dark);
+  color: #ffffff;
+  text-align: left;
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  position: absolute;
+  z-index: 100;
+  top: 130%; 
+  left: 0;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  font-weight: 400;
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+}
+
+.tooltipText::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 20px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent var(--text-dark) transparent;
+}
+
+.tooltipContainer:hover .tooltipText {
+  visibility: visible;
+  opacity: 1;
+}
+
 .pdfGrid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 1.5rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
 }
 
+@media (min-width: 640px) { .pdfGrid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1024px) { .pdfGrid { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 1280px) { .pdfGrid { grid-template-columns: repeat(5, 1fr); } }
+
 .pdfCard {
-  background: white;
-  border-radius: 0.75rem;
-  padding: 0.75rem;
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
   display: flex;
   flex-direction: column;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  border: 1px solid #e5e7eb;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
 
 .pdfCard:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border-color: #ff6600;
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
 }
 
 .pdfThumbnail {
   position: relative;
   width: 100%;
   aspect-ratio: 3/4;
-  background-color: #f3f4f6;
-  border-radius: 0.5rem;
+  background-color: var(--bg-app);
+  border-radius: var(--radius-sm);
   overflow: hidden;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-sm);
+  border: 1px solid var(--border-light);
+}
+
+.imagePreview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .downloadOverlay {
   position: absolute;
   inset: 0;
-  background: rgba(255, 102, 0, 0.2);
+  background: rgba(234, 88, 12, 0.15); /* var(--primary-color) with opacity */
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.3s;
+  transition: opacity var(--transition-fast);
+}
+
+.downloadIcon {
+  color: var(--primary-color);
+  font-size: 2rem;
+  background: white;
+  border-radius: 50%;
+  padding: 10px;
+  box-shadow: var(--shadow-md);
 }
 
 .pdfCard:hover .downloadOverlay {
@@ -66,104 +139,41 @@
 .pdfInfo {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 4px;
 }
 
 .pdfName {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-dark);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .senderBadge {
+  background-color: #eff6ff; /* light blue */
+  color: #2563eb;
+  padding: 2px 8px;
+  border-radius: var(--radius-round);
   font-size: 0.7rem;
-  background-color: #fff7ed;
-  color: #c2410c;
-  padding: 0.1rem 0.5rem;
-  border-radius: 9999px;
+  font-weight: 700;
   width: fit-content;
-  font-weight: 600;
-  border: 1px solid #ffedd5;
+  text-transform: uppercase;
 }
 
 .pdfDate {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--text-muted);
+  font-weight: 600;
 }
 
 .empty {
   text-align: center;
-  padding: 4rem;
-  color: #6b7280;
-  background: white;
-  border-radius: 1rem;
-  border: 2px dashed #e5e7eb;
+  padding: var(--space-2xl);
+  color: var(--text-muted);
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md);
+  border: 2px dashed var(--border-color);
+  font-weight: 500;
 }
-
-.headerWithInfo {
-  display: flex;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-.tooltipContainer {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.tooltipText {
-  visibility: hidden;
-  width: 260px;
-  background-color: #1e293b;
-  color: #ffffff;
-  text-align: left;
-  border-radius: 8px;
-  padding: 12px;
-  position: absolute;
-  z-index: 100;
-  top: 130%; /* Abre para baixo para não cortar no topo */
-  left: 0;
-  opacity: 0;
-  transition: opacity 0.3s;
-  font-size: 0.8rem;
-  line-height: 1.4;
-  font-weight: normal;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-  pointer-events: none;
-}
-
-/* Triângulo da Tooltip */
-.tooltipText::after {
-  content: "";
-  position: absolute;
-  bottom: 100%;
-  left: 20px;
-  border-width: 6px;
-  border-style: solid;
-  border-color: transparent transparent #1e293b transparent;
-}
-
-.tooltipContainer:hover .tooltipText {
-  visibility: visible;
-  opacity: 1;
-}
-
-.senderBadge {
-  background-color: #eff6ff;
-  color: #2563eb;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  margin: 4px 0;
-  display: inline-block;
-}
-
-/* Responsividade do documentos */
-@media (max-width: 1280px) { .pdfGrid { grid-template-columns: repeat(4, 1fr); } }
-@media (max-width: 1024px) { .pdfGrid { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 640px) { .pdfGrid { grid-template-columns: repeat(2, 1fr); } }

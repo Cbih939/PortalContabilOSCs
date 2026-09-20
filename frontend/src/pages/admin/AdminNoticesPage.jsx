@@ -1,34 +1,26 @@
-// src/pages/admin/AdminNoticesPage.jsx
-
 import React, { useState, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-// Serviços API
-import * as userService from '../../services/userService.js'; // Para buscar lista de users
-import * as alertService from '../../services/alertService.js'; // Para enviar e buscar histórico
+import * as userService from '../../services/userService.js';
+import * as alertService from '../../services/alertService.js';
 import useApi from '../../hooks/useApi.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
-// Componentes
 import Spinner from '../../components/common/Spinner.jsx';
-import Button from '../../components/common/Button.jsx';
-import Input from '../../components/common/Input.jsx';
-import { SendIcon } from '../../components/common/Icons.jsx';
-import styles from './AdminNoticesPage.module.css'; // CSS da página
+import Button from '../../components/ui/Button.jsx';
+import Card, { CardBody, CardHeader } from '../../components/ui/Card.jsx';
+import { FiSend, FiBell, FiInfo, FiAlertCircle, FiClock } from 'react-icons/fi';
+import styles from './AdminNoticesPage.module.css';
 import { formatDate } from '../../utils/formatDate.js';
 import { ROLES } from '../../utils/constants.js';
 
-// Schema para o formulário de envio
 const schema = yup.object().shape({
-  targetUser: yup.string().required(), // 'all_users', 'all_oscs', 'all_contadores', ou um ID específico
+  targetUser: yup.string().required(),
   type: yup.string().required(),
   title: yup.string().required('O título é obrigatório.'),
   message: yup.string().required('A mensagem é obrigatória.'),
 });
 
-/**
- * Página de Envio de Avisos do Admin
- */
 export default function AdminNoticesPage() {
   const [allUsers, setAllUsers] = useState([]);
   const [sentNotices, setSentNotices] = useState([]);
@@ -41,33 +33,29 @@ export default function AdminNoticesPage() {
     defaultValues: { targetUser: 'all_users', type: 'Informativo' }
   });
 
-  // Hook para Enviar Aviso
   const { request: sendNoticeRequest, isLoading: isSending } = useApi(
       alertService.sendNotice, { showErrorNotification: false }
   );
 
-  // Efeito para Buscar Dados (Todos Utilizadores e Histórico)
   useEffect(() => {
     const fetchData = async () => {
       setIsLoadingData(true);
       setErrorLoading(null);
       try {
-        // Busca Utilizadores e Histórico
         const [usersResponse, historyResponse] = await Promise.all([
-          userService.getAllUsers(), // O Admin busca TODOS
-          alertService.getSentNoticesHistory(), // Histórico (do Admin)
+          userService.getAllUsers(),
+          alertService.getSentNoticesHistory(),
         ]);
 
         const users = usersResponse.data || [];
         setAllUsers(users);
 
-        // Formata o histórico
         const formattedHistory = (historyResponse.data || []).map(notice => {
             let oscName = 'Sistema (Broadcast)';
             if (notice.osc_id) {
                 oscName = users.find(o => o.id === notice.osc_id)?.name || 'OSC Desconhecida';
             } else if (notice.osc_id === null && notice.type === 'Informativo') {
-                oscName = 'Todas as OSCs'; // Lógica do Contador
+                oscName = 'Todas as OSCs';
             }
             return { ...notice, oscName, date: notice.created_at || notice.date };
         }).sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -85,27 +73,23 @@ export default function AdminNoticesPage() {
     fetchData();
   }, [addNotification]);
 
-  // Handler para Enviar Aviso
   const onSubmit = async (data) => {
-    let oscId = null; // Padrão é NULL (broadcast geral)
+    let oscId = null;
     let targetName = "Todos os Usuários";
 
-    // Define o ID do destinatário
     if (data.targetUser === 'all_oscs') {
-        oscId = null; // O backend (createAlert) já trata osc_id=null
+        oscId = null; 
         targetName = "Todas as OSCs";
     } else if (data.targetUser === 'all_contadores') {
-        // TODO: Backend não suporta "só contadores" ainda.
-        // Vamos tratar como broadcast geral por enquanto.
         oscId = null;
         targetName = "Todos (Contadores)";
     } else if (data.targetUser !== 'all_users') {
-        oscId = parseInt(data.targetUser); // ID específico
+        oscId = parseInt(data.targetUser);
         targetName = allUsers.find(u => u.id === oscId)?.name || 'Desconhecido';
     }
 
     const payload = {
-        oscId: oscId, // Nome esperado pelo controller
+        oscId: oscId,
         type: data.type,
         title: data.title,
         message: data.message,
@@ -115,90 +99,132 @@ export default function AdminNoticesPage() {
         const newNotice = await sendNoticeRequest(payload);
         setSentNotices(prev => [{ ...newNotice, oscName: targetName, date: newNotice.date }, ...prev]);
         addNotification(`Aviso enviado com sucesso para ${targetName}!`, 'success');
-        reset({ targetUser: data.targetUser, type: data.type, title: '', message: '' }); // Limpa form
+        reset({ targetUser: data.targetUser, type: data.type, title: '', message: '' }); 
     } catch (err) {
          addNotification(`Falha ao enviar aviso: ${err.response?.data?.message || err.message}`, 'error');
     }
   };
 
-  if (isLoadingData) { /* ... (Render Spinner) ... */ }
-  if (errorLoading) { /* ... (Render Erro) ... */ }
+  const getNoticeIcon = (type) => {
+    switch (type) {
+      case 'Urgente': return <FiAlertCircle className={styles.iconUrgent} size={20} />;
+      case 'Lembrete': return <FiClock className={styles.iconReminder} size={20} />;
+      default: return <FiInfo className={styles.iconInfo} size={20} />;
+    }
+  };
+
+  if (isLoadingData) return <div className={styles.loadingContainer}><Spinner text="A carregar histórico e configurações..." /></div>;
+  if (errorLoading) return <div className={styles.errorState}>{errorLoading}</div>;
 
   return (
     <div className={styles.pageContainer}>
-      <h2 className={styles.title}>Canal de Avisos Global (Admin)</h2>
+      <div className={styles.header}>
+        <h1 className={styles.pageTitle}>Canal de Avisos Global</h1>
+        <p className={styles.pageSubtitle}>Dispare mensagens e alertas para toda a base ou segmentos específicos.</p>
+      </div>
+      
       <div className={styles.grid}>
-        {/* Coluna do Formulário */}
+        {/* Formulário */}
         <div className={styles.formColumn}>
-          <form onSubmit={handleSubmit(onSubmit)} className={styles.formCard}>
-            <h3 className={styles.formTitle}>Enviar Novo Aviso</h3>
-            <div className={styles.formFields}>
-              {/* Enviar para */}
-              <div>
-                <label htmlFor="target-select" className={styles.formLabel}>Enviar para:</label>
-                <select id="target-select" {...register('targetUser')} className={styles.formSelect}>
-                  <option value="all_users">TODOS OS USUÁRIOS (Geral)</option>
-                  <option value="all_oscs">Todas as OSCs</option>
-                  <option value="all_contadores">Todos os Contadores</option>
-                  <optgroup label="Contadores Específicos">
-                    {allUsers.filter(u => u.role === ROLES.CONTADOR).map(u => 
-                      <option key={u.id} value={u.id}>{u.name} (Contador)</option>
-                    )}
-                  </optgroup>
-                  <optgroup label="OSCs Específicas">
-                     {allUsers.filter(u => u.role === ROLES.OSC).map(u => 
-                      <option key={u.id} value={u.id}>{u.name} (OSC)</option>
-                    )}
-                  </optgroup>
-                </select>
-              </div>
-              {/* Tipo de Aviso */}
-              <div>
-                <label htmlFor="type-select" className={styles.formLabel}>Tipo de Aviso:</label>
-                <select id="type-select" {...register('type')} className={styles.formSelect}>
-                  <option>Informativo</option>
-                  <option>Lembrete</option>
-                  <option>Urgente</option>
-                </select>
-              </div>
-              {/* Título */}
-              <Input label="Título:" id="notice-title" {...register('title')} error={errors.title?.message} required />
-              {/* Mensagem */}
-              <div>
-                <label htmlFor="notice-message" className={styles.formLabel}>Mensagem:</label>
-                <textarea id="notice-message" rows="5" {...register('message')} className={styles.formTextarea} required></textarea>
-                {errors.message && <p className={styles.errorMessage}>{errors.message.message}</p>}
-              </div>
-              {/* Botão Enviar */}
-              <Button type="submit" className={styles.submitButton} disabled={isSending} variant="primary">
-                {isSending ? <Spinner size="sm" /> : <SendIcon />}
-                {isSending ? 'Enviando...' : 'Enviar Aviso Global'}
-              </Button>
-            </div>
-          </form>
+          <Card padding="none" className={styles.formCard}>
+            <CardHeader title="Enviar Novo Aviso" />
+            <CardBody className={styles.formBody}>
+              <form onSubmit={handleSubmit(onSubmit)} className={styles.formLayout}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="target-select" className={styles.formLabel}>Enviar para:</label>
+                  <select id="target-select" {...register('targetUser')} className={styles.formInput}>
+                    <option value="all_users">TODOS OS USUÁRIOS (Geral)</option>
+                    <option value="all_oscs">Todas as OSCs</option>
+                    <option value="all_contadores">Todos os Contadores</option>
+                    <optgroup label="Contadores Específicos">
+                      {allUsers.filter(u => u.role === ROLES.CONTADOR).map(u => 
+                        <option key={u.id} value={u.id}>{u.name} (Contador)</option>
+                      )}
+                    </optgroup>
+                    <optgroup label="OSCs Específicas">
+                       {allUsers.filter(u => u.role === ROLES.OSC).map(u => 
+                        <option key={u.id} value={u.id}>{u.name} (OSC)</option>
+                      )}
+                    </optgroup>
+                  </select>
+                </div>
+                
+                <div className={styles.formGroup}>
+                  <label htmlFor="type-select" className={styles.formLabel}>Tipo de Aviso:</label>
+                  <select id="type-select" {...register('type')} className={styles.formInput}>
+                    <option value="Informativo">Informativo</option>
+                    <option value="Lembrete">Lembrete</option>
+                    <option value="Urgente">Urgente</option>
+                  </select>
+                </div>
+                
+                <div className={styles.formGroup}>
+                  <label htmlFor="notice-title" className={styles.formLabel}>Título:</label>
+                  <input id="notice-title" type="text" {...register('title')} className={styles.formInput} placeholder="Ex: Manutenção Programada" />
+                  {errors.title && <p className={styles.errorMessage}>{errors.title.message}</p>}
+                </div>
+                
+                <div className={styles.formGroup}>
+                  <label htmlFor="notice-message" className={styles.formLabel}>Mensagem:</label>
+                  <textarea id="notice-message" rows="5" {...register('message')} className={styles.formTextarea} placeholder="Escreva a mensagem aqui..."></textarea>
+                  {errors.message && <p className={styles.errorMessage}>{errors.message.message}</p>}
+                </div>
+                
+                <div className={styles.formAction}>
+                  <Button 
+                    type="submit" 
+                    variant="primary" 
+                    loading={isSending}
+                    icon={!isSending && <FiSend />}
+                    size="lg"
+                    block
+                  >
+                    {isSending ? 'Enviando...' : 'Enviar Aviso'}
+                  </Button>
+                </div>
+              </form>
+            </CardBody>
+          </Card>
         </div>
 
-        {/* Coluna do Histórico */}
+        {/* Histórico */}
         <div className={styles.historyColumn}>
-          <div className={styles.historyCard}>
-            <h3 className={styles.historyTitle}>Histórico de Envios (Admin)</h3>
-            <div className={styles.historyList}>
-              {sentNotices.length > 0 ? (
-                sentNotices.map(notice => (
-                  <div key={notice.id} className={`${styles.noticeItem} ${styles.borderInfo}`}> {/* Simplificado */}
-                    <div className={styles.noticeHeader}>
-                      <p className={styles.noticeTitle}>{notice.title}</p>
-                      <span className={styles.noticeDate}>{formatDate(notice.date)}</span>
-                    </div>
-                    <p className={styles.noticeMessage}>{notice.message}</p>
-                    <p className={styles.noticeRecipient}>Para: {notice.oscName}</p>
-                  </div>
-                ))
-               ) : (
-                 <p className={styles.emptyText}>Nenhum aviso enviado pelo Admin.</p>
-               )}
-            </div>
-          </div>
+          <Card padding="none" className={styles.historyCard}>
+            <CardHeader title="Histórico de Envios" />
+            <CardBody className={styles.historyBody}>
+              <div className={styles.historyList}>
+                {sentNotices.length > 0 ? (
+                  sentNotices.map(notice => {
+                    const typeClass = 
+                      notice.type === 'Urgente' ? styles.borderUrgent :
+                      notice.type === 'Lembrete' ? styles.borderReminder : 
+                      styles.borderInfo;
+
+                    return (
+                      <div key={notice.id} className={`${styles.noticeItem} ${typeClass}`}>
+                        <div className={styles.noticeHeader}>
+                          <div className={styles.noticeTitleGroup}>
+                            {getNoticeIcon(notice.type)}
+                            <h4 className={styles.noticeTitle}>{notice.title}</h4>
+                          </div>
+                          <span className={styles.noticeDate}>{formatDate(notice.date)}</span>
+                        </div>
+                        <p className={styles.noticeMessage}>{notice.message}</p>
+                        <div className={styles.noticeFooter}>
+                          <span className={styles.noticeRecipient}>Enviado para: {notice.oscName}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                 ) : (
+                   <div className={styles.emptyState}>
+                     <FiBell size={32} color="var(--text-muted)" />
+                     <p>Nenhum aviso enviado pelo Admin.</p>
+                   </div>
+                 )}
+              </div>
+            </CardBody>
+          </Card>
         </div>
       </div>
     </div>

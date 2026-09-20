@@ -28,6 +28,7 @@ import certificateRoutes from './src/routes/certificate.routes.js';
 // 🚀 NOVA ROTA DE LOGS / AUDITORIA AQUI!
 import logRoutes from './src/routes/log.routes.js';
 import reportRoutes from './src/routes/report.routes.js';
+import planRoutes from './src/routes/plan.routes.js';
 
 dotenv.config();
 
@@ -90,6 +91,7 @@ app.use('/api/certificates', certificateRoutes);
 // 🚀 REGISTO DA ROTA DE LOGS NO SERVIDOR!
 app.use('/api/logs', logRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/plans', planRoutes);
 
 app.get('/', (req, res) => {
   res.send('API Portal Contábil Ativa e Operacional 🚀');

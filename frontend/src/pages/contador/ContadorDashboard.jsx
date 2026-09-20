@@ -1,27 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  BuildingIcon, FolderIcon, MessageIcon, DownloadIcon
-} from '../../components/common/Icons.jsx';
 import * as contadorService from '../../services/contadorService.js';
 import { formatDateTime } from '../../utils/formatDate.js';
 import styles from './ContadorDashboard.module.css';
 import Spinner from '../../components/common/Spinner.jsx';
+import Button from '../../components/ui/Button.jsx';
+import Card, { CardBody, CardHeader } from '../../components/ui/Card.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-
-// Ícones Adicionais
-const InfoIcon = () => (
-  <svg style={{ width: '14px', height: '14px', color: '#EC6D12', cursor: 'help', marginLeft: '6px' }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-const AlertTriangleIcon = () => (
-  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-);
-const ArrowRightIcon = () => <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>;
-const UserIcon = () => <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>;
+import { FiBriefcase, FiFolder, FiMessageSquare, FiDownload, FiInfo, FiAlertTriangle, FiArrowRight, FiUser } from 'react-icons/fi';
 
 export default function ContadorDashboard() {
   const navigate = useNavigate();
@@ -41,11 +29,6 @@ export default function ContadorDashboard() {
           contadorService.getRecentActivity(),
         ]);
 
-        // 🔥 DEBUG: Isto vai imprimir os dados reais no console do seu navegador (F12)
-        console.log("🔥 [DEBUG] Resposta Stats:", statsResponse.data);
-        console.log("🔥 [DEBUG] Resposta Activity:", activityResponse.data);
-
-        // O SEGREDO ESTÁ AQUI: Se o backend enviar um Array em vez de Objeto, nós ajustamos automaticamente!
         const rawStats = statsResponse.data;
         const data = Array.isArray(rawStats) ? rawStats[0] : rawStats;
 
@@ -63,7 +46,6 @@ export default function ContadorDashboard() {
         setRecentActivity(Array.isArray(rawActivity) ? rawActivity : []);
 
       } catch (err) {
-        console.error("🔥 [DEBUG ERRO]:", err);
         setError('Erro ao carregar dashboard. Verifique a conexão com o servidor.');
         addNotification('Erro ao conectar com o servidor.', 'error');
       } finally {
@@ -83,8 +65,8 @@ export default function ContadorDashboard() {
     pdf.save(`relatorio-escritorio-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
-  if (error) return <div style={{ padding: '40px', textAlign: 'center', color: '#dc2626', fontWeight: 'bold' }}>{error}</div>;
-  if (isLoading) return <Spinner text="Analisando dados do escritório..." />;
+  if (error) return <div className={styles.errorState}>{error}</div>;
+  if (isLoading) return <div className={styles.loadingContainer}><Spinner text="Analisando dados do escritório..." /></div>;
 
   return (
     <div className={styles.pageContainer}>
@@ -98,106 +80,158 @@ export default function ContadorDashboard() {
         </div>
       </div>
 
-      <div className={styles.topActions}>
+      <div className={styles.header}>
+        <div className={styles.headerTitleGroup}>
+          <h1 className={styles.pageTitle}>Painel Operacional do Escritório</h1>
           <div className={styles.tooltipContainer}>
-            <button onClick={handleDownloadPDF} className={`${styles.downloadReportBtn} ${styles.noPrint}`}>
-              <DownloadIcon /> Baixar Relatório (PDF)
-            </button>
+            <FiInfo className={styles.infoIcon} />
+            <span className={styles.tooltipText}>Central de ação rápida focada nas pendências documentais da sua carteira.</span>
+          </div>
+        </div>
+        
+        <div className={styles.headerActions}>
+          <div className={styles.tooltipContainer}>
+            <Button 
+              variant="secondary" 
+              onClick={handleDownloadPDF} 
+              icon={<FiDownload />}
+              className={styles.noPrint}
+            >
+              Baixar Relatório (PDF)
+            </Button>
             <span className={styles.tooltipText}>Gera um documento em PDF do painel atual para impressão.</span>
           </div>
-      </div>
-
-      <div className={styles.headerWithInfo}>
-        <h2 className={styles.title}>Painel Operacional do Escritório</h2>
-        <div className={styles.tooltipContainer}>
-          <InfoIcon />
-          <span className={styles.tooltipText}>Central de ação rápida focada nas pendências documentais da sua carteira.</span>
         </div>
       </div>
 
       {/* KPIs */}
       <div className={styles.statsGrid}>
-        <div className={styles.statCard}>
-          <BuildingIcon /> <strong>OSCs Ativas:</strong> {stats.activeOSCs}
-        </div>
-        <div className={styles.statCard} style={{ backgroundColor: stats.pendingDocs > 0 ? '#fff7ed' : '#fff', borderColor: stats.pendingDocs > 0 ? '#fdba74' : '#e5e7eb' }}>
-          <FolderIcon /> <strong>Docs Aguardando Validação:</strong> <span style={{ color: stats.pendingDocs > 0 ? '#ea580c' : 'inherit' }}>{stats.pendingDocs}</span>
-        </div>
-        <div className={styles.statCard} style={{ backgroundColor: stats.unreadMessages > 0 ? '#f0fdf4' : '#fff', borderColor: stats.unreadMessages > 0 ? '#86efac' : '#e5e7eb' }}>
-          <MessageIcon /> <strong>Mensagens não Lidas:</strong> <span style={{ color: stats.unreadMessages > 0 ? '#16a34a' : 'inherit' }}>{stats.unreadMessages}</span>
-        </div>
+        <Card className={styles.statCard}>
+          <CardBody className={styles.statBody}>
+            <div className={styles.statIconWrapper} style={{ backgroundColor: '#eff6ff', color: '#3b82f6' }}>
+              <FiBriefcase size={24} />
+            </div>
+            <div className={styles.statContent}>
+              <p className={styles.statLabel}>OSCs Ativas</p>
+              <h3 className={styles.statValue}>{stats.activeOSCs}</h3>
+            </div>
+          </CardBody>
+        </Card>
+
+        <Card className={styles.statCard} style={{ borderColor: stats.pendingDocs > 0 ? '#fdba74' : undefined, backgroundColor: stats.pendingDocs > 0 ? '#fff7ed' : undefined }}>
+          <CardBody className={styles.statBody}>
+            <div className={styles.statIconWrapper} style={{ backgroundColor: stats.pendingDocs > 0 ? '#ffedd5' : '#f3f4f6', color: stats.pendingDocs > 0 ? '#ea580c' : '#6b7280' }}>
+              <FiFolder size={24} />
+            </div>
+            <div className={styles.statContent}>
+              <p className={styles.statLabel}>Docs Aguardando Validação</p>
+              <h3 className={styles.statValue} style={{ color: stats.pendingDocs > 0 ? '#ea580c' : 'inherit' }}>
+                {stats.pendingDocs}
+              </h3>
+            </div>
+          </CardBody>
+        </Card>
+
+        <Card className={styles.statCard} style={{ borderColor: stats.unreadMessages > 0 ? '#86efac' : undefined, backgroundColor: stats.unreadMessages > 0 ? '#f0fdf4' : undefined }}>
+          <CardBody className={styles.statBody}>
+            <div className={styles.statIconWrapper} style={{ backgroundColor: stats.unreadMessages > 0 ? '#dcfce3' : '#f3f4f6', color: stats.unreadMessages > 0 ? '#16a34a' : '#6b7280' }}>
+              <FiMessageSquare size={24} />
+            </div>
+            <div className={styles.statContent}>
+              <p className={styles.statLabel}>Mensagens não Lidas</p>
+              <h3 className={styles.statValue} style={{ color: stats.unreadMessages > 0 ? '#16a34a' : 'inherit' }}>
+                {stats.unreadMessages}
+              </h3>
+            </div>
+          </CardBody>
+        </Card>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', marginTop: '32px' }}>
+      <div className={styles.grid}>
         
         {/* Tabela de Ação */}
-        <div className={styles.sectionCard}>
-          <div className={styles.headerWithInfo}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <AlertTriangleIcon /> Tabela de Ação: OSCs com Pendências
-            </h3>
-          </div>
-          <table className={styles.missingTable}>
-            <thead>
-              <tr>
-                <th style={{ textAlign: 'left' }}>Organização</th>
-                <th style={{ textAlign: 'left' }}>Status de Documentação</th>
-                <th style={{ textAlign: 'center', width: '120px' }}>Ação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {oscsMissingDocs.length === 0 ? (
-                <tr>
-                  <td colSpan="3" style={{ textAlign: 'center', padding: '40px', color: '#16a34a', fontWeight: 'bold' }}>
-                    Nenhuma pendência crítica encontrada para validação neste momento.
-                  </td>
-                </tr>
-              ) : (
-                oscsMissingDocs.map((osc, idx) => (
-                  <tr key={osc.id || idx}>
-                    <td style={{ fontWeight: 'bold', color: '#1f2937' }}>{osc.name || osc.razao_social || 'OSC'}</td>
-                    <td style={{ color: '#4b5563', fontSize: '13px', fontWeight: '500' }}>{osc.missing}</td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button 
-                        onClick={() => navigate('/contador/oscs')} 
-                        style={{ backgroundColor: '#ea580c', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                      >
-                        Validar <ArrowRightIcon />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div className={styles.colSpan}>
+          <Card padding="none" className={styles.actionCard}>
+            <CardHeader 
+              title={
+                <div className={styles.cardTitleGroup}>
+                  <FiAlertTriangle className={styles.warningIcon} />
+                  Tabela de Ação: OSCs com Pendências
+                </div>
+              } 
+            />
+            <CardBody className={styles.tableBody}>
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Organização</th>
+                      <th>Status de Documentação</th>
+                      <th style={{ textAlign: 'center' }}>Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {oscsMissingDocs.length === 0 ? (
+                      <tr>
+                        <td colSpan="3" className={styles.emptyTable}>
+                          Nenhuma pendência crítica encontrada para validação neste momento.
+                        </td>
+                      </tr>
+                    ) : (
+                      oscsMissingDocs.map((osc, idx) => (
+                        <tr key={osc.id || idx}>
+                          <td className={styles.oscName}>{osc.name || osc.razao_social || 'OSC'}</td>
+                          <td className={styles.oscStatus}>{osc.missing}</td>
+                          <td style={{ textAlign: 'center' }}>
+                            <Button 
+                              onClick={() => navigate('/contador/oscs')}
+                              variant="primary"
+                              size="sm"
+                              icon={<FiArrowRight />}
+                              iconPosition="right"
+                            >
+                              Validar
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardBody>
+          </Card>
         </div>
 
         {/* Log de Atividades */}
-        <div className={styles.sectionCard}>
-          <div className={styles.headerWithInfo}>
-            <h3>Log de Atividades do Escritório</h3>
-          </div>
-          <div className={styles.activityList}>
-            {recentActivity.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#9ca3af', padding: '40px' }}>Nenhum documento registado recentemente.</p>
-            ) : (
-              recentActivity.map((item, idx) => (
-                <div key={item.id || idx} className={styles.activityItem} style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', transition: 'background-color 0.2s' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
-                    <div style={{ color: '#1f2937', fontSize: '14px', lineHeight: '1.4' }}>
-                      <strong style={{ color: '#2563eb' }}>{item.oscName || 'OSC'}</strong> <br/> {item.content || item.original_name}
+        <div className={styles.colSpan}>
+          <Card padding="none">
+            <CardHeader title="Log de Atividades do Escritório" />
+            <CardBody className={styles.activityBody}>
+              <div className={styles.activityList}>
+                {recentActivity.length === 0 ? (
+                  <div className={styles.emptyActivity}>Nenhum documento registrado recentemente.</div>
+                ) : (
+                  recentActivity.map((item, idx) => (
+                    <div key={item.id || idx} className={styles.activityItem}>
+                      <div className={styles.activityHeader}>
+                        <div className={styles.activityContent}>
+                          <span className={styles.activityOscName}>{item.oscName || 'OSC'}</span>
+                          <span className={styles.activityDesc}>{item.content || item.original_name}</span>
+                        </div>
+                        <span className={styles.activityTime}>
+                          {formatDateTime(item.timestamp || item.created_at)}
+                        </span>
+                      </div>
+                      <div className={styles.activitySender}>
+                        <FiUser size={12} /> Enviado por: {item.sender || item.sender_name || 'Sistema'}
+                      </div>
                     </div>
-                    <span style={{ fontSize: '11px', color: '#9ca3af', whiteSpace: 'nowrap', marginLeft: '12px' }}>
-                      {formatDateTime(item.timestamp || item.created_at)}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#ea580c', fontWeight: '600', backgroundColor: '#fff7ed', padding: '4px 8px', borderRadius: '4px', width: 'fit-content' }}>
-                    <UserIcon /> Enviado por: {item.sender || item.sender_name || 'Sistema'}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+                  ))
+                )}
+              </div>
+            </CardBody>
+          </Card>
         </div>
 
       </div>
