@@ -3,7 +3,7 @@ import * as planService from '../../services/planService.js';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
-import Modal from '../../components/ui/Modal.jsx';
+import Modal from '../../components/common/Modal.jsx';
 import styles from './ManagePlans.module.css';
 import { FiPlus, FiEdit2, FiTrash2, FiCheckCircle } from 'react-icons/fi';
 
