@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.jsx';
-import useApi from '../../hooks/useApi.jsx';
 import api from '../../services/api.js'; 
 import { useNotification } from '../../contexts/NotificationContext.jsx';
 import * as docService from '../../services/documentService.js';
@@ -9,7 +8,8 @@ import DocumentUpload from './components/DocumentUpload.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
 import Card, { CardBody, CardHeader } from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
-import { FiInfo, FiFileText, FiDownload, FiLink, FiCalendar, FiFilter } from 'react-icons/fi';
+import { FiFileText, FiDownload, FiLink, FiCalendar } from 'react-icons/fi';
+import StatusBadge from '../../components/dashboard/StatusBadge.jsx';
 import styles from './Documents.module.css';
 
 export default function OSCDocumentsPage() {
@@ -30,8 +30,15 @@ export default function OSCDocumentsPage() {
   const [refYear, setRefYear] = useState(initialYear);
   const [viewYear, setViewYear] = useState(initialYear);
   const [projectId, setProjectId] = useState('');
+  const uploadAnchorRef = useRef(null);
 
-  const { request: uploadFile, isLoading: isUploading } = useApi(docService.uploadDocument);
+
+  // Vindo do botão "Enviar documento": leva o usuário direto ao envio
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get('enviar') === '1') {
+      setTimeout(() => uploadAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+    }
+  }, [location.search]);
 
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const years = [2024, 2025, 2026];
@@ -123,29 +130,25 @@ export default function OSCDocumentsPage() {
     if(user?.id) fetchDocuments();
   }, [user?.id]);
 
-  const handleFileUpload = async (file) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('doc_type', docType);
-      formData.append('ref_month', refMonth);
-      formData.append('ref_year', refYear);
-      if (projectId) formData.append('project_id', projectId);
-      
-      await uploadFile(formData);
-      addNotification(`Documento enviado para ${refMonth}/${refYear}!`, 'success');
-      setProjectId('');
-      await fetchDocuments();
-    } catch (err) {
-      addNotification(`Erro no upload: ${err.response?.data?.message || err.message}`, 'error');
-    }
+  const handleFileUpload = async (file, onProgress) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('doc_type', docType);
+    formData.append('ref_month', refMonth);
+    formData.append('ref_year', refYear);
+    if (projectId) formData.append('project_id', projectId);
+
+    // Se falhar, o erro chega ao componente de upload, que mostra a mensagem junto ao arquivo.
+    await docService.uploadDocument(formData, onProgress);
+    addNotification(`Documento enviado para ${refMonth}/${refYear}!`, 'success');
+    await fetchDocuments();
   };
 
   const handleDownload = async (file) => {
     try {
-      await docService.downloadDocument(file.id, file.original_name || file.name);
+      await docService.saveDocument(file.id, file.original_name || file.name);
     } catch (err) {
-      addNotification('Erro ao descarregar ficheiro.', 'error');
+      addNotification(err.message || 'Erro ao baixar o arquivo.', 'error');
     }
   };
 
@@ -216,7 +219,9 @@ export default function OSCDocumentsPage() {
             </CardBody>
           </Card>
 
-          <DocumentUpload onUpload={handleFileUpload} isLoading={isUploading} className={styles.uploadWidget} />
+          <div ref={uploadAnchorRef} style={{ scrollMarginTop: 76 }}>
+            <DocumentUpload onUpload={handleFileUpload} className={styles.uploadWidget} />
+          </div>
         </div>
 
         {/* COLUNA DIREITA: CALENDÁRIO E LISTA DE ARQUIVOS */}
@@ -235,7 +240,7 @@ export default function OSCDocumentsPage() {
             <CardBody className={styles.mainCardBody}>
               {user?.data_contrato_conta_comigo && (
                 <div className={styles.contractAlert}>
-                  🤝 Início da relação contratual com a contabilidade: <strong>{new Date(user.data_contrato_conta_comigo).toLocaleDateString('pt-BR')}</strong>
+                  Início da relação contratual com a contabilidade: <strong>{new Date(user.data_contrato_conta_comigo).toLocaleDateString('pt-BR')}</strong>
                 </div>
               )}
 
@@ -254,9 +259,12 @@ export default function OSCDocumentsPage() {
                   const itemClass = `${styles.monthBox} ${getStatusClass(status)} ${isSelected ? styles.monthSelected : ''}`;
                   
                   return (
-                    <div 
+                    <button 
+                      type="button"
                       key={m} 
                       className={itemClass}
+                      aria-pressed={isSelected}
+                      aria-label={`${m} de ${viewYear}: ${getStatusLabel(status)}`}
                       onClick={() => {
                         setRefMonth(idx + 1);
                         setRefYear(viewYear);
@@ -264,7 +272,7 @@ export default function OSCDocumentsPage() {
                     >
                       <span className={styles.monthName}>{m}</span>
                       <span className={styles.monthStatus}>{getStatusLabel(status)}</span>
-                    </div>
+                    </button>
                   )
                 })}
               </div>
@@ -307,8 +315,9 @@ export default function OSCDocumentsPage() {
                         </div>
                         
                         <span className={styles.fileMeta}>
-                          Enviado em {new Date(file.created_at).toLocaleDateString('pt-BR')} • {file.status}
+                          Enviado em {new Date(file.created_at).toLocaleDateString('pt-BR')}
                         </span>
+                        <StatusBadge status={file.status} />
                       </div>
 
                       <div className={styles.fileActions}>
@@ -318,6 +327,7 @@ export default function OSCDocumentsPage() {
                           icon={<FiLink />}
                           onClick={() => handleShare(file)}
                           title="Gerar Link Público"
+                          aria-label={`Gerar link público de ${file.original_name || file.name}`}
                         />
                         <Button 
                           variant="primary" 
@@ -325,6 +335,7 @@ export default function OSCDocumentsPage() {
                           icon={<FiDownload />}
                           onClick={() => handleDownload(file)}
                           title="Fazer Download"
+                          aria-label={`Baixar ${file.original_name || file.name}`}
                         />
                       </div>
                     </div>

@@ -3,10 +3,17 @@ import { useAuth } from '../../hooks/useAuth.jsx';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api.js'; 
 import styles from './OSCDashboard.module.css';
-import ReportCharts from '../../components/charts/ReportCharts.jsx';
 import Card, { CardBody, CardHeader } from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
-import { FiFileText, FiAlertCircle, FiMessageSquare, FiShield, FiCalendar, FiExternalLink, FiInfo, FiChevronRight } from 'react-icons/fi';
+import { FiAlertCircle, FiShield, FiCalendar, FiExternalLink, FiChevronRight, FiUploadCloud, FiClock, FiCheckCircle } from 'react-icons/fi';
+import ds from '../../components/dashboard/dashboard.module.css';
+import StatCard from '../../components/dashboard/StatCard.jsx';
+import MonthlyReference from '../../components/dashboard/MonthlyReference.jsx';
+import HistoryChart from '../../components/dashboard/HistoryChart.jsx';
+import RecentDocuments from '../../components/dashboard/RecentDocuments.jsx';
+import ErrorState from '../../components/dashboard/ErrorState.jsx';
+import useDocumentStats from '../../hooks/useDocumentStats.js';
+import { MONTHLY_REFERENCE_FALLBACK } from '../../utils/constants.js';
 
 export default function OSCDashboard() {
   const { user } = useAuth();
@@ -25,6 +32,20 @@ export default function OSCDashboard() {
 
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const yearsAvailable = [currentYear, currentYear - 1, currentYear - 2];
+
+  // Dados REAIS do dashboard (documentos enviados, histórico mensal, pendências)
+  const [range, setRange] = useState({ key: '6' });
+  const statsParams = range.key === 'custom' ? { from: range.from, to: range.to } : { months: range.key };
+  const { data: stats, isLoading: statsLoading, error: statsError, reload: reloadStats } = useDocumentStats(statsParams);
+  const totals = stats?.totals;
+  const lateMonths = stats?.late?.lateMonths || [];
+  const referenceMonthly = stats?.reference?.monthly || MONTHLY_REFERENCE_FALLBACK;
+
+  const syncCalendar = () => {
+    import('../../utils/calendar.js').then(module => {
+      module.downloadICS("Envio Contábil", "Lembrete mensal", "Portal");
+    });
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -121,44 +142,68 @@ export default function OSCDashboard() {
   const linksMunicipais = officialLinks.filter(l => l.type === 'MUNICIPAL' && l.state?.toUpperCase() === oscState.toUpperCase() && l.city?.toLowerCase().trim() === oscCity.toLowerCase().trim());
 
   return (
-    <div className={styles.container}>
+    <div className={ds.page}>
       
-      {/* HEADER SECTION (App-like) */}
-      <div className={styles.headerSection}>
-        <div className={styles.headerTitleGroup}>
-          <img src="/logo_portal.png" alt="Logo" className={styles.logo} />
-          <div>
-            <h1 className={styles.title}>Olá, {user?.name?.split(' ')[0] || 'OSC'}!</h1>
-            <p className={styles.subtitle}>O que faremos hoje?</p>
-          </div>
+      {/* CABEÇALHO: saudação + ação principal */}
+      <header className={ds.pageHead}>
+        <div>
+          <h1 className={ds.hello}>Olá, {user?.name?.split(' ')[0] || 'OSC'}!</h1>
+          <p className={ds.sub}>Veja como está a sua movimentação.</p>
         </div>
-        
-        <div className={`${styles.headerActions} hide-on-mobile`}>
-          <Button 
-            variant="outline" 
-            icon={<FiCalendar />}
-            onClick={() => {
-              import('../../utils/calendar.js').then(module => {
-                module.downloadICS("Envio Contábil", "Lembrete mensal", "Portal");
-              });
-            }}
-          >
-            Sincronizar Calendário
-          </Button>
-          <Button 
-            variant="primary" 
-            icon={<FiShield />}
-            onClick={() => setShowCertificadosModal(true)}
-          >
-            Certificadoras
-          </Button>
+        <div className={ds.headActions}>
+          <Link to="/osc/documentos?enviar=1" className={`${ds.primaryBtn} ${ds.belowDesktop}`}>
+            <FiUploadCloud aria-hidden="true" /> Enviar documento
+          </Link>
+          <button type="button" className={ds.secondaryBtn} onClick={syncCalendar}>
+            <FiCalendar aria-hidden="true" /> Calendário
+          </button>
+          <button type="button" className={ds.secondaryBtn} onClick={() => setShowCertificadosModal(true)}>
+            <FiShield aria-hidden="true" /> Certidões
+          </button>
         </div>
+      </header>
+
+      {statsError && <ErrorState message={statsError} onRetry={reloadStats} />}
+
+      {/* INDICADORES (dados reais) */}
+      <div className={ds.statGrid}>
+        <StatCard
+          className={ds.span2}
+          tone="hero"
+          tourId="stat-sent"
+          label="Documentos enviados"
+          value={totals?.sent ?? 0}
+          hint="Este mês"
+          icon={FiUploadCloud}
+          loading={statsLoading}
+        />
+        <StatCard label="Em análise" value={totals?.inReview ?? 0} hint="Aguardando conferência" icon={FiClock} loading={statsLoading} />
+        <StatCard label="Concluídos" tone="success" value={totals?.concluded ?? 0} hint="Validados pela contabilidade" icon={FiCheckCircle} loading={statsLoading} />
+        <StatCard
+          className={ds.span2}
+          tone={lateMonths.length > 0 ? 'warning' : 'default'}
+          label="Meses sem envio"
+          value={lateMonths.length}
+          hint={lateMonths.length > 0 ? 'Toque para regularizar' : 'Tudo em dia'}
+          icon={FiAlertCircle}
+          loading={statsLoading}
+          to={lateMonths.length > 0 ? '/osc/documentos' : undefined}
+        />
       </div>
 
-      {/* MOBILE AÇÕES RÁPIDAS */}
-      <div className={`${styles.mobileQuickActions} show-on-mobile-flex`}>
-        <Button size="sm" variant="outline" icon={<FiCalendar />} block onClick={() => {/* logic */}}>Calendário</Button>
-        <Button size="sm" variant="primary" icon={<FiShield />} block onClick={() => setShowCertificadosModal(true)}>Certidões</Button>
+      <MonthlyReference sent={totals?.sent ?? 0} reference={referenceMonthly} loading={statsLoading} />
+
+      <div className={ds.twoCol}>
+        <HistoryChart
+          history={stats?.history || []}
+          current={stats?.current}
+          range={range}
+          onRangeChange={setRange}
+          loading={statsLoading}
+          error={statsError}
+          onRetry={reloadStats}
+        />
+        <RecentDocuments items={stats?.recent || []} viewAllTo="/osc/documentos" uploadTo="/osc/documentos?enviar=1" />
       </div>
 
       {/* BANNER GOVERNANÇA */}
@@ -174,48 +219,6 @@ export default function OSCDashboard() {
           </div>
         </div>
       </Link>
-
-      {/* QUICK STATS CARDS */}
-      <div className={styles.statsGrid}>
-        <Link to="/osc/modelos" className={styles.noUnderline}>
-          <Card className={styles.statCard} padding="md">
-            <div className={`${styles.statIcon} ${styles.iconBlue}`}>
-              <FiFileText size={24} />
-            </div>
-            <div className={styles.statInfo}>
-              <span className={styles.statLabel}>Modelos &amp; Manuais</span>
-              <span className={styles.statValueText}>Acessar &rarr;</span>
-            </div>
-          </Card>
-        </Link>
-
-        <Card className={styles.statCard} padding="md">
-          <div className={`${styles.statIcon} ${styles.iconYellow}`}>
-            <FiAlertCircle size={24} />
-          </div>
-          <div className={styles.statInfo}>
-            <span className={styles.statLabel}>Docs Pendentes</span>
-            <span className={styles.statValue}>-</span>
-          </div>
-        </Card>
-
-        <Link to="/osc/mensagens" className={styles.noUnderline}>
-          <Card className={styles.statCard} padding="md">
-            <div className={`${styles.statIcon} ${styles.iconGreen}`}>
-              <FiMessageSquare size={24} />
-            </div>
-            <div className={styles.statInfo}>
-              <span className={styles.statLabel}>Suporte Governança</span>
-              <span className={styles.statValueText}>Contatar &rarr;</span>
-            </div>
-          </Card>
-        </Link>
-      </div>
-
-      {/* GRÁFICOS */}
-      <div className={styles.chartsSection}>
-        <ReportCharts role="OSC" />
-      </div>
 
       {/* CALENDÁRIO CONTÁBIL */}
       <Card className={styles.calendarCard}>

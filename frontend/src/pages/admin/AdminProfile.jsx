@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReplayTutorial from '../../components/onboarding/ReplayTutorial.jsx';
 import api from '../../services/api.js';
 import Button from '../../components/ui/Button.jsx';
 import Card, { CardBody, CardHeader } from '../../components/ui/Card.jsx';
@@ -55,6 +56,7 @@ export default function AdminProfile() {
         <h1 className={styles.pageTitle}>Meu Perfil</h1>
         <p className={styles.pageSubtitle}>Gerencie suas credenciais de acesso ao sistema.</p>
       </div>
+      <ReplayTutorial />
 
       <Card padding="none" className={styles.securitySection}>
         <CardHeader 

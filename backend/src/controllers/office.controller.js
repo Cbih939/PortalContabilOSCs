@@ -1,10 +1,18 @@
 // backend/src/controllers/office.controller.js
 import pool from '../config/db.js';
+import { isAdmin, isOfficeAdmin, officeIdOf } from '../utils/roles.js';
 
 // Lista todos os escritórios
 export const getOffices = async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT * FROM offices ORDER BY name ASC');
+    if (isAdmin(req.user)) {
+      const [rows] = await pool.execute('SELECT * FROM offices ORDER BY name ASC');
+      return res.status(200).json(rows);
+    }
+    // Demais perfis: somente o escritório ao qual pertencem.
+    const office = officeIdOf(req.user);
+    if (office === null) return res.status(200).json([]);
+    const [rows] = await pool.execute('SELECT * FROM offices WHERE id = ? ORDER BY name ASC', [office]);
     return res.status(200).json(rows);
   } catch (error) {
     console.error('[getOffices Error]:', error);
@@ -37,6 +45,9 @@ export const updateOffice = async (req, res) => {
     const { id } = req.params;
     const { name, document, email, phone } = req.body;
 
+    if (!isAdmin(req.user) && !(isOfficeAdmin(req.user) && officeIdOf(req.user) === Number(id))) {
+      return res.status(403).json({ message: 'Você só pode editar os dados do seu próprio escritório.' });
+    }
     if (!name) return res.status(400).json({ message: 'O nome do escritório é obrigatório.' });
 
     await pool.execute(

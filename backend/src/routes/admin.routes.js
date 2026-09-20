@@ -2,38 +2,22 @@ import express from 'express';
 import { protect, checkRole } from '../middlewares/auth.middleware.js';
 import * as messageController from '../controllers/message.controller.js';
 import * as profileController from '../controllers/profile.controller.js';
-
-// --- IMPORTAÇÃO DO PAINEL GERAL (NOVO) ---
 import { getDashboardStats } from '../controllers/admin.controller.js';
-
-// Centralizamos todas as importações do financeiro em um único controller
-import { 
-    listOSCsFinanceiro, 
-    updateDebtStatus, 
-    getFinanceiroStats, 
-    getStripeConfig, 
-    updateStripeConfig 
-} from '../controllers/financeiro.controller.js';
-
-import { getHistoricoPagamentos } from '../controllers/historico.controller.js';
 
 const router = express.Router();
 
-// Todas as rotas abaixo exigem login e permissão de admin ou financeiro
+// Todas as rotas abaixo exigem login e perfil ADMIN.
+// (As rotas financeiras migraram para /api/financeiro; o perfil FINANCEIRO foi descontinuado.)
 router.use(protect);
-router.use(checkRole(['admin', 'financeiro']));
+router.use(checkRole('ADMIN'));
 
-// --- ROTA DO NOVO DASHBOARD DO ADMIN ---
+// Dashboard geral
 router.get('/dashboard-stats', getDashboardStats);
 
-// Rotas existentes
+// Perfil
 router.put('/profile/password', profileController.updatePassword);
-router.get('/financeiro/stats', getFinanceiroStats);
-router.get('/financeiro/oscs', listOSCsFinanceiro);
-router.patch('/financeiro/oscs/:id/status', updateDebtStatus);
-router.get('/financeiro/config', getStripeConfig);
-router.post('/financeiro/config', updateStripeConfig);
-router.get('/financeiro/historico', getHistoricoPagamentos);
+
+// Mensagens de cobrança
 router.get('/messages/:status', messageController.getMessagesByStatus);
 router.post('/messages/send', messageController.sendMessage);
 

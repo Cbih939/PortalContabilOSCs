@@ -15,7 +15,7 @@ export const createCheckoutSession = async (req, res) => {
         if (!activePlan) {
             activePlan = {
                 name: 'Assinatura Padrão',
-                amount: 99.90, // valor fallback
+                amount: 339.00, // valor fallback corrigido
                 interval_type: 'month'
             };
         }

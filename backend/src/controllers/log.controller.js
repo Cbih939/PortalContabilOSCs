@@ -1,4 +1,6 @@
 import pool from '../config/db.js';
+import { oscScope } from '../services/access.service.js';
+import { isAdmin } from '../utils/roles.js';
 
 export const getSystemLogs = async (req, res) => {
   try {
@@ -11,6 +13,13 @@ export const getSystemLogs = async (req, res) => {
       WHERE 1=1
     `;
     const params = [];
+
+    // Admin vê tudo; contadores veem apenas logs das OSCs do seu escopo e as próprias ações.
+    if (!isAdmin(req.user)) {
+      const scope = oscScope(req.user, 'o2');
+      query += ` AND (l.osc_id IN (SELECT o2.id FROM oscs o2 WHERE ${scope.sql}) OR l.user_id = ?)`;
+      params.push(...scope.params, req.user.id);
+    }
 
     if (startDate) { query += ' AND DATE(l.created_at) >= ?'; params.push(startDate); }
     if (endDate) { query += ' AND DATE(l.created_at) <= ?'; params.push(endDate); }

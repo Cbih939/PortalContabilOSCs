@@ -124,14 +124,14 @@ export default function ProjectsPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '10px', margin: '0 0 8px 0' }}>
-            <div style={{ padding: '8px', backgroundColor: '#ffedd5', color: '#ea580c', borderRadius: '8px' }}><FolderIcon /></div>
+            <div style={{ padding: '8px', backgroundColor: '#FFF1E8', color: '#E85002', borderRadius: '8px' }}><FolderIcon /></div>
             Projetos e Centros de Custo
           </h1>
           <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
             Não misture recurso livre com vinculado. Cadastre seus projetos para separar despesas e facilitar a prestação de contas.
           </p>
         </div>
-        <Button onClick={handleOpenCreate} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#ea580c', color: '#fff' }}>
+        <Button onClick={handleOpenCreate} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#E85002', color: '#fff' }}>
           <PlusIcon /> Novo Projeto
         </Button>
       </div>
@@ -144,7 +144,7 @@ export default function ProjectsPage() {
           <FolderIcon style={{ width: '48px', height: '48px', color: '#9ca3af', marginBottom: '16px' }} />
           <h3 style={{ fontSize: '18px', color: '#374151', margin: '0 0 8px 0' }}>Nenhum projeto cadastrado</h3>
           <p style={{ color: '#6b7280', margin: '0 0 20px 0', fontSize: '14px' }}>Crie o seu primeiro projeto ou centro de custo para iniciar a organização financeira.</p>
-          <Button onClick={handleOpenCreate} style={{ backgroundColor: '#ea580c', color: '#fff' }}>Criar Primeiro Projeto</Button>
+          <Button onClick={handleOpenCreate} style={{ backgroundColor: '#E85002', color: '#fff' }}>Criar Primeiro Projeto</Button>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
@@ -223,7 +223,7 @@ export default function ProjectsPage() {
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
             <Button variant="secondary" onClick={() => setIsModalOpen(false)} type="button">Cancelar</Button>
-            <Button type="submit" style={{ backgroundColor: '#ea580c', color: '#fff' }} disabled={isSubmitting}>
+            <Button type="submit" style={{ backgroundColor: '#E85002', color: '#fff' }} disabled={isSubmitting}>
               {isSubmitting ? 'Salvando...' : (projectToEdit ? 'Atualizar Projeto' : 'Criar Projeto')}
             </Button>
           </div>

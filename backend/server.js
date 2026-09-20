@@ -29,6 +29,8 @@ import certificateRoutes from './src/routes/certificate.routes.js';
 import logRoutes from './src/routes/log.routes.js';
 import reportRoutes from './src/routes/report.routes.js';
 import planRoutes from './src/routes/plan.routes.js';
+import financeiroRoutes from './src/routes/financeiro.routes.js';
+import transactionRoutes from './src/routes/transaction.routes.js';
 
 dotenv.config();
 
@@ -38,18 +40,38 @@ const PORT = process.env.PORT || 5000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Atrás do nginx/PM2: necessário para req.ip (rate limit) e req.protocol corretos.
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
+
 // --- 1. CONFIGURAÇÃO DE SEGURANÇA E CORS ---
+app.use((req, res, next) => {
+  res.set('X-Content-Type-Options', 'nosniff');
+  res.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.set('X-Frame-Options', 'SAMEORIGIN');
+  next();
+});
+
 app.use(cors({
   origin: ['https://contacomigo.org.br', 'http://localhost:5173'],
   credentials: true
 }));
 
 // --- 2. SERVIDOR DE FICHEIROS ESTÁTICOS ---
+// Somente uploads/public é servido de forma aberta (logotipos, biblioteca e modelos institucionais).
+// Os documentos contábeis (raiz de uploads/) NÃO são mais públicos: o acesso é feito por
+// GET /api/documents/download/:id, que valida login e vínculo com a OSC.
+const INLINE_SAFE = new Set(['.pdf', '.png', '.jpg', '.jpeg', '.webp']);
+
 const staticOptions = {
+  dotfiles: 'deny',
+  index: false,
   setHeaders: (res, filePath) => {
     res.set('Access-Control-Allow-Origin', '*');
-    if (filePath.endsWith('.pdf')) res.set('Content-Type', 'application/pdf');
-    res.set('Content-Disposition', 'inline');
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext === '.pdf') res.set('Content-Type', 'application/pdf');
+    // Tipos que o navegador poderia executar/renderizar de forma ativa são sempre baixados.
+    res.set('Content-Disposition', INLINE_SAFE.has(ext) ? 'inline' : 'attachment');
   }
 };
 
@@ -57,10 +79,7 @@ const uploadsPath = path.resolve(__dirname, 'uploads');
 const publicUploadsPath = path.resolve(uploadsPath, 'public');
 
 app.use('/api/uploads/public', express.static(publicUploadsPath, staticOptions));
-app.use('/api/uploads', express.static(uploadsPath, staticOptions));
-
 app.use('/uploads/public', express.static(publicUploadsPath, staticOptions));
-app.use('/uploads', express.static(uploadsPath, staticOptions));
 
 // --- 3. MIDDLEWARES DE PROCESSAMENTO ---
 app.use('/api/webhooks', webhookRoutes);
@@ -92,6 +111,8 @@ app.use('/api/certificates', certificateRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/plans', planRoutes);
+app.use('/api/financeiro', financeiroRoutes);
+app.use('/api/transactions', transactionRoutes);
 
 app.get('/', (req, res) => {
   res.send('API Portal Contábil Ativa e Operacional 🚀');
@@ -99,6 +120,17 @@ app.get('/', (req, res) => {
 
 // --- 6. TRATAMENTO DE ERROS GLOBAL ---
 app.use((err, req, res, next) => {
+  // Erros de upload (multer) são falhas do cliente, não do servidor.
+  if (err?.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ message: 'Arquivo muito grande. O tamanho máximo é de 50 MB.' });
+  }
+  if (err?.code === 'INVALID_FILE_TYPE') {
+    return res.status(400).json({ message: err.message });
+  }
+  if (err?.name === 'MulterError') {
+    return res.status(400).json({ message: 'Falha no envio do arquivo. Verifique o formato e tente novamente.' });
+  }
+
   console.error('[Global Server Error]:', err.stack);
   res.status(500).json({ 
     message: 'Ocorreu um erro interno no servidor!',

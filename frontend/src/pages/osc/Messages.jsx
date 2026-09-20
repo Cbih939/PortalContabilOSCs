@@ -233,7 +233,7 @@ export default function OSCMessagesPage() {
                     className={styles.textInput}
                     style={{ flex: 1, padding: '10px 16px', borderRadius: '9999px', border: '1px solid #d1d5db', outline: 'none' }}
                   />
-                  <button type="submit" disabled={!newMessage.trim()} className={styles.sendButton} style={{ padding: '10px 20px', borderRadius: '9999px', backgroundColor: newMessage.trim() ? '#ea580c' : '#d1d5db', color: '#fff', border: 'none', cursor: newMessage.trim() ? 'pointer' : 'not-allowed' }}>
+                  <button type="submit" disabled={!newMessage.trim()} className={styles.sendButton} style={{ padding: '10px 20px', borderRadius: '9999px', backgroundColor: newMessage.trim() ? '#E85002' : '#d1d5db', color: '#fff', border: 'none', cursor: newMessage.trim() ? 'pointer' : 'not-allowed' }}>
                     <SendIcon className={styles.sendIcon} style={{ width: '20px', height: '20px' }} />
                   </button>
                 </form>

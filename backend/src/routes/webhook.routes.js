@@ -36,8 +36,8 @@ router.post('/create-checkout-session', protect, async (req, res) => {
             mode: 'payment',
             // O id do usuário vai aqui para o Stripe devolver no webhook depois
             client_reference_id: req.user.id.toString(), 
-            success_url: `https://contacomigo.org.br/dashboard/financeiro?success=true`,
-            cancel_url: `https://contacomigo.org.br/dashboard/financeiro?canceled=true`,
+            success_url: `https://contacomigo.org.br/osc/financeiro?success=true`,
+            cancel_url: `https://contacomigo.org.br/osc/financeiro?canceled=true`,
         });
 
         res.json({ url: session.url });
@@ -74,6 +74,16 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
                 'INSERT INTO subscriptions (osc_id, stripe_customer_id, status, amount) VALUES (?, ?, ?, ?)',
                 [userId, session.customer, 'active', session.amount_total / 100]
             );
+
+            // 3. Histórico de pagamentos (lido pelo painel financeiro). Não deve derrubar o webhook.
+            try {
+                await pool.query(
+                    "INSERT INTO payments (user_id, amount, status, payment_date, stripe_session_id) VALUES (?, ?, 'succeeded', NOW(), ?)",
+                    [userId, session.amount_total / 100, session.id]
+                );
+            } catch (paymentError) {
+                console.error('[Webhook] Não foi possível gravar em payments:', paymentError.message);
+            }
 
             console.log(`✅ Usuário ${userId} desbloqueado e pagamento registrado.`);
         }

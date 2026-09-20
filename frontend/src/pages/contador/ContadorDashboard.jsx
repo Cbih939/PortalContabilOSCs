@@ -1,62 +1,72 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import * as contadorService from '../../services/contadorService.js';
-import { formatDateTime } from '../../utils/formatDate.js';
-import styles from './ContadorDashboard.module.css';
-import Spinner from '../../components/common/Spinner.jsx';
-import Button from '../../components/ui/Button.jsx';
-import Card, { CardBody, CardHeader } from '../../components/ui/Card.jsx';
-import { useNotification } from '../../contexts/NotificationContext.jsx';
+import { Link, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { FiBriefcase, FiFolder, FiMessageSquare, FiDownload, FiInfo, FiAlertTriangle, FiArrowRight, FiUser } from 'react-icons/fi';
+import {
+  FiUploadCloud, FiClock, FiBriefcase, FiAlertTriangle, FiMessageSquare, FiDownload,
+  FiArrowRight, FiUser, FiCheckCircle, FiUsers, FiDollarSign,
+} from 'react-icons/fi';
+import * as contadorService from '../../services/contadorService.js';
+import { useAuth } from '../../hooks/useAuth.jsx';
+import { useNotification } from '../../contexts/NotificationContext.jsx';
+import { formatDateTime } from '../../utils/formatDate.js';
+import { MONTHLY_REFERENCE_FALLBACK } from '../../utils/constants.js';
+import useDocumentStats from '../../hooks/useDocumentStats.js';
+import ds from '../../components/dashboard/dashboard.module.css';
+import StatCard from '../../components/dashboard/StatCard.jsx';
+import MonthlyReference from '../../components/dashboard/MonthlyReference.jsx';
+import HistoryChart from '../../components/dashboard/HistoryChart.jsx';
+import EmptyState from '../../components/dashboard/EmptyState.jsx';
+import ErrorState from '../../components/dashboard/ErrorState.jsx';
+import RecentDocuments from '../../components/dashboard/RecentDocuments.jsx';
 
+/**
+ * Painel do Contador. O ADM Contador (dono do escritório) vê os mesmos indicadores
+ * do escritório e ganha atalhos para Equipe e Financeiro.
+ */
 export default function ContadorDashboard() {
   const navigate = useNavigate();
+  const { user, isOfficeAdmin } = useAuth();
   const addNotification = useNotification();
 
-  const [stats, setStats] = useState({ activeOSCs: 0, pendingDocs: 0, unreadMessages: 0 });
-  const [recentActivity, setRecentActivity] = useState([]);
-  const [oscsMissingDocs, setOscsMissingDocs] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [range, setRange] = useState({ key: '6' });
+  const statsParams = range.key === 'custom' ? { from: range.from, to: range.to } : { months: range.key };
+  const { data: stats, isLoading: statsLoading, error: statsError, reload: reloadStats } = useDocumentStats(statsParams);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [statsResponse, activityResponse] = await Promise.all([
-          contadorService.getDashboardStats(),
-          contadorService.getRecentActivity(),
-        ]);
+  const [ops, setOps] = useState({ activeOSCs: 0, unreadMessages: 0, missing: [] });
+  const [activity, setActivity] = useState([]);
+  const [opsLoading, setOpsLoading] = useState(true);
+  const [opsError, setOpsError] = useState(null);
 
-        const rawStats = statsResponse.data;
-        const data = Array.isArray(rawStats) ? rawStats[0] : rawStats;
+  const loadOps = async () => {
+    setOpsLoading(true);
+    setOpsError(null);
+    try {
+      const [statsResponse, activityResponse] = await Promise.all([
+        contadorService.getDashboardStats(),
+        contadorService.getRecentActivity(),
+      ]);
+      const raw = statsResponse.data;
+      const data = (Array.isArray(raw) ? raw[0] : raw) || {};
+      setOps({
+        activeOSCs: data.activeOSCs || 0,
+        unreadMessages: data.unreadMessages || 0,
+        missing: data.missingDocsList || [],
+      });
+      setActivity(Array.isArray(activityResponse.data) ? activityResponse.data : []);
+    } catch {
+      setOpsError('Erro ao carregar as pendências. Verifique a conexão com o servidor.');
+      addNotification('Erro ao conectar com o servidor.', 'error');
+    } finally {
+      setOpsLoading(false);
+    }
+  };
 
-        if (data) {
-          setStats({
-            activeOSCs: data.activeOSCs || data.activeoscs || data.totalOscs || 0,
-            pendingDocs: data.pendingDocs || data.pendingdocs || data.docsPendentes || 0,
-            unreadMessages: data.unreadMessages || data.unreadmessages || data.mensagens || 0
-          });
-          
-          setOscsMissingDocs(data.missingDocsList || data.missingdocslist || []);
-        }
-
-        const rawActivity = activityResponse.data;
-        setRecentActivity(Array.isArray(rawActivity) ? rawActivity : []);
-
-      } catch (err) {
-        setError('Erro ao carregar dashboard. Verifique a conexão com o servidor.');
-        addNotification('Erro ao conectar com o servidor.', 'error');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, [addNotification]);
+  useEffect(() => { loadOps(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDownloadPDF = async () => {
-    const element = document.querySelector(`.${styles.pageContainer}`);
+    const element = document.querySelector('[data-report-root]');
+    if (!element) return;
     const canvas = await html2canvas(element, { scale: 2, useCORS: true });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
@@ -65,176 +75,150 @@ export default function ContadorDashboard() {
     pdf.save(`relatorio-escritorio-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
-  if (error) return <div className={styles.errorState}>{error}</div>;
-  if (isLoading) return <div className={styles.loadingContainer}><Spinner text="Analisando dados do escritório..." /></div>;
+  const totals = stats?.totals;
+  const referenceMonthly = stats?.reference?.monthly || MONTHLY_REFERENCE_FALLBACK;
+  const oscsWithLate = stats?.late?.oscsWithLate ?? 0;
+  const firstName = user?.name?.split(' ')[0] || 'Contador';
 
   return (
-    <div className={styles.pageContainer}>
-      
-      {/* Cabeçalho exclusivo do PDF */}
-      <div className={styles.printOnlyHeader}>
-        <img src="/logo_portal.png" alt="Logo" className={styles.printLogo} />
+    <div className={ds.page} data-report-root>
+      <header className={ds.pageHead}>
         <div>
-          <h1>Relatório de Conformidade do Escritório</h1>
-          <p>Gerado em: {formatDateTime(new Date())}</p>
+          <h1 className={ds.hello}>Olá, {firstName}!</h1>
+          <p className={ds.sub}>
+            {isOfficeAdmin ? 'Visão do desempenho do seu escritório.' : 'Veja a movimentação da sua carteira de OSCs.'}
+          </p>
         </div>
+        <div className={ds.headActions}>
+          <Link to="/contador/mensagens" className={ds.primaryBtn}>
+            <FiMessageSquare aria-hidden="true" /> Mensagens{ops.unreadMessages > 0 ? ` (${ops.unreadMessages})` : ''}
+          </Link>
+          <button type="button" className={ds.secondaryBtn} onClick={handleDownloadPDF}>
+            <FiDownload aria-hidden="true" /> Baixar PDF
+          </button>
+        </div>
+      </header>
+
+      {statsError && <ErrorState message={statsError} onRetry={reloadStats} />}
+
+      <div className={ds.statGrid}>
+        <StatCard
+          className={ds.span2}
+          tone="hero"
+          tourId="stat-sent"
+          label="Documentos enviados"
+          value={totals?.sent ?? 0}
+          hint="Este mês, pela sua carteira"
+          icon={FiUploadCloud}
+          loading={statsLoading}
+        />
+        <StatCard
+          tone={(totals?.inReview ?? 0) > 0 ? 'warning' : 'default'}
+          label="Em análise"
+          value={totals?.inReview ?? 0}
+          hint="Aguardando sua validação"
+          icon={FiClock}
+          loading={statsLoading}
+        />
+        <StatCard label="OSCs ativas" value={stats?.oscCount ?? ops.activeOSCs} hint="Na carteira" icon={FiBriefcase} loading={statsLoading} to="/contador/oscs" />
+        <StatCard
+          className={ds.span2}
+          tone={oscsWithLate > 0 ? 'warning' : 'success'}
+          label="OSCs com meses sem envio"
+          value={oscsWithLate}
+          hint={oscsWithLate > 0 ? 'Veja a lista de pendências abaixo' : 'Todas em dia'}
+          icon={oscsWithLate > 0 ? FiAlertTriangle : FiCheckCircle}
+          loading={statsLoading}
+        />
       </div>
 
-      <div className={styles.header}>
-        <div className={styles.headerTitleGroup}>
-          <h1 className={styles.pageTitle}>Painel Operacional do Escritório</h1>
-          <div className={styles.tooltipContainer}>
-            <FiInfo className={styles.infoIcon} />
-            <span className={styles.tooltipText}>Central de ação rápida focada nas pendências documentais da sua carteira.</span>
+      <MonthlyReference sent={totals?.sent ?? 0} reference={referenceMonthly} loading={statsLoading} />
+
+      <div className={ds.twoCol}>
+        <HistoryChart
+          title="Histórico de envios da carteira"
+          history={stats?.history || []}
+          current={stats?.current}
+          range={range}
+          onRangeChange={setRange}
+          loading={statsLoading}
+          error={statsError}
+          onRetry={reloadStats}
+        />
+
+        <section className={ds.card} aria-labelledby="late-title" data-tour="late-oscs">
+          <div className={ds.cardHead}>
+            <h2 id="late-title" className={ds.cardTitle}>OSCs com pendências</h2>
           </div>
-        </div>
-        
-        <div className={styles.headerActions}>
-          <div className={styles.tooltipContainer}>
-            <Button 
-              variant="secondary" 
-              onClick={handleDownloadPDF} 
-              icon={<FiDownload />}
-              className={styles.noPrint}
-            >
-              Baixar Relatório (PDF)
-            </Button>
-            <span className={styles.tooltipText}>Gera um documento em PDF do painel atual para impressão.</span>
-          </div>
-        </div>
-      </div>
 
-      {/* KPIs */}
-      <div className={styles.statsGrid}>
-        <Card className={styles.statCard}>
-          <CardBody className={styles.statBody}>
-            <div className={styles.statIconWrapper} style={{ backgroundColor: '#eff6ff', color: '#3b82f6' }}>
-              <FiBriefcase size={24} />
-            </div>
-            <div className={styles.statContent}>
-              <p className={styles.statLabel}>OSCs Ativas</p>
-              <h3 className={styles.statValue}>{stats.activeOSCs}</h3>
-            </div>
-          </CardBody>
-        </Card>
-
-        <Card className={styles.statCard} style={{ borderColor: stats.pendingDocs > 0 ? '#fdba74' : undefined, backgroundColor: stats.pendingDocs > 0 ? '#fff7ed' : undefined }}>
-          <CardBody className={styles.statBody}>
-            <div className={styles.statIconWrapper} style={{ backgroundColor: stats.pendingDocs > 0 ? '#ffedd5' : '#f3f4f6', color: stats.pendingDocs > 0 ? '#ea580c' : '#6b7280' }}>
-              <FiFolder size={24} />
-            </div>
-            <div className={styles.statContent}>
-              <p className={styles.statLabel}>Docs Aguardando Validação</p>
-              <h3 className={styles.statValue} style={{ color: stats.pendingDocs > 0 ? '#ea580c' : 'inherit' }}>
-                {stats.pendingDocs}
-              </h3>
-            </div>
-          </CardBody>
-        </Card>
-
-        <Card className={styles.statCard} style={{ borderColor: stats.unreadMessages > 0 ? '#86efac' : undefined, backgroundColor: stats.unreadMessages > 0 ? '#f0fdf4' : undefined }}>
-          <CardBody className={styles.statBody}>
-            <div className={styles.statIconWrapper} style={{ backgroundColor: stats.unreadMessages > 0 ? '#dcfce3' : '#f3f4f6', color: stats.unreadMessages > 0 ? '#16a34a' : '#6b7280' }}>
-              <FiMessageSquare size={24} />
-            </div>
-            <div className={styles.statContent}>
-              <p className={styles.statLabel}>Mensagens não Lidas</p>
-              <h3 className={styles.statValue} style={{ color: stats.unreadMessages > 0 ? '#16a34a' : 'inherit' }}>
-                {stats.unreadMessages}
-              </h3>
-            </div>
-          </CardBody>
-        </Card>
-      </div>
-
-      <div className={styles.grid}>
-        
-        {/* Tabela de Ação */}
-        <div className={styles.colSpan}>
-          <Card padding="none" className={styles.actionCard}>
-            <CardHeader 
-              title={
-                <div className={styles.cardTitleGroup}>
-                  <FiAlertTriangle className={styles.warningIcon} />
-                  Tabela de Ação: OSCs com Pendências
-                </div>
-              } 
-            />
-            <CardBody className={styles.tableBody}>
-              <div className={styles.tableWrapper}>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>Organização</th>
-                      <th>Status de Documentação</th>
-                      <th style={{ textAlign: 'center' }}>Ação</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {oscsMissingDocs.length === 0 ? (
-                      <tr>
-                        <td colSpan="3" className={styles.emptyTable}>
-                          Nenhuma pendência crítica encontrada para validação neste momento.
-                        </td>
-                      </tr>
-                    ) : (
-                      oscsMissingDocs.map((osc, idx) => (
-                        <tr key={osc.id || idx}>
-                          <td className={styles.oscName}>{osc.name || osc.razao_social || 'OSC'}</td>
-                          <td className={styles.oscStatus}>{osc.missing}</td>
-                          <td style={{ textAlign: 'center' }}>
-                            <Button 
-                              onClick={() => navigate('/contador/oscs')}
-                              variant="primary"
-                              size="sm"
-                              icon={<FiArrowRight />}
-                              iconPosition="right"
-                            >
-                              Validar
-                            </Button>
-                          </td>
-                        </tr>
-                      ))
+          {opsError ? (
+            <ErrorState message={opsError} onRetry={loadOps} />
+          ) : opsLoading ? (
+            <div className={ds.chartSkeleton} aria-label="Carregando pendências" />
+          ) : ops.missing.length === 0 ? (
+            <EmptyState compact icon={FiCheckCircle} title="Nenhuma pendência" text="Nenhuma OSC com documentos aguardando ou meses em atraso neste momento." />
+          ) : (
+            <ul className={ds.lateList}>
+              {ops.missing.map((osc, idx) => (
+                <li key={osc.id || idx} className={ds.lateItem}>
+                  <span className={ds.lateName}>{osc.name || osc.razao_social || 'OSC'}</span>
+                  <span className={ds.lateTags}>
+                    {osc.awaitingValidation > 0 && (
+                      <span className={`${ds.badge} ${ds.badge_warning}`}><FiClock aria-hidden="true" />{osc.awaitingValidation} em análise</span>
                     )}
-                  </tbody>
-                </table>
-              </div>
-            </CardBody>
-          </Card>
-        </div>
-
-        {/* Log de Atividades */}
-        <div className={styles.colSpan}>
-          <Card padding="none">
-            <CardHeader title="Log de Atividades do Escritório" />
-            <CardBody className={styles.activityBody}>
-              <div className={styles.activityList}>
-                {recentActivity.length === 0 ? (
-                  <div className={styles.emptyActivity}>Nenhum documento registrado recentemente.</div>
-                ) : (
-                  recentActivity.map((item, idx) => (
-                    <div key={item.id || idx} className={styles.activityItem}>
-                      <div className={styles.activityHeader}>
-                        <div className={styles.activityContent}>
-                          <span className={styles.activityOscName}>{item.oscName || 'OSC'}</span>
-                          <span className={styles.activityDesc}>{item.content || item.original_name}</span>
-                        </div>
-                        <span className={styles.activityTime}>
-                          {formatDateTime(item.timestamp || item.created_at)}
-                        </span>
-                      </div>
-                      <div className={styles.activitySender}>
-                        <FiUser size={12} /> Enviado por: {item.sender || item.sender_name || 'Sistema'}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardBody>
-          </Card>
-        </div>
-
+                    {osc.lateMonths?.length > 0 && (
+                      <span className={`${ds.badge} ${ds.badge_danger}`}><FiAlertTriangle aria-hidden="true" />Atraso: {osc.lateMonths.join(', ')}</span>
+                    )}
+                    {osc.awaitingValidation === undefined && osc.missing && (
+                      <span className={`${ds.badge} ${ds.badge_warning}`}>{osc.missing}</span>
+                    )}
+                  </span>
+                  <button type="button" className={ds.primaryBtn} onClick={() => navigate('/contador/oscs')}>
+                    Validar <FiArrowRight aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
+
+      <div className={ds.twoCol}>
+        <RecentDocuments items={stats?.recent || []} showOsc viewAllTo="/contador/documentos" />
+
+        <section className={ds.card} aria-labelledby="activity-title">
+          <div className={ds.cardHead}>
+            <h2 id="activity-title" className={ds.cardTitle}>Atividade do escritório</h2>
+          </div>
+          {activity.length === 0 ? (
+            <EmptyState compact icon={FiUser} title="Sem atividade recente" text="Nenhum documento registrado recentemente." />
+          ) : (
+            <ul className={ds.docList}>
+              {activity.slice(0, 6).map((item, idx) => (
+                <li key={item.id || idx} className={ds.docItem}>
+                  <span className={ds.docIcon}><FiUser aria-hidden="true" /></span>
+                  <div className={ds.docInfo}>
+                    <strong>{item.oscName || 'OSC'}</strong>
+                    <small>{item.content || item.original_name} · {formatDateTime(item.timestamp || item.created_at)}</small>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+
+      {isOfficeAdmin && (
+        <section className={ds.card} aria-labelledby="office-title">
+          <div className={ds.cardHead}>
+            <h2 id="office-title" className={ds.cardTitle}>Gestão do escritório</h2>
+          </div>
+          <div className={ds.headActions}>
+            <Link to="/contador/equipe" className={ds.secondaryBtn}><FiUsers aria-hidden="true" /> Equipe do escritório</Link>
+            <Link to="/contador/financeiro" className={ds.secondaryBtn}><FiDollarSign aria-hidden="true" /> Financeiro</Link>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

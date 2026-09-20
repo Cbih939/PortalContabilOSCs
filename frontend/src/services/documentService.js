@@ -40,10 +40,16 @@ export const getMyDocuments = () => api.get('/documents/my');
  * Faz o upload de um novo documento.
  * (Usado pela OSC - OSCDocumentsPage.jsx)
  */
-export const uploadDocument = (formData) => {
+/**
+ * Envia um documento. `onProgress(percent)` recebe 0–100 durante o upload.
+ */
+export const uploadDocument = (formData, onProgress) => {
   return api.post('/documents/upload', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
+    },
+    onUploadProgress: (event) => {
+      if (onProgress && event.total) onProgress(Math.round((event.loaded * 100) / event.total));
     },
   });
 };
@@ -145,4 +151,19 @@ export const deleteDocument = async (id) => {
 export const generatePublicLink = async (id) => {
   const response = await api.post(`/documents/share/${id}`);
   return response.data;
+};
+
+/** Baixa um documento pela API autenticada (a pasta /uploads deixou de ser pública). */
+export const saveDocument = async (id, fileName = 'documento') => {
+  const blob = await getDocumentBlob(id);
+  triggerDownload(blob, fileName);
+};
+
+/** Abre um documento em nova aba, a partir de um blob autenticado. */
+export const openDocument = async (id, mimeType) => {
+  const blob = await getDocumentBlob(id);
+  const typed = mimeType ? new Blob([blob], { type: mimeType }) : blob;
+  const url = window.URL.createObjectURL(typed);
+  window.open(url, '_blank', 'noopener');
+  setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
 };

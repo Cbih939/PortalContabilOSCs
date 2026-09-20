@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReplayTutorial from '../../components/onboarding/ReplayTutorial.jsx';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import useApi from '../../hooks/useApi.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
@@ -72,6 +73,7 @@ export default function ContadorProfilePage() {
   return (
     <div className={styles.pageContainer}>
       <h2 className={styles.title}>Meu Perfil</h2>
+      <ReplayTutorial />
 
       <Card>
         <CardBody>

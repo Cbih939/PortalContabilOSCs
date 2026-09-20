@@ -48,7 +48,9 @@ export const downloadTemplate = async (req, res) => {
         if (rows.length === 0) return res.status(404).json({ message: 'Modelo não encontrado.' });
 
         // Caminho absoluto para a VPS
-        const filePath = path.join('/var/www/PortalContabilOSCs/backend/', rows[0].file_path);
+        const BACKEND_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
+        const filePath = path.resolve(BACKEND_ROOT, String(rows[0].file_path || '').replace(/^\/+/, ''));
+        if (!filePath.startsWith(BACKEND_ROOT + path.sep)) return res.status(400).json({ message: 'Caminho inválido.' });
         
         if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'Ficheiro não encontrado no servidor.' });
 

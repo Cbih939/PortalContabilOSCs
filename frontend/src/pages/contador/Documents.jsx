@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import * as docService from '../../services/documentService.js';
-import PdfThumbnail from '../osc/components/PdfThumbnail.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
 import { formatDate } from '../../utils/formatDate.js';
 import styles from './Documents.module.css';
-import { FiInfo, FiDownload } from 'react-icons/fi';
+import { FiInfo, FiDownload, FiFileText, FiImage } from 'react-icons/fi';
 
 export default function ContadorDocumentsPage() {
   const { user } = useAuth();
@@ -37,9 +36,10 @@ export default function ContadorDocumentsPage() {
 
   const handleDownload = async (doc) => {
     try {
-      await docService.downloadDocument(doc.id, doc.original_name || doc.title);
+      await docService.saveDocument(doc.id, doc.original_name || doc.title || 'documento');
     } catch (error) {
-      alert("Erro ao descarregar arquivo.");
+      console.error('Erro ao baixar documento:', error);
+      window.alert('Erro ao baixar o arquivo. Tente novamente.');
     }
   };
 
@@ -62,32 +62,29 @@ export default function ContadorDocumentsPage() {
       ) : (
         <div className={styles.pdfGrid}>
           {documents.map((doc) => {
-            const fileUrl = `${import.meta.env.VITE_API_URL}/uploads/${doc.file_path}`;
-            const fileName = doc.file_path || doc.original_name || "";
+            const fileName = doc.original_name || doc.title || '';
+            const ext = (fileName.split('.').pop() || '').toUpperCase().slice(0, 5);
+            const Icon = isImage(fileName) ? FiImage : FiFileText;
 
             return (
-              <div 
-                key={doc.id} 
-                className={styles.pdfCard} 
+              <div
+                key={doc.id}
+                className={styles.pdfCard}
+                role="button"
+                tabIndex={0}
+                aria-label={`Baixar ${doc.title || doc.original_name}`}
                 onClick={() => handleDownload(doc)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleDownload(doc); } }}
               >
-                <div className={styles.pdfThumbnail}>
-                  {isImage(fileName) ? (
-                    <img 
-                      src={fileUrl} 
-                      alt="Preview" 
-                      className={styles.imagePreview}
-                      onError={(e) => { e.target.src = '/placeholder-file.png'; }} 
-                    />
-                  ) : (
-                    <PdfThumbnail fileUrl={fileUrl} />
-                  )}
-                  
+                <div className={styles.pdfThumbnail} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 6, background: 'var(--primary-light)', color: 'var(--primary-color)' }}>
+                  <Icon size={44} aria-hidden="true" />
+                  <strong style={{ fontSize: 12, color: 'var(--text-body)' }}>{ext}</strong>
+
                   <div className={styles.downloadOverlay}>
                     <FiDownload className={styles.downloadIcon} />
                   </div>
                 </div>
-                
+
                 <div className={styles.pdfInfo}>
                   <span className={styles.pdfName} title={doc.title || doc.original_name}>
                     {doc.title || doc.original_name}

@@ -1,135 +1,136 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../../services/api.js'; 
-import Spinner from '../../components/common/Spinner.jsx'; 
-import Card, { CardBody, CardHeader } from '../../components/ui/Card.jsx';
-import Button from '../../components/ui/Button.jsx';
+import {
+  FiUploadCloud, FiClock, FiUsers, FiBriefcase, FiFolder, FiBell, FiSettings, FiGrid, FiBookOpen, FiDollarSign,
+} from 'react-icons/fi';
+import api from '../../services/api.js';
+import { useAuth } from '../../hooks/useAuth.jsx';
 import { useNotification } from '../../contexts/NotificationContext.jsx';
-import ReportCharts from '../../components/charts/ReportCharts.jsx';
-import { FiUsers, FiBriefcase, FiFolder, FiBell, FiSettings } from 'react-icons/fi';
-import styles from './AdminDashboard.module.css';
+import { MONTHLY_REFERENCE_FALLBACK } from '../../utils/constants.js';
+import useDocumentStats from '../../hooks/useDocumentStats.js';
+import ds from '../../components/dashboard/dashboard.module.css';
+import StatCard from '../../components/dashboard/StatCard.jsx';
+import MonthlyReference from '../../components/dashboard/MonthlyReference.jsx';
+import HistoryChart from '../../components/dashboard/HistoryChart.jsx';
+import RecentDocuments from '../../components/dashboard/RecentDocuments.jsx';
+import ErrorState from '../../components/dashboard/ErrorState.jsx';
 
 export default function AdminDashboard() {
-  const [dashboardData, setDashboardData] = useState({ totalUsers: 0, totalOscs: 0, totalDocs: 0, totalOffices: 0 });
-  const [isMaintenanceActive, setIsMaintenanceActive] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
   const addNotification = useNotification();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [statsResponse, statusResponse] = await Promise.all([
-            api.get('/admin/dashboard-stats'),
-            api.get('/system/status')
-        ]);
-        
-        setDashboardData(statsResponse.data);
-        setIsMaintenanceActive(statusResponse.data.maintenance_mode);
-      } catch (error) {
-        addNotification('Erro ao conectar com o servidor central.', 'error');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const [range, setRange] = useState({ key: '6' });
+  const statsParams = range.key === 'custom' ? { from: range.from, to: range.to } : { months: range.key };
+  const { data: stats, isLoading: statsLoading, error: statsError, reload: reloadStats } = useDocumentStats(statsParams);
 
-    fetchData();
-  }, [addNotification]);
+  const [totalsData, setTotalsData] = useState(null);
+  const [totalsError, setTotalsError] = useState(null);
+  const [isMaintenanceActive, setIsMaintenanceActive] = useState(false);
 
-  const handleToggleMaintenance = async () => {
-    const action = isMaintenanceActive ? 'DESATIVAR' : 'ATIVAR';
-    if (!window.confirm(`Tem certeza que deseja ${action} o Modo de Manutenção?\n\nSe ativado, todos os utilizadores (exceto admins) receberão um aviso e serão desconectados em 3 minutos.`)) return;
-
+  const loadSystem = async () => {
+    setTotalsError(null);
     try {
-        await api.post('/system/toggle-maintenance', { 
-            active: !isMaintenanceActive, 
-            minutesUntilLock: 3 
-        });
-        setIsMaintenanceActive(!isMaintenanceActive);
-        addNotification(`Modo de manutenção ${!isMaintenanceActive ? 'ATIVADO' : 'DESATIVADO'} com sucesso!`, 'success');
-    } catch (err) {
-        addNotification('Erro ao alterar modo de manutenção.', 'error');
+      const [statsResponse, statusResponse] = await Promise.all([
+        api.get('/admin/dashboard-stats'),
+        api.get('/system/status'),
+      ]);
+      setTotalsData(statsResponse.data);
+      setIsMaintenanceActive(!!statusResponse.data.maintenance_mode);
+    } catch {
+      setTotalsError('Erro ao conectar com o servidor central.');
     }
   };
 
-  const stats = [
-    { title: 'Total de Usuários', value: dashboardData.totalUsers, icon: FiUsers, theme: styles.blueTheme },
-    { title: 'OSCs Cadastradas', value: dashboardData.totalOscs, icon: FiBriefcase, theme: styles.greenTheme },
-    { title: 'Escritórios Contábeis', value: dashboardData.totalOffices, icon: FiBriefcase, theme: styles.purpleTheme },
-    { title: 'Arquivos no Cofre', value: dashboardData.totalDocs, icon: FiFolder, theme: styles.orangeTheme },
+  useEffect(() => { loadSystem(); }, []);
+
+  const handleToggleMaintenance = async () => {
+    const action = isMaintenanceActive ? 'DESATIVAR' : 'ATIVAR';
+    if (!window.confirm(`Tem certeza que deseja ${action} o Modo de Manutenção?\n\nSe ativado, todos os utilizadores (exceto admins) receberão um aviso e serão bloqueados em 3 minutos.`)) return;
+    try {
+      await api.post('/system/toggle-maintenance', { active: !isMaintenanceActive, minutesUntilLock: 3 });
+      setIsMaintenanceActive(!isMaintenanceActive);
+      addNotification(`Modo de manutenção ${!isMaintenanceActive ? 'ATIVADO' : 'DESATIVADO'} com sucesso!`, 'success');
+    } catch {
+      addNotification('Erro ao alterar modo de manutenção.', 'error');
+    }
+  };
+
+  const totals = stats?.totals;
+  const referenceMonthly = stats?.reference?.monthly || MONTHLY_REFERENCE_FALLBACK;
+  const loadingTotals = totalsData === null && !totalsError;
+
+  const shortcuts = [
+    { to: '/admin/usuarios', label: 'Usuários', icon: FiUsers },
+    { to: '/admin/oscs', label: 'OSCs', icon: FiGrid },
+    { to: '/admin/offices', label: 'Escritórios', icon: FiBriefcase },
+    { to: '/admin/financeiro', label: 'Financeiro', icon: FiDollarSign },
+    { to: '/admin/biblioteca', label: 'Biblioteca', icon: FiBookOpen },
+    { to: '/admin/avisos', label: 'Aviso global', icon: FiBell },
   ];
 
-  if (isLoading) return <div className={styles.loadingContainer}><Spinner text="A calcular métricas do sistema..." /></div>;
-
   return (
-    <div className={styles.pageContainer}>
-      <div className={styles.header}>
+    <div className={ds.page}>
+      <header className={ds.pageHead}>
         <div>
-          <h1 className={styles.pageTitle}>Visão Geral do Sistema</h1>
-          <p className={styles.pageSubtitle}>Estatísticas e ações globais do painel administrativo.</p>
+          <h1 className={ds.hello}>Olá, {user?.name?.split(' ')[0] || 'Administrador'}!</h1>
+          <p className={ds.sub}>Visão global da plataforma.</p>
         </div>
-      </div>
+      </header>
 
-      <div className={styles.statsGrid}>
-        {stats.map((stat, index) => (
-          <Card key={index} padding="md" className={styles.statCard}>
-            <div className={styles.statContent}>
-              <div className={`${styles.iconWrapper} ${stat.theme}`}>
-                <stat.icon size={24} />
-              </div>
-              <div className={styles.statText}>
-                <span className={styles.statLabel}>{stat.title}</span>
-                <span className={styles.statValue}>{stat.value}</span>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+      {(statsError || totalsError) && <ErrorState message={statsError || totalsError} onRetry={() => { reloadStats(); loadSystem(); }} />}
 
-      <ReportCharts role="ADMIN" />
-
-      <Card padding="none" className={styles.actionsCard}>
-        <CardHeader 
-          className={styles.actionsHeader}
-          title="Ações Rápidas de Gestão"
+      <div className={ds.statGrid}>
+        <StatCard
+          className={ds.span2}
+          tone="hero"
+          tourId="stat-sent"
+          label="Documentos enviados"
+          value={totals?.sent ?? 0}
+          hint="Este mês, em toda a plataforma"
+          icon={FiUploadCloud}
+          loading={statsLoading}
         />
-        <CardBody className={styles.actionsBody}>
-          <div className={styles.actionsGrid}>
-            <Link to="/admin/usuarios" className={styles.linkNoDecoration}>
-              <Button block variant="primary" icon={<FiUsers />} className={styles.actionBtn}>
-                Gerenciar Usuários
-              </Button>
-            </Link>
+        <StatCard tone={(totals?.inReview ?? 0) > 0 ? 'warning' : 'default'} label="Em análise" value={totals?.inReview ?? 0} hint="Aguardando validação" icon={FiClock} loading={statsLoading} />
+        <StatCard label="OSCs cadastradas" value={totalsData?.totalOscs ?? 0} icon={FiGrid} loading={loadingTotals} to="/admin/oscs" />
+        <StatCard label="Escritórios" value={totalsData?.totalOffices ?? 0} icon={FiBriefcase} loading={loadingTotals} to="/admin/offices" />
+        <StatCard label="Usuários" value={totalsData?.totalUsers ?? 0} icon={FiUsers} loading={loadingTotals} to="/admin/usuarios" />
+        <StatCard label="Arquivos no cofre" value={totalsData?.totalDocs ?? 0} hint="Inclui registros TEC" icon={FiFolder} loading={loadingTotals} />
+      </div>
 
-            <Link to="/admin/oscs" className={styles.linkNoDecoration}>
-              <Button block variant="primary" icon={<FiBriefcase />} className={styles.actionBtn}>
-                Gerenciar OSCs e Escritórios
-              </Button>
-            </Link>
-            
-            <Link to="/admin/biblioteca" className={styles.linkNoDecoration}>
-              <Button block variant="primary" icon={<FiFolder />} className={styles.actionBtn}>
-                Biblioteca Geral e Modelos
-              </Button>
-            </Link>
+      <MonthlyReference sent={totals?.sent ?? 0} reference={referenceMonthly} loading={statsLoading} />
 
-            <Link to="/admin/avisos" className={styles.linkNoDecoration}>
-              <Button block variant="secondary" icon={<FiBell />} className={styles.actionBtn}>
-                Disparar Aviso Global
-              </Button>
-            </Link>
+      <div className={ds.twoCol}>
+        <HistoryChart
+          title="Histórico de envios da plataforma"
+          history={stats?.history || []}
+          current={stats?.current}
+          range={range}
+          onRangeChange={setRange}
+          loading={statsLoading}
+          error={statsError}
+          onRetry={reloadStats}
+        />
+        <RecentDocuments items={stats?.recent || []} showOsc />
+      </div>
 
-            <Button 
-               block
-               variant={isMaintenanceActive ? 'danger' : 'secondary'} 
-               onClick={handleToggleMaintenance} 
-               icon={<FiSettings />}
-               className={styles.actionBtn}
-            >
-               {isMaintenanceActive ? 'Desativar Manutenção' : 'Ativar Manutenção (3 min)'}
-            </Button>
-          </div>
-        </CardBody>
-      </Card>
+      <section className={ds.card} aria-labelledby="quick-title">
+        <div className={ds.cardHead}>
+          <h2 id="quick-title" className={ds.cardTitle}>Ações rápidas</h2>
+        </div>
+        <div className={ds.headActions}>
+          {shortcuts.map((s) => (
+            <Link key={s.to} to={s.to} className={ds.secondaryBtn}><s.icon aria-hidden="true" /> {s.label}</Link>
+          ))}
+          <button
+            type="button"
+            className={isMaintenanceActive ? ds.primaryBtn : ds.secondaryBtn}
+            onClick={handleToggleMaintenance}
+            aria-pressed={isMaintenanceActive}
+          >
+            <FiSettings aria-hidden="true" /> {isMaintenanceActive ? 'Desativar manutenção' : 'Ativar manutenção (3 min)'}
+          </button>
+        </div>
+      </section>
     </div>
   );
 }

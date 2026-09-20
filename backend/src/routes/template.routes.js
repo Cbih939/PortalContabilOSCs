@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { protect } from '../middlewares/auth.middleware.js';
+import { protect, checkRole } from '../middlewares/auth.middleware.js';
 import { upload } from '../middlewares/upload.middleware.js'; 
 import { 
     getTemplates, 
@@ -17,12 +17,12 @@ router.use(protect);
 router.get('/', getTemplates);
 
 // Upload
-router.post('/', upload.any(), uploadTemplate);
+router.post('/', checkRole(['ADMIN', 'CONTADOR']), upload.any(), uploadTemplate);
 
 // Download
 router.get('/:id/download', downloadTemplate);
 
 // Excluir
-router.delete('/:id', deleteTemplate);
+router.delete('/:id', checkRole(['ADMIN', 'CONTADOR']), deleteTemplate);
 
 export default router;

@@ -53,7 +53,7 @@ export default function TransferOfficeModal({ isOpen, onClose, onSave, isLoading
             type="button" 
             onClick={handleSubmit} 
             disabled={isLoading} 
-            style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#ea580c', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}
+            style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#E85002', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}
           >
             {isLoading ? 'Transferindo...' : 'Confirmar Transferência'}
           </button>

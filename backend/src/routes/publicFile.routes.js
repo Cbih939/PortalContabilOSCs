@@ -3,6 +3,8 @@ import multer from 'multer';
 import path from 'path';
 // Verifique se o caminho do controller está correto
 import { getFiles, uploadFile, deleteFile } from '../controllers/publicFile.controller.js';
+import { protect, checkRole } from '../middlewares/auth.middleware.js';
+import { fileFilter } from '../middlewares/upload.middleware.js';
 
 const router = express.Router();
 
@@ -24,16 +26,17 @@ const storage = multer.diskStorage({
 // Inicializa o upload sem limites restritos por enquanto
 const upload = multer({ 
     storage: storage,
+    fileFilter,
     limits: { fileSize: 50 * 1024 * 1024 } // Limite de 50MB
 });
 // --------------------------------------------------------------------------
 
 // Rotas
-router.get('/', getFiles);
+router.get('/', protect, getFiles);
 
 // O segredo: upload.any() aceita qualquer campo (pdf, file, cover, image...)
-router.post('/', upload.any(), uploadFile); 
+router.post('/', protect, checkRole('ADMIN'), upload.any(), uploadFile); 
 
-router.delete('/:id', deleteFile);
+router.delete('/:id', protect, checkRole('ADMIN'), deleteFile);
 
 export default router;
