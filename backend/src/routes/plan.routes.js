@@ -7,7 +7,7 @@ import {
   deletePlan, 
   activatePlan 
 } from '../controllers/plan.controller.js';
-import { protect, adminOnly } from '../middlewares/auth.middleware.js';
+import { protect, checkRole } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
@@ -15,10 +15,10 @@ const router = express.Router();
 router.get('/active', protect, getActivePlan);
 
 // Rotas exclusivas do Administrador
-router.get('/', protect, adminOnly, getPlans);
-router.post('/', protect, adminOnly, createPlan);
-router.put('/:id', protect, adminOnly, updatePlan);
-router.delete('/:id', protect, adminOnly, deletePlan);
-router.patch('/:id/activate', protect, adminOnly, activatePlan);
+router.get('/', protect, checkRole('ADMIN'), getPlans);
+router.post('/', protect, checkRole('ADMIN'), createPlan);
+router.put('/:id', protect, checkRole('ADMIN'), updatePlan);
+router.delete('/:id', protect, checkRole('ADMIN'), deletePlan);
+router.patch('/:id/activate', protect, checkRole('ADMIN'), activatePlan);
 
 export default router;
