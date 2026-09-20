@@ -139,8 +139,14 @@ a:hover {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
-  padding: 1.5rem;
+  padding: 1rem; /* Reduzido para mobile para sobrar espaço pro conteúdo */
   transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .card-clean {
+    padding: 1.5rem; /* Respiro maior no desktop */
+  }
 }
 
 .card-clean:hover {

@@ -147,7 +147,7 @@ export default function ProjectsPage() {
           <Button onClick={handleOpenCreate} style={{ backgroundColor: '#ea580c', color: '#fff' }}>Criar Primeiro Projeto</Button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
           {projects.map((project) => {
             const statusStyle = getStatusStyle(project.status);
             return (
