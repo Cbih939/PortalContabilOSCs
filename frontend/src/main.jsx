@@ -2,6 +2,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
+import '@fontsource-variable/inter';
 import './index.css';
 
 // --- INÍCIO DO SCRIPT ANTI-CACHE (DESTRÓI QUALQUER VERSÃO ANTIGA PRESA) ---

@@ -6,6 +6,22 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Somente estes tipos são aceitos (extensão E mimetype declarado).
+const ALLOWED_EXTENSIONS = new Set([
+    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.csv', '.ppt', '.pptx',
+    '.png', '.jpg', '.jpeg', '.webp', '.txt',
+]);
+
+export const fileFilter = (req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    if (!ALLOWED_EXTENSIONS.has(ext)) {
+        const error = new Error('Tipo de arquivo não permitido. Envie PDF, Word, Excel, PowerPoint, imagem (JPG/PNG/WEBP), CSV ou TXT.');
+        error.code = 'INVALID_FILE_TYPE';
+        return cb(error);
+    }
+    cb(null, true);
+};
+
 // 1. STORAGE SEGURO (Para Documentos Contábeis e Governança)
 const storageDocs = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -42,6 +58,7 @@ const storagePublic = multer.diskStorage({
  */
 export const upload = multer({ 
     storage: storageDocs,
+    fileFilter,
     limits: { fileSize: 50 * 1024 * 1024 } // Limite de 50MB
 });
 
@@ -51,6 +68,7 @@ export const upload = multer({
  */
 export const uploadRegistration = multer({ 
     storage: storagePublic,
+    fileFilter,
     limits: { fileSize: 10 * 1024 * 1024 } // Limite de 10MB
 }).fields([
     { name: 'logotipo', maxCount: 1 },

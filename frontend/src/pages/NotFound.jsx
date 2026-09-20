@@ -10,7 +10,7 @@ export default function NotFoundPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#f9fafb', padding: '20px', textAlign: 'center' }}>
-      <div style={{ color: '#ea580c', marginBottom: '24px' }}>
+      <div style={{ color: '#E85002', marginBottom: '24px' }}>
         <AlertIcon />
       </div>
       
@@ -23,7 +23,7 @@ export default function NotFoundPage() {
       
       <button 
         onClick={() => navigate('/')} 
-        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', backgroundColor: '#ea580c', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(234, 88, 12, 0.2)' }}
+        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', backgroundColor: '#E85002', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(234, 88, 12, 0.2)' }}
       >
         <HomeIcon /> Voltar ao Início
       </button>

@@ -15,7 +15,7 @@ export default defineConfig({
         name: 'Portal Contábil OSCs',
         short_name: 'Portal OSCs',
         description: 'Portal Contábil para OSCs',
-        theme_color: '#ea580c',
+        theme_color: '#E85002',
         background_color: '#ffffff',
         display: 'standalone',
         icons: [

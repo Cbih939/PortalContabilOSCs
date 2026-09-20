@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { 
   getDocuments, 
   getReceivedDocuments, 
+  getDocumentStats,
   uploadDocument, 
   downloadDocument, 
   markMonthAsConcluded, 
@@ -12,32 +13,31 @@ import {
   generatePublicLink,
   downloadPublicDocument
 } from '../controllers/doc.controller.js';
-import { protect } from '../middlewares/auth.middleware.js';
+import { protect, blockIfInDebt } from '../middlewares/auth.middleware.js';
 import { upload } from '../middlewares/upload.middleware.js'; 
 
 const router = Router();
 
-// ROTA PÚBLICA (Sem protect)
+// ROTA PÚBLICA (link compartilhado, protegido por token assinado)
 router.get('/public/:token', downloadPublicDocument);
 
-router.get('/my', protect, getDocuments);
+// Todas as demais exigem login. OSC em débito é bloqueada também no servidor.
+router.get('/my', protect, blockIfInDebt, getDocuments);
 router.get('/received', protect, getReceivedDocuments);
-router.post('/upload', protect, upload.single('file'), uploadDocument);
-router.get('/download/:id', protect, downloadDocument);
-router.get('/download-month-zip', protect, downloadMonthZip);
+router.get('/stats', protect, blockIfInDebt, getDocumentStats);
+router.post('/upload', protect, blockIfInDebt, upload.single('file'), uploadDocument);
+router.get('/download/:id', protect, blockIfInDebt, downloadDocument);
+router.get('/download-month-zip', protect, blockIfInDebt, downloadMonthZip);
 
 // Gerar link de partilha
-router.post('/share/:id', protect, generatePublicLink);
+router.post('/share/:id', protect, blockIfInDebt, generatePublicLink);
 
-// Marcar como Concluído
+// Marcar como Concluído / Pendente (Desfazer) / TEC — somente equipe contábil (validado no controller)
 router.post('/conclude', protect, markMonthAsConcluded);
-// NOVO: Marcar como Pendente (Desfazer)
 router.post('/pending', protect, markMonthAsPending);
-
-// Marcar TEC
 router.post('/mark-tec', protect, markConclusoTec);
 
-// NOVO: Excluir Documento
-router.delete('/:id', protect, deleteDocument);
+// Excluir Documento (acesso validado no controller)
+router.delete('/:id', protect, blockIfInDebt, deleteDocument);
 
 export default router;

@@ -1,11 +1,11 @@
 import pool from '../config/db.js';
 import { logAction } from '../services/logger.service.js'; // 🕵️‍♂️ Espião importado!
+import { getAccessibleOsc, findOscLinks, canAccessOsc, canManageOsc, oscScope } from '../services/access.service.js';
+import { isAdmin, isContador, isOSC, isOfficeAdmin, officeIdOf } from '../utils/roles.js';
 
 export const getMyOSCs = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const officeId = (req.user.office_id && req.user.office_id !== "0") ? req.user.office_id : null;
-    const userRole = req.user.role.toLowerCase();
+    const scope = oscScope(req.user, 'o');
 
     let query = `
       SELECT o.id, o.cnpj, o.razao_social, o.responsible, o.email, o.phone, o.address, 
@@ -15,17 +15,9 @@ export const getMyOSCs = async (req, res) => {
              off.name as office_name
       FROM oscs o
       LEFT JOIN offices off ON o.office_id = off.id
+      WHERE ${scope.sql}
     `;
-    let params = [];
-
-    if (userRole === 'contador') {
-      if (!officeId) return res.json([]); 
-      query += ' WHERE o.office_id = ?';
-      params.push(officeId);
-    } else if (userRole === 'osc') {
-      query += ' WHERE o.user_id = ?';
-      params.push(userId);
-    }
+    let params = [...scope.params];
 
     const [oscs] = await pool.execute(query, params);
 
@@ -50,8 +42,11 @@ export const getMyOSCs = async (req, res) => {
 export const createOSC = async (req, res) => {
   try {
     const { name, cnpj, responsible, email, phone, address, data_origem_estatuto, data_contrato_conta_comigo, tipo_plano, cert_federal, cert_estadual, cert_municipal } = req.body;
-    const contadorId = (req.user && req.user.role.toUpperCase() === 'CONTADOR') ? req.user.id : null;
-    const officeId = (req.user && req.user.office_id && req.user.office_id !== "0") ? req.user.office_id : null;
+    if (!isAdmin(req.user) && !isContador(req.user)) {
+      return res.status(403).json({ message: 'Apenas a equipe contábil pode cadastrar OSCs.' });
+    }
+    const contadorId = isContador(req.user) ? req.user.id : null;
+    const officeId = isAdmin(req.user) ? (req.body.office_id || null) : officeIdOf(req.user);
 
     const query = `
       INSERT INTO oscs (razao_social, cnpj, responsible, email, phone, address, assigned_contador_id, office_id, data_origem_estatuto, data_contrato_conta_comigo, tipo_plano, cert_federal, cert_estadual, cert_municipal) 
@@ -72,6 +67,9 @@ export const createOSC = async (req, res) => {
 export const updateOSC = async (req, res) => {
   try {
     const { id } = req.params;
+    if (!(await getAccessibleOsc(req.user, id))) {
+      return res.status(403).json({ message: 'Acesso negado a esta OSC.' });
+    }
     let { name, razao_social, cnpj, data_fundacao, email, phone, address, cep, numero, bairro, cidade, estado, website, instagram, resp_nome, resp_cpf, gestor_nome, gestor_cpf, data_origem_estatuto, data_contrato_conta_comigo, tipo_plano, natureza_juridica, atividade_principal, inscricao_municipal, inscricao_estadual, presta_servico, vende_mercadorias, emite_nfse, emite_nfe, fim_mandato, banco_cadastrado, responsible, responsible_cpf, cert_federal, cert_estadual, cert_municipal } = req.body;
 
     const formatData = (dateStr) => {
@@ -114,9 +112,7 @@ export const getOSCById = async (req, res) => {
     const [rows] = await pool.execute(`SELECT o.*, off.name as office_name, "Ativo" as status FROM oscs o LEFT JOIN offices off ON o.office_id = off.id WHERE o.id = ?`, [req.params.id]);
     if (rows.length === 0) return res.status(404).json({ message: "Não encontrado" });
 
-    const userRole = req.user.role.toLowerCase();
-    const officeId = req.user.office_id;
-    if (userRole === 'contador' && rows[0].office_id !== officeId) return res.status(403).json({ message: "Acesso negado." });
+    if (!canAccessOsc(req.user, rows[0])) return res.status(403).json({ message: "Acesso negado." });
 
     res.json(rows[0]);
   } catch (error) { res.status(500).json({ message: "Erro ao buscar OSC" }); }
@@ -124,7 +120,8 @@ export const getOSCById = async (req, res) => {
 
 export const getAllOSCs = async (req, res) => {
   try {
-    const [rows] = await pool.execute(`SELECT o.id, o.razao_social, o.cnpj, o.data_contrato_conta_comigo, o.office_id, u.name as contadorName, off.name as officeName FROM oscs o LEFT JOIN users u ON o.assigned_contador_id = u.id LEFT JOIN offices off ON o.office_id = off.id`);
+    const scope = oscScope(req.user, 'o');
+    const [rows] = await pool.execute(`SELECT o.id, o.razao_social, o.cnpj, o.data_contrato_conta_comigo, o.office_id, u.name as contadorName, off.name as officeName FROM oscs o LEFT JOIN users u ON o.assigned_contador_id = u.id LEFT JOIN offices off ON o.office_id = off.id WHERE ${scope.sql}`, scope.params);
     res.json(rows.map(r => ({ ...r, name: r.razao_social, status: 'Ativo' })));
   } catch (error) { res.status(500).json({ message: 'Erro interno ao listar OSCs.' }); }
 };
@@ -134,7 +131,7 @@ export const transferOSCOffice = async (req, res) => {
         const { id } = req.params;
         const { newOfficeId } = req.body;
 
-        if (req.user.role.toLowerCase() !== 'admin') return res.status(403).json({ message: 'Apenas administradores podem transferir carteiras.' });
+        if (!isAdmin(req.user)) return res.status(403).json({ message: 'Apenas administradores podem transferir carteiras.' });
         if (!newOfficeId) return res.status(400).json({ message: 'ID do novo escritório é obrigatório.' });
 
         await pool.execute('UPDATE oscs SET office_id = ?, assigned_contador_id = NULL WHERE id = ?', [newOfficeId, id]);
@@ -154,7 +151,30 @@ export const getMyPayments = async (req, res) => {
 export const assignContador = async (req, res) => {
   try {
     const { id } = req.params;
-    const { contadorId, officeId } = req.body;
+    const { contadorId } = req.body;
+    let { officeId } = req.body;
+
+    const osc = await findOscLinks(id);
+    if (!osc) return res.status(404).json({ message: 'OSC não encontrada.' });
+    if (!canManageOsc(req.user, osc)) {
+      return res.status(403).json({ message: 'Somente o Administrador ou o ADM do escritório podem reatribuir contadores.' });
+    }
+
+    // ADM Contador não move OSCs entre escritórios: a carteira permanece no próprio escritório.
+    if (!isAdmin(req.user)) officeId = officeIdOf(req.user);
+
+    // O contador escolhido precisa pertencer ao escritório de destino.
+    if (contadorId) {
+      const [rows] = await pool.execute(
+        "SELECT id, office_id FROM users WHERE id = ? AND UPPER(role) = 'CONTADOR' AND status = 'Ativo'",
+        [contadorId]
+      );
+      if (rows.length === 0) return res.status(400).json({ message: 'Contador inválido ou inativo.' });
+      if (officeId && Number(rows[0].office_id) !== Number(officeId)) {
+        return res.status(400).json({ message: 'O contador selecionado não pertence a este escritório.' });
+      }
+    }
+
     await pool.execute('UPDATE oscs SET assigned_contador_id = ?, office_id = ? WHERE id = ?', [contadorId || null, officeId || null, id]);
     res.json({ message: 'Associação atualizada' });
   } catch (error) { res.status(500).json({ message: 'Erro ao associar.' }); }
@@ -171,6 +191,11 @@ export const getMyOscProfile = async (req, res) => {
 export const deleteOSC = async (req, res) => {
   try {
     const { id } = req.params;
+    const osc = await findOscLinks(id);
+    if (!osc) return res.status(404).json({ message: 'OSC não encontrada.' });
+    if (!canManageOsc(req.user, osc)) {
+      return res.status(403).json({ message: 'Somente o Administrador ou o ADM do escritório podem excluir uma OSC.' });
+    }
     await pool.execute('DELETE FROM documents WHERE osc_id = ?', [id]);
     
     // 🔴 ESPIÃO LIGADO: Grava a Exclusão!

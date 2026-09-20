@@ -42,7 +42,8 @@ export default function LoginPage() {
         navigate(destination);
       }
     } catch (err) {
-      setFormError("Email ou senha incorretos. Tente novamente.");
+      // Mostra o motivo real (conta bloqueada, perfil descontinuado, muitas tentativas...)
+      setFormError(err?.response?.data?.message || "Não foi possível entrar. Verifique seus dados e tente novamente.");
       console.error("Falha no login:", err);
     }
   };
@@ -64,7 +65,9 @@ export default function LoginPage() {
           id="email"
           name="email"
           type="email"
-          placeholder="Seu email"
+          label="E-mail"
+          autoComplete="email"
+          placeholder="voce@organizacao.org.br"
           defaultValue={localStorage.getItem('remembered_email') || ''}
           required
           error={apiError?.data?.field === 'email' ? apiError.data.message : null}
@@ -73,6 +76,8 @@ export default function LoginPage() {
           id="password"
           name="password"
           type="password"
+          label="Senha"
+          autoComplete="current-password"
           placeholder="Sua senha"
           required
           error={apiError?.data?.field === 'password' ? apiError.data.message : null}
@@ -92,7 +97,7 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        {formError && <p className={styles.errorMessage}>{formError}</p>}
+        {formError && <p className={styles.errorMessage} role="alert">{formError}</p>}
 
         <Button type="submit" className={styles.loginButton} disabled={isLoading} style={{ width: '100%' }}>
           {isLoading ? <Spinner size="sm" className="mr-2" /> : null}

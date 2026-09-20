@@ -24,8 +24,14 @@ const config = {
   DB_NAME: process.env.DB_NAME || 'portal_contabil',
 
   // Configuração de Segurança (JWT - JSON Web Token)
-  JWT_SECRET: process.env.JWT_SECRET || 'ea000d1a6824d253f61525ba1d69bd29',
+  JWT_SECRET: process.env.JWT_SECRET, // sem fallback: definido apenas via ambiente
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
 };
+
+// Falha rápido: sem segredo próprio, qualquer pessoa poderia forjar tokens.
+if (!config.JWT_SECRET || config.JWT_SECRET.length < 16) {
+  console.error('[Config] JWT_SECRET ausente ou curto demais (mínimo 16 caracteres). Defina-o no ambiente/.env.');
+  process.exit(1);
+}
 
 export default config;

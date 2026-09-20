@@ -94,7 +94,7 @@ export default function EditOSCModal({ isOpen, onClose, oscData, onSave, isLoadi
           <button type="button" onClick={onClose} disabled={isLoading} style={{ padding: '10px 16px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', color: '#374151', cursor: 'pointer', fontWeight: '500' }}>
             Cancelar
           </button>
-          <button type="button" disabled={isLoading} onClick={handleDirectSubmit} style={{ padding: '10px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#ea580c', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>
+          <button type="button" disabled={isLoading} onClick={handleDirectSubmit} style={{ padding: '10px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#E85002', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>
             {isLoading ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Cadastrar Nova OSC')}
           </button>
         </div>

@@ -28,8 +28,8 @@ export default function ManualPage() {
     p: { color: '#4b5563', fontSize: '15px', lineHeight: '1.7', marginBottom: '16px' },
     ul: { margin: '0 0 24px 24px', color: '#4b5563', fontSize: '15px', lineHeight: '1.7' },
     li: { marginBottom: '6px' },
-    link: { color: '#ea580c', textDecoration: 'none', fontWeight: '600' },
-    highlightBox: { backgroundColor: '#fff7ed', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #ea580c', margin: '24px 0' },
+    link: { color: '#E85002', textDecoration: 'none', fontWeight: '600' },
+    highlightBox: { backgroundColor: '#fff7ed', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #E85002', margin: '24px 0' },
     highlightText: { color: '#9a3412', fontWeight: '600', margin: 0, fontSize: '15px', lineHeight: '1.6' }
   };
 
@@ -71,7 +71,7 @@ export default function ManualPage() {
           <img src="/logo_portal.png" alt="Conta Comigo" style={{ height: '40px' }} />
           <h1 style={{ margin: 0, fontSize: '18px', color: '#1f2937', fontWeight: 'bold' }}>Portal de Guias</h1>
         </div>
-        <Link to="/login" style={{ color: '#ea580c', fontWeight: 'bold', textDecoration: 'none', fontSize: '14px' }}>&larr; Voltar ao Sistema</Link>
+        <Link to="/login" style={{ color: '#E85002', fontWeight: 'bold', textDecoration: 'none', fontSize: '14px' }}>&larr; Voltar ao Sistema</Link>
       </nav>
 
       {/* Layout com Sidebar e Conteúdo */}
@@ -86,7 +86,7 @@ export default function ManualPage() {
                 key={topic.id} 
                 href={`#${topic.id}`} 
                 style={s.indexLink}
-                onMouseOver={(e) => { e.target.style.backgroundColor = '#f3f4f6'; e.target.style.color = '#ea580c'; }}
+                onMouseOver={(e) => { e.target.style.backgroundColor = '#f3f4f6'; e.target.style.color = '#E85002'; }}
                 onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = '#4b5563'; }}
               >
                 {topic.title}

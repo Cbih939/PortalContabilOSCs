@@ -8,7 +8,7 @@
 
 /* HELPER CLASSES */
 .highlight {
-  color: #ea580c;
+  color: #E85002;
   font-weight: 800;
 }
 
@@ -39,7 +39,7 @@
 
 .heroTitle {
   font-size: 3rem;
-  color: #ea580c;
+  color: #E85002;
   font-weight: 900;
   margin: 0 0 10px 0;
   line-height: 1;
@@ -63,7 +63,7 @@
 
 .heroBtn {
   display: inline-block;
-  background-color: #ea580c;
+  background-color: #E85002;
   color: #fff;
   padding: 12px 25px;
   border-radius: 20px;
@@ -76,7 +76,7 @@
 .heroBtn:hover {
   transform: translateY(-3px);
   box-shadow: 0 10px 15px rgba(234, 88, 12, 0.3);
-  background-color: #c2410c;
+  background-color: #C74400;
 }
 
 .heroImageContainer {
@@ -108,7 +108,7 @@
 
 .quote {
   font-size: 1rem;
-  color: #ea580c;
+  color: #E85002;
   font-style: italic;
   font-weight: bold;
   margin-bottom: 15px;
@@ -148,7 +148,7 @@
 .iconWrapper {
   width: 30px;
   height: 30px;
-  color: #ea580c;
+  color: #E85002;
   margin-bottom: 15px;
 }
 
@@ -169,7 +169,7 @@
 
 /* TARGET SECTION */
 .targetSection {
-  background-color: #ea580c; /* Fallback */
+  background-color: #E85002; /* Fallback */
   background-size: cover;
   background-position: center;
   color: #fff;
@@ -222,7 +222,7 @@
 .targetBtn {
   display: inline-block;
   background-color: #fff;
-  color: #ea580c;
+  color: #E85002;
   padding: 10px 25px;
   border-radius: 20px;
   text-decoration: none;
@@ -280,7 +280,7 @@
   display: flex;
   align-items: center;
   gap: 15px;
-  background-color: #ea580c;
+  background-color: #E85002;
   color: #fff;
   padding: 15px;
   border-radius: 8px;
@@ -311,7 +311,7 @@
 
 .orangeBtn {
   display: inline-block;
-  background-color: #ea580c;
+  background-color: #E85002;
   color: #fff;
   padding: 8px 25px;
   border-radius: 20px;
@@ -323,7 +323,7 @@
 
 .orangeBtn:hover {
   transform: translateY(-2px);
-  background-color: #c2410c;
+  background-color: #C74400;
   box-shadow: 0 5px 10px rgba(234, 88, 12, 0.3);
 }
 
@@ -364,7 +364,7 @@
 
 .pricingCard {
   background-color: #fff;
-  border: 1px solid #ea580c;
+  border: 1px solid #E85002;
   border-radius: 12px;
   max-width: 450px;
   margin: 0 auto;
@@ -379,7 +379,7 @@
 }
 
 .pricingTop {
-  background-color: #ea580c;
+  background-color: #E85002;
   color: #fff;
   font-size: 2.8rem;
   font-weight: bold;
@@ -410,7 +410,7 @@
   width: 18px;
   height: 18px;
   min-width: 18px;
-  color: #ea580c;
+  color: #E85002;
 }
 
 .pricingBtnContainer {
@@ -420,7 +420,7 @@
 
 .pricingBtn {
   display: inline-block;
-  background-color: #ea580c;
+  background-color: #E85002;
   color: #fff;
   padding: 12px 35px;
   border-radius: 25px;
@@ -432,7 +432,7 @@
 }
 
 .pricingBtn:hover {
-  background-color: #c2410c;
+  background-color: #C74400;
   transform: translateY(-3px);
 }
 

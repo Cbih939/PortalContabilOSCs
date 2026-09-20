@@ -18,7 +18,7 @@ export default function HelpPage() {
       
       <div style={{ marginBottom: '32px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#1f2937', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ padding: '8px', backgroundColor: '#ffedd5', color: '#ea580c', borderRadius: '8px' }}><SupportIcon /></div>
+          <div style={{ padding: '8px', backgroundColor: '#FFF1E8', color: '#E85002', borderRadius: '8px' }}><SupportIcon /></div>
           Ajuda Institucional
         </h1>
         <p style={{ color: '#6b7280', margin: 0, fontSize: '15px' }}>

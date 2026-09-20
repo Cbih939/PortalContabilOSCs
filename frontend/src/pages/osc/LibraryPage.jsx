@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { publicFileUrl } from '../../utils/fileUrl.js';
 import * as fileService from '../../services/publicFileService.js';
 import PdfThumbnail from '../osc/components/PdfThumbnail.jsx'; 
 import styles from './Downloads.module.css';
@@ -51,8 +52,7 @@ export default function LibraryPage() {
   }, []);
 
   const handleDownload = (path) => {
-    const cleanPath = path.replace(/\\/g, '/');
-    window.open(`https://contacomigo.org.br/${cleanPath}`, '_blank');
+    window.open(publicFileUrl(path), '_blank', 'noopener');
   };
 
   return (
@@ -82,12 +82,12 @@ export default function LibraryPage() {
               <div className={styles.thumbnailWrapper}>
                 {file.cover_path ? (
                   <img 
-                    src={`https://contacomigo.org.br/${file.cover_path.replace(/\\/g, '/')}`} 
+                    src={publicFileUrl(file.cover_path)} 
                     alt={file.title} 
                     className={styles.bookCoverImage}
                   />
                 ) : (
-                  <PdfThumbnail fileUrl={`https://contacomigo.org.br/${file.file_path.replace(/\\/g, '/')}`} />
+                  <PdfThumbnail fileUrl={publicFileUrl(file.file_path)} />
                 )}
                 
                 <div className={styles.overlay}>

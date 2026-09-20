@@ -1,6 +1,10 @@
 import * as transactionModel from '../models/transaction.model.js';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+import pool from '../config/db.js';
+
+const UPLOADS_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../uploads');
 
 // Inicializa a tabela caso não exista
 transactionModel.createTableIfNotExists();
@@ -99,5 +103,28 @@ export const deleteTransaction = async (req, res) => {
   } catch (error) {
     console.error('Erro ao apagar transação:', error);
     return res.status(500).json({ error: 'Erro interno ao apagar transação' });
+  }
+};
+
+// Download autenticado do comprovante (a pasta /uploads deixou de ser pública)
+export const downloadReceipt = async (req, res) => {
+  try {
+    if (req.user.role !== 'OSC') return res.status(403).json({ error: 'Acesso negado' });
+
+    const [rows] = await pool.execute(
+      'SELECT receipt_filename FROM transactions WHERE id = ? AND osc_id = ?',
+      [req.params.id, req.user.id]
+    );
+    const filename = rows[0]?.receipt_filename;
+    if (!filename) return res.status(404).json({ error: 'Comprovante não encontrado' });
+
+    const filePath = path.resolve(UPLOADS_ROOT, path.basename(filename));
+    if (!filePath.startsWith(UPLOADS_ROOT + path.sep) || !fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Arquivo não encontrado no servidor' });
+    }
+    return res.sendFile(filePath);
+  } catch (error) {
+    console.error('Erro ao baixar comprovante:', error);
+    return res.status(500).json({ error: 'Erro interno ao baixar comprovante' });
   }
 };

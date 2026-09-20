@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReplayTutorial from '../../components/onboarding/ReplayTutorial.jsx';
 import { useForm, Controller } from 'react-hook-form';
 import { IMaskInput } from 'react-imask';
 import api from '../../services/api.js';
@@ -107,6 +108,7 @@ export default function OSCProfilePage() {
           <h1 className={styles.pageTitle}>Perfil da Organização</h1>
           <p className={styles.pageSubtitle}>Complete o Checklist de Implantação para garantir a regularidade contábil e jurídica.</p>
         </div>
+      <ReplayTutorial />
       </div>
 
       <div className={styles.formContainer}>

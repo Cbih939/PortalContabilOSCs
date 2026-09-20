@@ -1,26 +1,12 @@
 import pool from '../config/db.js';
+import { oscScope } from '../services/access.service.js';
 
 export const getChartData = async (req, res) => {
     try {
-        const userId = req.user.id;
-        const userRole = req.user.role;
-
-        let oscsQuery = 'SELECT id, razao_social, created_at, data_origem_estatuto, data_fundacao FROM oscs';
-        const queryParams = [];
-
-        const officeId = req.user.office_id;
-
-        if (userRole?.toUpperCase() === 'CONTADOR') {
-            if (!officeId || officeId === "0") {
-                return res.json({ statusGeral: [], mensal: [], semestral: [], totalOscs: 0 });
-            }
-            oscsQuery += ' WHERE office_id = ?';
-            queryParams.push(officeId);
-        } else if (userRole?.toUpperCase() === 'OSC') {
-            // Em alguns locais é user_id, mas a chave primária da tabela oscs é id
-            oscsQuery += ' WHERE id = ?'; 
-            queryParams.push(userId);
-        }
+        // Escopo unificado: Admin (global) | Contador/ADM (escritório ou atribuídas) | OSC (a própria, por user_id)
+        const scope = oscScope(req.user, 'o');
+        const oscsQuery = `SELECT o.id, o.razao_social, o.created_at, o.data_origem_estatuto, o.data_fundacao FROM oscs o WHERE ${scope.sql}`;
+        const queryParams = [...scope.params];
 
         const [oscs] = await pool.execute(oscsQuery, queryParams);
 

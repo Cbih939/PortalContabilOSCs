@@ -62,7 +62,7 @@ export default function AlertsModal({
             {/* Alertas Não Lidos */}
             {unreadAlerts.length > 0 && (
               <section style={{ marginBottom: '24px' }}>
-                <h4 className={styles.sectionTitle} style={{ color: '#ea580c', borderBottom: '2px solid #ea580c', paddingBottom: '4px', marginBottom: '12px' }}>Novos Avisos</h4>
+                <h4 className={styles.sectionTitle} style={{ color: '#E85002', borderBottom: '2px solid #E85002', paddingBottom: '4px', marginBottom: '12px' }}>Novos Avisos</h4>
                 <div className={styles.alertsList} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {unreadAlerts.map(alert => (
                     <div key={alert.id} className={styles.unreadAlert} style={{ backgroundColor: '#fff7ed', border: '1px solid #fdba74', padding: '16px', borderRadius: '8px' }}>
@@ -77,13 +77,13 @@ export default function AlertsModal({
                             onClick={() => onMarkAsRead(alert.id)}
                             className={styles.markReadButton}
                             disabled={isLoading}
-                            style={{ padding: '8px 12px', backgroundColor: '#fff', border: '1px solid #fdba74', color: '#ea580c', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
+                            style={{ padding: '8px 12px', backgroundColor: '#fff', border: '1px solid #fdba74', color: '#E85002', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
                           >
                             Marcar como lido
                           </button>
                           <button
                             onClick={handleReplyInChat}
-                            style={{ padding: '8px 12px', backgroundColor: '#ea580c', border: 'none', color: '#fff', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            style={{ padding: '8px 12px', backgroundColor: '#E85002', border: 'none', color: '#fff', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                           >
                             <ChatIcon /> Responder
                           </button>

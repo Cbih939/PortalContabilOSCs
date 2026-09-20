@@ -50,14 +50,17 @@ router.put('/:id', protect, async (req, res) => {
     const memberId = req.params.id;
     const { name, role, cpf, start_date, end_date, status } = req.body;
 
-    await pool.execute(
-      'UPDATE board_members SET name = ?, role = ?, cpf = ?, start_date = ?, end_date = ?, status = ? WHERE id = ?',
-      [name, role, cpf || null, start_date || null, end_date || null, status, memberId]
-    );
-
-    // 🔴 GRAVA NO RELATÓRIO
     const [oscs] = await pool.execute('SELECT id FROM oscs WHERE user_id = ? LIMIT 1', [req.user.id]);
     const oscId = oscs.length > 0 ? oscs[0].id : null;
+    if (!oscId) return res.status(403).json({ message: 'Acesso negado.' });
+
+    const [result] = await pool.execute(
+      'UPDATE board_members SET name = ?, role = ?, cpf = ?, start_date = ?, end_date = ?, status = ? WHERE id = ? AND osc_id = ?',
+      [name, role, cpf || null, start_date || null, end_date || null, status, memberId, oscId]
+    );
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Membro não encontrado.' });
+
+    // 🔴 GRAVA NO RELATÓRIO
     await logAction(req.user.id, req.user.name, oscId, 'EDITOU', 'DIRETORIA', `Atualizou os dados do membro ${name} (${role}).`);
 
     res.json({ message: 'Membro atualizado!' });
@@ -70,16 +73,19 @@ router.put('/:id', protect, async (req, res) => {
 router.delete('/:id', protect, async (req, res) => {
   try {
     const memberId = req.params.id;
-    
-    // Busca o nome do membro antes de apagar para colocar no log
-    const [member] = await pool.execute('SELECT name FROM board_members WHERE id = ?', [memberId]);
-    const memberName = member.length > 0 ? member[0].name : 'Desconhecido';
 
-    await pool.execute('DELETE FROM board_members WHERE id = ?', [memberId]);
-
-    // 🔴 GRAVA NO RELATÓRIO
     const [oscs] = await pool.execute('SELECT id FROM oscs WHERE user_id = ? LIMIT 1', [req.user.id]);
     const oscId = oscs.length > 0 ? oscs[0].id : null;
+    if (!oscId) return res.status(403).json({ message: 'Acesso negado.' });
+    
+    // Busca o nome do membro antes de apagar para colocar no log
+    const [member] = await pool.execute('SELECT name FROM board_members WHERE id = ? AND osc_id = ?', [memberId, oscId]);
+    if (member.length === 0) return res.status(404).json({ message: 'Membro não encontrado.' });
+    const memberName = member[0].name;
+
+    await pool.execute('DELETE FROM board_members WHERE id = ? AND osc_id = ?', [memberId, oscId]);
+
+    // 🔴 GRAVA NO RELATÓRIO
     await logAction(req.user.id, req.user.name, oscId, 'EXCLUIU', 'DIRETORIA', `Removeu o membro ${memberName} da diretoria.`);
 
     res.json({ message: 'Membro removido!' });

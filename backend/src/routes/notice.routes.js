@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { protect } from '../middlewares/auth.middleware.js';
+import { protect, checkRole } from '../middlewares/auth.middleware.js';
 import { 
     getNoticeHistory, 
     sendNotice, 
@@ -14,7 +14,7 @@ router.use(protect);
 router.get('/history', getNoticeHistory);
 
 // Rota para enviar aviso (POST /api/notices)
-router.post('/', sendNotice);
+router.post('/', checkRole(['ADMIN', 'CONTADOR']), sendNotice);
 
 // Rota de estatísticas (caso precise)
 router.get('/stats', getNoticeStats);

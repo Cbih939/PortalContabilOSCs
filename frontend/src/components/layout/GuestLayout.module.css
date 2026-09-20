@@ -1,9 +1,23 @@
 .layout {
   min-height: 100vh;
-  width: 100vw;
-  background-color: #f3f4f6; /* Cor de fundo sólida (Cinza claro) */
+  min-height: 100dvh;
+  width: 100%;
+  background-color: var(--bg-app);
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Faixa de marca (gradiente preto → laranja) atrás do cartão de acesso */
+.layout::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 42vh;
+  min-height: 260px;
+  background: var(--brand-gradient);
+  border-radius: 0 0 32px 32px;
 }
 
 .contentWrapper {
@@ -13,4 +27,5 @@
   justify-content: center;
   padding: 1rem;
   width: 100%;
+  position: relative;
 }

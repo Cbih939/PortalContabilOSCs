@@ -1,19 +1,16 @@
 import pool from '../config/db.js';
+import { oscScope } from '../services/access.service.js';
 
 export const getDashboardStats = async (req, res) => {
     try {
         const userId = req.user.id;
-        const officeId = (req.user.office_id && req.user.office_id !== "0") ? req.user.office_id : null;
+        const scope = oscScope(req.user, 'o');
 
-        if (!officeId) {
-            const [msgs] = await pool.execute('SELECT COUNT(*) as total FROM messages WHERE receiver_id = ? AND is_read = 0', [userId]);
-            return res.json({ activeOSCs: 0, pendingDocs: 0, unreadMessages: msgs[0].total || 0, missingDocsList: [], _debug: 'SEM_ESCRITORIO' });
-        }
-        
+
         // 1. Busca OSCs usando o OFFICE_ID (Exatamente como no osc.controller.js)
         const [oscs] = await pool.execute(`
-            SELECT * FROM oscs WHERE office_id = ?
-        `, [officeId]);
+            SELECT o.* FROM oscs o WHERE ${scope.sql}
+        `, scope.params);
 
         const activeOSCs = oscs.length;
 
@@ -27,8 +24,8 @@ export const getDashboardStats = async (req, res) => {
             SELECT d.id, d.osc_id, d.original_name, d.ref_month, d.ref_year, d.status 
             FROM documents d
             JOIN oscs o ON d.osc_id = o.id
-            WHERE o.office_id = ?
-        `, [officeId]);
+            WHERE ${scope.sql}
+        `, scope.params);
 
         // 3. Busca Mensagens (Mensagens são pessoais do contador)
         const [msgs] = await pool.execute(
@@ -60,7 +57,7 @@ export const getDashboardStats = async (req, res) => {
             let missingText = [];
 
             if (pendingOscDocs.length > 0) {
-                missingText.push(`⏳ ${pendingOscDocs.length} doc(s) aguardando validação`);
+                missingText.push(`${pendingOscDocs.length} doc(s) aguardando validação`);
             }
 
             const rawDate = osc.data_origem_estatuto || osc.dataOrigemEstatuto || osc.data_fundacao || osc.dataFundacao || osc.created_at || osc.createdAt;
@@ -83,14 +80,17 @@ export const getDashboardStats = async (req, res) => {
             }
 
             if (mesesAtraso.length > 0) {
-                missingText.push(`🔴 Atraso: ${mesesAtraso.join(', ')}`);
+                missingText.push(`Atraso: ${mesesAtraso.join(', ')}`);
             }
 
             if (missingText.length > 0) {
                 missingDocsList.push({
                     id: osc.id,
                     name: osc.razao_social || osc.name || 'OSC Desconhecida',
-                    missing: missingText.join(' | ')
+                    missing: missingText.join(' | '),
+                    // Dados estruturados (o texto acima é mantido por compatibilidade)
+                    awaitingValidation: pendingOscDocs.length,
+                    lateMonths: mesesAtraso
                 });
             }
         }
@@ -105,8 +105,7 @@ export const getDashboardStats = async (req, res) => {
 
 export const getRecentActivity = async (req, res) => {
     try {
-        const officeId = (req.user.office_id && req.user.office_id !== "0") ? req.user.office_id : null;
-        if (!officeId) return res.json([]);
+        const scope = oscScope(req.user, 'o');
         
         const query = `
             SELECT 
@@ -115,12 +114,12 @@ export const getRecentActivity = async (req, res) => {
             FROM documents d
             JOIN oscs o ON d.osc_id = o.id
             LEFT JOIN users u ON o.user_id = u.id
-            WHERE o.office_id = ?
+            WHERE ${scope.sql}
             ORDER BY d.created_at DESC
             LIMIT 15
         `;
 
-        const [rows] = await pool.execute(query, [officeId]);
+        const [rows] = await pool.execute(query, scope.params);
 
         const activities = rows.map(row => ({
             id: row.id,
@@ -172,8 +171,7 @@ export const getMyOSCs = async (req, res) => {
 // --- NOVO: RELATÓRIOS COMPLETOS DO SISTEMA ---
 export const getSystemReports = async (req, res) => {
     try {
-        const officeId = (req.user.office_id && req.user.office_id !== "0") ? req.user.office_id : null;
-        if (!officeId) return res.json([]);
+        const scope = oscScope(req.user, 'o');
         
         // Puxa um histórico muito mais amplo (ex: últimos 300 movimentos) com mais detalhes
         const query = `
@@ -183,12 +181,12 @@ export const getSystemReports = async (req, res) => {
             FROM documents d
             JOIN oscs o ON d.osc_id = o.id
             LEFT JOIN users u ON o.user_id = u.id
-            WHERE o.office_id = ?
+            WHERE ${scope.sql}
             ORDER BY d.created_at DESC
             LIMIT 500
         `;
 
-        const [rows] = await pool.execute(query, [officeId]);
+        const [rows] = await pool.execute(query, scope.params);
 
         const reports = rows.map(row => ({
             id: row.id,

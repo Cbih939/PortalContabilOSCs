@@ -51,10 +51,14 @@ export const updateProject = async (req, res) => {
     const { id } = req.params;
     const { name, description, start_date, end_date, status } = req.body;
 
-    await pool.execute(
-      'UPDATE projects SET name = ?, description = ?, start_date = ?, end_date = ?, status = ? WHERE id = ?',
-      [name, description || null, start_date || null, end_date || null, status, id]
+    const oscId = await getInternalOscId(req.user.id);
+    if (!oscId) return res.status(403).json({ message: 'Acesso negado.' });
+
+    const [result] = await pool.execute(
+      'UPDATE projects SET name = ?, description = ?, start_date = ?, end_date = ?, status = ? WHERE id = ? AND osc_id = ?',
+      [name, description || null, start_date || null, end_date || null, status, id, oscId]
     );
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Projeto não encontrado.' });
 
     return res.status(200).json({ success: true, message: 'Projeto atualizado com sucesso!' });
   } catch (error) {
@@ -67,7 +71,11 @@ export const updateProject = async (req, res) => {
 export const deleteProject = async (req, res) => {
   try {
     const { id } = req.params;
-    await pool.execute('DELETE FROM projects WHERE id = ?', [id]);
+    const oscId = await getInternalOscId(req.user.id);
+    if (!oscId) return res.status(403).json({ message: 'Acesso negado.' });
+
+    const [result] = await pool.execute('DELETE FROM projects WHERE id = ? AND osc_id = ?', [id, oscId]);
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Projeto não encontrado.' });
     return res.status(200).json({ success: true, message: 'Projeto excluído com sucesso!' });
   } catch (error) {
     console.error('[deleteProject]', error);

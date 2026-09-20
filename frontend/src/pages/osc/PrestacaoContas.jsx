@@ -5,9 +5,12 @@ import Card, { CardBody } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/common/Modal';
 import Spinner from '@/components/common/Spinner';
+import api from '@/services/api';
+import { useNotification } from '@/contexts/NotificationContext';
 import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiDownload, FiFileText, FiEdit2, FiTrash2 } from 'react-icons/fi';
 
 export default function PrestacaoContas() {
+  const addNotification = useNotification();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -115,6 +118,18 @@ export default function PrestacaoContas() {
 
   const formatCurrency = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
+  // Comprovantes são privados: abre pela API autenticada, nunca por URL pública/localhost.
+  const openReceipt = async (transactionId) => {
+    try {
+      const { data } = await api.get(`/transactions/${transactionId}/receipt`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(data);
+      window.open(url, '_blank', 'noopener');
+      setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
+    } catch {
+      addNotification('Não foi possível abrir o comprovante.', 'error');
+    }
+  };
+
   return (
     <div className={styles.pageContainer}>
       <header className={styles.header}>
@@ -220,9 +235,9 @@ export default function PrestacaoContas() {
                       </td>
                       <td style={{ textAlign: 'center' }}>
                         {t.receipt_filename ? (
-                          <a href={`http://localhost:5000/uploads/${t.receipt_filename}`} target="_blank" rel="noopener noreferrer" className={styles.iconLink} title="Ver Comprovativo">
+                          <button type="button" onClick={() => openReceipt(t.id)} className={styles.iconLink} title="Ver Comprovativo" aria-label="Ver comprovante" style={{ background: 'none', border: 0, cursor: 'pointer' }}>
                             <FiFileText size={18} />
-                          </a>
+                          </button>
                         ) : (
                           <span className={styles.noFile}>-</span>
                         )}

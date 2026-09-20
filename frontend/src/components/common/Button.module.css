@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  background-color: #ED8223; /* laranja claro */
+  background-color: var(--primary-color);
   border-radius: 0.5rem; /* rounded-lg */
   border: 1px solid transparent; /* Adiciona borda para consistência */
   cursor: pointer;
@@ -33,13 +33,15 @@
 
 /* --- Variantes de Cor --- */
 .primary {
-  background-color: #ED8223; /* laranja claro */
-  color: white;
-  border-color: #EF4138;
+  background-color: var(--primary-color);
+  color: var(--on-primary);
+  font-weight: 700;
+  border-color: var(--primary-color);
 }
 .primary:hover:not(:disabled) {
-  background-color: #EF4138; /* Azul mais escuro */
-  border-color: #ED8223;
+  background-color: var(--primary-hover);
+  color: #fff;
+  border-color: var(--primary-hover);
 }
 
 .secondary {

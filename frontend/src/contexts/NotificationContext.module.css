@@ -96,3 +96,14 @@
     opacity: 1;
   }
 }
+/* Celular/tablet: avisos acima da barra inferior, ocupando a largura útil (antes estouravam a tela) */
+@media (max-width: 1023px) {
+  .portalContainer {
+    top: auto;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    bottom: calc(var(--bottom-nav-height, 68px) + env(safe-area-inset-bottom, 0px) + 12px);
+  }
+}

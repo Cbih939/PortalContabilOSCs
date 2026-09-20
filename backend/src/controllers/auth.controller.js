@@ -1,76 +1,113 @@
 import pool from '../config/db.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import config from '../config/index.js';
+import { verifyToken, protect, loadAuthUser, invalidateUserCache } from '../middlewares/auth.middleware.js';
+import { normalizeRole, isLegacyFinanceiro, isOfficeAdmin } from '../utils/roles.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'seusecretoseguro123jwt';
+const JWT_SECRET = config.JWT_SECRET; // sem fallback
 
-// --- MIDDLEWARES ---
-export const verifyToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+// Compatibilidade: outras rotas importam { verifyToken } deste módulo.
+export { verifyToken, protect };
 
-    if (!token) return res.status(401).json({ message: 'Token não fornecido.' });
+/** Dados do usuário expostos ao frontend (nunca inclui password_hash). */
+const toPublicUser = (u) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    role: normalizeRole(u.role),
+    status: u.status,
+    is_in_debt: u.is_in_debt,
+    office_id: u.office_id,
+    is_office_admin: Number(u.is_office_admin) || 0,
+    is_office_owner: isOfficeAdmin({ ...u, role: normalizeRole(u.role), is_office_admin: u.is_office_admin }),
+    onboarding_completed_at: u.onboarding_completed_at || null,
+});
 
+const findUserForLogin = async (email) => {
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded;
-        next();
+        const [rows] = await pool.execute(
+            'SELECT id, name, email, password_hash, role, status, is_in_debt, office_id, is_office_admin, onboarding_completed_at FROM users WHERE email = ?',
+            [email]
+        );
+        return rows[0] || null;
     } catch (error) {
-        return res.status(403).json({ message: 'Token inválido.' });
+        if (error.code !== 'ER_BAD_FIELD_ERROR') throw error;
+        // Banco ainda sem as colunas do redesign (migração pendente): login segue funcionando.
+        const [rows] = await pool.execute(
+            'SELECT id, name, email, password_hash, role, status, is_in_debt, office_id FROM users WHERE email = ?',
+            [email]
+        );
+        return rows[0] || null;
     }
 };
 
-export const protect = verifyToken;
-
-// --- FUNÇÃO DE LOGIN (DECLARAÇÃO ÚNICA) ---
+// --- FUNÇÃO DE LOGIN ---
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) return res.status(400).json({ message: 'Preencha todos os campos.' });
 
-        // CORREÇÃO 1: Adicionado o office_id na busca do banco de dados
-        const [rows] = await pool.execute(
-            'SELECT id, name, email, password_hash, role, status, is_in_debt, office_id FROM users WHERE email = ?',
-            [email]
-        );
-
-        if (rows.length === 0) return res.status(401).json({ message: 'Credenciais inválidas.' });
-
-        const user = rows[0];
+        const user = await findUserForLogin(email);
+        if (!user) return res.status(401).json({ message: 'Credenciais inválidas.' });
         if (user.status !== 'Ativo') return res.status(403).json({ message: 'Conta inativa.' });
 
-        let isMatch = await bcrypt.compare(password, user.password_hash);
+        const isMatch = await bcrypt.compare(password, user.password_hash);
+        if (!isMatch) return res.status(401).json({ message: 'Credenciais inválidas.' });
 
-        if (!isMatch) return res.status(401).json({ message: 'Senha incorreta.' });
+        // O perfil Financeiro foi descontinuado: não emitimos token para contas antigas.
+        if (isLegacyFinanceiro(user)) {
+            return res.status(403).json({
+                message: 'O perfil Financeiro foi descontinuado. Procure o administrador para migrar a sua conta.',
+            });
+        }
 
-        // CORREÇÃO 2: Adicionado o office_id dentro do Crachá (Token JWT)
+        const publicUser = toPublicUser(user);
         const token = jwt.sign(
-            { 
-                id: user.id, 
-                role: user.role, 
-                name: user.name, 
+            {
+                id: user.id,
+                role: publicUser.role,
+                name: user.name,
                 is_in_debt: user.is_in_debt,
-                office_id: user.office_id // <--- MÁGICA AQUI
+                office_id: user.office_id,
+                is_office_admin: publicUser.is_office_admin,
             },
             JWT_SECRET,
             { expiresIn: '24h' }
         );
 
-        return res.json({
-            token,
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                status: user.status,
-                is_in_debt: user.is_in_debt,
-                office_id: user.office_id // <--- E AQUI
-            }
-        });
+        return res.json({ token, user: publicUser });
     } catch (error) {
         console.error('[Auth Error]:', error);
         return res.status(500).json({ message: 'Erro interno do servidor.' });
+    }
+};
+
+// --- SESSÃO ATUAL (dados sempre frescos: débito, escritório, ADM, onboarding) ---
+export const me = async (req, res) => {
+    try {
+        invalidateUserCache(req.user.id);
+        const [rows] = await pool.execute('SELECT * FROM users WHERE id = ?', [req.user.id]);
+        if (rows.length === 0) return res.status(404).json({ message: 'Usuário não encontrado.' });
+        return res.json({ user: toPublicUser(rows[0]) });
+    } catch (error) {
+        console.error('[Auth me]:', error);
+        return res.status(500).json({ message: 'Erro ao carregar a sessão.' });
+    }
+};
+
+// --- ONBOARDING: registra que o usuário concluiu (ou pulou) o tour ---
+export const completeOnboarding = async (req, res) => {
+    try {
+        await pool.execute('UPDATE users SET onboarding_completed_at = NOW() WHERE id = ?', [req.user.id]);
+        invalidateUserCache(req.user.id);
+        return res.json({ success: true, onboarding_completed_at: new Date().toISOString() });
+    } catch (error) {
+        if (error.code === 'ER_BAD_FIELD_ERROR') {
+            return res.status(503).json({ message: 'Migração do banco pendente (onboarding_completed_at).' });
+        }
+        console.error('[Onboarding]:', error);
+        return res.status(500).json({ message: 'Erro ao registrar o onboarding.' });
     }
 };
 

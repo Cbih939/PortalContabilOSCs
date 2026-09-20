@@ -221,3 +221,17 @@
   justify-content: flex-end;
   margin-top: var(--space-sm);
 }
+
+/* Celular: o tooltip deixa de ficar fora da tela (alargava a página) e passa a caber na largura útil */
+@media (max-width: 767px) {
+  .tooltipText {
+    position: fixed;
+    top: 76px;
+    left: 12px;
+    right: 12px;
+    bottom: auto;
+    width: auto;
+    transform: none;
+  }
+  .tooltipText::after { display: none; }
+}
