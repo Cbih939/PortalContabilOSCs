@@ -152,8 +152,8 @@
 }
 
 .senderBadge {
-  background-color: #eff6ff; /* light blue */
-  color: #2563eb;
+  background-color: var(--color-info-light); /* light blue */
+  color: var(--color-info);
   padding: 2px 8px;
   border-radius: var(--radius-round);
   font-size: 0.7rem;

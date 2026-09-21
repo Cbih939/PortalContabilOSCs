@@ -10,26 +10,26 @@ export default function ManualPage() {
   }, []);
 
   const s = {
-    container: { minHeight: '100vh', backgroundColor: '#f9fafb', fontFamily: 'Inter, Arial, sans-serif' },
-    nav: { backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'fixed', width: '100%', top: 0, zIndex: 50, boxSizing: 'border-box' },
+    container: { minHeight: '100vh', backgroundColor: 'var(--bg-app)', fontFamily: 'Inter, Arial, sans-serif' },
+    nav: { backgroundColor: '#fff', borderBottom: '1px solid var(--border-color)', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'fixed', width: '100%', top: 0, zIndex: 50, boxSizing: 'border-box' },
     layout: { display: 'flex', maxWidth: '1200px', margin: '80px auto 40px', padding: '0 20px', gap: '30px', alignItems: 'flex-start' },
     
     // Estilos do Índice Lateral (Sidebar)
-    sidebar: { width: '300px', backgroundColor: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '1px solid #e5e7eb', position: 'sticky', top: '100px', maxHeight: 'calc(100vh - 140px)', overflowY: 'auto', flexShrink: 0 },
-    sidebarTitle: { margin: '0 0 15px 0', fontSize: '14px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold' },
-    indexLink: { display: 'block', color: '#4b5563', textDecoration: 'none', fontSize: '13px', padding: '6px 8px', borderRadius: '6px', marginBottom: '4px', transition: 'all 0.2s' },
+    sidebar: { width: '300px', backgroundColor: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '1px solid var(--border-color)', position: 'sticky', top: '100px', maxHeight: 'calc(100vh - 140px)', overflowY: 'auto', flexShrink: 0 },
+    sidebarTitle: { margin: '0 0 15px 0', fontSize: '14px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold' },
+    indexLink: { display: 'block', color: 'var(--text-muted)', textDecoration: 'none', fontSize: '13px', padding: '6px 8px', borderRadius: '6px', marginBottom: '4px', transition: 'all 0.2s' },
     
     // Estilos do Conteúdo
-    content: { flex: 1, backgroundColor: '#fff', borderRadius: '12px', padding: '40px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '1px solid #e5e7eb' },
-    mainTitle: { margin: '0 0 10px 0', color: '#111827', fontSize: '32px', fontWeight: '900', lineHeight: '1.2' },
-    subtitle: { margin: '0 0 30px 0', color: '#6b7280', fontSize: '18px', lineHeight: '1.5' },
-    h2: { color: '#111827', fontSize: '20px', fontWeight: 'bold', marginTop: '48px', marginBottom: '16px', borderBottom: '2px solid #fed7aa', paddingBottom: '8px', scrollMarginTop: '100px' },
-    h3: { color: '#374151', fontSize: '16px', fontWeight: 'bold', marginTop: '24px', marginBottom: '12px' },
-    p: { color: '#4b5563', fontSize: '15px', lineHeight: '1.7', marginBottom: '16px' },
-    ul: { margin: '0 0 24px 24px', color: '#4b5563', fontSize: '15px', lineHeight: '1.7' },
+    content: { flex: 1, backgroundColor: '#fff', borderRadius: '12px', padding: '40px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '1px solid var(--border-color)' },
+    mainTitle: { margin: '0 0 10px 0', color: 'var(--text-dark)', fontSize: '32px', fontWeight: '900', lineHeight: '1.2' },
+    subtitle: { margin: '0 0 30px 0', color: 'var(--text-muted)', fontSize: '18px', lineHeight: '1.5' },
+    h2: { color: 'var(--text-dark)', fontSize: '20px', fontWeight: 'bold', marginTop: '48px', marginBottom: '16px', borderBottom: '2px solid #fed7aa', paddingBottom: '8px', scrollMarginTop: '100px' },
+    h3: { color: 'var(--text-body)', fontSize: '16px', fontWeight: 'bold', marginTop: '24px', marginBottom: '12px' },
+    p: { color: 'var(--text-muted)', fontSize: '15px', lineHeight: '1.7', marginBottom: '16px' },
+    ul: { margin: '0 0 24px 24px', color: 'var(--text-muted)', fontSize: '15px', lineHeight: '1.7' },
     li: { marginBottom: '6px' },
-    link: { color: '#E85002', textDecoration: 'none', fontWeight: '600' },
-    highlightBox: { backgroundColor: '#fff7ed', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #E85002', margin: '24px 0' },
+    link: { color: 'var(--primary-color)', textDecoration: 'none', fontWeight: '600' },
+    highlightBox: { backgroundColor: 'var(--primary-light)', padding: '20px', borderRadius: '8px', borderLeft: '4px solid var(--primary-color)', margin: '24px 0' },
     highlightText: { color: '#9a3412', fontWeight: '600', margin: 0, fontSize: '15px', lineHeight: '1.6' }
   };
 
@@ -69,9 +69,9 @@ export default function ManualPage() {
       <nav style={s.nav}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <img src="/logo_portal.png" alt="Conta Comigo" style={{ height: '40px' }} />
-          <h1 style={{ margin: 0, fontSize: '18px', color: '#1f2937', fontWeight: 'bold' }}>Portal de Guias</h1>
+          <h1 style={{ margin: 0, fontSize: '18px', color: 'var(--text-dark)', fontWeight: 'bold' }}>Portal de Guias</h1>
         </div>
-        <Link to="/login" style={{ color: '#E85002', fontWeight: 'bold', textDecoration: 'none', fontSize: '14px' }}>&larr; Voltar ao Sistema</Link>
+        <Link to="/login" style={{ color: 'var(--primary-color)', fontWeight: 'bold', textDecoration: 'none', fontSize: '14px' }}>&larr; Voltar ao Sistema</Link>
       </nav>
 
       {/* Layout com Sidebar e Conteúdo */}
@@ -86,8 +86,8 @@ export default function ManualPage() {
                 key={topic.id} 
                 href={`#${topic.id}`} 
                 style={s.indexLink}
-                onMouseOver={(e) => { e.target.style.backgroundColor = '#f3f4f6'; e.target.style.color = '#E85002'; }}
-                onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = '#4b5563'; }}
+                onMouseOver={(e) => { e.target.style.backgroundColor = 'var(--gray-100)'; e.target.style.color = 'var(--primary-color)'; }}
+                onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = 'var(--text-muted)'; }}
               >
                 {topic.title}
               </a>
@@ -328,8 +328,8 @@ export default function ManualPage() {
           <h2 id="t27" style={s.h2}>27. Encerramento</h2>
           <p style={s.p}>Este manual consolida a base necessária para que o Conta Comigo se torne uma plataforma realmente especializada em associações sem fins lucrativos, OSCs, OSCIPs e cooperativas.</p>
           <p style={s.p}>O maior diferencial estratégico do Conta Comigo não é apenas “fazer contabilidade online”.</p>
-          <div style={{ ...s.highlightBox, backgroundColor: '#f0fdf4', borderLeftColor: '#16a34a' }}>
-            <p style={{ ...s.highlightText, color: '#166534', fontSize: '18px' }}>É traduzir a complexidade do terceiro setor e do cooperativismo em rotina simples, segura e documentada.</p>
+          <div style={{ ...s.highlightBox, backgroundColor: 'var(--color-success-light)', borderLeftColor: 'var(--color-success)' }}>
+            <p style={{ ...s.highlightText, color: 'var(--color-success)', fontSize: '18px' }}>É traduzir a complexidade do terceiro setor e do cooperativismo em rotina simples, segura e documentada.</p>
           </div>
         </main>
       </div>

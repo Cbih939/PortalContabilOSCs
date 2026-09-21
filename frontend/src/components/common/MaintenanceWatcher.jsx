@@ -47,7 +47,7 @@ export default function MaintenanceWatcher() {
     if (!warning) return null;
 
     return (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: '#dc2626', color: 'white', textAlign: 'center', padding: '12px', fontSize: '14px', fontWeight: 'bold', zIndex: 99999, boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: 'var(--color-danger)', color: 'white', textAlign: 'center', padding: '12px', fontSize: '14px', fontWeight: 'bold', zIndex: 99999, boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
             {warning}
         </div>
     );

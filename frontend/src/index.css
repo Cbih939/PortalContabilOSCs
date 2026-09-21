@@ -422,3 +422,40 @@ a:hover {
     scroll-behavior: auto !important;
   }
 }
+
+/* Aliases de compatibilidade (tokens usados por telas antigas) */
+:root {
+  --primary-color-light: var(--primary-light);
+  --space-3xl: 4rem;
+  --radius-round: var(--radius-pill);
+  --radius-full: var(--radius-pill);
+}
+
+/* ============ Padronização das telas dentro do AppShell ============
+   O espaçamento externo e a largura máxima vêm do shell (#conteudo);
+   as telas herdadas mantinham padding/max-width próprios e títulos em caixa alta. */
+#conteudo [class*="pageContainer"],
+#conteudo [class*="_container_"] {
+  padding-left: 0;
+  padding-right: 0;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+#conteudo [class*="pageContainer"]:not([class*="Messages"]) { padding-top: 0; padding-bottom: 0; }
+
+#conteudo h1 {
+  font-size: var(--fs-h1);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  color: var(--text-dark);
+}
+#conteudo [class*="pageSubtitle"] { font-size: var(--fs-body); color: var(--text-muted); }
+
+/* Cabeçalhos de página empilham no celular */
+@media (max-width: 767px) {
+  #conteudo [class*="_header_"],
+  #conteudo [class*="headerWithInfo"] { flex-wrap: wrap; gap: 12px; }
+}

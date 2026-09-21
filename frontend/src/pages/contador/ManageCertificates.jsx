@@ -215,7 +215,7 @@ export default function ManageCertificates() {
                     <FiMapPin className={styles.regionIcon} /> {region} 
                     <span className={styles.countBadge}>{countLinksInRegion(estaduais[region])} link(s)</span>
                   </div>
-                  <div style={{ color: '#0369a1' }}>{expandedEstReg[region] ? <FiChevronUp /> : <FiChevronDown />}</div>
+                  <div style={{ color: 'var(--color-info)' }}>{expandedEstReg[region] ? <FiChevronUp /> : <FiChevronDown />}</div>
                 </button>
 
                 {expandedEstReg[region] && (

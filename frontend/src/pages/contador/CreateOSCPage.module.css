@@ -75,7 +75,7 @@
 }
 
 .formInput::placeholder {
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .formInput:focus {

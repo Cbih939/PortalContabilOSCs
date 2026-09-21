@@ -15,12 +15,12 @@
 .title {
   font-size: 1.875rem; /* text-3xl */
   font-weight: 700; /* font-bold */
-  color: #1f2937; /* text-gray-800 */
+  color: var(--text-dark); /* text-gray-800 */
 }
 
 .subtitle {
   font-size: 1rem; /* text-base */
-  color: #6b7280; /* text-gray-600 */
+  color: var(--text-muted); /* text-gray-600 */
   margin-top: 0.5rem;
 }
 
@@ -35,9 +35,9 @@
 .sectionTitle {
   font-size: 1.25rem; /* text-xl */
   font-weight: 600; /* font-semibold */
-  color: #111827; /* text-gray-900 */
+  color: var(--text-dark); /* text-gray-900 */
   padding-bottom: 0.75rem; /* pb-3 */
-  border-bottom: 1px solid #e5e7eb; /* border-b */
+  border-bottom: 1px solid var(--border-color); /* border-b */
   margin-bottom: 1.5rem; /* mb-6 */
 }
 
@@ -64,7 +64,7 @@
   display: block;
   font-size: 0.875rem; /* text-sm */
   font-weight: 500; /* font-medium */
-  color: #374151; /* text-gray-700 */
+  color: var(--text-body); /* text-gray-700 */
   margin-bottom: 0.25rem; /* mb-1 */
 }
 
@@ -75,31 +75,31 @@
   display: block;
   width: 100%;
   padding: 0.65rem 0.75rem; /* p-3 (ajustado para altura) */
-  border: 1px solid #d1d5db; /* border border-gray-300 */
+  border: 1px solid var(--border-color); /* border border-gray-300 */
   border-radius: 0.375rem; /* rounded-md (ligeiramente menos redondo que rounded-lg) */
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
-  color: #111827;
+  color: var(--text-dark);
   background-color: white;
 }
 .formInput::placeholder {
-    color: #9ca3af; /* placeholder-gray-400 */
+    color: var(--text-muted); /* placeholder-gray-400 */
 }
 .formInput:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--color-info);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
 }
 
 /* (Upload de ficheiros - Secção 2 - precisa de mais estilos se for implementada) */
 .uploadBox {
-    border: 2px dashed #d1d5db;
+    border: 2px dashed var(--border-color);
     border-radius: 0.5rem;
     padding: 1.5rem;
     text-align: center;
-    color: #6b7280;
+    color: var(--text-muted);
 }
 .uploadLink {
-    color: #3b82f6;
+    color: var(--color-info);
     font-weight: 500;
     cursor: pointer;
 }
@@ -119,11 +119,11 @@
 /* Estilo para o botão de finalizar (usará Button.jsx) */
 /* Opcional: Definir gradiente laranja/vermelho se a variante 'danger' não for suficiente */
 /* .submitButton {
-    background-image: linear-gradient(to right, #f97316, #ef4444);
+    background-image: linear-gradient(to right, var(--primary-color), var(--color-danger));
     border-color: transparent;
     color: white;
 }
 .submitButton:hover {
-    background-image: linear-gradient(to right, #E85002, #dc2626);
+    background-image: linear-gradient(to right, var(--primary-color), var(--color-danger));
 } 
 */

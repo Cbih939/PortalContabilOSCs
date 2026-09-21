@@ -175,7 +175,7 @@ export default function RegisterOSC() {
                                 />
                             )} />
                             {/* Dica visual e mensagem de erro do Yup */}
-                            <span style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '4px' }}>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                                 Apenas .PNG | Máx: 5MB | Resolução ideal: 1080x1080px
                             </span>
                             {errors.logotipo && <span className={styles.errorMessage}>{errors.logotipo.message}</span>}

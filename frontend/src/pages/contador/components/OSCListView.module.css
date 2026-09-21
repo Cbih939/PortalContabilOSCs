@@ -14,7 +14,7 @@
 .title {
   font-size: 1.875rem; /* text-3xl */
   font-weight: 700; /* font-bold */
-  color: #1f2937; /* text-gray-800 */
+  color: var(--text-dark); /* text-gray-800 */
 }
 
 /* Estilos para o botão "Cadastrar Nova OSC" (usa o componente Button) */
@@ -57,25 +57,25 @@
 
 .table th {
   padding: 0.75rem 1.25rem; /* px-5 py-3 */
-  border-bottom: 2px solid #e5e7eb; /* border-b-2 */
-  background-color: #f9fafb; /* bg-gray-100 */
+  border-bottom: 2px solid var(--border-color); /* border-b-2 */
+  background-color: var(--bg-app); /* bg-gray-100 */
   text-align: left;
   font-size: 0.75rem; /* text-xs */
   font-weight: 600; /* font-semibold */
-  color: #4b5563; /* text-gray-600 */
+  color: var(--text-muted); /* text-gray-600 */
   text-transform: uppercase;
 }
 
 .table td {
   padding: 1.25rem 1.25rem; /* px-5 py-5 */
-  border-bottom: 1px solid #e5e7eb; /* border-b border-gray-200 */
+  border-bottom: 1px solid var(--border-color); /* border-b border-gray-200 */
   font-size: 0.875rem; /* text-sm */
-  color: #111827; /* text-gray-900 */
+  color: var(--text-dark); /* text-gray-900 */
   white-space: nowrap; /* whitespace-no-wrap */
 }
 
 .table tr:hover td { /* hover:bg-gray-50 */
-    background-color: #f9fafb;
+    background-color: var(--bg-app);
 }
 
 .statusBadge {
@@ -103,7 +103,7 @@
 }
 
 .statusBadgeInactive {
-  color: #b91c1c; /* text-red-900 */
+  color: var(--color-danger); /* text-red-900 */
 }
 .statusBadgeInactive span {
   background-color: #fecaca; /* bg-red-200 */
@@ -133,18 +133,18 @@
   display: block;
 }
 
-.viewButton { color: #2563eb; /* text-blue-600 */ }
-.viewButton:hover { color: #1d4ed8; /* hover:text-blue-900 */ background-color: #dbeafe; /* hover:bg-blue-100 */ }
+.viewButton { color: var(--color-info); /* text-blue-600 */ }
+.viewButton:hover { color: var(--color-info); /* hover:text-blue-900 */ background-color: var(--color-info-light); /* hover:bg-blue-100 */ }
 
 .editButton { color: #ca8a04; /* text-yellow-600 */ }
-.editButton:hover { color: #854d0e; /* hover:text-yellow-900 */ background-color: #fef9c3; /* hover:bg-yellow-100 */ }
+.editButton:hover { color: #854d0e; /* hover:text-yellow-900 */ background-color: var(--color-warning-light); /* hover:bg-yellow-100 */ }
 
-.alertButton { color: #dc2626; /* text-red-600 */ }
-.alertButton:hover { color: #991b1b; /* hover:text-red-900 */ background-color: #fee2e2; /* hover:bg-red-100 */ }
+.alertButton { color: var(--color-danger); /* text-red-600 */ }
+.alertButton:hover { color: var(--color-danger); /* hover:text-red-900 */ background-color: var(--color-danger-light); /* hover:bg-red-100 */ }
 
 .emptyRow td {
     padding: 2.5rem 1.25rem; /* py-10 px-5 */
     text-align: center;
-    color: #6b7280; /* text-gray-500 */
+    color: var(--text-muted); /* text-gray-500 */
     white-space: normal;
 }

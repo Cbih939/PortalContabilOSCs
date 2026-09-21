@@ -150,12 +150,12 @@
 
 .badgeReceita {
   background-color: var(--color-success-light);
-  color: #166534;
+  color: var(--color-success);
 }
 
 .badgeDespesa {
   background-color: var(--color-danger-light);
-  color: #991b1b;
+  color: var(--color-danger);
 }
 
 .textGreen {

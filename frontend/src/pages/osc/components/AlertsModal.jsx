@@ -54,7 +54,7 @@ export default function AlertsModal({
     >
       <div className={styles.modalBody}>
         {alerts.length === 0 ? (
-          <p className={styles.emptyText} style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+          <p className={styles.emptyText} style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>
             Nenhum aviso no momento.
           </p>
         ) : (
@@ -62,10 +62,10 @@ export default function AlertsModal({
             {/* Alertas Não Lidos */}
             {unreadAlerts.length > 0 && (
               <section style={{ marginBottom: '24px' }}>
-                <h4 className={styles.sectionTitle} style={{ color: '#E85002', borderBottom: '2px solid #E85002', paddingBottom: '4px', marginBottom: '12px' }}>Novos Avisos</h4>
+                <h4 className={styles.sectionTitle} style={{ color: 'var(--primary-color)', borderBottom: '2px solid var(--primary-color)', paddingBottom: '4px', marginBottom: '12px' }}>Novos Avisos</h4>
                 <div className={styles.alertsList} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {unreadAlerts.map(alert => (
-                    <div key={alert.id} className={styles.unreadAlert} style={{ backgroundColor: '#fff7ed', border: '1px solid #fdba74', padding: '16px', borderRadius: '8px' }}>
+                    <div key={alert.id} className={styles.unreadAlert} style={{ backgroundColor: 'var(--primary-light)', border: '1px solid #fdba74', padding: '16px', borderRadius: '8px' }}>
                       <div className={styles.alertHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
                         <div className={styles.alertContent} style={{ flex: 1 }}>
                           <p className={styles.alertTitle} style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#9a3412', margin: '0 0 8px 0' }}>{alert.title}</p>
@@ -77,13 +77,13 @@ export default function AlertsModal({
                             onClick={() => onMarkAsRead(alert.id)}
                             className={styles.markReadButton}
                             disabled={isLoading}
-                            style={{ padding: '8px 12px', backgroundColor: '#fff', border: '1px solid #fdba74', color: '#E85002', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
+                            style={{ padding: '8px 12px', backgroundColor: '#fff', border: '1px solid #fdba74', color: 'var(--primary-color)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
                           >
                             Marcar como lido
                           </button>
                           <button
                             onClick={handleReplyInChat}
-                            style={{ padding: '8px 12px', backgroundColor: '#E85002', border: 'none', color: '#fff', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            style={{ padding: '8px 12px', backgroundColor: 'var(--primary-color)', border: 'none', color: '#fff', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                           >
                             <ChatIcon /> Responder
                           </button>
@@ -102,24 +102,24 @@ export default function AlertsModal({
             {/* Alertas Lidos */}
             {readAlerts.length > 0 && (
               <section className={styles.readSection}>
-                <h4 className={styles.sectionTitle} style={{ color: '#6b7280', borderBottom: '2px solid #e5e7eb', paddingBottom: '4px', marginBottom: '12px' }}>Histórico de Avisos</h4>
+                <h4 className={styles.sectionTitle} style={{ color: 'var(--text-muted)', borderBottom: '2px solid var(--border-color)', paddingBottom: '4px', marginBottom: '12px' }}>Histórico de Avisos</h4>
                 <div className={styles.alertsList} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {readAlerts.map(alert => (
-                    <div key={alert.id} className={styles.readAlert} style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', padding: '12px', borderRadius: '8px', opacity: 0.8 }}>
+                    <div key={alert.id} className={styles.readAlert} style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', padding: '12px', borderRadius: '8px', opacity: 0.8 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ flex: 1 }}>
-                          <p className={styles.alertTitle} style={{ fontWeight: '600', color: '#374151', margin: '0 0 4px 0' }}>{alert.title}</p>
-                          <p className={styles.alertMessage} style={{ color: '#6b7280', margin: 0, fontSize: '0.9rem' }}>{alert.message}</p>
+                          <p className={styles.alertTitle} style={{ fontWeight: '600', color: 'var(--text-body)', margin: '0 0 4px 0' }}>{alert.title}</p>
+                          <p className={styles.alertMessage} style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.9rem' }}>{alert.message}</p>
                         </div>
                         <button
                             onClick={handleReplyInChat}
-                            style={{ padding: '6px 10px', backgroundColor: 'transparent', border: '1px solid #d1d5db', color: '#4b5563', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', marginLeft: '12px' }}
+                            style={{ padding: '6px 10px', backgroundColor: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', marginLeft: '12px' }}
                             title="Ir para o Chat"
                           >
                             <ChatIcon />
                         </button>
                       </div>
-                      <p className={styles.alertTimestamp} style={{ fontSize: '0.7rem', color: '#9ca3af', margin: '8px 0 0 0' }}>
+                      <p className={styles.alertTimestamp} style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: '8px 0 0 0' }}>
                         Lido - Recebido em: {formatDateTime(alert.date || alert.created_at)}
                       </p>
                     </div>

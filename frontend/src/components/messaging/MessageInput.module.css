@@ -1,7 +1,7 @@
 .inputContainer {
   padding: 1rem 1.5rem;
   background-color: white;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -10,7 +10,7 @@
 .attachButton {
   background: none;
   border: none;
-  color: #9ca3af;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 50%;
@@ -18,29 +18,29 @@
 }
 
 .attachButton:hover {
-  color: #EC6D12;
-  background-color: #fff7ed;
+  color: var(--primary-color);
+  background-color: var(--primary-light);
 }
 
 .textField {
   flex: 1;
   padding: 0.75rem 1rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
   border-radius: 1.5rem; /* Arredondado estilo pílula */
   font-size: 0.95rem;
   outline: none;
   transition: border-color 0.2s;
-  background-color: #f9fafb;
+  background-color: var(--bg-app);
 }
 
 .textField:focus {
-  border-color: #EC6D12;
+  border-color: var(--primary-color);
   background-color: white;
   box-shadow: 0 0 0 2px rgba(236, 109, 18, 0.1);
 }
 
 .sendButton {
-  background-color: #EC6D12;
+  background-color: var(--primary-color);
   color: white;
   border: none;
   width: 2.75rem;
@@ -55,12 +55,12 @@
 }
 
 .sendButton:hover {
-  background-color: #C74400; /* Laranja mais escuro */
+  background-color: var(--primary-hover); /* Laranja mais escuro */
   transform: scale(1.05);
 }
 
 .sendButton:disabled {
-  background-color: #e5e7eb;
+  background-color: var(--border-color);
   cursor: not-allowed;
   transform: none;
   box-shadow: none;

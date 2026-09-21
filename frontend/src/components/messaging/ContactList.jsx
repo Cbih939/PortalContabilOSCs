@@ -30,7 +30,7 @@ export default function ContactList({ contacts, selectedContact, onSelectContact
 
       <div className={styles.list}>
         {isLoading ? (
-          <div style={{ padding: '1rem', textAlign: 'center', color: '#9ca3af' }}>Carregando...</div>
+          <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>Carregando...</div>
         ) : (
           filteredContacts.map((contact) => (
             <div 

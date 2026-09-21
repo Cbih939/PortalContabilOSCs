@@ -1,7 +1,7 @@
 .pageContainer {
   height: calc(100vh - 4rem); /* Altura total menos o header */
   display: flex;
-  background-color: #f3f4f6; /* Fundo cinza para destacar os painéis brancos */
+  background-color: var(--gray-100); /* Fundo cinza para destacar os painéis brancos */
   padding: 1.5rem;
   gap: 1.5rem;
   overflow: hidden;
@@ -21,7 +21,7 @@
 /* Área da Lista de Contatos (Esquerda) */
 .sidebar {
   width: 20rem; /* 320px */
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid var(--border-color);
   background-color: #ffffff;
   display: flex;
   flex-direction: column;
@@ -43,15 +43,15 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #9ca3af;
-  background-color: #f9fafb;
+  color: var(--text-muted);
+  background-color: var(--bg-app);
 }
 
 .emptyIcon {
   width: 4rem;
   height: 4rem;
   margin-bottom: 1rem;
-  color: #d1d5db;
+  color: var(--border-color);
 }
 
 @media (max-width: 768px) {

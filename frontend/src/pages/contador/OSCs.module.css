@@ -219,10 +219,10 @@
   opacity: 0.8;
 }
 
-.actionBtn.view { color: #2563eb; background-color: #eff6ff; }
-.actionBtn.edit { color: #d97706; background-color: #fffbeb; }
-.actionBtn.alert { color: #dc2626; background-color: #fef2f2; }
-.actionBtn.delete { color: #991b1b; background-color: #fee2e2; }
+.actionBtn.view { color: var(--color-info); background-color: var(--color-info-light); }
+.actionBtn.edit { color: #d97706; background-color: var(--color-warning-light); }
+.actionBtn.alert { color: var(--color-danger); background-color: var(--color-danger-light); }
+.actionBtn.delete { color: var(--color-danger); background-color: var(--color-danger-light); }
 
 /* Accordion Body */
 .accordionBody {
@@ -435,7 +435,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  color: #2563eb;
+  color: var(--color-info);
   font-weight: 600;
   cursor: pointer;
   font-size: 0.9rem;

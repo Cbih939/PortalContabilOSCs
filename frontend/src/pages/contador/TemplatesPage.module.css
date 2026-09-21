@@ -131,7 +131,7 @@
 }
 
 .fileIcon {
-  color: #15803d;
+  color: var(--color-success);
   font-size: 1.5rem;
   flex-shrink: 0;
 }

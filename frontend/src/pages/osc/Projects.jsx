@@ -111,9 +111,9 @@ export default function ProjectsPage() {
   const getStatusStyle = (status) => {
     switch (status) {
       case 'ATIVO': return { bg: '#ecfdf5', color: '#059669', border: '#6ee7b7', label: 'Em Andamento' };
-      case 'CONCLUIDO': return { bg: '#eff6ff', color: '#2563eb', border: '#93c5fd', label: 'Concluído' };
-      case 'SUSPENSO': return { bg: '#fef2f2', color: '#dc2626', border: '#fca5a5', label: 'Suspenso / Cancelado' };
-      default: return { bg: '#f3f4f6', color: '#4b5563', border: '#d1d5db', label: status };
+      case 'CONCLUIDO': return { bg: 'var(--color-info-light)', color: 'var(--color-info)', border: '#93c5fd', label: 'Concluído' };
+      case 'SUSPENSO': return { bg: 'var(--color-danger-light)', color: 'var(--color-danger)', border: '#fca5a5', label: 'Suspenso / Cancelado' };
+      default: return { bg: 'var(--gray-100)', color: 'var(--text-muted)', border: 'var(--border-color)', label: status };
     }
   };
 
@@ -123,15 +123,15 @@ export default function ProjectsPage() {
       {/* Cabeçalho */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '10px', margin: '0 0 8px 0' }}>
-            <div style={{ padding: '8px', backgroundColor: '#FFF1E8', color: '#E85002', borderRadius: '8px' }}><FolderIcon /></div>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '10px', margin: '0 0 8px 0' }}>
+            <div style={{ padding: '8px', backgroundColor: 'var(--primary-light)', color: 'var(--primary-color)', borderRadius: '8px' }}><FolderIcon /></div>
             Projetos e Centros de Custo
           </h1>
-          <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
+          <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '14px' }}>
             Não misture recurso livre com vinculado. Cadastre seus projetos para separar despesas e facilitar a prestação de contas.
           </p>
         </div>
-        <Button onClick={handleOpenCreate} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#E85002', color: '#fff' }}>
+        <Button onClick={handleOpenCreate} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'var(--primary-color)', color: '#fff' }}>
           <PlusIcon /> Novo Projeto
         </Button>
       </div>
@@ -140,43 +140,43 @@ export default function ProjectsPage() {
       {isLoading ? (
         <div style={{ padding: '60px', textAlign: 'center' }}><Spinner text="A carregar projetos..." /></div>
       ) : projects.length === 0 ? (
-        <div style={{ padding: '60px 20px', textAlign: 'center', backgroundColor: '#fff', borderRadius: '12px', border: '1px dashed #d1d5db' }}>
-          <FolderIcon style={{ width: '48px', height: '48px', color: '#9ca3af', marginBottom: '16px' }} />
-          <h3 style={{ fontSize: '18px', color: '#374151', margin: '0 0 8px 0' }}>Nenhum projeto cadastrado</h3>
-          <p style={{ color: '#6b7280', margin: '0 0 20px 0', fontSize: '14px' }}>Crie o seu primeiro projeto ou centro de custo para iniciar a organização financeira.</p>
-          <Button onClick={handleOpenCreate} style={{ backgroundColor: '#E85002', color: '#fff' }}>Criar Primeiro Projeto</Button>
+        <div style={{ padding: '60px 20px', textAlign: 'center', backgroundColor: '#fff', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
+          <FolderIcon style={{ width: '48px', height: '48px', color: 'var(--text-muted)', marginBottom: '16px' }} />
+          <h3 style={{ fontSize: '18px', color: 'var(--text-body)', margin: '0 0 8px 0' }}>Nenhum projeto cadastrado</h3>
+          <p style={{ color: 'var(--text-muted)', margin: '0 0 20px 0', fontSize: '14px' }}>Crie o seu primeiro projeto ou centro de custo para iniciar a organização financeira.</p>
+          <Button onClick={handleOpenCreate} style={{ backgroundColor: 'var(--primary-color)', color: '#fff' }}>Criar Primeiro Projeto</Button>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
           {projects.map((project) => {
             const statusStyle = getStatusStyle(project.status);
             return (
-              <div key={project.id} style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '20px', display: 'flex', flexDirection: 'column', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'transform 0.2s, box-shadow 0.2s', ':hover': { transform: 'translateY(-2px)', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' } }}>
+              <div key={project.id} style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '20px', display: 'flex', flexDirection: 'column', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'transform 0.2s, box-shadow 0.2s', ':hover': { transform: 'translateY(-2px)', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' } }}>
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                   <span style={{ backgroundColor: statusStyle.bg, color: statusStyle.color, border: `1px solid ${statusStyle.border}`, padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>
                     {statusStyle.label}
                   </span>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => handleOpenEdit(project)} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '4px' }} title="Editar"><EditIcon /></button>
+                    <button onClick={() => handleOpenEdit(project)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }} title="Editar"><EditIcon /></button>
                     <button onClick={() => handleDelete(project)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '4px' }} title="Excluir"><TrashIcon /></button>
                   </div>
                 </div>
 
-                <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#1f2937', fontWeight: 'bold' }}>{project.name}</h3>
+                <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: 'var(--text-dark)', fontWeight: 'bold' }}>{project.name}</h3>
                 
-                <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#6b7280', flex: 1, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'var(--text-muted)', flex: 1, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                   {project.description || 'Sem descrição detalhada.'}
                 </p>
 
-                <div style={{ display: 'flex', gap: '16px', borderTop: '1px solid #f3f4f6', paddingTop: '16px', marginTop: 'auto' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#4b5563', fontSize: '12px' }}>
+                <div style={{ display: 'flex', gap: '16px', borderTop: '1px solid var(--gray-100)', paddingTop: '16px', marginTop: 'auto' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '12px' }}>
                     <CalendarIcon /> 
-                    <span>Início: <strong style={{color: '#1f2937'}}>{project.start_date ? new Date(project.start_date).toLocaleDateString('pt-BR') : '-'}</strong></span>
+                    <span>Início: <strong style={{color: 'var(--text-dark)'}}>{project.start_date ? new Date(project.start_date).toLocaleDateString('pt-BR') : '-'}</strong></span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#4b5563', fontSize: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '12px' }}>
                     <CalendarIcon /> 
-                    <span>Fim: <strong style={{color: '#1f2937'}}>{project.end_date ? new Date(project.end_date).toLocaleDateString('pt-BR') : '-'}</strong></span>
+                    <span>Fim: <strong style={{color: 'var(--text-dark)'}}>{project.end_date ? new Date(project.end_date).toLocaleDateString('pt-BR') : '-'}</strong></span>
                   </div>
                 </div>
 
@@ -193,7 +193,7 @@ export default function ProjectsPage() {
           <div>
             <label style={labelStyle}>Nome do Projeto / Centro de Custo *</label>
             <input {...register('name')} placeholder="Ex: Fundo Municipal do Idoso 2026" style={inputStyle} />
-            {errors.name && <span style={{ color: '#dc2626', fontSize: '12px' }}>{errors.name.message}</span>}
+            {errors.name && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.name.message}</span>}
           </div>
 
           <div>
@@ -223,7 +223,7 @@ export default function ProjectsPage() {
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
             <Button variant="secondary" onClick={() => setIsModalOpen(false)} type="button">Cancelar</Button>
-            <Button type="submit" style={{ backgroundColor: '#E85002', color: '#fff' }} disabled={isSubmitting}>
+            <Button type="submit" style={{ backgroundColor: 'var(--primary-color)', color: '#fff' }} disabled={isSubmitting}>
               {isSubmitting ? 'Salvando...' : (projectToEdit ? 'Atualizar Projeto' : 'Criar Projeto')}
             </Button>
           </div>
@@ -234,5 +234,5 @@ export default function ProjectsPage() {
   );
 }
 
-const labelStyle = { display: 'block', fontSize: '13px', fontWeight: 'bold', color: '#374151', marginBottom: '6px' };
-const inputStyle = { width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' };
+const labelStyle = { display: 'block', fontSize: '13px', fontWeight: 'bold', color: 'var(--text-body)', marginBottom: '6px' };
+const inputStyle = { width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '14px', outline: 'none' };

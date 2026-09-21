@@ -6,7 +6,7 @@
 
 .header {
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-color);
   background-color: white;
   display: flex;
   align-items: center;
@@ -16,13 +16,13 @@
 .headerInfo h3 {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-dark);
   margin: 0;
 }
 
 .headerInfo span {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .messagesList {
@@ -58,7 +58,7 @@
 
 /* Minha mensagem: Laranja Sólido */
 .sent .bubble {
-  background-color: #EC6D12;
+  background-color: var(--primary-color);
   color: white;
   border-bottom-right-radius: 0.25rem; /* Ponta do balão */
 }
@@ -66,8 +66,8 @@
 /* Mensagem do outro: Branco/Cinza */
 .received .bubble {
   background-color: #ffffff;
-  color: #374151;
-  border: 1px solid #e5e7eb;
+  color: var(--text-body);
+  border: 1px solid var(--border-color);
   border-bottom-left-radius: 0.25rem;
 }
 
@@ -79,5 +79,5 @@
   text-align: right;
 }
 
-.received .timestamp { color: #9ca3af; }
+.received .timestamp { color: var(--text-muted); }
 .sent .timestamp { color: rgba(255, 255, 255, 0.9); }

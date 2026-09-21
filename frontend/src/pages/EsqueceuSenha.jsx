@@ -29,7 +29,7 @@ export default function EsqueceuSenhaPage() {
     return (
       <div className={styles.loginCard}>
         <h3 className={styles.title}>Verifique seu E-mail</h3>
-        <p style={{ textAlign: 'center', color: '#4b5563', marginBottom: '1.5rem' }}>
+        <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
           Enviamos as instruções de recuperação para o seu endereço de e-mail cadastrado.
         </p>
         <Link to="/login" className={styles.forgotPassword} style={{ textAlign: 'center', display: 'block' }}>
@@ -43,7 +43,7 @@ export default function EsqueceuSenhaPage() {
     <div className={styles.loginCard}>
       <img src="/logo_portal.png" alt="Logo" className={styles.logo} />
       <h3 className={styles.title}>Recuperar Senha</h3>
-      <p style={{ textAlign: 'center', fontSize: '0.9rem', color: '#6b7280', marginBottom: '1.5rem' }}>
+      <p style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
         Insira seu e-mail e enviaremos um link para você criar uma nova senha.
       </p>
 
