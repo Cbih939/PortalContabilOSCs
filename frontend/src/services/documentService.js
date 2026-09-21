@@ -167,3 +167,9 @@ export const openDocument = async (id, mimeType) => {
   window.open(url, '_blank', 'noopener');
   setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
 };
+
+/** Documentos recebidos agrupados por OSC, com os meses ainda sem envio. */
+export const getReceivedByOsc = async () => {
+  const response = await api.get('/documents/received-by-osc');
+  return response.data;
+};

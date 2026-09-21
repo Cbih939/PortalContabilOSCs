@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { 
   getDocuments, 
-  getReceivedDocuments, 
+  getReceivedDocuments,
+  getReceivedByOsc, 
   getDocumentStats,
   uploadDocument, 
   downloadDocument, 
@@ -24,6 +25,7 @@ router.get('/public/:token', downloadPublicDocument);
 // Todas as demais exigem login. OSC em débito é bloqueada também no servidor.
 router.get('/my', protect, blockIfInDebt, getDocuments);
 router.get('/received', protect, getReceivedDocuments);
+router.get('/received-by-osc', protect, getReceivedByOsc);
 router.get('/stats', protect, blockIfInDebt, getDocumentStats);
 router.post('/upload', protect, blockIfInDebt, upload.single('file'), uploadDocument);
 router.get('/download/:id', protect, blockIfInDebt, downloadDocument);

@@ -22,6 +22,27 @@ const REAL_DOC_SQL = "LEFT(d.saved_filename, 12) <> 'tec_virtual_'";
 const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 // --- helpers -----------------------------------------------------------------
+/**
+ * Meses (do ano corrente) sem nenhum documento enviado pela OSC.
+ * O mês anterior só vira "atraso" após o dia 10; meses anteriores à origem da OSC são ignorados.
+ */
+const computeLateMonths = (osc, haveMonths, now = new Date()) => {
+  const year = now.getFullYear();
+  const lastLateMonth = now.getDate() > 10 ? now.getMonth() : now.getMonth() - 1;
+  const origin = osc.data_origem_estatuto || osc.data_fundacao || osc.created_at;
+  let originYear = 2000, originMonth = 1;
+  if (origin) {
+    const d = new Date(origin);
+    if (!Number.isNaN(d.getTime())) { originYear = d.getFullYear(); originMonth = d.getMonth() + 1; }
+  }
+  const late = [];
+  for (let m = 1; m <= lastLateMonth; m++) {
+    if (year < originYear || (year === originYear && m < originMonth)) continue;
+    if (!haveMonths.has(m)) late.push(m);
+  }
+  return late;
+};
+
 const toInt = (value) => {
   const n = Number.parseInt(value, 10);
   return Number.isFinite(n) ? n : null;
@@ -127,6 +148,55 @@ export const getReceivedDocuments = async (req, res) => {
     res.json(formatted);
   } catch (error) {
     console.error('[getReceivedDocuments]', error.message);
+    res.status(500).json({ message: 'Erro ao buscar documentos recebidos.' });
+  }
+};
+
+/**
+ * Documentos recebidos agrupados por OSC (mais recentes primeiro), com quem enviou
+ * e os meses do ano corrente ainda sem envio.
+ */
+export const getReceivedByOsc = async (req, res) => {
+  try {
+    const scope = oscScope(req.user, 'o');
+    const [oscs] = await pool.execute(
+      `SELECT o.id, o.razao_social, o.data_origem_estatuto, o.data_fundacao, o.created_at
+         FROM oscs o WHERE ${scope.sql} ORDER BY o.razao_social`,
+      scope.params
+    );
+    const [docs] = await pool.execute(
+      `SELECT d.id, d.osc_id, d.original_name, d.doc_type, d.status, d.ref_month, d.ref_year, d.created_at,
+              u.name AS uploader_name
+         FROM documents d
+         JOIN oscs o ON d.osc_id = o.id
+         LEFT JOIN users u ON d.uploaded_by_user_id = u.id
+        WHERE ${scope.sql} AND ${REAL_DOC_SQL}
+        ORDER BY d.created_at DESC`,
+      scope.params
+    );
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const byOsc = new Map(oscs.map(o => [o.id, { docs: [], months: new Set() }]));
+    for (const d of docs) {
+      const bucket = byOsc.get(d.osc_id);
+      if (!bucket) continue;
+      bucket.docs.push(d);
+      if (Number(d.ref_year) === year && d.ref_month) bucket.months.add(Number(d.ref_month));
+    }
+
+    res.json(oscs.map(o => {
+      const bucket = byOsc.get(o.id);
+      return {
+        id: o.id,
+        name: o.razao_social,
+        year,
+        late_months: computeLateMonths(o, bucket.months, now),
+        documents: bucket.docs,
+      };
+    }));
+  } catch (error) {
+    console.error('[getReceivedByOsc]', error.message);
     res.status(500).json({ message: 'Erro ao buscar documentos recebidos.' });
   }
 };
@@ -498,7 +568,6 @@ export const getDocumentStats = async (req, res) => {
     );
     const year = now.getFullYear();
     const currentMonth = now.getMonth() + 1;
-    const lastLateMonth = now.getDate() > 10 ? currentMonth - 1 : currentMonth - 2; // mês anterior vira "atraso" após o dia 10
 
     let docMonths = new Map();
     if (oscRows.length > 0) {
@@ -518,18 +587,7 @@ export const getDocumentStats = async (req, res) => {
     let oscsWithLate = 0;
     const lateMonthsByOsc = new Map();
     for (const osc of oscRows) {
-      const origin = osc.data_origem_estatuto || osc.data_fundacao || osc.created_at;
-      let originYear = 2000, originMonth = 1;
-      if (origin) {
-        const d = new Date(origin);
-        if (!Number.isNaN(d.getTime())) { originYear = d.getFullYear(); originMonth = d.getMonth() + 1; }
-      }
-      const have = docMonths.get(osc.id) || new Set();
-      const late = [];
-      for (let m = 1; m <= lastLateMonth; m++) {
-        if (year < originYear || (year === originYear && m < originMonth)) continue;
-        if (!have.has(m)) late.push(m);
-      }
+      const late = computeLateMonths(osc, docMonths.get(osc.id) || new Set(), now);
       lateMonthsByOsc.set(osc.id, late);
       if (late.length > 0) oscsWithLate++;
     }
