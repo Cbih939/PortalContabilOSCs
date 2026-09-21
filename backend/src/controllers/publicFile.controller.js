@@ -1,4 +1,52 @@
 import pool from '../config/db.js';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const UPLOADS_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../uploads');
+const INLINE_SAFE = new Set(['.pdf', '.png', '.jpg', '.jpeg', '.webp']);
+
+/**
+ * Resolve o arquivo físico de um registro de public_files. Aceita os formatos antigos do banco
+ * (caminho relativo, com barras invertidas ou absoluto) e procura em uploads/ e uploads/public/.
+ */
+const resolvePublicFile = (storedPath) => {
+  const normalized = String(storedPath || '').replace(/\\/g, '/');
+  const rel = normalized.includes('uploads/') ? normalized.split('uploads/').pop() : normalized;
+  const candidates = [rel, path.basename(rel), path.join('public', path.basename(rel))];
+  for (const candidate of candidates) {
+    const full = path.resolve(UPLOADS_ROOT, candidate);
+    if (full.startsWith(UPLOADS_ROOT + path.sep) && fs.existsSync(full) && fs.statSync(full).isFile()) return full;
+  }
+  return null;
+};
+
+/**
+ * Entrega o arquivo (ou a capa) de um item da biblioteca/modelos. Só serve arquivos
+ * cadastrados em public_files; os documentos contábeis continuam privados.
+ */
+export const serveFile = async (req, res) => {
+  try {
+    const kind = req.params.kind === 'cover' ? 'cover_path' : 'file_path';
+    const [rows] = await pool.execute(`SELECT title, ${kind} AS stored FROM public_files WHERE id = ?`, [req.params.id]);
+    const full = rows[0]?.stored ? resolvePublicFile(rows[0].stored) : null;
+    if (!full) return res.status(404).json({ message: 'Arquivo não encontrado.' });
+
+    const ext = path.extname(full).toLowerCase();
+    const inline = INLINE_SAFE.has(ext) && req.query.download !== '1';
+    const name = `${rows[0].title || 'arquivo'}${path.extname(String(rows[0].title || '')) ? '' : ext}`;
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.set('Content-Disposition', `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(name)}`);
+    if (ext === '.pdf') res.type('application/pdf');
+    return res.sendFile(full);
+  } catch (error) {
+    console.error('Erro ao servir arquivo público:', error);
+    return res.status(500).json({ message: 'Erro ao abrir o arquivo.' });
+  }
+};
+
+
 
 // Listar arquivos
 export const getFiles = async (req, res) => {

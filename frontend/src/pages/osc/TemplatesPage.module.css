@@ -259,3 +259,9 @@
   padding: var(--space-lg);
   font-style: italic;
 }
+/* Filtro por categoria */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.filterChip { min-height: var(--touch-target); padding: 0 16px; border-radius: var(--radius-pill); border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-body); font-weight: 600; font-size: var(--fs-secondary); cursor: pointer; }
+.filterChip:hover { border-color: var(--primary-color); }
+.filterChip:focus-visible { outline: 0; box-shadow: var(--focus-ring); }
+.filterChipActive { background: var(--primary-color); border-color: var(--primary-color); color: var(--on-primary); }

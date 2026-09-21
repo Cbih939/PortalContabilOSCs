@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { publicFileUrl } from '../../utils/fileUrl.js';
+import { libraryFileUrl } from '../../utils/fileUrl.js';
 import * as fileService from '../../services/publicFileService.js';
 import Card, { CardBody, CardHeader } from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
@@ -104,7 +104,7 @@ export default function ManageLibrary() {
               <div className={styles.coverWrapper}>
                 {f.cover_path ? (
                   <img 
-                    src={publicFileUrl(f.cover_path)} 
+                    src={libraryFileUrl(f.id, 'cover')} 
                     alt={f.title} 
                     className={styles.gridCover} 
                   />

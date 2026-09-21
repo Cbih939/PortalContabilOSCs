@@ -2,7 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 // Verifique se o caminho do controller está correto
-import { getFiles, uploadFile, deleteFile } from '../controllers/publicFile.controller.js';
+import { getFiles, uploadFile, deleteFile, serveFile } from '../controllers/publicFile.controller.js';
 import { protect, checkRole } from '../middlewares/auth.middleware.js';
 import { fileFilter } from '../middlewares/upload.middleware.js';
 
@@ -32,6 +32,9 @@ const upload = multer({
 // --------------------------------------------------------------------------
 
 // Rotas
+// Abertura/baixa de arquivos da biblioteca e modelos (link direto, sem cabeçalho de login).
+router.get('/:id/:kind(file|cover)', serveFile);
+
 router.get('/', protect, getFiles);
 
 // O segredo: upload.any() aceita qualquer campo (pdf, file, cover, image...)

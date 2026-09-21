@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { publicFileUrl } from '../../utils/fileUrl.js';
+import { libraryFileUrl } from '../../utils/fileUrl.js';
 import * as fileService from '../../services/publicFileService.js';
 import PdfThumbnail from '../osc/components/PdfThumbnail.jsx'; 
 import styles from './Downloads.module.css';
@@ -51,8 +51,8 @@ export default function LibraryPage() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const handleDownload = (path) => {
-    window.open(publicFileUrl(path), '_blank', 'noopener');
+  const handleDownload = (id) => {
+    window.open(libraryFileUrl(id), '_blank', 'noopener');
   };
 
   return (
@@ -77,17 +77,17 @@ export default function LibraryPage() {
             <div 
               key={file.id} 
               className={styles.bookCard} 
-              onClick={() => handleDownload(file.file_path)}
+              onClick={() => handleDownload(file.id)}
             >
               <div className={styles.thumbnailWrapper}>
                 {file.cover_path ? (
                   <img 
-                    src={publicFileUrl(file.cover_path)} 
+                    src={libraryFileUrl(file.id, 'cover')} 
                     alt={file.title} 
                     className={styles.bookCoverImage}
                   />
                 ) : (
-                  <PdfThumbnail fileUrl={publicFileUrl(file.file_path)} />
+                  <PdfThumbnail fileUrl={libraryFileUrl(file.id)} />
                 )}
                 
                 <div className={styles.overlay}>
