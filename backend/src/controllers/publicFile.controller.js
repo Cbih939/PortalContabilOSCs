@@ -30,7 +30,10 @@ export const serveFile = async (req, res) => {
     const kind = req.params.kind === 'cover' ? 'cover_path' : 'file_path';
     const [rows] = await pool.execute(`SELECT title, ${kind} AS stored_path FROM public_files WHERE id = ?`, [req.params.id]);
     const full = rows[0]?.stored_path ? resolvePublicFile(rows[0].stored_path) : null;
-    if (!full) return res.status(404).json({ message: 'Arquivo não encontrado.' });
+    if (!full) {
+      console.warn(`[public-files] 404 id=${req.params.id} tipo=${kind} caminho_no_banco=${JSON.stringify(rows[0]?.stored_path ?? null)} uploads=${UPLOADS_ROOT}`);
+      return res.status(404).json({ message: 'Arquivo não encontrado.' });
+    }
 
     const ext = path.extname(full).toLowerCase();
     const inline = INLINE_SAFE.has(ext) && req.query.download !== '1';
