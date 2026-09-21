@@ -9,21 +9,21 @@ export default function NotFoundPage() {
   const navigate = useNavigate();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#f9fafb', padding: '20px', textAlign: 'center' }}>
-      <div style={{ color: '#E85002', marginBottom: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: 'var(--bg-app)', padding: '20px', textAlign: 'center' }}>
+      <div style={{ color: 'var(--primary-color)', marginBottom: '24px' }}>
         <AlertIcon />
       </div>
       
-      <h1 style={{ fontSize: '48px', fontWeight: 'bold', color: '#1f2937', margin: '0 0 8px 0', lineHeight: '1' }}>404</h1>
-      <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#374151', margin: '0 0 16px 0' }}>Página Não Encontrada</h2>
+      <h1 style={{ fontSize: '48px', fontWeight: 'bold', color: 'var(--text-dark)', margin: '0 0 8px 0', lineHeight: '1' }}>404</h1>
+      <h2 style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-body)', margin: '0 0 16px 0' }}>Página Não Encontrada</h2>
       
-      <p style={{ color: '#6b7280', maxWidth: '400px', fontSize: '16px', lineHeight: '1.5', margin: '0 0 32px 0' }}>
+      <p style={{ color: 'var(--text-muted)', maxWidth: '400px', fontSize: '16px', lineHeight: '1.5', margin: '0 0 32px 0' }}>
         Oops! A página que tentou aceder não existe, foi movida ou não tem permissões para a visualizar.
       </p>
       
       <button 
         onClick={() => navigate('/')} 
-        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', backgroundColor: '#E85002', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(234, 88, 12, 0.2)' }}
+        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', backgroundColor: 'var(--primary-color)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(234, 88, 12, 0.2)' }}
       >
         <HomeIcon /> Voltar ao Início
       </button>

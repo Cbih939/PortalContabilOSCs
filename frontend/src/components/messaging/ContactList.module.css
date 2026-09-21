@@ -6,13 +6,13 @@
 
 .header {
   padding: 1.25rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-dark);
   margin-bottom: 0.75rem;
 }
 
@@ -20,14 +20,14 @@
   width: 100%;
   padding: 0.625rem 1rem;
   border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
-  background-color: #f9fafb;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-app);
   font-size: 0.875rem;
   transition: all 0.2s;
 }
 
 .searchInput:focus {
-  border-color: #EC6D12;
+  border-color: var(--primary-color);
   outline: none;
   box-shadow: 0 0 0 2px rgba(236, 109, 18, 0.1);
   background-color: white;
@@ -51,24 +51,24 @@
 }
 
 .contactItem:hover {
-  background-color: #f3f4f6;
+  background-color: var(--gray-100);
 }
 
 /* --- ITEM SELECIONADO (Laranja) --- */
 .selected {
-  background-color: #fff7ed !important; /* Laranja muito claro */
-  border-left-color: #EC6D12;
+  background-color: var(--primary-light) !important; /* Laranja muito claro */
+  border-left-color: var(--primary-color);
 }
 
 .avatar {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  background-color: #e5e7eb;
+  background-color: var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
+  color: var(--text-muted);
   font-weight: 600;
   margin-right: 0.75rem;
   flex-shrink: 0;
@@ -76,7 +76,7 @@
 
 /* Avatar laranja quando selecionado */
 .selected .avatar {
-  background-color: #EC6D12;
+  background-color: var(--primary-color);
   color: white;
 }
 
@@ -93,29 +93,29 @@
 
 .name {
   font-weight: 600;
-  color: #374151;
+  color: var(--text-body);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.selected .name { color: #EC6D12; }
+.selected .name { color: var(--primary-color); }
 
 .date {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .lastMessage {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .badge {
-  background-color: #EC6D12;
+  background-color: var(--primary-color);
   color: white;
   font-size: 0.7rem;
   padding: 0.1rem 0.4rem;

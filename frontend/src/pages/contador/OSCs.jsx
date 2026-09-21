@@ -176,13 +176,13 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'pre_origin': return { bg: '#f3f4f6', color: '#9ca3af', border: '#e5e7eb' };
-      case 'late': return { bg: '#fee2e2', color: '#b91c1c', border: '#fecaca' };
-      case 'pending': return { bg: '#fef9c3', color: '#a16207', border: '#fde047' };
-      case 'sent': return { bg: '#dbeafe', color: '#1d4ed8', border: '#bfdbfe' };
-      case 'concluded': return { bg: '#dcfce7', color: '#15803d', border: '#86efac' };
+      case 'pre_origin': return { bg: 'var(--gray-100)', color: 'var(--text-muted)', border: 'var(--border-color)' };
+      case 'late': return { bg: 'var(--color-danger-light)', color: 'var(--color-danger)', border: '#fecaca' };
+      case 'pending': return { bg: 'var(--color-warning-light)', color: '#a16207', border: '#fde047' };
+      case 'sent': return { bg: 'var(--color-info-light)', color: 'var(--color-info)', border: '#bfdbfe' };
+      case 'concluded': return { bg: 'var(--color-success-light)', color: 'var(--color-success)', border: '#86efac' };
       case 'concluso_tec': return { bg: '#f3e8ff', color: '#7e22ce', border: '#e9d5ff' };
-      default: return { bg: '#f3f4f6', color: '#9ca3af', border: '#e5e7eb' };
+      default: return { bg: 'var(--gray-100)', color: 'var(--text-muted)', border: 'var(--border-color)' };
     }
   };
 
@@ -291,10 +291,10 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
           </div>
 
           <div className={styles.legend}>
-            <div className={styles.legendItem}><div className={styles.colorBox} style={{backgroundColor: '#fee2e2'}}></div> Em Atraso</div>
-            <div className={styles.legendItem}><div className={styles.colorBox} style={{backgroundColor: '#fef9c3'}}></div> Pendente</div>
-            <div className={styles.legendItem}><div className={styles.colorBox} style={{backgroundColor: '#dbeafe'}}></div> Enviado</div>
-            <div className={styles.legendItem}><div className={styles.colorBox} style={{backgroundColor: '#dcfce7'}}></div> Concluso</div>
+            <div className={styles.legendItem}><div className={styles.colorBox} style={{backgroundColor: 'var(--color-danger-light)'}}></div> Em Atraso</div>
+            <div className={styles.legendItem}><div className={styles.colorBox} style={{backgroundColor: 'var(--color-warning-light)'}}></div> Pendente</div>
+            <div className={styles.legendItem}><div className={styles.colorBox} style={{backgroundColor: 'var(--color-info-light)'}}></div> Enviado</div>
+            <div className={styles.legendItem}><div className={styles.colorBox} style={{backgroundColor: 'var(--color-success-light)'}}></div> Concluso</div>
             <div className={styles.legendItem}><div className={styles.colorBox} style={{backgroundColor: '#f3e8ff'}}></div> Concluso TEC</div>
           </div>
 
@@ -323,8 +323,8 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
           </div>
 
           {selectedDocs.length > 0 && (
-            <div style={{ padding: '10px 15px', backgroundColor: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <span style={{ fontSize: '13px', color: '#b91c1c', fontWeight: 'bold' }}>
+            <div style={{ padding: '10px 15px', backgroundColor: 'var(--color-danger-light)', border: '1px solid #fca5a5', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <span style={{ fontSize: '13px', color: 'var(--color-danger)', fontWeight: 'bold' }}>
                 {selectedDocs.length} documento(s) selecionado(s) para exclusão.
               </span>
               <Button variant="danger" size="sm" icon={<FiTrash2 />} onClick={handleBulkDelete} disabled={isUploading}>
@@ -384,7 +384,7 @@ const OSCAccordionItem = ({ osc, isExpanded, onToggle, onView, onEdit, onSendAle
                   </div>
                   <div className={styles.docMeta}>
                     <span className={styles.docRef}>Ref: {months[(doc.ref_month || 1) - 1]}/{doc.ref_year}</span>
-                    <span className={styles.typeBadge} style={{backgroundColor: '#fef3c7', color: '#92400e'}}>GOVERNANÇA</span>
+                    <span className={styles.typeBadge} style={{backgroundColor: 'var(--color-warning-light)', color: 'var(--color-warning)'}}>GOVERNANÇA</span>
                     <span className={styles.docDate}>Postado: {new Date(doc.createdAt || doc.created_at).toLocaleDateString('pt-BR')}</span>
                     <button className={styles.deleteBtn} onClick={(e) => handleDeleteDocument(e, doc.id, doc.original_name)} title="Excluir documento"><FiTrash2 /></button>
                   </div>
@@ -603,7 +603,7 @@ export default function OSCsPage() {
         </div>
         
         <label className={`${styles.filterCheckboxContainer} ${showOnlyPending ? styles.active : ''}`}>
-          <input type="checkbox" checked={showOnlyPending} onChange={(e) => setShowOnlyPending(e.target.checked)} style={{ cursor: 'pointer', accentColor: '#dc2626' }} />
+          <input type="checkbox" checked={showOnlyPending} onChange={(e) => setShowOnlyPending(e.target.checked)} style={{ cursor: 'pointer', accentColor: 'var(--color-danger)' }} />
           <span className={styles.filterCheckboxLabel}>Apenas com Pendências</span>
         </label>
       </div>

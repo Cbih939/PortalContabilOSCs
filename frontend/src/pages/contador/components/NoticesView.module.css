@@ -126,9 +126,9 @@
   transform: translateX(4px);
 }
 
-.borderInfo { border-left-color: #3b82f6; }
+.borderInfo { border-left-color: var(--color-info); }
 .borderReminder { border-left-color: #f59e0b; }
-.borderUrgent { border-left-color: #ef4444; }
+.borderUrgent { border-left-color: var(--color-danger); }
 
 .noticeHeader {
   display: flex;

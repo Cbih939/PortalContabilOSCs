@@ -11,7 +11,7 @@
   margin-top: -1rem; /* Puxa para mais perto do input */
   margin-bottom: -0.5rem; /* Reduz espaço extra */
   font-size: 0.875rem; /* text-sm */
-  color: #dc2626; /* text-red-600 */
+  color: var(--color-danger); /* text-red-600 */
 }
 
 /* Estilos para o Select (copiados/adaptados de outros CSS Modules) */
@@ -19,7 +19,7 @@
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-body);
   margin-bottom: 0.25rem;
 }
 
@@ -28,7 +28,7 @@
   display: block;
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-color);
   border-radius: 0.5rem;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   background-color: white;
@@ -41,6 +41,6 @@
 }
 .selectInput:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: var(--color-info);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
 }

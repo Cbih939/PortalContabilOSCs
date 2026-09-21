@@ -153,8 +153,8 @@
 }
 
 .badgeConcluido {
-  background-color: #dcfce7;
-  color: #15803d;
+  background-color: var(--color-success-light);
+  color: var(--color-success);
   padding: 4px 8px;
   border-radius: 12px;
   font-size: 0.7rem;
@@ -163,7 +163,7 @@
 }
 
 .badgePendente {
-  background-color: #fef9c3;
+  background-color: var(--color-warning-light);
   color: #a16207;
   padding: 4px 8px;
   border-radius: 12px;

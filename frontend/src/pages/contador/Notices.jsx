@@ -9,7 +9,7 @@ import Spinner from '../../components/common/Spinner.jsx';
 // Ícone de Informação (Tooltip) declarado localmente
 const InfoIcon = () => (
   <svg 
-    style={{ width: '18px', height: '18px', color: '#EC6D12', cursor: 'help', marginLeft: '10px' }} 
+    style={{ width: '18px', height: '18px', color: 'var(--primary-color)', cursor: 'help', marginLeft: '10px' }} 
     xmlns="http://www.w3.org/2000/svg" 
     fill="none" 
     viewBox="0 0 24 24" 

@@ -153,8 +153,8 @@
 }
 
 .actionBtnOrange:hover {
-  color: #E85002;
-  background-color: #fff7ed;
+  color: var(--primary-color);
+  background-color: var(--primary-light);
 }
 
 .emptyState {

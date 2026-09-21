@@ -19,17 +19,17 @@ export default function TransferOfficeModal({ isOpen, onClose, onSave, isLoading
     <Modal isOpen={isOpen} title={`Transferir: ${osc.name}`} onClose={onClose}>
       <form>
         <div style={{ marginBottom: '20px' }}>
-          <p style={{ fontSize: '14px', color: '#4b5563', marginBottom: '15px' }}>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '15px' }}>
             Atenção: Ao transferir esta OSC para um novo escritório, a associação atual com qualquer contador específico será removida, passando o cliente para a responsabilidade global da nova equipa.
           </p>
           
-          <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#374151', marginBottom: '8px', display: 'block' }}>
+          <label style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-body)', marginBottom: '8px', display: 'block' }}>
             Selecione o Novo Escritório Destino *
           </label>
           <select 
             value={selectedOffice} 
             onChange={(e) => setSelectedOffice(e.target.value)}
-            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', outline: 'none' }}
+            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: '#fff', outline: 'none' }}
           >
             <option value="">-- Escolha um Escritório --</option>
             {offices.map(office => (
@@ -45,7 +45,7 @@ export default function TransferOfficeModal({ isOpen, onClose, onSave, isLoading
             type="button" 
             onClick={onClose} 
             disabled={isLoading} 
-            style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', cursor: 'pointer' }}
+            style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: '#fff', cursor: 'pointer' }}
           >
             Cancelar
           </button>
@@ -53,7 +53,7 @@ export default function TransferOfficeModal({ isOpen, onClose, onSave, isLoading
             type="button" 
             onClick={handleSubmit} 
             disabled={isLoading} 
-            style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#E85002', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}
+            style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: 'var(--primary-color)', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}
           >
             {isLoading ? 'Transferindo...' : 'Confirmar Transferência'}
           </button>

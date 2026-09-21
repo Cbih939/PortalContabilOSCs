@@ -66,23 +66,23 @@ export default function EditOSCModal({ isOpen, onClose, oscData, onSave, isLoadi
           <Input label="Telefone" name="phone" value={formData.phone} onChange={handleChange} />
           
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-             <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#374151', marginBottom: '4px' }}>Status</label>
-             <select name="status" value={formData.status} onChange={handleChange} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', backgroundColor: '#fff', outline: 'none' }}>
+             <label style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-body)', marginBottom: '4px' }}>Status</label>
+             <select name="status" value={formData.status} onChange={handleChange} style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: '#fff', outline: 'none' }}>
                <option value="Ativo">Ativo</option>
                <option value="Inativo">Inativo</option>
              </select>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-             <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#374151', marginBottom: '4px' }}>Data do Estatuto Social *</label>
-             <input type="date" name="data_origem_estatuto" value={formData.data_origem_estatuto} onChange={handleChange} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', backgroundColor: '#fff', outline: 'none' }} />
-             <span style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>Base para histórico</span>
+             <label style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-body)', marginBottom: '4px' }}>Data do Estatuto Social *</label>
+             <input type="date" name="data_origem_estatuto" value={formData.data_origem_estatuto} onChange={handleChange} style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: '#fff', outline: 'none' }} />
+             <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Base para histórico</span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-             <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#374151', marginBottom: '4px' }}>Início Contrato *</label>
-             <input type="date" name="data_contrato_conta_comigo" value={formData.data_contrato_conta_comigo} onChange={handleChange} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', backgroundColor: '#fff', outline: 'none' }} />
-             <span style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>Define os envios mensais</span>
+             <label style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-body)', marginBottom: '4px' }}>Início Contrato *</label>
+             <input type="date" name="data_contrato_conta_comigo" value={formData.data_contrato_conta_comigo} onChange={handleChange} style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: '#fff', outline: 'none' }} />
+             <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Define os envios mensais</span>
           </div>
 
           <div style={{ gridColumn: 'span 2' }}>
@@ -91,10 +91,10 @@ export default function EditOSCModal({ isOpen, onClose, oscData, onSave, isLoadi
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '25px' }}>
-          <button type="button" onClick={onClose} disabled={isLoading} style={{ padding: '10px 16px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', color: '#374151', cursor: 'pointer', fontWeight: '500' }}>
+          <button type="button" onClick={onClose} disabled={isLoading} style={{ padding: '10px 16px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: '#fff', color: 'var(--text-body)', cursor: 'pointer', fontWeight: '500' }}>
             Cancelar
           </button>
-          <button type="button" disabled={isLoading} onClick={handleDirectSubmit} style={{ padding: '10px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#E85002', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>
+          <button type="button" disabled={isLoading} onClick={handleDirectSubmit} style={{ padding: '10px 16px', borderRadius: '6px', border: 'none', backgroundColor: 'var(--primary-color)', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>
             {isLoading ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Cadastrar Nova OSC')}
           </button>
         </div>

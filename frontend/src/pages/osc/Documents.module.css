@@ -97,7 +97,7 @@
 .contractAlert {
   background-color: var(--color-info-light);
   border: 1px solid #bae6fd;
-  color: #0369a1;
+  color: var(--color-info);
   padding: var(--space-md);
   border-radius: var(--radius-sm);
   margin-bottom: var(--space-lg);
@@ -171,7 +171,7 @@
 
 /* Cores de Status */
 .statusLate { background-color: var(--color-danger-light); border-color: #fca5a5; color: var(--color-danger); }
-.statusPending { background-color: var(--color-warning-light); border-color: #fde047; color: #b45309; }
+.statusPending { background-color: var(--color-warning-light); border-color: #fde047; color: var(--color-warning); }
 .statusSent { background-color: var(--color-info-light); border-color: #93c5fd; color: var(--color-info); }
 .statusConcluded { background-color: var(--color-success-light); border-color: #86efac; color: var(--color-success); }
 .statusFuture { background-color: var(--bg-app); border-color: var(--border-color); color: var(--text-muted); opacity: 0.6; }

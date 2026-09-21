@@ -119,8 +119,8 @@
   gap: var(--space-sm);
 }
 
-.headingFederal { color: #15803d; border-bottom: 2px solid #bbf7d0; }
-.headingEstadual { color: #0369a1; border-bottom: 2px solid #bae6fd; }
+.headingFederal { color: var(--color-success); border-bottom: 2px solid #bbf7d0; }
+.headingEstadual { color: var(--color-info); border-bottom: 2px solid #bae6fd; }
 .headingMunicipal { color: #7e22ce; border-bottom: 2px solid #e9d5ff; }
 
 .emptyText {
@@ -172,7 +172,7 @@
 
 .linkUrl {
   font-size: 0.85rem;
-  color: #2563eb;
+  color: var(--color-info);
   text-decoration: none;
 }
 
@@ -217,7 +217,7 @@
   transition: background-color var(--transition-fast);
 }
 
-.regionBlock.estadual .regionHeader { background-color: #e0f2fe; }
+.regionBlock.estadual .regionHeader { background-color: var(--color-info-light); }
 .regionBlock.municipal .regionHeader { background-color: #f3e8ff; }
 
 .regionHeader:hover {
@@ -232,7 +232,7 @@
   gap: var(--space-sm);
 }
 
-.regionBlock.estadual .regionTitle { color: #0369a1; }
+.regionBlock.estadual .regionTitle { color: var(--color-info); }
 .regionBlock.municipal .regionTitle { color: #7e22ce; }
 
 .countBadge {

@@ -17,11 +17,11 @@ export default function HelpPage() {
     <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }}>
       
       <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#1f2937', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ padding: '8px', backgroundColor: '#FFF1E8', color: '#E85002', borderRadius: '8px' }}><SupportIcon /></div>
+        <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--text-dark)', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ padding: '8px', backgroundColor: 'var(--primary-light)', color: 'var(--primary-color)', borderRadius: '8px' }}><SupportIcon /></div>
           Ajuda Institucional
         </h1>
-        <p style={{ color: '#6b7280', margin: 0, fontSize: '15px' }}>
+        <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '15px' }}>
           Tire as suas dúvidas ou entre em contacto com o suporte técnico da plataforma.
         </p>
       </div>
@@ -29,29 +29,29 @@ export default function HelpPage() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
         
         {/* Contacto de Suporte */}
-        <div style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{ padding: '16px', backgroundColor: '#eff6ff', color: '#2563eb', borderRadius: '50%' }}>
+        <div style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div style={{ padding: '16px', backgroundColor: 'var(--color-info-light)', color: 'var(--color-info)', borderRadius: '50%' }}>
             <MailIcon />
           </div>
           <div>
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', margin: '0 0 4px 0' }}>Precisa de ajuda com o sistema?</h3>
-            <p style={{ color: '#6b7280', margin: '0 0 12px 0', fontSize: '14px' }}>A nossa equipa técnica está pronta para ajudar com qualquer erro ou dificuldade.</p>
-            <a href="mailto:suporte@contacomigo.org.br" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: '#2563eb', color: '#fff', textDecoration: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: 'bold' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-dark)', margin: '0 0 4px 0' }}>Precisa de ajuda com o sistema?</h3>
+            <p style={{ color: 'var(--text-muted)', margin: '0 0 12px 0', fontSize: '14px' }}>A nossa equipa técnica está pronta para ajudar com qualquer erro ou dificuldade.</p>
+            <a href="mailto:suporte@contacomigo.org.br" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'var(--color-info)', color: '#fff', textDecoration: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: 'bold' }}>
               <MailIcon /> Enviar E-mail para o Suporte
             </a>
           </div>
         </div>
 
         {/* Perguntas Frequentes */}
-        <div style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-dark)', margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <FAQIcon /> Perguntas Frequentes (FAQ)
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {faqs.map((faq, index) => (
-              <div key={index} style={{ paddingBottom: '16px', borderBottom: index !== faqs.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
-                <h4 style={{ fontSize: '15px', fontWeight: 'bold', color: '#374151', margin: '0 0 8px 0' }}>{faq.q}</h4>
-                <p style={{ color: '#6b7280', margin: 0, fontSize: '14px', lineHeight: '1.5' }}>{faq.a}</p>
+              <div key={index} style={{ paddingBottom: '16px', borderBottom: index !== faqs.length - 1 ? '1px solid var(--gray-100)' : 'none' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-body)', margin: '0 0 8px 0' }}>{faq.q}</h4>
+                <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '14px', lineHeight: '1.5' }}>{faq.a}</p>
               </div>
             ))}
           </div>

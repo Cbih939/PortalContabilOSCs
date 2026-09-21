@@ -198,11 +198,11 @@ export default function OSCMessagesPage() {
           </div>
 
           {/* COLUNA DIREITA: Área de Mensagens */}
-          <div className={styles.chatWindow} style={{ display: 'flex', flexDirection: 'column', height: '600px', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
+          <div className={styles.chatWindow} style={{ display: 'flex', flexDirection: 'column', height: '600px', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
             {selectedContact ? (
               <>
-                <div className={styles.chatHeader} style={{ padding: '16px', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
-                  <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#111827' }}>Conversando com: {selectedContact.name}</h3>
+                <div className={styles.chatHeader} style={{ padding: '16px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-dark)' }}>Conversando com: {selectedContact.name}</h3>
                 </div>
 
                 <div className={styles.messagesContainer} style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -216,7 +216,7 @@ export default function OSCMessagesPage() {
                       </div>
                     ))
                   ) : (
-                    <div className={styles.emptyMessages} style={{ margin: 'auto', textAlign: 'center', color: '#6b7280' }}>
+                    <div className={styles.emptyMessages} style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)' }}>
                       <p>Inicie a conversa com {selectedContact.name}</p>
                     </div>
                   )}
@@ -224,22 +224,22 @@ export default function OSCMessagesPage() {
                   <div ref={messagesEndRef} style={{ float: 'left', clear: 'both' }} />
                 </div>
 
-                <form onSubmit={handleSendMessage} className={styles.messageInputArea} style={{ padding: '16px', borderTop: '1px solid #e5e7eb', backgroundColor: '#fff', display: 'flex', gap: '8px' }}>
+                <form onSubmit={handleSendMessage} className={styles.messageInputArea} style={{ padding: '16px', borderTop: '1px solid var(--border-color)', backgroundColor: '#fff', display: 'flex', gap: '8px' }}>
                   <input 
                     type="text" 
                     placeholder="Digite sua mensagem..." 
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     className={styles.textInput}
-                    style={{ flex: 1, padding: '10px 16px', borderRadius: '9999px', border: '1px solid #d1d5db', outline: 'none' }}
+                    style={{ flex: 1, padding: '10px 16px', borderRadius: '9999px', border: '1px solid var(--border-color)', outline: 'none' }}
                   />
-                  <button type="submit" disabled={!newMessage.trim()} className={styles.sendButton} style={{ padding: '10px 20px', borderRadius: '9999px', backgroundColor: newMessage.trim() ? '#E85002' : '#d1d5db', color: '#fff', border: 'none', cursor: newMessage.trim() ? 'pointer' : 'not-allowed' }}>
+                  <button type="submit" disabled={!newMessage.trim()} className={styles.sendButton} style={{ padding: '10px 20px', borderRadius: '9999px', backgroundColor: newMessage.trim() ? 'var(--primary-color)' : 'var(--border-color)', color: '#fff', border: 'none', cursor: newMessage.trim() ? 'pointer' : 'not-allowed' }}>
                     <SendIcon className={styles.sendIcon} style={{ width: '20px', height: '20px' }} />
                   </button>
                 </form>
               </>
             ) : (
-              <div className={styles.noContactSelected} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#6b7280' }}>
+              <div className={styles.noContactSelected} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
                 <SupportIcon className={styles.placeholderIcon} style={{ width: '48px', height: '48px', marginBottom: '16px', opacity: 0.5 }} />
                 <p>Selecione um contato ao lado para iniciar o chat.</p>
           </div>

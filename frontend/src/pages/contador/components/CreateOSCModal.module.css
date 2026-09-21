@@ -17,8 +17,8 @@
 .sectionTitle {
     grid-column: span 2 / span 2; /* Ocupa linha toda no grid */
     font-weight: 600;
-    color: #4b5563;
+    color: var(--text-muted);
     margin-top: 1rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--border-color);
 }
