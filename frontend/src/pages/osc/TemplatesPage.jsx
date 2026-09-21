@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import * as fileService from '../../services/publicFileService.js';
-import { FileIcon, DownloadIcon, EyeIcon } from '../../components/common/Icons.jsx';
+import { FileIcon } from '../../components/common/Icons.jsx';
+import { libraryFileUrl } from '../../utils/fileUrl.js';
 import Spinner from '../../components/common/Spinner.jsx';
 import Card, { CardBody, CardHeader } from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
-import { FiInfo, FiEye, FiDownload } from 'react-icons/fi';
+import { FiInfo, FiDownload } from 'react-icons/fi';
 import styles from './TemplatesPage.module.css';
 
 export default function TemplatesPage() {
   const [modelos, setModelos] = useState([]);
   const [comunicacao, setComunicacao] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [category, setCategory] = useState('TODOS');
 
   // Mapeamento das 10 Classificações para o Tooltip
   const classifications = {
@@ -47,12 +49,7 @@ export default function TemplatesPage() {
   };
 
   const renderFileRow = (file) => {
-    const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
-    let cleanPath = (file.file_path || "").replace(/\\/g, '/');
-    if (cleanPath.includes('uploads/')) {
-      cleanPath = 'uploads/' + cleanPath.split('uploads/')[1];
-    }
-    const fileUrl = `${baseUrl.replace(/\/$/, '')}/${cleanPath}`;
+    const fileUrl = libraryFileUrl(file.id, 'file', { download: true });
 
     return (
       <div key={file.id} className={styles.fileItem}>
@@ -71,9 +68,6 @@ export default function TemplatesPage() {
           </div>
         </div>
         <div className={styles.actionGroup}>
-          <a href={fileUrl} target="_blank" rel="noopener noreferrer" className={styles.linkNoDecoration}>
-            <Button variant="secondary" size="sm" icon={<FiEye />} title="Visualizar" />
-          </a>
           <a href={fileUrl} download className={styles.linkNoDecoration}>
             <Button variant="primary" size="sm" icon={<FiDownload />} title="Descarregar" />
           </a>
@@ -87,6 +81,16 @@ export default function TemplatesPage() {
       keywords.some(key => file.title.toLowerCase().includes(key.toLowerCase()))
     );
   };
+
+  const GROUPS = [
+    { key: 'ESTATUTOS', title: 'Estatutos Sociais', empty: 'Sem estatutos disponíveis.', list: getFilesBySubcategory(modelos, ['Estatuto']) },
+    { key: 'ATAS', title: 'Atas Institucionais', empty: 'Sem atas disponíveis.', list: getFilesBySubcategory(modelos, ['Ata']) },
+    { key: 'REGIMENTOS', title: 'Regimentos Internos', empty: 'Sem regimentos disponíveis.', list: getFilesBySubcategory(modelos, ['Regimento']) },
+    { key: 'DECLARACOES', title: 'Declarações', empty: 'Sem declarações disponíveis.', list: getFilesBySubcategory(modelos, ['Declaração', 'Declarações']) },
+  ];
+  const showModelos = category === 'TODOS' || GROUPS.some((g) => g.key === category);
+  const showComunicacao = category === 'TODOS' || category === 'COMUNICACAO';
+  const filterOptions = [{ key: 'TODOS', label: 'Todos' }, ...GROUPS.map((g) => ({ key: g.key, label: g.title })), { key: 'COMUNICACAO', label: 'Comunicação Institucional' }];
 
   if (loading) {
     return <div className={styles.loadingFull}><Spinner text="A carregar documentos..." /></div>;
@@ -159,44 +163,43 @@ export default function TemplatesPage() {
         </Card>
       </section>
 
+      <div className={styles.filters} role="group" aria-label="Filtrar por categoria">
+        {filterOptions.map((o) => (
+          <button
+            key={o.key}
+            type="button"
+            className={`${styles.filterChip} ${category === o.key ? styles.filterChipActive : ''}`}
+            aria-pressed={category === o.key}
+            onClick={() => setCategory(o.key)}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+
       <div className={styles.gridContainer}>
-        {/* COLUNA 1: MODELOS */}
-        <Card padding="none" className={styles.listCard}>
-          <CardHeader className={styles.cardHeader} title="Modelos de Documentos" />
-          <CardBody className={styles.cardBody}>
-            <h3 className={styles.groupTitle}>Estatutos Sociais</h3>
-            {getFilesBySubcategory(modelos, ['Estatuto']).length > 0 ? 
-              getFilesBySubcategory(modelos, ['Estatuto']).map(renderFileRow) : 
-              <p className={styles.empty}>Sem estatutos disponíveis.</p>
-            }
+        {showModelos && (
+          <Card padding="none" className={styles.listCard}>
+            <CardHeader className={styles.cardHeader} title="Modelos de Documentos" />
+            <CardBody className={styles.cardBody}>
+              {GROUPS.filter((g) => category === 'TODOS' || category === g.key).map((g) => (
+                <React.Fragment key={g.key}>
+                  <h3 className={styles.groupTitle}>{g.title}</h3>
+                  {g.list.length > 0 ? g.list.map(renderFileRow) : <p className={styles.empty}>{g.empty}</p>}
+                </React.Fragment>
+              ))}
+            </CardBody>
+          </Card>
+        )}
 
-            <h3 className={styles.groupTitle}>Atas Institucionais</h3>
-            {getFilesBySubcategory(modelos, ['Ata']).length > 0 ? 
-              getFilesBySubcategory(modelos, ['Ata']).map(renderFileRow) : 
-              <p className={styles.empty}>Sem atas disponíveis.</p>
-            }
-
-            <h3 className={styles.groupTitle}>Regimentos Internos</h3>
-            {getFilesBySubcategory(modelos, ['Regimento']).length > 0 ? 
-              getFilesBySubcategory(modelos, ['Regimento']).map(renderFileRow) : 
-              <p className={styles.empty}>Sem regimentos disponíveis.</p>
-            }
-
-            <h3 className={styles.groupTitle}>Declarações</h3>
-            {getFilesBySubcategory(modelos, ['Declaração', 'Declarações']).length > 0 ? 
-              getFilesBySubcategory(modelos, ['Declaração', 'Declarações']).map(renderFileRow) : 
-              <p className={styles.empty}>Sem declarações disponíveis.</p>
-            }
-          </CardBody>
-        </Card>
-
-        {/* COLUNA 2: COMUNICAÇÃO */}
-        <Card padding="none" className={styles.listCard}>
-          <CardHeader className={styles.cardHeader} title="Comunicação Institucional" />
-          <CardBody className={styles.cardBody}>
-            {comunicacao.length > 0 ? comunicacao.map(renderFileRow) : <p className={styles.empty}>Sem documentos nesta categoria.</p>}
-          </CardBody>
-        </Card>
+        {showComunicacao && (
+          <Card padding="none" className={styles.listCard}>
+            <CardHeader className={styles.cardHeader} title="Comunicação Institucional" />
+            <CardBody className={styles.cardBody}>
+              {comunicacao.length > 0 ? comunicacao.map(renderFileRow) : <p className={styles.empty}>Sem documentos nesta categoria.</p>}
+            </CardBody>
+          </Card>
+        )}
       </div>
 
     </div>

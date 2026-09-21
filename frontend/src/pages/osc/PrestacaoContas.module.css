@@ -270,3 +270,20 @@
   margin-bottom: var(--space-xl);
   font-size: 0.95rem;
 }
+
+/* Lançamentos por ano > mês */
+.groups { display: flex; flex-direction: column; gap: 12px; padding: 12px; }
+.yearGroup { display: flex; flex-direction: column; gap: 8px; }
+.groupBtn, .monthBtn { width: 100%; display: flex; align-items: center; gap: 12px; min-height: var(--touch-target); padding: 10px 14px; text-align: left; border: 0; border-radius: var(--radius-md); cursor: pointer; color: var(--text-dark); }
+.groupBtn { background: var(--gray-100); }
+.groupBtn:hover { background: var(--border-color); }
+.monthBtn { background: var(--bg-card); border: 1px solid var(--border-color); flex-wrap: wrap; }
+.monthBtn:hover { background: var(--primary-light); }
+.groupBtn:focus-visible, .monthBtn:focus-visible { outline: 0; box-shadow: var(--focus-ring); }
+.groupTitle { flex: 1; font-size: var(--fs-h3); font-weight: 800; }
+.monthTitle { flex: 1; font-weight: 700; min-width: 110px; }
+.groupCount { font-size: var(--fs-secondary); color: var(--text-muted); }
+.monthTotals { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: var(--fs-secondary); }
+.groupChevron { flex-shrink: 0; transition: transform var(--transition-fast); }
+.groupChevronOpen { transform: rotate(180deg); }
+.monthGroup { display: flex; flex-direction: column; gap: 6px; margin-left: 8px; padding-left: 12px; border-left: 2px solid var(--border-color); }

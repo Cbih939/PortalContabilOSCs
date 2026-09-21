@@ -12,3 +12,7 @@ export const publicFileUrl = (storedPath = '') => {
   if (clean.includes('uploads/')) clean = `uploads/${clean.split('uploads/').pop()}`;
   return `${serverOrigin()}/${clean.replace(/^\//, '')}`;
 };
+
+/** Link direto de um item da biblioteca/modelos (kind: "file" | "cover"). Serve arquivos antigos e novos. */
+export const libraryFileUrl = (id, kind = 'file', { download = false } = {}) =>
+  `${API_BASE.replace(/\/$/, '')}/public-files/${id}/${kind}${download ? '?download=1' : ''}`;
