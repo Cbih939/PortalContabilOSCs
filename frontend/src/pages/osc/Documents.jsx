@@ -8,8 +8,9 @@ import DocumentUpload from './components/DocumentUpload.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
 import Card, { CardBody, CardHeader } from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
-import { FiFileText, FiDownload, FiLink, FiCalendar } from 'react-icons/fi';
+import { FiFileText, FiDownload, FiLink, FiCalendar, FiEdit2 } from 'react-icons/fi';
 import StatusBadge from '../../components/dashboard/StatusBadge.jsx';
+import EditDocumentModal from '../../components/documents/EditDocumentModal.jsx';
 import styles from './Documents.module.css';
 
 export default function OSCDocumentsPage() {
@@ -30,6 +31,7 @@ export default function OSCDocumentsPage() {
   const [refYear, setRefYear] = useState(initialYear);
   const [viewYear, setViewYear] = useState(initialYear);
   const [projectId, setProjectId] = useState('');
+  const [editingDoc, setEditingDoc] = useState(null);
   const uploadAnchorRef = useRef(null);
 
 
@@ -321,16 +323,26 @@ export default function OSCDocumentsPage() {
                       </div>
 
                       <div className={styles.fileActions}>
-                        <Button 
-                          variant="secondary" 
+                        {file.doc_type !== 'CONCLUSO TEC' && file.status !== 'CONCLUIDO' && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            icon={<FiEdit2 />}
+                            onClick={() => setEditingDoc(file)}
+                            title="Corrigir arquivo enviado"
+                            aria-label={`Corrigir ${file.original_name || file.name}`}
+                          />
+                        )}
+                        <Button
+                          variant="secondary"
                           size="sm"
                           icon={<FiLink />}
                           onClick={() => handleShare(file)}
                           title="Gerar Link Público"
                           aria-label={`Gerar link público de ${file.original_name || file.name}`}
                         />
-                        <Button 
-                          variant="primary" 
+                        <Button
+                          variant="primary"
                           size="sm"
                           icon={<FiDownload />}
                           onClick={() => handleDownload(file)}
@@ -347,6 +359,17 @@ export default function OSCDocumentsPage() {
 
         </div>
       </div>
+
+      <EditDocumentModal
+        isOpen={!!editingDoc}
+        doc={editingDoc}
+        onClose={() => setEditingDoc(null)}
+        onSave={(id, formData, onProgress) => docService.updateDocument(id, formData, onProgress)}
+        onSaved={() => {
+          addNotification('Documento corrigido com sucesso!', 'success');
+          fetchDocuments();
+        }}
+      />
     </div>
   );
 }

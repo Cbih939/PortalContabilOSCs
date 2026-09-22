@@ -4,8 +4,9 @@ import {
   getReceivedDocuments,
   getReceivedByOsc, 
   getDocumentStats,
-  uploadDocument, 
-  downloadDocument, 
+  uploadDocument,
+  updateDocument,
+  downloadDocument,
   markMonthAsConcluded, 
   markConclusoTec,
   markMonthAsPending,
@@ -28,6 +29,9 @@ router.get('/received', protect, getReceivedDocuments);
 router.get('/received-by-osc', protect, getReceivedByOsc);
 router.get('/stats', protect, blockIfInDebt, getDocumentStats);
 router.post('/upload', protect, blockIfInDebt, upload.single('file'), uploadDocument);
+// Corrige um envio (troca arquivo e/ou mês, ano, tipo): OSC (o que ela mesma enviou, se
+// ainda não concluído) ou equipe contábil (qualquer documento em seu escopo).
+router.put('/:id', protect, blockIfInDebt, upload.single('file'), updateDocument);
 router.get('/download/:id', protect, blockIfInDebt, downloadDocument);
 router.get('/download-month-zip', protect, blockIfInDebt, downloadMonthZip);
 

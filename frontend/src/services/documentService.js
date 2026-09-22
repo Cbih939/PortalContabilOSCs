@@ -55,6 +55,21 @@ export const uploadDocument = (formData, onProgress) => {
 };
 
 /**
+ * Corrige o envio de um documento (arquivo errado, mês/ano ou tipo errados).
+ * `formData` pode trazer um novo `file` e/ou os campos `doc_type`, `ref_month`, `ref_year`, `project_id`.
+ */
+export const updateDocument = (id, formData, onProgress) => {
+  return api.put(`/documents/${id}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+    onUploadProgress: (event) => {
+      if (onProgress && event.total) onProgress(Math.round((event.loaded * 100) / event.total));
+    },
+  });
+};
+
+/**
  * Faz o download de um ficheiro específico e aciona o 'save' no browser.
  */
 // Descarregar / Ler documento com segurança (Adicione no final)

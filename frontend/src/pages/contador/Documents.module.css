@@ -34,15 +34,19 @@
 .emptyInline { margin: 0; color: var(--text-muted); font-size: var(--fs-secondary); }
 
 .docList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.docRow { width: 100%; display: flex; align-items: center; gap: 12px; min-height: var(--touch-target); padding: 10px 8px; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--border-light); cursor: pointer; color: var(--text-body); }
-.docList li:last-child .docRow { border-bottom: 0; }
-.docRow:hover { background: var(--primary-light); }
-.docRow:focus-visible { outline: 0; box-shadow: var(--focus-ring); }
+.docRow { width: 100%; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--border-light); }
+.docList > .docRow:last-child { border-bottom: 0; }
+.docRowMain { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; min-height: var(--touch-target); padding: 10px 8px; text-align: left; background: transparent; border: 0; cursor: pointer; color: var(--text-body); }
+.docRowMain:hover { background: var(--primary-light); }
+.docRowMain:focus-visible { outline: 0; box-shadow: var(--focus-ring); }
 .docIcon { flex-shrink: 0; font-size: 22px; color: var(--primary-text); }
 .docMain { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .docName { font-weight: 600; color: var(--text-dark); overflow-wrap: anywhere; }
 .docMeta { font-size: var(--fs-secondary); color: var(--text-muted); }
 .docDownload { flex-shrink: 0; color: var(--text-muted); }
+.docEditBtn { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: var(--touch-target); height: var(--touch-target); border-radius: var(--radius-md); border: 0; background: transparent; color: var(--text-muted); cursor: pointer; }
+.docEditBtn:hover { background: var(--gray-100); color: var(--primary-text); }
+.docEditBtn:focus-visible { outline: 0; box-shadow: var(--focus-ring); }
 
 /* Ano > mês de competência */
 .tree, .monthList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }

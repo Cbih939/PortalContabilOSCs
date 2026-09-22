@@ -2,8 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import * as docService from '../../services/documentService.js';
 import Spinner from '../../components/common/Spinner.jsx';
 import { formatDateTime } from '../../utils/formatDate.js';
+import EditDocumentModal from '../../components/documents/EditDocumentModal.jsx';
 import styles from './Documents.module.css';
-import { FiDownload, FiFileText, FiImage, FiAlertTriangle, FiChevronDown, FiSearch } from 'react-icons/fi';
+import { FiDownload, FiFileText, FiImage, FiAlertTriangle, FiChevronDown, FiSearch, FiEdit2 } from 'react-icons/fi';
 
 const MONTH_NAMES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 
@@ -47,7 +48,7 @@ const buildTree = (osc) => {
     }));
 };
 
-function CompetenceTree({ osc, onDownload }) {
+function CompetenceTree({ osc, onDownload, onEdit }) {
   const tree = useMemo(() => buildTree(osc), [osc]);
   const [openYears, setOpenYears] = useState(() => new Set([osc.year]));
   const [openMonths, setOpenMonths] = useState(() => new Set());
@@ -95,8 +96,8 @@ function CompetenceTree({ osc, onDownload }) {
                           {docs.map((doc) => {
                             const Icon = isImage(doc.original_name) ? FiImage : FiFileText;
                             return (
-                              <li key={doc.id}>
-                                <button type="button" className={styles.docRow} onClick={() => onDownload(doc)} aria-label={`Baixar ${doc.original_name}`}>
+                              <li key={doc.id} className={styles.docRow}>
+                                <button type="button" className={styles.docRowMain} onClick={() => onDownload(doc)} aria-label={`Baixar ${doc.original_name}`}>
                                   <Icon className={styles.docIcon} aria-hidden="true" />
                                   <span className={styles.docMain}>
                                     <span className={styles.docName}>{doc.original_name}</span>
@@ -106,6 +107,11 @@ function CompetenceTree({ osc, onDownload }) {
                                   </span>
                                   <FiDownload className={styles.docDownload} aria-hidden="true" />
                                 </button>
+                                {doc.doc_type !== 'CONCLUSO TEC' && (
+                                  <button type="button" className={styles.docEditBtn} onClick={() => onEdit(doc)} title="Corrigir documento" aria-label={`Corrigir ${doc.original_name}`}>
+                                    <FiEdit2 aria-hidden="true" />
+                                  </button>
+                                )}
                               </li>
                             );
                           })}
@@ -129,19 +135,20 @@ export default function ContadorDocumentsPage() {
   const [error, setError] = useState('');
   const [openId, setOpenId] = useState(null);
   const [search, setSearch] = useState('');
+  const [editingDoc, setEditingDoc] = useState(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        setOscs(await docService.getReceivedByOsc());
-      } catch (e) {
-        console.error('Erro ao carregar documentos:', e);
-        setError('Não foi possível carregar os documentos. Tente novamente.');
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-  }, []);
+  const fetchOscs = async () => {
+    try {
+      setOscs(await docService.getReceivedByOsc());
+    } catch (e) {
+      console.error('Erro ao carregar documentos:', e);
+      setError('Não foi possível carregar os documentos. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchOscs(); }, []);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -211,7 +218,7 @@ export default function ContadorDocumentsPage() {
                   <div id={`osc-docs-${osc.id}`} className={styles.docsPanel}>
                     {late && <p className={styles.lateNote}><FiAlertTriangle aria-hidden="true" /> {lateMessage(osc)}</p>}
 
-                    <CompetenceTree osc={osc} onDownload={handleDownload} />
+                    <CompetenceTree osc={osc} onDownload={handleDownload} onEdit={setEditingDoc} />
                   </div>
                 )}
               </li>
@@ -219,6 +226,14 @@ export default function ContadorDocumentsPage() {
           })}
         </ul>
       )}
+
+      <EditDocumentModal
+        isOpen={!!editingDoc}
+        doc={editingDoc}
+        onClose={() => setEditingDoc(null)}
+        onSave={(id, formData, onProgress) => docService.updateDocument(id, formData, onProgress)}
+        onSaved={fetchOscs}
+      />
     </div>
   );
 }
