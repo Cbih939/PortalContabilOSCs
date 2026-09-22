@@ -1,0 +1,17 @@
+.form { display: flex; flex-direction: column; gap: 14px; }
+.currentFile { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 12px; border-radius: var(--radius-md); background: var(--gray-100); color: var(--text-body); font-size: var(--fs-secondary); overflow-wrap: anywhere; }
+.currentFile svg { flex-shrink: 0; color: var(--primary-text); }
+
+.hiddenInput { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
+.fileDrop { display: flex; align-items: center; gap: 10px; min-height: var(--touch-target); padding: 0 14px; border: 1px dashed var(--border-color); border-radius: var(--radius-md); background: var(--bg-app); color: var(--text-muted); cursor: pointer; }
+.fileDrop:hover { border-color: var(--primary-color); color: var(--primary-text); }
+.fileDrop svg { flex-shrink: 0; }
+.fileDrop span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.rowGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.hint { margin: 0; font-size: var(--fs-caption); color: var(--text-muted); }
+.fieldError { margin: 0; font-size: var(--fs-caption); color: var(--color-danger); }
+
+.progressBar { height: 6px; border-radius: var(--radius-pill); background: var(--gray-100); overflow: hidden; }
+.progressBar span { display: block; height: 100%; background: var(--primary-color); transition: width 0.2s ease; }

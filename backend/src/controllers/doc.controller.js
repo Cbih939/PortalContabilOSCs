@@ -80,7 +80,8 @@ const discardUploadedFile = (file) => {
 /** Carrega um documento junto com os vínculos da OSC dona e valida o acesso do usuário. */
 const getAccessibleDocument = async (user, docId) => {
   const [rows] = await pool.execute(
-    `SELECT d.id, d.osc_id, d.original_name, d.saved_filename, d.mime_type, d.status, d.uploaded_by_user_id
+    `SELECT d.id, d.osc_id, d.original_name, d.saved_filename, d.file_path, d.mime_type, d.status,
+            d.uploaded_by_user_id, d.doc_type, d.ref_month, d.ref_year, d.project_id, d.file_size_bytes
        FROM documents d WHERE d.id = ?`,
     [docId]
   );
@@ -254,6 +255,88 @@ export const uploadDocument = async (req, res) => {
     console.error('[uploadDocument]', error.message);
     discardUploadedFile(file);
     res.status(500).json({ message: 'Erro interno ao salvar documento.' });
+  }
+};
+
+/**
+ * Corrige o envio de um documento: troca o arquivo e/ou os dados (tipo, mês/ano de
+ * referência). Usado quando a OSC (ou o contador, em nome dela) enviou o arquivo errado.
+ * A OSC só corrige o que ela mesma enviou e enquanto não estiver "CONCLUIDO";
+ * a equipe contábil (contador/admin) pode corrigir qualquer documento em seu escopo.
+ */
+export const updateDocument = async (req, res) => {
+  const file = req.file;
+  try {
+    const { doc, osc } = await getAccessibleDocument(req.user, req.params.id);
+    if (!doc) { discardUploadedFile(file); return res.status(404).json({ message: 'Documento não encontrado.' }); }
+    if (!osc) { discardUploadedFile(file); return res.status(403).json({ message: 'Acesso negado a este documento.' }); }
+
+    if (doc.doc_type === 'CONCLUSO TEC' || String(doc.saved_filename).startsWith('tec_virtual_')) {
+      discardUploadedFile(file);
+      return res.status(400).json({ message: 'Este registro não é um arquivo e não pode ser editado.' });
+    }
+
+    if (isOSC(req.user)) {
+      const ownsIt = Number(doc.uploaded_by_user_id) === Number(req.user.id);
+      if (!ownsIt || String(doc.status).toUpperCase() === 'CONCLUIDO') {
+        discardUploadedFile(file);
+        return res.status(403).json({ message: 'Este documento já foi concluído e não pode mais ser editado. Fale com a contabilidade.' });
+      }
+    }
+
+    const { doc_type, ref_month, ref_year, project_id } = req.body;
+
+    const month = ref_month !== undefined && ref_month !== '' ? toInt(ref_month) : doc.ref_month;
+    const year = ref_year !== undefined && ref_year !== '' ? toInt(ref_year) : doc.ref_year;
+    if ((ref_month !== undefined && ref_month !== '' && !validMonth(month)) ||
+        (ref_year !== undefined && ref_year !== '' && !validYear(year))) {
+      discardUploadedFile(file);
+      return res.status(400).json({ message: 'Mês ou ano de referência inválido.' });
+    }
+
+    const parsedProjectId = project_id !== undefined
+      ? ((project_id && project_id !== 'null' && project_id !== 'undefined' && project_id !== '') ? parseInt(project_id) : null)
+      : doc.project_id;
+
+    const fields = {
+      doc_type: doc_type || doc.doc_type,
+      ref_month: month,
+      ref_year: year,
+      project_id: parsedProjectId,
+      status: 'PENDENTE', // conteúdo mudou: volta para análise da contabilidade
+    };
+    if (file) {
+      fields.original_name = file.originalname;
+      fields.saved_filename = file.filename;
+      fields.file_path = file.path;
+      fields.mime_type = file.mimetype || 'application/pdf';
+      fields.file_size_bytes = file.size || 0;
+    }
+
+    await pool.execute(
+      `UPDATE documents SET doc_type = ?, ref_month = ?, ref_year = ?, project_id = ?, status = ?,
+              original_name = ?, saved_filename = ?, file_path = ?, mime_type = ?, file_size_bytes = ?
+         WHERE id = ?`,
+      [fields.doc_type, fields.ref_month, fields.ref_year, fields.project_id, fields.status,
+       fields.original_name || doc.original_name, fields.saved_filename || doc.saved_filename,
+       fields.file_path || doc.file_path, fields.mime_type || doc.mime_type,
+       fields.file_size_bytes ?? doc.file_size_bytes, doc.id]
+    );
+
+    // Só remove o arquivo antigo depois que o banco confirmou a troca.
+    if (file && doc.saved_filename !== 'none') {
+      const oldPath = resolveStoredFile(doc.saved_filename);
+      if (oldPath) { try { fs.unlinkSync(oldPath); } catch (e) { /* melhor esforço */ } }
+    }
+
+    await logAction(req.user.id, req.user.name, doc.osc_id, 'EDITOU', 'DOCUMENTO',
+      file ? `Substituiu o arquivo de "${doc.original_name}" por "${file.originalname}".` : `Corrigiu os dados do documento "${doc.original_name}".`);
+
+    res.json({ message: 'Documento atualizado com sucesso.' });
+  } catch (error) {
+    console.error('[updateDocument]', error.message);
+    discardUploadedFile(file);
+    res.status(500).json({ message: 'Erro ao atualizar o documento.' });
   }
 };
 
